@@ -3,44 +3,62 @@
 # Railway / Docker: build context MUST be the monorepo root (repository root), e.g.
 #   docker build -f Dockerfile.backend .
 # docker-compose.yml uses context: . for this service.
-#
-FROM node:20 AS builder
-WORKDIR /app
 
-RUN npm install -g prisma@latest
+# ── Build stage ───────────────────────────────────────────────────────────────
+FROM node:20-bookworm-slim AS builder
+WORKDIR /repo
 
-RUN prisma --version
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssl \
+    ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
-COPY package*.json ./
-COPY packages ./packages
-COPY apps/backend/package*.json ./apps/backend/
+# Copy workspace manifests first so npm ci can link all workspaces correctly
+COPY package.json package-lock.json ./
+COPY packages/ ./packages/
+COPY apps/backend/package.json ./apps/backend/
+COPY apps/dashboard/package.json ./apps/dashboard/
+COPY apps/player/package.json ./apps/player/
+COPY apps/marketing/package.json ./apps/marketing/
 
-RUN npm install
+# Respects package-lock.json exactly — installs all workspace dependencies
+RUN npm ci
 
+# Copy backend source after dependency install to maximise layer cache reuse
 COPY apps/backend ./apps/backend
 
+# Dummy DATABASE_URL so Prisma generate doesn't need a live DB
 ENV DATABASE_URL="postgresql://build:build@127.0.0.1:5432/build?schema=public"
 
-RUN prisma generate --config apps/backend/prisma.config.ts
+RUN npm run prisma:generate -w apps/backend
 
-RUN npm run build --workspace=backend
+RUN npm run build -w apps/backend
 
-FROM node:20-alpine
-WORKDIR /app
+# Drop dev dependencies before copying to the runner image
+RUN npm prune --omit=dev
 
-RUN apk add --no-cache openssl libc6-compat
+# ── Runner stage ──────────────────────────────────────────────────────────────
+FROM node:20-bookworm-slim
+WORKDIR /repo
 
 ENV NODE_ENV=production
 
-COPY --from=builder /app ./
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssl \
+    ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
-ENV DATABASE_URL="postgresql://build:build@127.0.0.1:5432/build?schema=public"
-RUN npm install -g prisma@latest \
-  && prisma generate --config apps/backend/prisma.config.ts
+COPY --from=builder /repo/package.json       ./package.json
+COPY --from=builder /repo/package-lock.json  ./package-lock.json
+COPY --from=builder /repo/node_modules       ./node_modules
+COPY --from=builder /repo/apps/backend       ./apps/backend
+COPY --from=builder /repo/packages           ./packages
 
-EXPOSE 3000
+WORKDIR /repo/apps/backend
+
+EXPOSE 4000
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=60s --retries=6 \
-  CMD node -e "const p=Number(process.env.PORT||3000);require('http').get('http://127.0.0.1:'+p+'/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+  CMD node -e "require('http').get('http://127.0.0.1:4000/api/v1',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"
 
-CMD ["sh", "-c", "prisma migrate deploy --config apps/backend/prisma.config.ts && npm run start:prod --workspace=backend"]
+CMD ["sh", "-c", "npx prisma migrate deploy --schema=./prisma/schema.prisma && node dist/src/main.js"]
