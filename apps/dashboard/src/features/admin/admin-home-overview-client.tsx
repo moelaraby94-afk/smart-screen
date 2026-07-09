@@ -72,11 +72,11 @@ export function AdminHomeOverviewClient() {
   const nf = (n: number) => new Intl.NumberFormat(locale).format(n);
   const storageSub =
     overview.storageQuotaBytes != null && overview.storageQuotaBytes > 0
-      ? t('storageSubQuota', {
+      ? t('cards.storageSubQuota', {
           used: formatBytes(overview.storageUsedBytes, locale),
           quota: formatBytes(overview.storageQuotaBytes, locale),
         })
-      : t('storageSubNoQuota', {
+      : t('cards.storageSubNoQuota', {
           used: formatBytes(overview.storageUsedBytes, locale),
         });
 

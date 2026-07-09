@@ -380,9 +380,14 @@ export function PlayerRuntime() {
         offlinePlaybackActiveRef.current,
     });
 
+    /**
+     * `screen:register` is handled asynchronously on the server (a DB lookup
+     * plus a bcrypt comparison against the screen's secret). Sending the first
+     * heartbeat in the same tick races that work and gets answered with
+     * `NOT_REGISTERED`, so wait for the `screen:registered` acknowledgement.
+     */
     const register = () => {
       socket.emit('screen:register', { serialNumber: kioskSerial, secret });
-      socket.emit('screen:heartbeat', heartbeatPayload());
     };
 
     socket.on('connect', () => {
@@ -394,6 +399,7 @@ export function PlayerRuntime() {
       if (payload && 'ticker' in payload && payload.ticker !== undefined) {
         setTicker(payload.ticker ?? null);
       }
+      socket.emit('screen:heartbeat', heartbeatPayload());
     });
 
     socket.on('playlist:updated', (raw: unknown) => {

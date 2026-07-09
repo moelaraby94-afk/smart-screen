@@ -31,11 +31,14 @@ function PlayerHeartbeatInner({ serialNumber, secret }: InnerProps) {
       timeout: 20000,
     });
 
+    /**
+     * The server binds the socket asynchronously (DB lookup + bcrypt compare of
+     * the screen secret), so a heartbeat sent in the same tick as the register
+     * arrives before the binding exists and is answered with `NOT_REGISTERED`.
+     * Send the first one only once registration is acknowledged.
+     */
     const register = () => {
       socket.emit('screen:register', { serialNumber, secret });
-      socket.emit('screen:heartbeat', {
-        isOfflineMode: typeof navigator !== 'undefined' && !navigator.onLine,
-      });
     };
 
     socket.on('connect', () => {
@@ -45,6 +48,9 @@ function PlayerHeartbeatInner({ serialNumber, secret }: InnerProps) {
     socket.on('screen:registered', () => {
       setStatus('live');
       setDetail(`Heartbeat active for ${serialNumber}`);
+      socket.emit('screen:heartbeat', {
+        isOfflineMode: typeof navigator !== 'undefined' && !navigator.onLine,
+      });
     });
 
     socket.on('content:sync', (payload: unknown) => {

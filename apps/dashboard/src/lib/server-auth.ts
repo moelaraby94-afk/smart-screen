@@ -1,10 +1,20 @@
 import { cookies } from 'next/headers';
 
-/** Server-side fetch (Docker): use service hostname; browser still uses NEXT_PUBLIC_*. */
-const API_BASE =
-  process.env.INTERNAL_API_BASE_URL ??
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://localhost:4000/api/v1';
+/**
+ * Server-side fetch (Docker): use the service hostname; the browser still uses
+ * NEXT_PUBLIC_*.
+ *
+ * `||`, not `??`: `.env.example` ships `INTERNAL_API_BASE_URL=""` and documents
+ * "leave empty for local dev". `??` only falls back on null/undefined, so the
+ * empty string won through, `fetch("/auth/me")` threw on a relative URL, and the
+ * catch below turned that into "not authenticated" — every server-guarded page
+ * bounced to /login.
+ */
+const API_BASE = (
+  process.env.INTERNAL_API_BASE_URL?.trim() ||
+  process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ||
+  'http://localhost:4000/api/v1'
+).replace(/\/+$/, '');
 
 export type AuthMeServer = {
   authenticated: boolean;
@@ -32,7 +42,16 @@ export async function fetchAuthMeServer(): Promise<AuthMeServer> {
       authenticated: true,
       isSuperAdmin: body.isSuperAdmin === true,
     };
-  } catch {
+  } catch (error) {
+    /**
+     * A misconfigured API_BASE or an unreachable backend is not the same thing
+     * as a signed-out user, but both end in a redirect to /login. Log it, or the
+     * next misconfiguration looks exactly like an expired session.
+     */
+    console.error(
+      `[server-auth] ${API_BASE}/auth/me failed; treating request as unauthenticated.`,
+      error,
+    );
     return { authenticated: false, isSuperAdmin: false };
   }
 }

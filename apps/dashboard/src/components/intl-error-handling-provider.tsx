@@ -2,6 +2,7 @@
 
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocaleAwareFallbackString } from '@/i18n/fallback';
+import { DEFAULT_TIME_ZONE } from '@/i18n/time-zone';
 import { devError } from '@/lib/dev-log';
 
 type Props = {
@@ -19,6 +20,8 @@ export function IntlErrorHandlingProvider({ children, locale, messages }: Props)
     <NextIntlClientProvider
       locale={locale}
       messages={messages}
+      // Must match getRequestConfig's timeZone, or SSR and hydration disagree.
+      timeZone={DEFAULT_TIME_ZONE}
       onError={(error) => {
         devError('[i18n]', error);
       }}

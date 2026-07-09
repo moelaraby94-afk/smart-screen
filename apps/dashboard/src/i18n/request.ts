@@ -3,6 +3,7 @@ import { hasLocale } from 'next-intl';
 import { headers } from 'next/headers';
 import { getLocaleAwareFallbackString } from './fallback';
 import { routing } from './routing';
+import { DEFAULT_TIME_ZONE } from './time-zone';
 import { devWarn } from '@/lib/dev-log';
 
 export default getRequestConfig(async ({ requestLocale }) => {
@@ -33,7 +34,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
   return {
     locale,
-    timeZone: 'UTC',
+    timeZone: DEFAULT_TIME_ZONE,
     messages: (await import(`./messages/${locale}.json`)).default,
     getMessageFallback({ namespace, key }) {
       return getLocaleAwareFallbackString(locale, namespace, key);
