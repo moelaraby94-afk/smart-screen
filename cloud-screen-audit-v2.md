@@ -14,8 +14,11 @@
 > | `node --test` (player) | ✅ **6 اختبارات** — ماكانش فيه test runner أصلًا |
 > | `next build` (player) | ✅ ينجح |
 > | `npm run i18n:check` | ✅ key-parity + hardcoded-scan + missing-marker-scan كلهم OK |
+> | `next build` (dashboard) | ✅ ينجح |
+> | **تشغيل فعلي للـ stack** | ✅ Postgres + backend + dashboard + player — شوف القسم 15 |
 >
-> **تحذير باقي:** الشغل كله **لسه uncommitted** على فرع `master`. اعمل commit.
+> **الحالة:** كل الشغل اتعمله commit على فرع `fix/security-audit-v2`
+> (`861db6e` الإصلاحات، `39a7813` أخطاء التشغيل الفعلي).
 
 ---
 
@@ -248,3 +251,74 @@
 عشان كده الاختبار الجديد `pairing-to-bootstrap.integration.spec.ts` **بيولّد الشاشة من مسار الـ pairing الحقيقي** قبل ما يختبر الـ bootstrap عليها. والدالة النقية `interpretPollResult` موجودة تحديدًا عشان الحالة الصامتة (`complete` من غير سيكرت) تبقى **حالة فشل صريحة** مستحيل تعدّي بالغلط.
 
 **القاعدة:** لما تغيّر عقد بين خدمتين، اختبر على بيانات اتولدت بالعقد الجديد — مش بالقديم.
+
+---
+
+## 15. الجولة الأخيرة — 6 أخطاء ما ظهرتش غير بتشغيل المشروع فعليًا
+
+الأخطاء دي **كلها عدّت** من `tsc` و `eslint` ومن الـ 59 اختبار. ولا واحد فيهم كان ممكن يتلقى بقراءة الكود. ظهروا لما شغّلت الـ stack كامل (Postgres في Docker + الخدمات التلاتة) وسقت المنتج بإيدي.
+
+### 15.1 🔴 حلقة إعادة توجيه لتسجيل الدخول — كل صفحة محمية بترجّعك للّوجين
+
+الأخطر في القايمة، والمستخدم شافه بنفسه.
+
+`server-auth.ts` كان بيعمل:
+```ts
+const API_BASE = process.env.INTERNAL_API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? '...';
+```
+و `.env.example` بيشحن `INTERNAL_API_BASE_URL=""` ومكتوب جنبها حرفيًا *"Leave empty for local dev"*.
+
+`??` بترجع للبديل بس لو `null`/`undefined` — **مش لو string فاضية**. فـ `API_BASE` بقى `""`، والسيرفر نادى `fetch("/auth/me")` بمسار نسبي → `TypeError: Failed to parse URL`. والـ `catch { }` الفاضي حوّل الخطأ ده لـ `{ authenticated: false }`.
+
+يعني: **عطل في الإعدادات كان بيتنكّر في صورة "المستخدم مش مسجّل دخول"**. تسجّل دخول بنجاح، تضغط أي صفحة، ترجع للّوجين مع `?returnTo=/ar/admin`.
+
+**الإصلاح:** `||` بدل `??`، والـ `catch` بقى بيسجّل الخطأ بدل ما يبلعه. ونفس الفخ اتقفل في `getApiBaseUrl` بتاع الداشبورد والبلاير.
+
+### 15.2 🔴 `docker-compose.yml` مكانش بيتقرا أصلًا
+
+الحراسات اللي ضفتها في الجولة السابقة (`${JWT_ACCESS_SECRET:?...}`) رسالتها فيها `: ` — وده **يكسر YAML** جوه scalar غير مقتبس. الملف كله مكانش بيتحلل.
+
+خطأ مني، وماكانش ليه أي طريقة يظهر غير بتشغيل `docker compose`. اتصلح، واتأكدت من الاتجاهين: بيقلع بالـ `.env`، وبيقف برسالة واضحة من غيرها.
+
+### 15.3 🟠 `prisma db seed` كان no-op صامت
+
+Prisma 7 نقل أمر الـ seed لـ `prisma.config.ts`، والمفتاح القديم `prisma.seed` في `package.json` بقى **متجاهَل**. فـ `npm run prisma:seed` كان بيطبع تعليمات إعداد **ويخرج بكود 0** من غير ما يزرع صف واحد.
+
+نجاح كاذب — أسوأ أنواع الفشل.
+
+### 15.4 🟠 بانر `NOT_REGISTERED` على كل شاشة
+
+البلاير كان بيبعت `screen:register` و`screen:heartbeat` في **نفس الـ tick**، بينما السيرفر بيربط الـ socket بشكل غير متزامن. الـ heartbeat بيوصل الأول → `NOT_REGISTERED`.
+
+race قديم كان نايم؛ إضافة `bcrypt.compare` (~250ms) في مسار المصادقة خلّته **يضرب كل مرة**. أول heartbeat بقى بيستنى إشعار `screen:registered`.
+
+### 15.5 🟠 `Hydration failed` على كل صفحة
+
+`NextIntlClientProvider` مكانش بياخد `timeZone`، فالعميل بينسّق التواريخ بتوقيت المتصفح بينما السيرفر بيستخدم `UTC` من `getRequestConfig` → React بيرمي الشجرة ويعيد بناءها.
+
+الاتنين بقوا بيقروا ثابت واحد `DEFAULT_TIME_ZONE` عشان ما يفترقوش تاني.
+
+### 15.6 🟡 `[missing:adminHomeOverview.storageSubQuota]` في صفحة الأدمن
+
+الكومبوننت بينادي `t('storageSubQuota')` والمفتاح موجود في `cards.storageSubQuota`.
+
+**ليه الفحوصات ما مسكتهوش:** `i18n:key-parity` بيقارن `en` بـ `ar` بس — ومفتاح ناقص من **الاتنين** بيعدّي. وكمان الصفحة نفسها كانت **مستحيل توصلها** بسبب حلقة اللوجين في 15.1، فمحدش شافها.
+
+---
+
+## 16. التحقق النهائي — على السيرفر الشغّال
+
+| ما تم اختباره | النتيجة |
+|---|---|
+| ربط شاشة من واجهة البلاير → claim → تشغيل محتوى | ✅ الشاشة اتربطت، `bootstrap` رجع 200، اتسجلت على الـ socket (`ONLINE`)، والمحتوى اتدفع لحظيًا من غير reload |
+| `bootstrap` بالسيكرت المشترك القديم | ✅ **401** |
+| الـ poll التاني للـ handoff | ✅ `screenSecret: null` |
+| `SUPPORT_SPECIALIST` على `customers/users/screens` | ✅ 200 |
+| `SUPPORT_SPECIALIST` على `stats/logs/settings/staff` | ✅ **403** |
+| refresh token كـ Bearer access token | ✅ **401** (claim الـ `typ`) — وبيشتغل عادي على `/auth/refresh` |
+| HTML متسمّي `image/png` | ✅ **400** (magic bytes) |
+| رفع يتجاوز الكوتا | ✅ **403** · مفيش صف في الداتابيز · مفيش ملف `.part` متبقي |
+| `impersonate` | ✅ صف في جدول `AuditLog` بـ IP حقيقي `127.0.0.1` |
+| صفحات الأدمن والعميل | ✅ كلها بتفتح ببيانات حقيقية |
+
+**الدرس:** الاختبارات والـ type checker بيثبتوا إن الكود **متماسك مع نفسه**. تشغيل المنتج هو اللي بيثبت إنه **بيشتغل**. الستة دول كلهم عدّوا من الأول وسقطوا في التاني.
