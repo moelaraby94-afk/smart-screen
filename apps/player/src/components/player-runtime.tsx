@@ -5,7 +5,9 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { io, type Socket } from 'socket.io-client';
 import {
   clearPersistedKioskSerial,
+  clearPersistedScreenSecret,
   getPersistedKioskSerial,
+  getPersistedScreenSecret,
   getPlayerBearerToken,
 } from '@/lib/auth-session';
 import {
@@ -58,7 +60,15 @@ export function PlayerRuntime() {
   );
   const [kioskSerial, setKioskSerial] = useState(envSerial);
   const [storageReady, setStorageReady] = useState(false);
-  const secret = process.env.NEXT_PUBLIC_PLAYER_HEARTBEAT_SECRET?.trim();
+  const [pairedSecret, setPairedSecret] = useState('');
+  const envSecret = process.env.NEXT_PUBLIC_PLAYER_HEARTBEAT_SECRET?.trim();
+  /**
+   * A screen paired through the pairing flow authenticates with its own secret
+   * (Screen.pairingSecretHash); the shared env secret only works for screens
+   * created outside that flow, which have no per-screen hash. Prefer the paired
+   * secret whenever we have one.
+   */
+  const secret = pairedSecret || envSecret;
   const workspaceNameOpt = process.env.NEXT_PUBLIC_PLAYER_WORKSPACE_NAME?.trim();
 
   useLayoutEffect(() => {
@@ -66,6 +76,8 @@ export function PlayerRuntime() {
       const s = getPersistedKioskSerial();
       if (s) setKioskSerial(s);
     }
+    const persistedSecret = getPersistedScreenSecret();
+    if (persistedSecret) setPairedSecret(persistedSecret);
     setStorageReady(true);
   }, [envSerial]);
 
@@ -275,10 +287,15 @@ export function PlayerRuntime() {
       });
       return;
     }
-    if (secret && !kioskSerial) {
+    /**
+     * No serial yet: pair. This no longer requires the shared env secret —
+     * pairing is how a screen earns its own secret in the first place.
+     */
+    if (!kioskSerial) {
       setBootMode('pairing');
       return;
     }
+    // Serial present but no secret of any kind: nothing this player can do.
     setBootMode('none');
   }, [storageReady, runBootstrap, runJwtBootstrap, kioskSerial, secret]);
 
@@ -571,20 +588,21 @@ export function PlayerRuntime() {
             match backend <code className="rounded bg-black/40 px-1">PLAYER_HEARTBEAT_SECRET</code>).
           </p>
           <p className="mt-4 text-sm text-white/65">
-            <strong className="text-white/85">Pairing (no serial yet):</strong> set only{' '}
-            <code className="rounded bg-black/40 px-1 font-mono text-cyan-200/90">NEXT_PUBLIC_PLAYER_HEARTBEAT_SECRET</code> — the
-            player shows a 6-digit code; claim it from the dashboard, then the serial is saved in this browser for kiosk mode.
+            <strong className="text-white/85">Pairing (no serial yet):</strong> no configuration needed — the player shows a
+            6-digit code; claim it from the dashboard, and the serial plus the screen&apos;s own secret are saved in this browser
+            for kiosk mode.
           </p>
           <button
             type="button"
             className="mt-6 w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-2.5 font-mono text-xs text-white/70 hover:bg-white/[0.1]"
             onClick={() => {
               clearPersistedKioskSerial();
+              clearPersistedScreenSecret();
               clearOfflinePlaylistSnapshot();
               window.location.reload();
             }}
           >
-            Clear saved kiosk serial (localStorage)
+            Clear saved kiosk serial + screen secret (localStorage)
           </button>
         </div>
       </div>

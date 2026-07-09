@@ -56,7 +56,7 @@ export class WorkspacesService {
               status: SubscriptionStatus.TRIALING,
               seats: 5,
               screenLimit: 25,
-              storageLimitBytes: 5 * 1024 * 1024 * 1024,
+              storageLimitBytes: BigInt(5 * 1024 * 1024 * 1024),
             },
           },
         },

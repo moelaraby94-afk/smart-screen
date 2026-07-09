@@ -13,10 +13,12 @@ Monorepo for the Cloud Signage platform: dashboard (Next.js), API (NestJS + Pris
 1. Copy `.env.example` to `.env` at the repo root and adjust secrets (`DATABASE_URL`, JWT secrets, etc.).
 2. Install dependencies: `npm install`
 3. Apply database schema: `npm run prisma:migrate -w apps/backend` (or `prisma migrate deploy` in production).
-4. Optional seed: `npm run prisma:seed -w apps/backend`
+4. Optional seed (**local development only — never a production setup step**): `npm run prisma:seed -w apps/backend`. Creates a demo Super Admin and a demo client account with a freshly generated random password printed once to the console. Refuses to run when `NODE_ENV=production` unless `ENABLE_DB_SEED=true` is set explicitly.
 5. Development (dashboard + backend + player): `npm run dev`
 
 API base URL defaults to `http://localhost:4000/api/v1`; dashboard reads `NEXT_PUBLIC_API_BASE_URL`.
+
+> **If any environment (including staging) was ever seeded before this change**, its Super Admin (`admin@cloudsignage.local`) and demo client (`admin2@client.local`) accounts may still have the old hardcoded passwords (`admin` / `123`). Run `npm run rotate-seeded-admin -w apps/backend` against that database immediately to rotate both to strong random passwords — safe to run any time, it's a no-op if the accounts don't exist.
 
 ## Workspace scripts
 

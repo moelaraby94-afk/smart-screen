@@ -16,6 +16,10 @@ import Stripe from 'stripe';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
 import { assertMockBillingAllowed } from '../../common/product/mock-billing';
+import {
+  fromStorageLimitBytes,
+  toStorageLimitBytesInput,
+} from '../../common/product/storage-limit';
 
 const BYTES_5GB = 5 * 1024 * 1024 * 1024;
 const BYTES_50GB = 50 * 1024 * 1024 * 1024;
@@ -84,7 +88,11 @@ export class SubscriptionsService {
             ? params.currentPeriodEnd
             : d.currentPeriodEnd,
         ...(params.storageLimitBytes !== undefined
-          ? { storageLimitBytes: params.storageLimitBytes }
+          ? {
+              storageLimitBytes: toStorageLimitBytesInput(
+                params.storageLimitBytes,
+              ),
+            }
           : {}),
         ...(params.stripeCustomerId
           ? { stripeCustomerId: params.stripeCustomerId }
@@ -100,7 +108,7 @@ export class SubscriptionsService {
       status: updated.status,
       seats: updated.seats,
       screenLimit: updated.screenLimit,
-      storageLimitBytes: updated.storageLimitBytes,
+      storageLimitBytes: fromStorageLimitBytes(updated.storageLimitBytes),
       currentPeriodEnd: updated.currentPeriodEnd?.toISOString() ?? null,
       startedAt: updated.startedAt.toISOString(),
     };
@@ -135,7 +143,7 @@ export class SubscriptionsService {
       status: sub.status,
       seats: sub.seats,
       screenLimit: sub.screenLimit,
-      storageLimitBytes: sub.storageLimitBytes,
+      storageLimitBytes: fromStorageLimitBytes(sub.storageLimitBytes),
       currentPeriodEnd: sub.currentPeriodEnd?.toISOString() ?? null,
       startedAt: sub.startedAt.toISOString(),
       billingPortalAvailable: Boolean(sub.stripeCustomerId),
@@ -362,7 +370,7 @@ export class SubscriptionsService {
         seats: nextSeats,
         screenLimit: nextScreenLimit,
         currentPeriodEnd: nextPeriodEnd,
-        storageLimitBytes: nextStorageLimit,
+        storageLimitBytes: toStorageLimitBytesInput(nextStorageLimit),
       },
     });
 
@@ -372,7 +380,7 @@ export class SubscriptionsService {
       status: updated.status,
       seats: updated.seats,
       screenLimit: updated.screenLimit,
-      storageLimitBytes: updated.storageLimitBytes,
+      storageLimitBytes: fromStorageLimitBytes(updated.storageLimitBytes),
       currentPeriodEnd: updated.currentPeriodEnd?.toISOString() ?? null,
       startedAt: updated.startedAt.toISOString(),
       mock: true,

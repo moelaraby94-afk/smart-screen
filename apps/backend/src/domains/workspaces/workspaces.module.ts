@@ -1,5 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { RolesGuard } from '../../common/auth/roles.guard';
+import { UserThrottlerGuard } from '../../common/throttler/user-throttler.guard';
 import { AuthModule } from '../auth/auth.module';
 import { MediaModule } from '../media/media.module';
 import { PairingModule } from '../pairing/pairing.module';
@@ -15,7 +16,7 @@ import { WorkspacesService } from './workspaces.service';
     RealtimeModule,
   ],
   controllers: [WorkspacesController],
-  providers: [WorkspacesService, RolesGuard],
+  providers: [WorkspacesService, RolesGuard, UserThrottlerGuard],
   exports: [WorkspacesService],
 })
 export class WorkspacesModule {}

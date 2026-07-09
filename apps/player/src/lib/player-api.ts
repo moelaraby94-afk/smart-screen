@@ -8,16 +8,9 @@ export type StartPairingSessionResponse = {
   expiresAt: string;
 };
 
-export type PollPairingSessionResponse =
-  | { status: 'pending'; expiresAt: string }
-  | {
-      status: 'complete';
-      screenId?: string | null;
-      workspaceId?: string | null;
-      serialNumber: string;
-    }
-  | { status: 'expired'; expiresAt: string }
-  | { status: 'cancelled'; expiresAt: string };
+import type { PollPairingSessionResponse } from '@/lib/pairing-handoff';
+
+export type { PollPairingSessionResponse };
 
 export type WorkspaceBootstrapResponse = {
   screenId: string;

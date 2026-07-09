@@ -1,7 +1,10 @@
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -13,14 +16,24 @@ import {
   ScreenStatus,
   UserRole,
 } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 import { randomBytes, randomInt } from 'crypto';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
 import { ClaimPairingSessionDto } from './dto/claim-pairing-session.dto';
 import { StartPairingSessionDto } from './dto/start-pairing-session.dto';
 
+/** Wrong-code claim attempts are counted within this rolling window. */
+const LOCKOUT_FAILURE_WINDOW_MS = 10 * 60 * 1000;
+/** How long a user is locked out of claim once the failure threshold is hit. */
+const LOCKOUT_DURATION_MS = 30 * 60 * 1000;
+/** Wrong-code attempts allowed within the window before lockout kicks in. */
+const LOCKOUT_MAX_FAILED_ATTEMPTS = 5;
+
 @Injectable()
 export class PairingService {
+  private readonly logger = new Logger(PairingService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
@@ -57,6 +70,81 @@ export class PairingService {
     }
   }
 
+  /**
+   * Throws while the user is locked out from a prior burst of wrong-code claim
+   * guesses. Independent of the per-minute ThrottlerGuard on the route — this
+   * survives across throttle windows (30 min vs. 60 s).
+   */
+  private async assertClaimNotLockedOut(
+    userId: string,
+    workspaceId: string,
+  ): Promise<void> {
+    const lockout = await this.prisma.pairingClaimLockout.findUnique({
+      where: { userId },
+    });
+    const now = new Date();
+    if (lockout?.lockedUntil && lockout.lockedUntil > now) {
+      const retryAfterSeconds = Math.ceil(
+        (lockout.lockedUntil.getTime() - now.getTime()) / 1000,
+      );
+      this.logger.warn(
+        `Pairing claim failed userId=${userId} workspaceId=${workspaceId} reason=LOCKED_OUT retryAfterSeconds=${retryAfterSeconds}`,
+      );
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.TOO_MANY_REQUESTS,
+          message: 'TOO_MANY_FAILED_PAIRING_ATTEMPTS',
+          retryAfterSeconds,
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+  }
+
+  /**
+   * Records a wrong/expired-code claim guess and, once
+   * {@link LOCKOUT_MAX_FAILED_ATTEMPTS} is hit inside the rolling
+   * {@link LOCKOUT_FAILURE_WINDOW_MS} window, locks the user out of claim for
+   * {@link LOCKOUT_DURATION_MS}. Only called after {@link assertClaimNotLockedOut}
+   * has already passed, so any `lockedUntil` seen here is stale (in the past).
+   */
+  private async recordFailedClaimAttempt(
+    userId: string,
+    workspaceId: string,
+  ): Promise<void> {
+    const now = new Date();
+    const existing = await this.prisma.pairingClaimLockout.findUnique({
+      where: { userId },
+    });
+
+    const windowExpired =
+      !existing ||
+      now.getTime() - existing.windowStartAt.getTime() >
+        LOCKOUT_FAILURE_WINDOW_MS;
+
+    const failedCount = windowExpired ? 1 : existing.failedCount + 1;
+    const windowStartAt = windowExpired ? now : existing.windowStartAt;
+    const lockedUntil =
+      failedCount >= LOCKOUT_MAX_FAILED_ATTEMPTS
+        ? new Date(now.getTime() + LOCKOUT_DURATION_MS)
+        : null;
+
+    await this.prisma.pairingClaimLockout.upsert({
+      where: { userId },
+      create: { userId, failedCount, windowStartAt, lockedUntil },
+      update: { failedCount, windowStartAt, lockedUntil },
+    });
+
+    this.logger.warn(
+      `Pairing claim failed userId=${userId} workspaceId=${workspaceId} reason=INVALID_OR_EXPIRED_PAIRING_CODE ` +
+        `failedCount=${failedCount}/${LOCKOUT_MAX_FAILED_ATTEMPTS}${lockedUntil ? ' -> LOCKED for 30m' : ''}`,
+    );
+  }
+
+  private async clearFailedClaimAttempts(userId: string): Promise<void> {
+    await this.prisma.pairingClaimLockout.deleteMany({ where: { userId } });
+  }
+
   private async assertWithinScreenLimitTx(
     tx: Prisma.TransactionClient,
     workspaceId: string,
@@ -78,6 +166,11 @@ export class PairingService {
 
   private makePollSecret(): string {
     return randomBytes(24).toString('base64url');
+  }
+
+  /** Per-screen secret replacing the shared PLAYER_HEARTBEAT_SECRET. */
+  private makeScreenSecret(): string {
+    return randomBytes(32).toString('base64url');
   }
 
   private async makeUniqueSerialTx(
@@ -181,6 +274,7 @@ export class PairingService {
         expiresAt: true,
         screenId: true,
         workspaceId: true,
+        screenSecretHandoff: true,
         screen: {
           select: { serialNumber: true },
         },
@@ -207,11 +301,28 @@ export class PairingService {
     }
 
     if (row.status === ScreenPairingSessionStatus.COMPLETE && row.screen) {
+      /**
+       * One-time handoff: the per-screen secret is only ever readable here,
+       * on whichever poll is first to claim it. The atomic updateMany guard
+       * (matching on the still-non-null value) ensures a concurrent poll
+       * can't also receive it once one request has cleared it.
+       */
+      let screenSecret: string | null = null;
+      if (row.screenSecretHandoff) {
+        const claimed = await this.prisma.screenPairingSession.updateMany({
+          where: { id: row.id, screenSecretHandoff: { not: null } },
+          data: { screenSecretHandoff: null },
+        });
+        if (claimed.count > 0) {
+          screenSecret = row.screenSecretHandoff;
+        }
+      }
       return {
         status: 'complete' as const,
         screenId: row.screenId,
         workspaceId: row.workspaceId,
         serialNumber: row.screen.serialNumber,
+        screenSecret,
       };
     }
 
@@ -233,76 +344,99 @@ export class PairingService {
     userId: string,
     dto: ClaimPairingSessionDto,
   ) {
-    await this.assertWorkspaceAdmin(workspaceId, userId);
-    const code = dto.code.trim();
-    const now = new Date();
+    await this.assertClaimNotLockedOut(userId, workspaceId);
 
-    const result = await this.prisma.$transaction(async (tx) => {
-      const session = await tx.screenPairingSession.findFirst({
-        where: {
-          code,
-          status: ScreenPairingSessionStatus.PENDING,
-          expiresAt: { gt: now },
-        },
+    try {
+      await this.assertWorkspaceAdmin(workspaceId, userId);
+      const code = dto.code.trim();
+      const now = new Date();
+
+      const result = await this.prisma.$transaction(async (tx) => {
+        const session = await tx.screenPairingSession.findFirst({
+          where: {
+            code,
+            status: ScreenPairingSessionStatus.PENDING,
+            expiresAt: { gt: now },
+          },
+        });
+        if (!session) {
+          throw new BadRequestException('INVALID_OR_EXPIRED_PAIRING_CODE');
+        }
+
+        await this.assertWithinScreenLimitTx(tx, workspaceId);
+
+        const serialNumber = await this.makeUniqueSerialTx(tx);
+        const screenName =
+          dto.name?.trim() || `Screen ${serialNumber.slice(-6).toUpperCase()}`;
+
+        const rawScreenSecret = this.makeScreenSecret();
+        const pairingSecretHash = await bcrypt.hash(rawScreenSecret, 12);
+
+        const screen = await tx.screen.create({
+          data: {
+            workspaceId,
+            name: screenName,
+            serialNumber,
+            status: ScreenStatus.OFFLINE,
+            playerPlatform: session.playerPlatform,
+            resolutionWidth: session.resolutionWidth,
+            resolutionHeight: session.resolutionHeight,
+            pairingSecretHash,
+          },
+          select: {
+            id: true,
+            serialNumber: true,
+            name: true,
+            playerPlatform: true,
+            resolutionWidth: true,
+            resolutionHeight: true,
+          },
+        });
+
+        await tx.screenPairingSession.update({
+          where: { id: session.id },
+          data: {
+            status: ScreenPairingSessionStatus.COMPLETE,
+            workspaceId,
+            screenId: screen.id,
+            screenSecretHandoff: rawScreenSecret,
+          },
+        });
+
+        return { session, screen };
       });
-      if (!session) {
-        throw new BadRequestException('INVALID_OR_EXPIRED_PAIRING_CODE');
+
+      await this.clearFailedClaimAttempts(userId);
+
+      const { session, screen } = result;
+      this.heartbeat.emitPairingSessionComplete(session.id, {
+        sessionId: session.id,
+        screenId: screen.id,
+        serialNumber: screen.serialNumber,
+        workspaceId,
+        playerPlatform: screen.playerPlatform,
+        resolutionWidth: screen.resolutionWidth,
+        resolutionHeight: screen.resolutionHeight,
+        at: new Date().toISOString(),
+      });
+
+      return {
+        workspaceId,
+        sessionId: session.id,
+        screen,
+      };
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err);
+      this.logger.warn(
+        `Pairing claim failed userId=${userId} workspaceId=${workspaceId} reason=${reason}`,
+      );
+      if (
+        err instanceof BadRequestException &&
+        reason === 'INVALID_OR_EXPIRED_PAIRING_CODE'
+      ) {
+        await this.recordFailedClaimAttempt(userId, workspaceId);
       }
-
-      await this.assertWithinScreenLimitTx(tx, workspaceId);
-
-      const serialNumber = await this.makeUniqueSerialTx(tx);
-      const screenName =
-        dto.name?.trim() || `Screen ${serialNumber.slice(-6).toUpperCase()}`;
-
-      const screen = await tx.screen.create({
-        data: {
-          workspaceId,
-          name: screenName,
-          serialNumber,
-          status: ScreenStatus.OFFLINE,
-          playerPlatform: session.playerPlatform,
-          resolutionWidth: session.resolutionWidth,
-          resolutionHeight: session.resolutionHeight,
-        },
-        select: {
-          id: true,
-          serialNumber: true,
-          name: true,
-          playerPlatform: true,
-          resolutionWidth: true,
-          resolutionHeight: true,
-        },
-      });
-
-      await tx.screenPairingSession.update({
-        where: { id: session.id },
-        data: {
-          status: ScreenPairingSessionStatus.COMPLETE,
-          workspaceId,
-          screenId: screen.id,
-        },
-      });
-
-      return { session, screen };
-    });
-
-    const { session, screen } = result;
-    this.heartbeat.emitPairingSessionComplete(session.id, {
-      sessionId: session.id,
-      screenId: screen.id,
-      serialNumber: screen.serialNumber,
-      workspaceId,
-      playerPlatform: screen.playerPlatform,
-      resolutionWidth: screen.resolutionWidth,
-      resolutionHeight: screen.resolutionHeight,
-      at: new Date().toISOString(),
-    });
-
-    return {
-      workspaceId,
-      sessionId: session.id,
-      screen,
-    };
+      throw err;
+    }
   }
 }

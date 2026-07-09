@@ -38,10 +38,24 @@ COPY --from=build /repo/package.json /repo/package-lock.json ./
 COPY --from=build /repo/node_modules ./node_modules
 COPY --from=build /repo/apps/dashboard ./apps/dashboard
 
+# Non-root user: if a dependency RCE ever lands, the attacker doesn't get root
+# inside the container.
+RUN addgroup --system --gid 1001 appgroup && \
+    adduser --system --uid 1001 --ingroup appgroup appuser
+
+# Only chown .next (Next.js writes cache there at runtime for ISR / image
+# optimization) — node_modules stays root-owned and world-readable (default
+# from COPY), the app only ever reads it, and `chown -R /repo` would also
+# walk the entire node_modules tree, which is unnecessary and, on Docker
+# Desktop's WSL2 filesystem, extremely slow.
+RUN chown -R appuser:appgroup /repo/apps/dashboard/.next
+
 WORKDIR /repo
 EXPOSE 3000
 
 HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
   CMD curl -fsS "http://127.0.0.1:3000/" >/dev/null || exit 1
+
+USER appuser
 
 CMD ["npm", "run", "start", "-w", "apps/dashboard"]

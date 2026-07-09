@@ -17,7 +17,10 @@ import { PairingService } from '../pairing/pairing.service';
 import { PlayerService } from './player.service';
 
 /**
- * Unauthenticated player endpoints (kiosk). Secured with shared PLAYER_HEARTBEAT_SECRET.
+ * Unauthenticated player endpoints (kiosk). Authenticated by the `x-player-secret`
+ * header: a screen's own secret (Screen.pairingSecretHash), issued once by the
+ * pairing poll below. The shared PLAYER_HEARTBEAT_SECRET is only accepted for
+ * screens created outside the pairing flow, which have no per-screen hash.
  */
 @Controller('player')
 export class PlayerController {

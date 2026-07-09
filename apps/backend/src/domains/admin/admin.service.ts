@@ -13,6 +13,7 @@ import {
   UserSubscriptionStatus,
 } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { fromStorageLimitBytes } from '../../common/product/storage-limit';
 import { AuthService } from '../auth/auth.service';
 import { WorkspacesService } from '../workspaces/workspaces.service';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
@@ -20,15 +21,20 @@ import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { SubscriptionEmailService } from '../email/subscription-email.service';
 import { assertMockBillingAllowed } from '../../common/product/mock-billing';
 import { UpdateAdminUserDto } from './dto/update-admin-user.dto';
-import {
-  appendAuditLog,
-  getAdminSettings,
-  listAuditLogs,
-  updateAdminSettings,
-} from './admin-runtime.store';
+import { getAdminSettings, updateAdminSettings } from './admin-runtime.store';
+import { AuditLogService } from '../../common/audit/audit-log.service';
 import * as bcrypt from 'bcryptjs';
 
 const IDLE_LOGIN_DAYS = 90;
+
+/**
+ * No pagination UI exists yet on these admin list endpoints, so this isn't a
+ * page size — it's a circuit breaker. At real scale (hundreds of customers,
+ * each with many screens) an unbounded findMany() here would return
+ * thousands of rows in one response and risk a timeout; this caps the worst
+ * case without truncating anything at today's realistic data volumes.
+ */
+const ADMIN_LIST_CAP = 1000;
 
 export type CustomerLifecycleStatus =
   | 'active'
@@ -90,6 +96,7 @@ export class AdminService {
     private readonly heartbeat: ScreenHeartbeatService,
     private readonly subscriptionEmail: SubscriptionEmailService,
     private readonly workspaceSubscriptions: SubscriptionsService,
+    private readonly auditLog: AuditLogService,
   ) {}
 
   async listUsers() {
@@ -112,6 +119,7 @@ export class AdminService {
           _count: { select: { memberships: true } },
         },
         orderBy: { createdAt: 'desc' },
+        take: ADMIN_LIST_CAP,
       }),
       this.prisma.workspaceMember.findMany({
         select: { userId: true, workspaceId: true },
@@ -531,6 +539,7 @@ export class AdminService {
     const [workspaces, storageRows] = await Promise.all([
       this.prisma.workspace.findMany({
         orderBy: { createdAt: 'desc' },
+        take: ADMIN_LIST_CAP,
         select: {
           id: true,
           name: true,
@@ -596,6 +605,7 @@ export class AdminService {
   async listGlobalFleetScreens() {
     const rows = await this.prisma.screen.findMany({
       orderBy: [{ workspaceId: 'asc' }, { name: 'asc' }],
+      take: ADMIN_LIST_CAP,
       select: {
         id: true,
         name: true,
@@ -698,7 +708,9 @@ export class AdminService {
       screenStatusGroups.find((g) => g.status === ScreenStatus.MAINTENANCE)
         ?._count._all ?? 0;
     const storageUsedBytes = mediaSizeAgg._sum.sizeBytes ?? 0;
-    const quotaSum = storageQuotaAgg._sum.storageLimitBytes;
+    const quotaSum = fromStorageLimitBytes(
+      storageQuotaAgg._sum.storageLimitBytes,
+    );
     const storageQuotaBytes =
       quotaSum != null && quotaSum > 0 ? quotaSum : null;
     return {
@@ -878,6 +890,7 @@ export class AdminService {
     actorId: string,
     targetUserId: string,
     workspaceId?: string,
+    ipAddress?: string,
   ) {
     const tokens = await this.auth.issueImpersonation(actorId, targetUserId);
     const me = await this.auth.me(targetUserId);
@@ -919,11 +932,11 @@ export class AdminService {
         select: { businessName: true, fullName: true },
       }),
     ]);
-    await appendAuditLog({
+    await this.auditLog.append({
       action: 'IMPERSONATION_START',
       adminName: actor?.fullName ?? actorId,
       targetCustomer: target?.businessName || target?.fullName || targetUserId,
-      ipAddress: 'n/a',
+      ipAddress: ipAddress ?? 'n/a',
     });
 
     return {
@@ -941,7 +954,7 @@ export class AdminService {
   }
 
   async listLogs() {
-    return listAuditLogs();
+    return this.auditLog.list();
   }
 
   async getSettings() {

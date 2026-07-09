@@ -34,17 +34,44 @@ services:
         condition: service_healthy
     ports:
       - "${BACKEND_PORT:-4000}:3000"
+    volumes:
+      - media_uploads:/repo/apps/backend/uploads
+      # admin-runtime.store.ts (audit log + platform settings) and
+      # branding-assets.service.ts (.data/branding/) both write here — without
+      # this volume they're wiped on every `docker compose down`/redeploy,
+      # same failure mode the media_uploads volume above already guards against.
+      - backend_data:/repo/apps/backend/.data
     environment:
       NODE_ENV: production
       PORT: '3000'
       DATABASE_URL: ${DATABASE_URL:-postgresql://cloudsignage:cloudsignage_dev_password@db:5432/cloudsignage?schema=public}
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change-me-in-production}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-me-in-production}
-      PLAYER_HEARTBEAT_SECRET: ${PLAYER_HEARTBEAT_SECRET:-dev-player-heartbeat-secret}
+      # No defaults, deliberately. This service runs with NODE_ENV=production, and
+      # main.ts refuses to start unless each of these is a strong, unique value
+      # (>=32 chars, not a known placeholder, access != refresh). A default here
+      # would either be rejected at boot or — worse — be a real secret committed to
+      # a public repo. Generate them once into `.env` next to this file:
+      #   printf 'JWT_ACCESS_SECRET=%s\nJWT_REFRESH_SECRET=%s\nPLAYER_HEARTBEAT_SECRET=%s\n' \
+      #     "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" >> .env
+      # The ":?" form makes Compose abort with the given message when the var is unset,
+      # so a missing secret fails at `docker compose up`, not at container start.
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set it in .env — run: openssl rand -hex 32}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set it in .env — must differ from JWT_ACCESS_SECRET}
+      PLAYER_HEARTBEAT_SECRET: ${PLAYER_HEARTBEAT_SECRET:?set it in .env — run: openssl rand -hex 32}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
       FRONTEND_ORIGINS: ${FRONTEND_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
-      # Reflect browser Origin (set false behind a reverse proxy with fixed origins)
-      TRUST_DYNAMIC_CORS: ${TRUST_DYNAMIC_CORS:-true}
+      # This service runs with NODE_ENV=production, so main.ts ignores TRUST_DYNAMIC_CORS
+      # entirely and REQUIRES ALLOWED_ORIGINS below — the backend refuses to start without it.
+      # TRUST_DYNAMIC_CORS only has effect when NODE_ENV != production (local `npm run dev`).
+      # Default is the safe one (false) so copying this file into a non-production
+      # override (e.g. a staging compose variant) doesn't silently inherit an
+      # open CORS policy — opt in explicitly per-environment instead.
+      TRUST_DYNAMIC_CORS: ${TRUST_DYNAMIC_CORS:-false}
+      # REQUIRED in production: exact comma-separated allow-list of browser origins permitted
+      # to call this API with credentials (cookies). The default below only works for this
+      # local compose stack (dashboard on localhost:3000) — any real deployment MUST override
+      # this with your real domain(s), e.g.:
+      #   ALLOWED_ORIGINS=https://app.example.com,https://admin.example.com
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
     healthcheck:
       test:
         [
@@ -78,3 +105,7 @@ services:
 
 volumes:
   pgdata:
+  media_uploads:
+    name: cloud_screen_media_uploads
+  backend_data:
+    name: cloud_screen_backend_data

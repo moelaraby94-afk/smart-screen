@@ -77,8 +77,9 @@ export class AuthController {
   async login(
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) response: Response,
+    @Req() request: Request,
   ) {
-    const result = await this.authService.login(dto);
+    const result = await this.authService.login(dto, request.ip);
     setAuthCookies(response, result.accessToken, result.refreshToken);
 
     return {
@@ -137,8 +138,9 @@ export class AuthController {
   async exitImpersonation(
     @CurrentUser() user: JwtUser,
     @Res({ passthrough: true }) response: Response,
+    @Req() request: Request,
   ) {
-    const result = await this.authService.exitImpersonation(user);
+    const result = await this.authService.exitImpersonation(user, request.ip);
     setAuthCookies(response, result.accessToken, result.refreshToken);
     return {
       accessToken: result.accessToken,

@@ -5,10 +5,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { existsSync, mkdirSync, unlinkSync } from 'fs';
-import { copyFile } from 'fs/promises';
-import { join } from 'path';
+import { copyFile, rename, unlink, writeFile } from 'fs/promises';
+import { join, relative } from 'path';
 import { randomUUID } from 'crypto';
 
 const ALLOWED_MIME = new Set([
@@ -22,6 +23,14 @@ const ALLOWED_MIME = new Set([
 ]);
 
 const MAX_BYTES = 150 * 1024 * 1024;
+
+/**
+ * No pagination UI exists yet on the media library, so this isn't a page
+ * size — it's a circuit breaker against an unbounded findMany() once a
+ * workspace accumulates thousands of uploads. take/skip are accepted for
+ * forward compatibility with an eventual "load more" UI.
+ */
+const MEDIA_LIST_CAP = 500;
 
 @Injectable()
 export class MediaService {
@@ -44,9 +53,27 @@ export class MediaService {
     );
   }
 
+  /**
+   * main.ts serves static files from `uploads/` (whole directory) under the
+   * `/media-files/` prefix, but files are actually written under
+   * `uploadRoot` (default `uploads/media/`, overridable via
+   * MEDIA_UPLOAD_DIR). Derive that gap here instead of hardcoding "media" —
+   * this is exactly what drifted out of sync last time.
+   */
   buildPublicUrl(relativePath: string): string {
     const base = this.getPublicBaseUrl().replace(/\/$/, '');
-    const segments = relativePath.split('/').map(encodeURIComponent).join('/');
+    const staticRoot = join(process.cwd(), 'uploads');
+    const uploadRootPrefix = relative(staticRoot, this.uploadRoot).replace(
+      /\\/g,
+      '/',
+    );
+    const fullRelativePath = uploadRootPrefix
+      ? `${uploadRootPrefix}/${relativePath}`
+      : relativePath;
+    const segments = fullRelativePath
+      .split('/')
+      .map(encodeURIComponent)
+      .join('/');
     return `${base}/media-files/${segments}`;
   }
 
@@ -54,6 +81,39 @@ export class MediaService {
     const dir = join(this.uploadRoot, workspaceId);
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     return dir;
+  }
+
+  /**
+   * Serializes the read-then-write quota check per workspace, so two concurrent
+   * uploads cannot both observe the same "used so far" total, both pass, and
+   * jointly land over the limit. The advisory lock is scoped to the transaction
+   * and keyed on the workspace, so other workspaces are never blocked.
+   *
+   * Keep the surrounding transaction short: it must not contain disk I/O (see
+   * `saveUploadedFile`). Prisma's interactive transactions time out after 5s by
+   * default, and this lock is held for the whole transaction.
+   */
+  private async assertWithinStorageQuotaTx(
+    tx: Prisma.TransactionClient,
+    workspaceId: string,
+    additionalBytes: number,
+  ): Promise<void> {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${workspaceId}))`;
+
+    const sub = await tx.subscription.findUnique({
+      where: { workspaceId },
+      select: { storageLimitBytes: true },
+    });
+    if (sub?.storageLimitBytes == null) return;
+
+    const agg = await tx.media.aggregate({
+      where: { workspaceId },
+      _sum: { sizeBytes: true },
+    });
+    const used = BigInt(agg._sum.sizeBytes ?? 0);
+    if (used + BigInt(additionalBytes) > sub.storageLimitBytes) {
+      throw new ForbiddenException('STORAGE_LIMIT_REACHED');
+    }
   }
 
   async saveUploadedFile(params: {
@@ -69,8 +129,32 @@ export class MediaService {
         `Unsupported file type: ${params.mimeType}`,
       );
     }
-    if (params.size > MAX_BYTES) {
+    /** The declared size is client-controlled; the buffer length is not. */
+    const sizeBytes = params.buffer.length;
+    if (sizeBytes > MAX_BYTES) {
       throw new BadRequestException('File exceeds maximum allowed size.');
+    }
+
+    /**
+     * The declared mimeType/extension above are client-controlled and prove
+     * nothing. Sniff the actual magic bytes and only trust that — a text
+     * file renamed to .png must still be rejected here, before anything
+     * touches disk (the upload is buffered in memory by multer, so there is
+     * no temp file to clean up on rejection).
+     *
+     * `file-type` is pure ESM, so it can only be reached from this CommonJS
+     * build through a dynamic import (tsconfig `module: nodenext` preserves it
+     * rather than lowering it to `require`). Jest needs
+     * `--experimental-vm-modules` to execute that import — see the backend's
+     * `test` script.
+     */
+    const { fileTypeFromBuffer } = await import('file-type');
+    const detected = await fileTypeFromBuffer(params.buffer);
+    if (!detected || !ALLOWED_MIME.has(detected.mime)) {
+      throw new BadRequestException(
+        `File content does not match an allowed image/video type ` +
+          `(declared "${params.mimeType}", detected "${detected?.mime ?? 'unrecognized'}").`,
+      );
     }
 
     if (params.folderId) {
@@ -83,49 +167,91 @@ export class MediaService {
       }
     }
 
-    const sub = await this.prisma.subscription.findUnique({
-      where: { workspaceId: params.workspaceId },
-      select: { storageLimitBytes: true },
-    });
-    if (sub?.storageLimitBytes != null) {
-      const agg = await this.prisma.media.aggregate({
-        where: { workspaceId: params.workspaceId },
-        _sum: { sizeBytes: true },
-      });
-      const used = agg._sum.sizeBytes ?? 0;
-      if (used + params.size > sub.storageLimitBytes) {
-        throw new ForbiddenException('STORAGE_LIMIT_REACHED');
-      }
-    }
-
     const dir = this.ensureUploadDir(params.workspaceId);
-    const ext = this.safeExt(params.originalName, params.mimeType);
+    const ext = `.${detected.ext}`;
     const fileName = `${randomUUID()}${ext}`;
     const relativePath = join(params.workspaceId, fileName).replace(/\\/g, '/');
     const absolutePath = join(dir, fileName);
 
-    await import('fs/promises').then((fs) =>
-      fs.writeFile(absolutePath, params.buffer),
-    );
+    /**
+     * The bytes land on disk *before* the transaction opens, under a temporary
+     * name in the destination directory (same filesystem, so the final `rename`
+     * is atomic and cheap).
+     *
+     * Writing inside the transaction instead would hold both the advisory lock
+     * and a Postgres connection for the duration of a disk write of up to
+     * MAX_BYTES — blowing Prisma's 5s interactive-transaction timeout on large
+     * uploads — and a rollback would leave the file behind, since the
+     * filesystem does not participate in the transaction.
+     */
+    const tempPath = `${absolutePath}.part`;
+    await writeFile(tempPath, params.buffer);
 
-    return this.prisma.media.create({
-      data: {
-        workspaceId: params.workspaceId,
-        fileName,
-        originalName: params.originalName,
-        mimeType: params.mimeType,
-        sizeBytes: params.size,
-        relativePath,
-        folderId: params.folderId ?? null,
-      },
+    let created: Awaited<ReturnType<typeof this.prisma.media.create>>;
+    try {
+      created = await this.prisma.$transaction(async (tx) => {
+        await this.assertWithinStorageQuotaTx(
+          tx,
+          params.workspaceId,
+          sizeBytes,
+        );
+        return tx.media.create({
+          data: {
+            workspaceId: params.workspaceId,
+            fileName,
+            originalName: params.originalName,
+            // Store the sniffed, verified type — not the client-supplied header.
+            mimeType: detected.mime,
+            sizeBytes,
+            relativePath,
+            folderId: params.folderId ?? null,
+          },
+        });
+      });
+    } catch (err) {
+      await this.discardTempFile(tempPath);
+      throw err;
+    }
+
+    try {
+      await rename(tempPath, absolutePath);
+    } catch (err) {
+      // The row is committed but its bytes never arrived — undo the row so the
+      // quota total and the library never reference a file that is not there.
+      await this.prisma.media
+        .delete({ where: { id: created.id } })
+        .catch(() => {
+          /* best effort: the row is already orphaned, don't mask the real error */
+        });
+      await this.discardTempFile(tempPath);
+      throw err;
+    }
+
+    return created;
+  }
+
+  private async discardTempFile(tempPath: string): Promise<void> {
+    await unlink(tempPath).catch(() => {
+      /* already gone, or never created */
     });
   }
 
-  async list(workspaceId: string) {
+  async list(workspaceId: string, options?: { take?: number; skip?: number }) {
+    /**
+     * Clamp to [0, cap] — a negative `take` has special "last N" meaning to
+     * Prisma (reverse pagination from the end), which would defeat the cap
+     * entirely if passed through unclamped.
+     */
+    const take = Math.max(
+      0,
+      Math.min(options?.take ?? MEDIA_LIST_CAP, MEDIA_LIST_CAP),
+    );
     const items = await this.prisma.media.findMany({
       where: { workspaceId },
       orderBy: { createdAt: 'desc' },
       include: { folder: true },
+      take,
+      skip: Math.max(0, options?.skip ?? 0),
     });
     return items.map((m) => this.toResponse(m));
   }
@@ -142,6 +268,10 @@ export class MediaService {
   /**
    * Copy a media file into another workspace (new DB row + file on disk).
    * Used when cloning playlists across branches.
+   *
+   * This counts against the *target* workspace's storage quota exactly like a
+   * direct upload does. Skipping the check here would let a workspace exceed
+   * its paid limit simply by cloning playlists between its own branches.
    */
   async duplicateMediaToWorkspace(params: {
     sourceWorkspaceId: string;
@@ -170,20 +300,49 @@ export class MediaService {
     );
     const destAbs = join(dir, fileName);
 
-    await copyFile(srcAbs, destAbs);
+    // Same temp-then-rename ordering as saveUploadedFile: the copy happens
+    // outside the transaction, and only an atomic rename follows the commit.
+    const tempPath = `${destAbs}.part`;
+    await copyFile(srcAbs, tempPath);
 
-    const created = await this.prisma.media.create({
-      data: {
-        workspaceId: params.targetWorkspaceId,
-        fileName,
-        originalName: media.originalName,
-        mimeType: media.mimeType,
-        sizeBytes: media.sizeBytes,
-        relativePath,
-        folderId: null,
-      },
-      select: { id: true },
-    });
+    let created: { id: string };
+    try {
+      created = await this.prisma.$transaction(async (tx) => {
+        await this.assertWithinStorageQuotaTx(
+          tx,
+          params.targetWorkspaceId,
+          media.sizeBytes,
+        );
+        return tx.media.create({
+          data: {
+            workspaceId: params.targetWorkspaceId,
+            fileName,
+            originalName: media.originalName,
+            mimeType: media.mimeType,
+            sizeBytes: media.sizeBytes,
+            relativePath,
+            folderId: null,
+          },
+          select: { id: true },
+        });
+      });
+    } catch (err) {
+      await this.discardTempFile(tempPath);
+      throw err;
+    }
+
+    try {
+      await rename(tempPath, destAbs);
+    } catch (err) {
+      await this.prisma.media
+        .delete({ where: { id: created.id } })
+        .catch(() => {
+          /* best effort */
+        });
+      await this.discardTempFile(tempPath);
+      throw err;
+    }
+
     return created;
   }
 

@@ -12,6 +12,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import * as bcrypt from 'bcryptjs';
 import cookie from 'cookie';
 import type { Server } from 'socket.io';
 import type { Socket } from 'socket.io';
@@ -35,6 +36,8 @@ type PairingWatchPayload = {
 type JwtAccessPayload = {
   sub: string;
   email: string;
+  /** See TokenPayload in auth.service.ts. Absent on pre-`typ` tokens. */
+  typ?: 'access' | 'refresh';
 };
 
 @WebSocketGateway({
@@ -150,16 +153,43 @@ export class RealtimeGateway
     client.emit('player:bound', { screenId: screen.id });
   }
 
+  /**
+   * Validates the per-screen secret against Screen.pairingSecretHash.
+   * Screens paired before per-screen secrets existed have no hash yet — for
+   * those only, fall back to the shared PLAYER_HEARTBEAT_SECRET and log a
+   * warning, so the fallback's usage stays visible until every screen has
+   * been re-paired and it can be retired.
+   */
+  private async assertScreenSecret(
+    screen: {
+      id: string;
+      serialNumber: string;
+      pairingSecretHash: string | null;
+    },
+    secret: string,
+  ): Promise<boolean> {
+    if (screen.pairingSecretHash) {
+      return bcrypt.compare(secret, screen.pairingSecretHash);
+    }
+    const sharedSecret = this.configService.get<string>(
+      'PLAYER_HEARTBEAT_SECRET',
+      'dev-player-heartbeat-secret',
+    );
+    if (secret !== sharedSecret) return false;
+    this.log.warn(
+      `Screen ${screen.serialNumber} (${screen.id}) authenticated via the ` +
+        'shared PLAYER_HEARTBEAT_SECRET fallback (no per-screen secret set). ' +
+        'Re-pair this screen to retire the shared-secret fallback.',
+    );
+    return true;
+  }
+
   @SubscribeMessage('screen:register')
   async handleScreenRegister(
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: ScreenRegisterPayload,
   ): Promise<void> {
-    const expected = this.configService.get<string>(
-      'PLAYER_HEARTBEAT_SECRET',
-      'dev-player-heartbeat-secret',
-    );
-    if (!payload?.serialNumber || payload.secret !== expected) {
+    if (!payload?.serialNumber || !payload.secret) {
       client.emit('screen:error', { code: 'UNAUTHORIZED' });
       client.disconnect(true);
       return;
@@ -172,11 +202,19 @@ export class RealtimeGateway
         workspaceId: true,
         serialNumber: true,
         playerTicker: true,
+        pairingSecretHash: true,
       },
     });
 
     if (!screen) {
       client.emit('screen:error', { code: 'SCREEN_NOT_FOUND' });
+      return;
+    }
+
+    const authorized = await this.assertScreenSecret(screen, payload.secret);
+    if (!authorized) {
+      client.emit('screen:error', { code: 'UNAUTHORIZED' });
+      client.disconnect(true);
       return;
     }
 
@@ -336,23 +374,25 @@ export class RealtimeGateway
       'JWT_ACCESS_SECRET',
       'dev-access-secret',
     );
-    const authToken = client.handshake.auth?.token as string | undefined;
-    if (authToken) {
+
+    /** Mirrors JwtStrategy.validate: a refresh token is not a socket credential. */
+    const verifyAccessToken = (token: string): JwtAccessPayload | null => {
       try {
-        return this.jwtService.verify<JwtAccessPayload>(authToken, { secret });
+        const payload = this.jwtService.verify<JwtAccessPayload>(token, {
+          secret,
+        });
+        return payload.typ === 'refresh' ? null : payload;
       } catch {
         return null;
       }
-    }
+    };
+
+    const authToken = client.handshake.auth?.token as string | undefined;
+    if (authToken) return verifyAccessToken(authToken);
+
     const raw = client.handshake.headers.cookie;
     if (!raw) return null;
-    const parsed = cookie.parse(raw);
-    const token = parsed.cs_access_token;
-    if (!token) return null;
-    try {
-      return this.jwtService.verify<JwtAccessPayload>(token, { secret });
-    } catch {
-      return null;
-    }
+    const token = cookie.parse(raw).cs_access_token;
+    return token ? verifyAccessToken(token) : null;
   }
 }

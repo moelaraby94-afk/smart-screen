@@ -1,10 +1,12 @@
 import {
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import type { JwtUser } from '../../common/auth/current-user.decorator';
 import { CanvasesService } from '../canvases/canvases.service';
@@ -12,6 +14,8 @@ import { PlaylistsService } from '../playlists/playlists.service';
 
 @Injectable()
 export class PlayerService {
+  private readonly logger = new Logger(PlayerService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
@@ -19,14 +23,43 @@ export class PlayerService {
     private readonly canvases: CanvasesService,
   ) {}
 
-  private assertPlayerSecret(secret: string | undefined): void {
-    const expected = this.config.get<string>(
+  /**
+   * Validates the per-screen secret against Screen.pairingSecretHash.
+   * Screens paired before per-screen secrets existed have no hash yet —
+   * for those only, fall back to the shared PLAYER_HEARTBEAT_SECRET and log
+   * a warning, so the fallback's usage stays visible until every screen has
+   * been re-paired and it can be retired.
+   */
+  private async assertPlayerSecretForScreen(
+    screen: {
+      id: string;
+      serialNumber: string;
+      pairingSecretHash: string | null;
+    },
+    secret: string | undefined,
+  ): Promise<void> {
+    if (!secret) {
+      throw new UnauthorizedException('Invalid player credentials');
+    }
+    if (screen.pairingSecretHash) {
+      const isValid = await bcrypt.compare(secret, screen.pairingSecretHash);
+      if (!isValid) {
+        throw new UnauthorizedException('Invalid player credentials');
+      }
+      return;
+    }
+    const sharedSecret = this.config.get<string>(
       'PLAYER_HEARTBEAT_SECRET',
       'dev-player-heartbeat-secret',
     );
-    if (!secret || secret !== expected) {
+    if (secret !== sharedSecret) {
       throw new UnauthorizedException('Invalid player credentials');
     }
+    this.logger.warn(
+      `Screen ${screen.serialNumber} (${screen.id}) authenticated via the ` +
+        'shared PLAYER_HEARTBEAT_SECRET fallback (no per-screen secret set). ' +
+        'Re-pair this screen to retire the shared-secret fallback.',
+    );
   }
 
   /**
@@ -36,7 +69,6 @@ export class PlayerService {
     serialNumber: string | undefined,
     secret: string | undefined,
   ) {
-    this.assertPlayerSecret(secret);
     if (!serialNumber?.trim()) {
       throw new NotFoundException('serialNumber is required');
     }
@@ -48,12 +80,14 @@ export class PlayerService {
         serialNumber: true,
         workspaceId: true,
         playerTicker: true,
+        pairingSecretHash: true,
         workspace: { select: { isPaused: true, name: true } },
       },
     });
     if (!screen) {
       throw new NotFoundException('Screen not found');
     }
+    await this.assertPlayerSecretForScreen(screen, secret);
     if (screen.workspace.isPaused) {
       throw new ForbiddenException('Workspace is paused');
     }
@@ -86,7 +120,6 @@ export class PlayerService {
     secret: string | undefined,
     canvasId: string,
   ) {
-    this.assertPlayerSecret(secret);
     if (!serialNumber?.trim()) {
       throw new NotFoundException('serialNumber is required');
     }
@@ -94,13 +127,17 @@ export class PlayerService {
     const screen = await this.prisma.screen.findFirst({
       where: { serialNumber: serialNumber.trim() },
       select: {
+        id: true,
+        serialNumber: true,
         workspaceId: true,
+        pairingSecretHash: true,
         workspace: { select: { isPaused: true } },
       },
     });
     if (!screen) {
       throw new NotFoundException('Screen not found');
     }
+    await this.assertPlayerSecretForScreen(screen, secret);
     if (screen.workspace.isPaused) {
       throw new ForbiddenException('Workspace is paused');
     }

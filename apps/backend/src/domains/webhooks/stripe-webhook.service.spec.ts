@@ -9,7 +9,11 @@ import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 jest.mock('stripe', () => ({
   __esModule: true,
   default: class StripeMock {
-    static webhooks = { constructEvent: jest.fn() };
+    // Annotated explicitly: without it the type is inferred through the mocked
+    // module back into itself (TS7022 circular inference).
+    static webhooks: { constructEvent: jest.Mock } = {
+      constructEvent: jest.fn(),
+    };
   },
 }));
 

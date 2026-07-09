@@ -56,8 +56,28 @@ Set `NEXT_PUBLIC_API_BASE_URL` to the URL **browsers** use to reach the API. Kee
 
 ## Backups
 
-- Schedule logical dumps of the Postgres database (e.g. `pg_dump`) and test restore quarterly.
-- Store uploads volume / `uploads` directory if used on disk.
+`scripts/backup.sh` captures everything that cannot be rebuilt from the repo:
+
+1. **Postgres** (`pg_dump`) — users, workspaces, subscriptions, screens, playlists, audit log
+2. **`cloud_screen_media_uploads`** volume — customer-uploaded images/video
+3. **`cloud_screen_backend_data`** volume — `.data/` (platform settings, branding assets)
+
+```bash
+./scripts/backup.sh                      # -> ./backups/{db,uploads,backend-data}-<stamp>.*
+RETENTION_DAYS=14 ./scripts/backup.sh    # also prune archives older than 14 days
+```
+
+Schedule it daily, e.g. `0 3 * * * cd /srv/cloud-screen && RETENTION_DAYS=14 ./scripts/backup.sh >> /var/log/cs-backup.log 2>&1`.
+
+Restore with `scripts/restore.sh` (destructive — the dump is taken with `--clean`):
+
+```bash
+./scripts/restore.sh backups/db-<stamp>.sql.gz backups/uploads-<stamp>.tar.gz backups/backend-data-<stamp>.tar.gz
+docker compose restart backend
+```
+
+**Test the restore on a scratch stack quarterly.** A backup that has never been
+replayed is an assumption, not a backup.
 
 ## Optional monitoring
 

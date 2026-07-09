@@ -59,8 +59,17 @@ export class MediaController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get()
-  list(@Query('workspaceId') workspaceId: string) {
-    return this.mediaService.list(workspaceId);
+  list(
+    @Query('workspaceId') workspaceId: string,
+    @Query('take') take?: string,
+    @Query('skip') skip?: string,
+  ) {
+    const parsedTake = take !== undefined ? Number(take) : undefined;
+    const parsedSkip = skip !== undefined ? Number(skip) : undefined;
+    return this.mediaService.list(workspaceId, {
+      take: Number.isFinite(parsedTake) ? parsedTake : undefined,
+      skip: Number.isFinite(parsedSkip) ? parsedSkip : undefined,
+    });
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)

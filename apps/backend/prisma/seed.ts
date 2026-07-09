@@ -1,5 +1,5 @@
 import * as bcrypt from 'bcryptjs';
-import { randomUUID } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import { mkdirSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -18,9 +18,31 @@ if (!databaseUrl) {
   throw new Error('DATABASE_URL is required for prisma db seed');
 }
 
+/**
+ * Local-dev/demo data only — never a production setup step. Same
+ * refuse-unless-explicitly-unlocked pattern as ENABLE_DEV_LOGIN /
+ * ENABLE_MOCK_BILLING (see auth.controller.ts / mock-billing.ts).
+ */
+if (
+  process.env.NODE_ENV === 'production' &&
+  process.env.ENABLE_DB_SEED !== 'true'
+) {
+  throw new Error(
+    'Refusing to run prisma/seed.ts with NODE_ENV=production. This script ' +
+      'wipes and recreates demo accounts (Super Admin + demo client) and is ' +
+      'meant for local development only. Set ENABLE_DB_SEED=true if you ' +
+      'really intend to seed this environment.',
+  );
+}
+
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: databaseUrl }),
 });
+
+/** 12-char URL-safe random password, generated fresh on every seed run. */
+function generateSeedPassword(): string {
+  return randomBytes(9).toString('base64url');
+}
 
 const CLIENT_WORKSPACE_NAME = 'My First Client Branch';
 const SCREEN_A = 'CS-CLIENT-LOBBY-001';
@@ -100,8 +122,10 @@ async function main() {
   wipeUploadsDir();
   await wipeSeedAccounts();
 
-  const passwordSuper = await bcrypt.hash('admin', 12);
-  const passwordClient = await bcrypt.hash('123', 12);
+  const rawPasswordSuper = generateSeedPassword();
+  const rawPasswordClient = generateSeedPassword();
+  const passwordSuper = await bcrypt.hash(rawPasswordSuper, 12);
+  const passwordClient = await bcrypt.hash(rawPasswordClient, 12);
 
   const admin2SubEnd = new Date();
   admin2SubEnd.setDate(admin2SubEnd.getDate() + 30);
@@ -264,10 +288,14 @@ async function main() {
   });
 
   console.log(
-    `Atomic seed OK — Super Admin: ${SEED_ADMIN_EMAIL} / admin (id ${admin.id}) · platformStaffRole=SUPER_ADMIN`,
+    'Generated passwords are shown ONCE below — they are not stored in ' +
+      'plaintext anywhere and cannot be recovered later. Save them now.',
   );
   console.log(
-    `Client Admin: ${SEED_CLIENT_EMAIL} / 123 (id ${admin2.id}) · platformStaffRole=null · workspace "${CLIENT_WORKSPACE_NAME}" (${wsId})`,
+    `Atomic seed OK — Super Admin: ${SEED_ADMIN_EMAIL} / ${rawPasswordSuper} (id ${admin.id}) · platformStaffRole=SUPER_ADMIN`,
+  );
+  console.log(
+    `Client Admin: ${SEED_CLIENT_EMAIL} / ${rawPasswordClient} (id ${admin2.id}) · platformStaffRole=null · workspace "${CLIENT_WORKSPACE_NAME}" (${wsId})`,
   );
   console.log(
     `Demo content: ${DEMO_MEDIA.length} media · 2 screens (${SCREEN_A}, ${SCREEN_B}) · playlist "${PLAYLIST_NAME}".`,

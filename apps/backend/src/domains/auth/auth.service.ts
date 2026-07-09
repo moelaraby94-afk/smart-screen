@@ -15,7 +15,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { WorkspacesService } from '../workspaces/workspaces.service';
-import { appendAuditLog } from '../admin/admin-runtime.store';
+import { AuditLogService } from '../../common/audit/audit-log.service';
 import { EmailService } from '../email/email.service';
 import { passwordResetEmail, registerOtpEmail } from '../email/email-templates';
 import { LoginDto } from './dto/login.dto';
@@ -28,6 +28,15 @@ type TokenPayload = {
   sub: string;
   email: string;
   impersonatedBy?: string;
+  /**
+   * Access and refresh tokens carry identical claims and are distinguished only
+   * by their signing key. If those keys are ever misconfigured to the same
+   * value, a long-lived refresh token would be accepted as a Bearer access
+   * token. This claim keeps the two apart regardless of key configuration.
+   * Absent on tokens minted before this claim existed — those are still
+   * accepted so a deploy does not sign every user out.
+   */
+  typ?: 'access' | 'refresh';
 };
 
 type TokenPair = {
@@ -48,6 +57,7 @@ export class AuthService {
     private readonly email: EmailService,
     @Inject(forwardRef(() => WorkspacesService))
     private readonly workspaces: WorkspacesService,
+    private readonly auditLog: AuditLogService,
   ) {
     this.accessExpiresIn = this.parseDurationToSeconds(
       this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m'),
@@ -270,7 +280,7 @@ export class AuthService {
     return { ok: true };
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, ipAddress?: string) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email.toLowerCase() },
       select: {
@@ -316,11 +326,11 @@ export class AuthService {
 
     if (isSuperAdmin) {
       try {
-        await appendAuditLog({
+        await this.auditLog.append({
           action: 'Super Admin Logged In',
           adminName: user.fullName,
           targetCustomer: '—',
-          ipAddress: 'n/a',
+          ipAddress: ipAddress ?? 'n/a',
         });
       } catch (err) {
         this.logger.error(
@@ -437,6 +447,10 @@ export class AuthService {
           secret: refreshSecret,
         },
       );
+      // Reject an access token presented here, even if both keys are the same.
+      if (decoded.typ === 'access') {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
       userId = decoded.sub;
       impersonatedByFromRefresh = decoded.impersonatedBy;
     } catch {
@@ -519,7 +533,10 @@ export class AuthService {
     };
   }
 
-  async exitImpersonation(jwtUser: { sub: string; impersonatedBy?: string }) {
+  async exitImpersonation(
+    jwtUser: { sub: string; impersonatedBy?: string },
+    ipAddress?: string,
+  ) {
     const superAdminId = jwtUser.impersonatedBy;
     if (!superAdminId) throw new ForbiddenException('Not impersonating');
 
@@ -549,11 +566,11 @@ export class AuthService {
       true,
     );
 
-    await appendAuditLog({
+    await this.auditLog.append({
       action: 'IMPERSONATION_END',
       adminName: superAdmin.fullName,
       targetCustomer: jwtUser.sub,
-      ipAddress: 'n/a',
+      ipAddress: ipAddress ?? 'n/a',
     });
 
     return {
@@ -695,14 +712,20 @@ export class AuthService {
     };
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(tokenPayload, {
-        secret: accessSecret,
-        expiresIn: this.accessExpiresIn,
-      }),
-      this.jwtService.signAsync(tokenPayload, {
-        secret: refreshSecret,
-        expiresIn: this.refreshExpiresIn,
-      }),
+      this.jwtService.signAsync(
+        { ...tokenPayload, typ: 'access' },
+        {
+          secret: accessSecret,
+          expiresIn: this.accessExpiresIn,
+        },
+      ),
+      this.jwtService.signAsync(
+        { ...tokenPayload, typ: 'refresh' },
+        {
+          secret: refreshSecret,
+          expiresIn: this.refreshExpiresIn,
+        },
+      ),
     ]);
 
     return { accessToken, refreshToken };

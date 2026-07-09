@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
 import { SentryModule } from '@sentry/nestjs/setup';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ConfigModule } from '@nestjs/config';
+import { AllExceptionsFilter } from './common/errors/all-exceptions.filter';
 import { CsrfModule } from './common/csrf/csrf.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { AuthModule } from './domains/auth/auth.module';
@@ -49,5 +51,6 @@ import { EmailModule } from './domains/email/email.module';
     WebhooksModule,
     MaintenanceModule,
   ],
+  providers: [{ provide: APP_FILTER, useClass: AllExceptionsFilter }],
 })
 export class AppModule {}

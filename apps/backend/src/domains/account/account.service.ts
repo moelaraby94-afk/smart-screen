@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { randomInt } from 'crypto';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { fromStorageLimitBytes } from '../../common/product/storage-limit';
 import { EmailService } from '../email/email.service';
 import { emailChangeOtpEmail } from '../email/email-templates';
 
@@ -248,7 +249,9 @@ export class AccountService {
                 status: m.workspace.subscription.status,
                 seats: m.workspace.subscription.seats,
                 screenLimit: m.workspace.subscription.screenLimit,
-                storageLimitBytes: m.workspace.subscription.storageLimitBytes,
+                storageLimitBytes: fromStorageLimitBytes(
+                  m.workspace.subscription.storageLimitBytes,
+                ),
                 currentPeriodEnd:
                   m.workspace.subscription.currentPeriodEnd?.toISOString() ??
                   null,

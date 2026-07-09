@@ -9,12 +9,14 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/auth/roles.guard';
 import { Roles } from '../../common/auth/roles.decorator';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import type { JwtUser } from '../../common/auth/current-user.decorator';
+import { UserThrottlerGuard } from '../../common/throttler/user-throttler.guard';
 import { ClaimPairingSessionDto } from '../pairing/dto/claim-pairing-session.dto';
 import { PairingService } from '../pairing/pairing.service';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
@@ -89,8 +91,9 @@ export class WorkspacesController {
     return this.workspaces.inviteDemo(workspaceId, dto.email, dto.role);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, UserThrottlerGuard, RolesGuard)
   @Roles(UserRole.OWNER, UserRole.ADMIN)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post(':workspaceId/pairing-sessions/claim')
   claimPairingSession(
     @Param('workspaceId') workspaceId: string,

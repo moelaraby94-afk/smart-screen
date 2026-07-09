@@ -203,6 +203,8 @@ model User {
 
   payments         PaymentRecord[]
 
+  pairingClaimLockout PairingClaimLockout?
+
 }
 
 
@@ -342,6 +344,12 @@ model Screen {
 
   resolutionHeight Int            @default(1080)
 
+  /// Hash (bcrypt) of a per-screen secret generated at pairing time. Replaces
+  /// the shared PLAYER_HEARTBEAT_SECRET for screens paired after this was
+  /// introduced. Null for screens paired before it existed — those fall back
+  /// to the shared secret (see player.service.ts / realtime.gateway.ts).
+  pairingSecretHash String?
+
   createdAt        DateTime     @default(now())
 
   updatedAt        DateTime     @updatedAt
@@ -392,6 +400,10 @@ model ScreenPairingSession {
 
   resolutionHeight Int            @default(1080)
 
+  /// Plaintext per-screen secret staged at claim time, delivered exactly
+  /// once via the first COMPLETE pollSession response, then cleared to null.
+  screenSecretHandoff String?
+
   expiresAt   DateTime
 
   createdAt   DateTime @default(now())
@@ -405,6 +417,35 @@ model ScreenPairingSession {
   @@index([status, expiresAt])
 
   @@index([workspaceId, status])
+
+}
+
+
+
+/// Per-user brute-force lockout for ScreenPairingSession.code claim guesses (POST
+/// :workspaceId/pairing-sessions/claim). Keyed by userId (not IP) since the endpoint
+/// already requires a JWT. Independent of, and stricter than, the per-minute ThrottlerGuard
+/// on the same route.
+model PairingClaimLockout {
+
+  id            String   @id @default(cuid())
+
+  userId        String   @unique
+
+  /// Wrong-code claim attempts within the current window (see windowStartAt).
+  failedCount   Int      @default(0)
+
+  /// Start of the current 10-minute failure-counting window; failures outside it reset the counter.
+  windowStartAt DateTime
+
+  /// Set once failedCount reaches the threshold; claim attempts are rejected while this is in the future.
+  lockedUntil   DateTime?
+
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([lockedUntil])
 
 }
 
@@ -663,8 +704,9 @@ model Subscription {
   screenLimit      Int                @default(1)
 
   /// Null = no workspace storage quota (legacy). When set, media uploads should sum to this cap.
+  /// BigInt (Postgres BIGINT): multi-GB quotas overflow a 32-bit Int (max ~2.1GB).
 
-  storageLimitBytes Int?
+  storageLimitBytes BigInt?
 
   startedAt        DateTime           @default(now())
 
@@ -684,3 +726,29 @@ model Subscription {
 
 }
 
+
+/// Cross-tenant audit trail (impersonation, privileged logins).
+/// Lives in Postgres rather than a JSON file: the previous file-backed store did
+/// read-modify-write with no locking, so concurrent appends silently dropped
+/// entries — the one record type that must never be lost.
+model AuditLog {
+
+  id             String   @id @default(cuid())
+
+  /// Machine-readable event name, e.g. "IMPERSONATE_USER".
+  action         String
+
+  /// Display name of the acting staff member at the time of the event.
+  adminName      String
+
+  /// Display name of the affected customer at the time of the event.
+  targetCustomer String
+
+  /// Real client IP as seen by the API, or "n/a" when the caller had no request context.
+  ipAddress      String
+
+  createdAt      DateTime @default(now())
+
+  @@index([createdAt])
+
+}

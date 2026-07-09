@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
-import { setPersistedKioskSerial } from '@/lib/auth-session';
+import {
+  setPersistedKioskSerial,
+  setPersistedScreenSecret,
+} from '@/lib/auth-session';
+import { interpretPollResult } from '@/lib/pairing-handoff';
 import {
   pollPlayerPairingSession,
   startPlayerPairingSession,
@@ -23,10 +27,14 @@ export function PlayerPairingWait() {
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const sessionRef = useRef<{ sessionId: string; pollSecret: string } | null>(null);
   const doneRef = useRef(false);
+  /** Single-flight guard: the screen secret is handed off to exactly one poll. */
+  const pollInFlightRef = useRef(false);
 
-  const finish = useCallback((serial: string) => {
+  const finish = useCallback((serial: string, screenSecret: string) => {
     if (doneRef.current) return;
     doneRef.current = true;
+    // Persist before reloading — this secret exists nowhere else.
+    setPersistedScreenSecret(screenSecret);
     setPersistedKioskSerial(serial);
     window.location.reload();
   }, []);
@@ -64,19 +72,24 @@ export function PlayerPairingWait() {
     const { sessionId, pollSecret } = sessionRef.current;
 
     const runPoll = async () => {
-      if (doneRef.current) return;
+      if (doneRef.current || pollInFlightRef.current) return;
+      pollInFlightRef.current = true;
       try {
-        const r = await pollPlayerPairingSession(sessionId, pollSecret);
-        if (r.status === 'complete' && r.serialNumber) {
-          finish(r.serialNumber);
+        const outcome = interpretPollResult(
+          await pollPlayerPairingSession(sessionId, pollSecret),
+        );
+        if (outcome.kind === 'paired') {
+          finish(outcome.serialNumber, outcome.screenSecret);
           return;
         }
-        if (r.status === 'expired' || r.status === 'cancelled') {
-          setError('Pairing code expired. Refresh to try again.');
+        if (outcome.kind === 'failed') {
+          setError(outcome.reason);
           setPhase('error');
         }
       } catch {
-        /* keep polling */
+        /* transient network error — keep polling */
+      } finally {
+        pollInFlightRef.current = false;
       }
     };
 
@@ -100,8 +113,13 @@ export function PlayerPairingWait() {
     socket.on('connect', onConnect);
     if (socket.connected) onConnect();
 
-    socket.on('pairing:complete', (payload: { serialNumber?: string }) => {
-      if (payload?.serialNumber) finish(payload.serialNumber);
+    /**
+     * The broadcast carries no secret (it fans out to a room), so it can only
+     * be a hint to poll immediately rather than wait out the interval — the
+     * authenticated poll is the sole channel that can deliver the handoff.
+     */
+    socket.on('pairing:complete', () => {
+      void runPoll();
     });
 
     return () => {

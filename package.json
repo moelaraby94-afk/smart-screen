@@ -14,7 +14,8 @@
     "dev:fresh": "npm run clean && npm run dev",
     "build": "npm run build -w apps/dashboard && npm run build -w apps/backend && npm run build -w apps/player",
     "lint": "npm run lint -w apps/dashboard && npm run lint -w apps/backend && npm run lint -w apps/player",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test": "npm run test -w apps/backend && npm run test -w apps/player"
   },
   "private": true,
   "workspaces": [

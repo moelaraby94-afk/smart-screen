@@ -1,15 +1,12 @@
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 
-export type AdminAuditLogItem = {
-  id: string;
-  action: string;
-  adminName: string;
-  targetCustomer: string;
-  ipAddress: string;
-  timestamp: string;
-};
-
+/**
+ * Platform settings only. The audit log used to live here too, appended with a
+ * read-modify-write of this whole file under no lock — concurrent events
+ * dropped each other. It now lives in Postgres; see
+ * `common/audit/audit-log.service.ts`.
+ */
 export type AdminGlobalSettings = {
   platformName: string;
   supportEmail: string;
@@ -29,7 +26,6 @@ export type AdminGlobalSettings = {
 };
 
 type AdminRuntimeData = {
-  logs: AdminAuditLogItem[];
   settings: AdminGlobalSettings;
 };
 
@@ -37,7 +33,6 @@ const DATA_DIR = join(process.cwd(), '.data');
 const DATA_FILE = join(DATA_DIR, 'admin-runtime.json');
 
 const DEFAULT_DATA: AdminRuntimeData = {
-  logs: [],
   settings: {
     platformName: 'Cloud Signage',
     supportEmail: 'support@cloudsignage.local',
@@ -102,11 +97,10 @@ async function readData(): Promise<AdminRuntimeData> {
   await ensureDataFile();
   try {
     const raw = await readFile(DATA_FILE, 'utf-8');
-    const parsed = JSON.parse(raw) as AdminRuntimeData;
-    return {
-      logs: Array.isArray(parsed.logs) ? parsed.logs : [],
-      settings: normalizeSettings(parsed.settings),
-    };
+    const parsed = JSON.parse(raw) as Partial<AdminRuntimeData>;
+    // A `logs` key may still be present in files written before the audit log
+    // moved to Postgres. It is ignored, and dropped on the next write.
+    return { settings: normalizeSettings(parsed.settings) };
   } catch {
     return DEFAULT_DATA;
   }
@@ -115,24 +109,6 @@ async function readData(): Promise<AdminRuntimeData> {
 async function writeData(data: AdminRuntimeData): Promise<void> {
   await ensureDataFile();
   await writeFile(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
-}
-
-export async function appendAuditLog(
-  input: Omit<AdminAuditLogItem, 'id' | 'timestamp'>,
-): Promise<void> {
-  const data = await readData();
-  data.logs.unshift({
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-    timestamp: new Date().toISOString(),
-    ...input,
-  });
-  data.logs = data.logs.slice(0, 1000);
-  await writeData(data);
-}
-
-export async function listAuditLogs(): Promise<AdminAuditLogItem[]> {
-  const data = await readData();
-  return data.logs;
 }
 
 export async function getAdminSettings(): Promise<AdminGlobalSettings> {

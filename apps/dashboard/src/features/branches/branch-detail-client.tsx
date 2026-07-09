@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
 import { useParams } from 'next/navigation';
@@ -47,13 +47,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  apiFetch,
-  parseScreenLimitFromApiMessage,
-  readApiErrorMessage,
-} from '@/features/auth/session';
+import { apiFetch, readApiErrorMessage } from '@/features/auth/session';
 import { useWorkspace } from '@/features/workspace/workspace-context';
-import { type MediaItem } from '@/features/media/media-library-client';
 import { CreateScreenDialog } from '@/features/branches/create-screen-dialog';
 import { BranchWorkspaceToolbar, type BranchTab } from '@/features/branches/branch-workspace-toolbar';
 import { ScreenQuickEditPanel } from '@/features/screens/screen-quick-edit-panel';
@@ -62,16 +57,11 @@ import { type ScreenRow, useApiScreens } from '@/features/screens/useApiScreens'
 import { useShellHeaderInsetSetter } from '@/components/layout/shell-header-inset-context';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
-
-export type BranchPlaylistRow = {
-  id: string;
-  workspaceId: string;
-  name: string;
-  isPublished: boolean;
-  createdAt: string;
-  updatedAt: string;
-  _count: { items: number; screensInGroup: number };
-};
+import { computeBranchScreenStats, computeOnlineByPlaylistId } from '@/features/branches/branch-stats';
+import { useBranchMedia } from '@/features/branches/use-branch-media';
+import { type BranchPlaylistRow, useBranchPlaylists } from '@/features/branches/use-branch-playlists';
+import { useScreenPlaybackAssignment } from '@/features/branches/use-screen-playback-assignment';
+import { usePlayerPairing } from '@/features/branches/use-player-pairing';
 
 type Props = {
   locale: string;
@@ -88,7 +78,6 @@ export function BranchDetailClient({ locale }: Props) {
     bumpWorkspaceDataEpoch,
     pairingActivityEpoch,
   } = useWorkspace();
-  const pairingModalBaseEpochRef = useRef(0);
   const branch = useMemo(
     () => workspaces.find((w) => w.id === workspaceIdParam),
     [workspaces, workspaceIdParam],
@@ -98,37 +87,35 @@ export function BranchDetailClient({ locale }: Props) {
     workspaceIdParam || null,
   );
 
-  const [playlists, setPlaylists] = useState<BranchPlaylistRow[]>([]);
-  const [playlistsLoading, setPlaylistsLoading] = useState(true);
+  const branchPlaylists = useBranchPlaylists(workspaceIdParam, bumpWorkspaceDataEpoch);
+  const branchMedia = useBranchMedia(workspaceIdParam);
+  const screenAssignment = useScreenPlaybackAssignment(
+    workspaceIdParam,
+    setScreens,
+    branchPlaylists.playlists,
+    bumpWorkspaceDataEpoch,
+  );
+
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState('');
-  const [creating, setCreating] = useState(false);
   const [screenDialogOpen, setScreenDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<BranchTab>('playlists');
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
-  const [mediaLoading, setMediaLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [editScreen, setEditScreen] = useState<ScreenRow | null>(null);
-  const [pairingModalOpen, setPairingModalOpen] = useState(false);
-  const [playerPairCode, setPlayerPairCode] = useState('');
-  const [playerPairName, setPlayerPairName] = useState('');
-  const [playerPairBusy, setPlayerPairBusy] = useState(false);
-  const [pairingClaimError, setPairingClaimError] = useState<string | null>(null);
-  const [pairingLinkSuccess, setPairingLinkSuccess] = useState(false);
-  const pairingSuccessTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [playlistToDelete, setPlaylistToDelete] = useState<BranchPlaylistRow | null>(null);
   const [playlistToMove, setPlaylistToMove] = useState<BranchPlaylistRow | null>(null);
   const [moveTargetId, setMoveTargetId] = useState('');
-  const [moveBusy, setMoveBusy] = useState(false);
-  const [deletePlaylistBusy, setDeletePlaylistBusy] = useState(false);
   const [playlistDeleteForce, setPlaylistDeleteForce] = useState(false);
-  const [duplicatePlaylistBusyId, setDuplicatePlaylistBusyId] = useState<string | null>(null);
   const [playlistEditOpen, setPlaylistEditOpen] = useState(false);
   const [playlistToEdit, setPlaylistToEdit] = useState<BranchPlaylistRow | null>(null);
   const [editPlaylistName, setEditPlaylistName] = useState('');
   const [editPlaylistPublished, setEditPlaylistPublished] = useState(false);
-  const [editPlaylistSaving, setEditPlaylistSaving] = useState(false);
-  const [assignPlaybackScreenId, setAssignPlaybackScreenId] = useState<string | null>(null);
+
+  const canDeletePlaylist = Boolean(
+    branch && (branch.role === 'OWNER' || branch.role === 'ADMIN'),
+  );
+  const canClaimPlayerPairing = canDeletePlaylist;
+  const canEditPlaylist = Boolean(branch && branch.role !== 'VIEWER');
 
   useEffect(() => {
     if (workspaceIdParam) {
@@ -137,88 +124,14 @@ export function BranchDetailClient({ locale }: Props) {
     }
   }, [workspaceIdParam, setWorkspaceId, bumpWorkspaceDataEpoch]);
 
-  const loadPlaylists = useCallback(async () => {
-    if (!workspaceIdParam) {
-      setPlaylists([]);
-      setPlaylistsLoading(false);
-      return;
-    }
-    setPlaylistsLoading(true);
-    const res = await apiFetch(`/playlists?workspaceId=${encodeURIComponent(workspaceIdParam)}`);
-    if (res.ok) {
-      const data = (await res.json()) as BranchPlaylistRow[];
-      setPlaylists(
-        Array.isArray(data)
-          ? data.map((p) => ({
-              ...p,
-              isPublished: p.isPublished === true,
-            }))
-          : [],
-      );
-    } else {
-      setPlaylists([]);
-      if (res.status !== 401) {
-        toast.error(await readApiErrorMessage(res));
-      }
-    }
-    setPlaylistsLoading(false);
-  }, [workspaceIdParam]);
-
-  useEffect(() => {
-    void loadPlaylists();
-  }, [loadPlaylists]);
-
-  const loadMedia = useCallback(async () => {
-    if (!workspaceIdParam) {
-      setMediaItems([]);
-      setMediaLoading(false);
-      return;
-    }
-    setMediaLoading(true);
-    const res = await apiFetch(`/media?workspaceId=${encodeURIComponent(workspaceIdParam)}`);
-    if (res.ok) {
-      const data = (await res.json()) as MediaItem[];
-      setMediaItems(Array.isArray(data) ? data : []);
-    } else {
-      setMediaItems([]);
-    }
-    setMediaLoading(false);
-  }, [workspaceIdParam]);
-
-  useEffect(() => {
-    void loadMedia();
-  }, [loadMedia]);
-
-  useEffect(() => {
-    if (!pairingModalOpen || !workspaceIdParam) return;
-    pairingModalBaseEpochRef.current = pairingActivityEpoch;
-    void apiFetch(
-      `/workspaces/${encodeURIComponent(workspaceIdParam)}/pairing-started`,
-      { method: 'POST', body: '{}' },
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- snapshot epoch only when modal opens; avoid re-POST on each pairing signal
-  }, [pairingModalOpen, workspaceIdParam]);
-
-  useEffect(() => {
-    return () => {
-      if (pairingSuccessTimerRef.current) {
-        clearTimeout(pairingSuccessTimerRef.current);
-        pairingSuccessTimerRef.current = null;
-      }
-    };
-  }, []);
-
-  const openPairingModal = useCallback(() => {
-    if (pairingSuccessTimerRef.current) {
-      clearTimeout(pairingSuccessTimerRef.current);
-      pairingSuccessTimerRef.current = null;
-    }
-    setPairingClaimError(null);
-    setPairingLinkSuccess(false);
-    setPlayerPairCode('');
-    setPlayerPairName('');
-    setPairingModalOpen(true);
-  }, []);
+  const pairing = usePlayerPairing(workspaceIdParam, {
+    canClaim: canClaimPlayerPairing,
+    pairingActivityEpoch,
+    onClaimed: useCallback(async () => {
+      await reloadScreens();
+      bumpWorkspaceDataEpoch();
+    }, [reloadScreens, bumpWorkspaceDataEpoch]),
+  });
 
   const setHeaderInset = useShellHeaderInsetSetter();
 
@@ -233,10 +146,10 @@ export function BranchDetailClient({ locale }: Props) {
         onNewMedia={() => {
           window.location.assign(`/${locale}/media`);
         }}
-        onOpenPairingModal={openPairingModal}
+        onOpenPairingModal={pairing.open}
       />
     ),
-    [activeTab, locale, openPairingModal],
+    [activeTab, locale, pairing.open],
   );
 
   useLayoutEffect(() => {
@@ -249,307 +162,46 @@ export function BranchDetailClient({ locale }: Props) {
     return () => setHeaderInset(null);
   }, [setHeaderInset, branch, branchHeaderToolbar]);
 
-  const onlineByPlaylistId = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const s of screens) {
-      if (!s.playlistGroupId || s.status !== 'ONLINE') continue;
-      const id = s.playlistGroupId;
-      m.set(id, (m.get(id) ?? 0) + 1);
-    }
-    return m;
-  }, [screens]);
+  const onlineByPlaylistId = useMemo(() => computeOnlineByPlaylistId(screens), [screens]);
+  const stats = useMemo(() => computeBranchScreenStats(screens), [screens]);
 
-  const stats = useMemo(() => {
-    let online = 0;
-    let offline = 0;
-    let maintenance = 0;
-    for (const s of screens) {
-      if (s.status === 'ONLINE') online += 1;
-      else if (s.status === 'MAINTENANCE') maintenance += 1;
-      else offline += 1;
-    }
-    const inactive = offline + maintenance;
-    return {
-      total: screens.length,
-      online,
-      inactive,
-      offline,
-      maintenance,
-    };
-  }, [screens]);
-
-  const canDeletePlaylist = Boolean(
-    branch && (branch.role === 'OWNER' || branch.role === 'ADMIN'),
-  );
-  const canClaimPlayerPairing = canDeletePlaylist;
-  const canEditPlaylist = Boolean(branch && branch.role !== 'VIEWER');
-
-  const assignScreenPlaybackPlaylist = useCallback(
-    async (screenId: string, playlistId: string | null) => {
-      if (!workspaceIdParam) return;
-      setAssignPlaybackScreenId(screenId);
-      try {
-        const res = await apiFetch(
-          `/screens/${encodeURIComponent(screenId)}?workspaceId=${encodeURIComponent(workspaceIdParam)}`,
-          {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ activePlaylistId: playlistId }),
-          },
-        );
-        if (!res.ok) {
-          toast.error(await readApiErrorMessage(res));
-          return;
-        }
-        const name =
-          playlistId === null
-            ? null
-            : (playlists.find((p) => p.id === playlistId)?.name ?? null);
-        setScreens((prev) =>
-          prev.map((s) =>
-            s.id === screenId
-              ? {
-                  ...s,
-                  activePlaylistId: playlistId,
-                  activePlaylist:
-                    playlistId && name ? { id: playlistId, name } : null,
-                }
-              : s,
-          ),
-        );
-        toast.success(t('screenPlaylistAssignOk'));
-        bumpWorkspaceDataEpoch();
-      } finally {
-        setAssignPlaybackScreenId(null);
-      }
-    },
-    [workspaceIdParam, playlists, setScreens, bumpWorkspaceDataEpoch, t],
-  );
-
-  const claimPlayerPairing = useCallback(async () => {
-    if (!workspaceIdParam || !canClaimPlayerPairing) return;
-    const code = playerPairCode.replace(/\D/g, '').slice(0, 6);
-    if (code.length !== 6) return;
-    setPairingClaimError(null);
-    setPlayerPairBusy(true);
-    try {
-      const body: { code: string; name?: string } = { code };
-      const trimmedName = playerPairName.trim();
-      if (trimmedName) body.name = trimmedName;
-      const res = await apiFetch(
-        `/workspaces/${encodeURIComponent(workspaceIdParam)}/pairing-sessions/claim`,
-        { method: 'POST', body: JSON.stringify(body) },
-      );
-      if (!res.ok) {
-        const msg = await readApiErrorMessage(res);
-        if (msg.includes('LIMIT_REACHED') || parseScreenLimitFromApiMessage(msg) !== null) {
-          setPairingClaimError(t('pairingErrorLimit'));
-        } else if (msg.includes('INVALID_OR_EXPIRED_PAIRING_CODE')) {
-          setPairingClaimError(t('pairingErrorInvalid'));
-        } else {
-          setPairingClaimError(msg);
-        }
-        return;
-      }
-      void import('canvas-confetti').then((mod) => {
-        mod.default({
-          particleCount: 140,
-          spread: 72,
-          origin: { y: 0.58 },
-        });
-      });
-      setPairingLinkSuccess(true);
-      await reloadScreens();
-      bumpWorkspaceDataEpoch();
-      if (pairingSuccessTimerRef.current) clearTimeout(pairingSuccessTimerRef.current);
-      pairingSuccessTimerRef.current = setTimeout(() => {
-        pairingSuccessTimerRef.current = null;
-        setPairingModalOpen(false);
-        setPairingLinkSuccess(false);
-        setPlayerPairCode('');
-        setPlayerPairName('');
-        setPairingClaimError(null);
-      }, 2000);
-    } finally {
-      setPlayerPairBusy(false);
-    }
-  }, [
-    workspaceIdParam,
-    canClaimPlayerPairing,
-    playerPairCode,
-    playerPairName,
-    t,
-    reloadScreens,
-    bumpWorkspaceDataEpoch,
-  ]);
-
-  const duplicatePlaylist = useCallback(
-    async (pl: BranchPlaylistRow) => {
-      if (!workspaceIdParam) return;
-      setDuplicatePlaylistBusyId(pl.id);
-      try {
-        const res = await apiFetch(
-          `/playlists/${encodeURIComponent(pl.id)}/duplicate?workspaceId=${encodeURIComponent(workspaceIdParam)}`,
-          { method: 'POST' },
-        );
-        if (!res.ok) {
-          toast.error(await readApiErrorMessage(res));
-          return;
-        }
-        toast.success(t('playlistDuplicated'));
-        await loadPlaylists();
-        bumpWorkspaceDataEpoch();
-      } finally {
-        setDuplicatePlaylistBusyId(null);
-      }
-    },
-    [workspaceIdParam, t, loadPlaylists, bumpWorkspaceDataEpoch],
-  );
-
-  const confirmDeletePlaylist = useCallback(async () => {
-    if (!playlistToDelete || !workspaceIdParam) return;
-    setDeletePlaylistBusy(true);
-    try {
-      const forceQ = playlistDeleteForce ? '&force=true' : '';
-      const res = await apiFetch(
-        `/playlists/${encodeURIComponent(playlistToDelete.id)}?workspaceId=${encodeURIComponent(workspaceIdParam)}${forceQ}`,
-        { method: 'DELETE' },
-      );
-      if (!res.ok) {
-        toast.error(await readApiErrorMessage(res));
-        return;
-      }
-      toast.success(t('playlistDeleted'));
-      setPlaylistToDelete(null);
-      setPlaylistDeleteForce(false);
-      await loadPlaylists();
-      bumpWorkspaceDataEpoch();
-    } finally {
-      setDeletePlaylistBusy(false);
-    }
-  }, [
-    playlistToDelete,
-    playlistDeleteForce,
-    workspaceIdParam,
-    t,
-    loadPlaylists,
-    bumpWorkspaceDataEpoch,
-  ]);
-
-  const confirmMovePlaylist = useCallback(async () => {
-    if (!playlistToMove || !workspaceIdParam || !moveTargetId) return;
-    if (moveTargetId === workspaceIdParam) {
-      toast.error(t('playlistMoveChooseBranch'));
-      return;
-    }
-    setMoveBusy(true);
-    try {
-      const cloneRes = await apiFetch(
-        `/playlists/${encodeURIComponent(playlistToMove.id)}/clone-to-workspace?workspaceId=${encodeURIComponent(workspaceIdParam)}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ targetWorkspaceId: moveTargetId }),
-        },
-      );
-      if (!cloneRes.ok) {
-        toast.error(await readApiErrorMessage(cloneRes));
-        return;
-      }
-      if (canDeletePlaylist) {
-        const delRes = await apiFetch(
-          `/playlists/${encodeURIComponent(playlistToMove.id)}?workspaceId=${encodeURIComponent(workspaceIdParam)}&force=true`,
-          { method: 'DELETE' },
-        );
-        if (!delRes.ok) {
-          toast.warning(
-            t('playlistMovePartial', { message: await readApiErrorMessage(delRes) }),
-          );
-        } else {
-          toast.success(t('playlistMoved'));
-        }
-      } else {
-        toast.success(t('playlistClonedToBranch'));
-      }
-      setPlaylistToMove(null);
-      setMoveTargetId('');
-      await loadPlaylists();
-      bumpWorkspaceDataEpoch();
-    } finally {
-      setMoveBusy(false);
-    }
-  }, [
-    playlistToMove,
-    workspaceIdParam,
-    moveTargetId,
-    canDeletePlaylist,
-    t,
-    loadPlaylists,
-    bumpWorkspaceDataEpoch,
-  ]);
-
-  const savePlaylistEdit = useCallback(async () => {
-    if (!playlistToEdit || !workspaceIdParam) return;
-    const name = editPlaylistName.trim();
-    if (!name) {
-      toast.error(t('playlistNameRequired'));
-      return;
-    }
-    setEditPlaylistSaving(true);
-    try {
-      const res = await apiFetch(
-        `/playlists/${encodeURIComponent(playlistToEdit.id)}?workspaceId=${encodeURIComponent(workspaceIdParam)}`,
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, isPublished: editPlaylistPublished }),
-        },
-      );
-      if (!res.ok) {
-        toast.error(await readApiErrorMessage(res));
-        return;
-      }
-      toast.success(t('playlistUpdated'));
-      setPlaylistEditOpen(false);
-      setPlaylistToEdit(null);
-      await loadPlaylists();
-      bumpWorkspaceDataEpoch();
-    } finally {
-      setEditPlaylistSaving(false);
-    }
-  }, [
-    playlistToEdit,
-    workspaceIdParam,
-    editPlaylistName,
-    editPlaylistPublished,
-    t,
-    loadPlaylists,
-    bumpWorkspaceDataEpoch,
-  ]);
-
-  const onCreatePlaylist = async () => {
-    const name = newName.trim();
-    if (!name || !workspaceIdParam) return;
-    setCreating(true);
-    try {
-      const res = await apiFetch('/playlists', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ workspaceId: workspaceIdParam, name }),
-      });
-      if (!res.ok) {
-        toast.error(await readApiErrorMessage(res));
-        return;
-      }
-      toast.success(t('playlistCreated'));
+  const onCreatePlaylist = useCallback(async () => {
+    const ok = await branchPlaylists.create(newName);
+    if (ok) {
       setNewName('');
       setCreateOpen(false);
-      await loadPlaylists();
-      bumpWorkspaceDataEpoch();
-    } finally {
-      setCreating(false);
     }
-  };
+  }, [branchPlaylists, newName]);
+
+  const confirmDeletePlaylist = useCallback(async () => {
+    if (!playlistToDelete) return;
+    const ok = await branchPlaylists.remove(playlistToDelete, playlistDeleteForce);
+    if (ok) {
+      setPlaylistToDelete(null);
+      setPlaylistDeleteForce(false);
+    }
+  }, [branchPlaylists, playlistToDelete, playlistDeleteForce]);
+
+  const confirmMovePlaylist = useCallback(async () => {
+    if (!playlistToMove) return;
+    const ok = await branchPlaylists.move(playlistToMove, moveTargetId, canDeletePlaylist);
+    if (ok) {
+      setPlaylistToMove(null);
+      setMoveTargetId('');
+    }
+  }, [branchPlaylists, playlistToMove, moveTargetId, canDeletePlaylist]);
+
+  const savePlaylistEdit = useCallback(async () => {
+    if (!playlistToEdit) return;
+    const ok = await branchPlaylists.update(playlistToEdit, {
+      name: editPlaylistName,
+      isPublished: editPlaylistPublished,
+    });
+    if (ok) {
+      setPlaylistEditOpen(false);
+      setPlaylistToEdit(null);
+    }
+  }, [branchPlaylists, playlistToEdit, editPlaylistName, editPlaylistPublished]);
 
   if (!branch) {
     return (
@@ -562,7 +214,7 @@ export function BranchDetailClient({ locale }: Props) {
     );
   }
 
-  const loading = screensLoading || playlistsLoading;
+  const loading = screensLoading || branchPlaylists.isLoading;
 
   return (
     <main className="space-y-8 pb-12">
@@ -572,7 +224,7 @@ export function BranchDetailClient({ locale }: Props) {
         workspaceId={workspaceIdParam}
         onCreated={() => {
           void reloadScreens();
-          void loadPlaylists();
+          void branchPlaylists.reload();
         }}
       />
 
@@ -666,11 +318,11 @@ export function BranchDetailClient({ locale }: Props) {
           </button>
         </div>
 
-        {playlistsLoading ? (
+        {branchPlaylists.isLoading ? (
           <div className="flex justify-center py-16">
             <Loader2 className="h-10 w-10 animate-spin text-[#FF6B00]" />
           </div>
-        ) : playlists.length === 0 ? (
+        ) : branchPlaylists.playlists.length === 0 ? (
           <div className="vc-card-surface rounded-2xl border border-dashed border-[#FF6B00]/25 p-10 text-center">
             <Clapperboard className="mx-auto h-10 w-10 text-[#FF6B00]/70" strokeWidth={ICON_STROKE} />
             <p className="mt-3 text-sm font-medium text-foreground dark:text-white">{t('noPlaylists')}</p>
@@ -678,10 +330,10 @@ export function BranchDetailClient({ locale }: Props) {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {playlists.map((pl, i) => {
+            {branchPlaylists.playlists.map((pl, i) => {
               const totalScreens = pl._count.screensInGroup;
               const online = onlineByPlaylistId.get(pl.id) ?? 0;
-              const dupBusy = duplicatePlaylistBusyId === pl.id;
+              const dupBusy = branchPlaylists.duplicatingId === pl.id;
               return (
                 <motion.div
                   key={pl.id}
@@ -737,7 +389,7 @@ export function BranchDetailClient({ locale }: Props) {
                         <DropdownMenuItem
                           className="gap-2 font-semibold"
                           disabled={dupBusy}
-                          onClick={() => void duplicatePlaylist(pl)}
+                          onClick={() => void branchPlaylists.duplicate(pl)}
                         >
                           <Copy className="h-4 w-4 text-[#FF6B00]" strokeWidth={ICON_STROKE} />
                           {t('playlistDuplicate')}
@@ -839,21 +491,21 @@ export function BranchDetailClient({ locale }: Props) {
                           'focus-visible:ring-2 focus-visible:ring-[#FF6B00]/35',
                           'disabled:cursor-not-allowed disabled:opacity-50',
                         )}
-                        disabled={!canEditPlaylist || assignPlaybackScreenId === screen.id}
+                        disabled={!canEditPlaylist || screenAssignment.assigningScreenId === screen.id}
                         value={screen.activePlaylistId ?? ''}
                         onChange={(e) => {
                           const v = e.target.value;
-                          void assignScreenPlaybackPlaylist(screen.id, v || null);
+                          void screenAssignment.assign(screen.id, v || null);
                         }}
                       >
                         <option value="">{t('screenPlaybackNone')}</option>
-                        {playlists.map((pl) => (
+                        {branchPlaylists.playlists.map((pl) => (
                           <option key={pl.id} value={pl.id}>
                             {pl.name}
                           </option>
                         ))}
                       </select>
-                      {assignPlaybackScreenId === screen.id ? (
+                      {screenAssignment.assigningScreenId === screen.id ? (
                         <span className="pointer-events-none absolute end-2 top-1/2 -translate-y-1/2">
                           <Loader2 className="h-4 w-4 animate-spin text-[#FF6B00]" strokeWidth={ICON_STROKE} />
                         </span>
@@ -922,18 +574,18 @@ export function BranchDetailClient({ locale }: Props) {
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">{t('mediaSub')}</p>
           </div>
-          {mediaLoading ? (
+          {branchMedia.isLoading ? (
             <div className="flex justify-center py-16">
               <Loader2 className="h-10 w-10 animate-spin text-[#FF6B00]" />
             </div>
-          ) : mediaItems.length === 0 ? (
+          ) : branchMedia.mediaItems.length === 0 ? (
             <div className="vc-card-surface rounded-2xl border border-dashed border-[#FF6B00]/25 p-10 text-center">
               <ImageIcon className="mx-auto h-10 w-10 text-[#FF6B00]/70" strokeWidth={ICON_STROKE} />
               <p className="mt-3 text-sm font-medium text-foreground dark:text-white">{t('noMedia')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {mediaItems.map((item) => (
+              {branchMedia.mediaItems.map((item) => (
                 <div
                   key={item.id}
                   className="vc-card-surface rounded-2xl border border-border/60 p-4 dark:border-white/10"
@@ -948,19 +600,9 @@ export function BranchDetailClient({ locale }: Props) {
       ) : null}
 
       <Dialog
-        open={pairingModalOpen}
+        open={pairing.isOpen}
         onOpenChange={(open) => {
-          setPairingModalOpen(open);
-          if (!open) {
-            if (pairingSuccessTimerRef.current) {
-              clearTimeout(pairingSuccessTimerRef.current);
-              pairingSuccessTimerRef.current = null;
-            }
-            setPlayerPairCode('');
-            setPlayerPairName('');
-            setPairingClaimError(null);
-            setPairingLinkSuccess(false);
-          }
+          if (!open) pairing.close();
         }}
       >
         <DialogContent className="max-h-[min(90vh,560px)] overflow-y-auto sm:max-w-md">
@@ -970,7 +612,7 @@ export function BranchDetailClient({ locale }: Props) {
               {tToolbar('branchLabel')} · {branch.name}
             </p>
           </DialogHeader>
-          {pairingModalOpen && pairingActivityEpoch > pairingModalBaseEpochRef.current ? (
+          {pairing.showProgressBanner ? (
             <p
               role="status"
               className="rounded-xl border border-[#FF6B00]/40 bg-[#FF6B00]/12 px-3 py-2 text-center text-xs font-medium leading-relaxed text-foreground dark:text-amber-50"
@@ -979,7 +621,7 @@ export function BranchDetailClient({ locale }: Props) {
             </p>
           ) : null}
           <div className="space-y-5 py-2">
-            {pairingLinkSuccess ? (
+            {pairing.success ? (
               <div className="flex flex-col items-center gap-3 py-6 text-center">
                 <CheckCircle2
                   className="h-14 w-14 text-emerald-500"
@@ -997,12 +639,12 @@ export function BranchDetailClient({ locale }: Props) {
                 <p className="text-center text-sm leading-relaxed text-muted-foreground">
                   {t('pairingModalDescription')}
                 </p>
-                {pairingClaimError ? (
+                {pairing.error ? (
                   <p
                     className="rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-center text-sm text-destructive"
                     role="alert"
                   >
-                    {pairingClaimError}
+                    {pairing.error}
                   </p>
                 ) : null}
                 <div className="space-y-2">
@@ -1018,36 +660,32 @@ export function BranchDetailClient({ locale }: Props) {
                     autoComplete="one-time-code"
                     maxLength={6}
                     placeholder={t('pairingCodePlaceholder')}
-                    value={playerPairCode}
-                    onChange={(e) =>
-                      setPlayerPairCode(e.target.value.replace(/\D/g, '').slice(0, 6))
-                    }
+                    value={pairing.code}
+                    onChange={(e) => pairing.setCode(e.target.value)}
                     className="h-14 rounded-xl text-center font-mono text-3xl font-semibold tracking-[0.35em] text-foreground"
-                    aria-invalid={Boolean(pairingClaimError)}
+                    aria-invalid={Boolean(pairing.error)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="player-pair-name">{t('pairingNameFieldLabel')}</Label>
                   <Input
                     id="player-pair-name"
-                    value={playerPairName}
-                    onChange={(e) => setPlayerPairName(e.target.value)}
+                    value={pairing.name}
+                    onChange={(e) => pairing.setName(e.target.value)}
                     placeholder={t('pairingNamePlaceholder')}
                     className="rounded-xl"
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') void claimPlayerPairing();
+                      if (e.key === 'Enter') void pairing.claim();
                     }}
                   />
                 </div>
                 <Button
                   type="button"
                   className="h-11 w-full rounded-xl bg-[#FF6B00] font-semibold text-amber-950 hover:bg-[#FF6B00]/90"
-                  disabled={
-                    playerPairBusy || playerPairCode.replace(/\D/g, '').length !== 6
-                  }
-                  onClick={() => void claimPlayerPairing()}
+                  disabled={pairing.busy || pairing.code.length !== 6}
+                  onClick={() => void pairing.claim()}
                 >
-                  {playerPairBusy ? (
+                  {pairing.busy ? (
                     <span className="inline-flex items-center justify-center gap-2">
                       <Loader2 className="h-5 w-5 animate-spin" strokeWidth={ICON_STROKE} />
                     </span>
@@ -1113,10 +751,10 @@ export function BranchDetailClient({ locale }: Props) {
             <Button
               type="button"
               className="rounded-xl bg-[#FF6B00] font-semibold text-amber-950"
-              disabled={editPlaylistSaving || !editPlaylistName.trim()}
+              disabled={branchPlaylists.isSavingEdit || !editPlaylistName.trim()}
               onClick={() => void savePlaylistEdit()}
             >
-              {editPlaylistSaving ? (
+              {branchPlaylists.isSavingEdit ? (
                 <Loader2 className="h-4 w-4 animate-spin" strokeWidth={ICON_STROKE} />
               ) : (
                 t('playlistEditSave')
@@ -1151,10 +789,10 @@ export function BranchDetailClient({ locale }: Props) {
             <Button
               type="button"
               className="rounded-xl bg-[#FF6B00] font-semibold text-amber-950"
-              disabled={creating || !newName.trim()}
+              disabled={branchPlaylists.isCreating || !newName.trim()}
               onClick={() => void onCreatePlaylist()}
             >
-              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : t('create')}
+              {branchPlaylists.isCreating ? <Loader2 className="h-4 w-4 animate-spin" /> : t('create')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1210,10 +848,14 @@ export function BranchDetailClient({ locale }: Props) {
             <Button
               type="button"
               className="rounded-xl bg-[#FF6B00] font-semibold text-amber-950 hover:bg-[#FF6B00]/90"
-              disabled={!moveTargetId || moveBusy || workspaces.filter((w) => w.id !== workspaceIdParam).length === 0}
+              disabled={
+                !moveTargetId ||
+                branchPlaylists.isMoving ||
+                workspaces.filter((w) => w.id !== workspaceIdParam).length === 0
+              }
               onClick={() => void confirmMovePlaylist()}
             >
-              {moveBusy ? (
+              {branchPlaylists.isMoving ? (
                 <Loader2 className="h-4 w-4 animate-spin" strokeWidth={ICON_STROKE} />
               ) : canDeletePlaylist ? (
                 t('playlistMoveConfirm')
@@ -1254,16 +896,16 @@ export function BranchDetailClient({ locale }: Props) {
             </span>
           </label>
           <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
-            <AlertDialogCancel className="rounded-xl" disabled={deletePlaylistBusy}>
+            <AlertDialogCancel className="rounded-xl" disabled={branchPlaylists.isDeleting}>
               {t('cancel')}
             </AlertDialogCancel>
             <Button
               type="button"
               className="rounded-xl bg-red-600 font-semibold text-white hover:bg-red-600/90"
-              disabled={deletePlaylistBusy}
+              disabled={branchPlaylists.isDeleting}
               onClick={() => void confirmDeletePlaylist()}
             >
-              {deletePlaylistBusy ? (
+              {branchPlaylists.isDeleting ? (
                 <Loader2 className="h-4 w-4 animate-spin" strokeWidth={ICON_STROKE} />
               ) : (
                 t('playlistDelete')

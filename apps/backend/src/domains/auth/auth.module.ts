@@ -6,10 +6,12 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
+import { AuditLogModule } from '../../common/audit/audit-log.module';
 
 @Module({
   imports: [
     forwardRef(() => WorkspacesModule),
+    AuditLogModule,
     ConfigModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({

@@ -10,6 +10,8 @@ type JwtPayload = {
   email: string;
   isSuperAdmin?: boolean;
   impersonatedBy?: string;
+  /** See TokenPayload in auth.service.ts. Absent on pre-`typ` tokens. */
+  typ?: 'access' | 'refresh';
 };
 
 @Injectable()
@@ -33,6 +35,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<JwtPayload> {
+    /**
+     * A refresh token must never authenticate a request. It only differs from
+     * an access token by signing key and lifetime, so if the two keys were ever
+     * set to the same value this is what stops a long-lived refresh token from
+     * being replayed as a Bearer credential.
+     */
+    if (payload.typ === 'refresh') {
+      throw new UnauthorizedException('Invalid access token');
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
       select: { id: true, email: true, isActive: true, isSuperAdmin: true },
