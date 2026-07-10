@@ -1,7 +1,8 @@
-import { Catch, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { Catch, HttpException, Logger } from '@nestjs/common';
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common';
 import { SentryExceptionCaptured } from '@sentry/nestjs';
 import type { Request, Response } from 'express';
+import { normalizeHttpError } from './normalize-http-error';
 
 /** Minimal shape of a Socket.IO client — avoids importing socket.io here. */
 type EmittingClient = { emit?: (event: string, payload: unknown) => void };
@@ -54,31 +55,22 @@ export class AllExceptionsFilter implements ExceptionFilter {
       return;
     }
 
-    if (exception instanceof HttpException) {
-      response.status(exception.getStatus()).json(exception.getResponse());
-      return;
+    if (!(exception instanceof HttpException)) {
+      this.logUnhandled(exception, `${request.method} ${request.originalUrl}`);
     }
 
-    this.logUnhandled(exception, `${request.method} ${request.originalUrl}`);
-    response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      message: 'Internal server error',
-    });
+    const body = normalizeHttpError(exception);
+    response.status(body.statusCode).json(body);
   }
 
   private catchWs(exception: unknown, host: ArgumentsHost): void {
     const client = host.switchToWs().getClient<EmittingClient>();
 
-    if (exception instanceof HttpException) {
-      client?.emit?.('exception', exception.getResponse());
-      return;
+    if (!(exception instanceof HttpException)) {
+      this.logUnhandled(exception, 'websocket message handler');
     }
 
-    this.logUnhandled(exception, 'websocket message handler');
-    client?.emit?.('exception', {
-      status: 'error',
-      message: 'Internal server error',
-    });
+    client?.emit?.('exception', normalizeHttpError(exception));
   }
 
   private logUnhandled(exception: unknown, context: string): void {

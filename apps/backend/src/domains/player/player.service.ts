@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
+import { DomainException } from '../../common/errors/domain.exception';
+import { ErrorCode } from '../../common/errors/error-codes';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import type { JwtUser } from '../../common/auth/current-user.decorator';
 import { CanvasesService } from '../canvases/canvases.service';
@@ -89,7 +91,10 @@ export class PlayerService {
     }
     await this.assertPlayerSecretForScreen(screen, secret);
     if (screen.workspace.isPaused) {
-      throw new ForbiddenException('Workspace is paused');
+      throw DomainException.forbidden(
+        ErrorCode.WORKSPACE_PAUSED,
+        'Workspace is paused',
+      );
     }
 
     const playlist = await this.playlists.getPlaylistPayloadForScreen(
@@ -139,7 +144,10 @@ export class PlayerService {
     }
     await this.assertPlayerSecretForScreen(screen, secret);
     if (screen.workspace.isPaused) {
-      throw new ForbiddenException('Workspace is paused');
+      throw DomainException.forbidden(
+        ErrorCode.WORKSPACE_PAUSED,
+        'Workspace is paused',
+      );
     }
 
     return this.canvases.getCompiledForPlayer(screen.workspaceId, canvasId);
@@ -178,7 +186,10 @@ export class PlayerService {
     }
     if (!ws) throw new NotFoundException('Workspace not found');
     if (ws.isPaused) {
-      throw new ForbiddenException('Workspace is paused');
+      throw DomainException.forbidden(
+        ErrorCode.WORKSPACE_PAUSED,
+        'Workspace is paused',
+      );
     }
 
     if (!dbUser.isSuperAdmin) {

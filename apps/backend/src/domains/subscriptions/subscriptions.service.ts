@@ -13,6 +13,8 @@ import {
   UserRole,
 } from '@prisma/client';
 import Stripe from 'stripe';
+import { DomainException } from '../../common/errors/domain.exception';
+import { ErrorCode } from '../../common/errors/error-codes';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import type { MockPlan } from './dto/set-mock-plan.dto';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
@@ -350,7 +352,10 @@ export class SubscriptionsService {
     if (!sub)
       throw new NotFoundException('Subscription not found for workspace');
     if (plan !== 'FREE' && plan !== 'PRO') {
-      throw new BadRequestException('Unsupported plan');
+      throw DomainException.badRequest(
+        ErrorCode.UNSUPPORTED_PLAN,
+        'Unsupported plan',
+      );
     }
 
     const nextPlan =

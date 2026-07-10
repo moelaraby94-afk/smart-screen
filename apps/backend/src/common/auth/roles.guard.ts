@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '@prisma/client';
+import { DomainException } from '../errors/domain.exception';
+import { ErrorCode } from '../errors/error-codes';
 import { PrismaService } from '../prisma/prisma.service';
 import { ROLES_KEY } from './roles.decorator';
 import { JwtUser } from './current-user.decorator';
@@ -62,9 +64,16 @@ export class RolesGuard implements CanActivate {
     });
 
     if (!membership)
-      throw new ForbiddenException('No workspace membership found');
+      throw DomainException.forbidden(
+        ErrorCode.NO_WORKSPACE_ACCESS,
+        'No workspace membership found',
+      );
     if (!requiredRoles.includes(membership.role)) {
-      throw new ForbiddenException('Insufficient workspace role');
+      throw DomainException.forbidden(
+        ErrorCode.INSUFFICIENT_WORKSPACE_ROLE,
+        'Insufficient workspace role',
+        { requiredRoles, actualRole: membership.role },
+      );
     }
 
     return true;

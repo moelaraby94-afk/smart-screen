@@ -1,6 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
 import type { ArgumentsHost } from '@nestjs/common';
 import { AllExceptionsFilter } from './all-exceptions.filter';
+import { DomainException } from './domain.exception';
+import { ErrorCode } from './error-codes';
 
 type FakeResponse = {
   status: jest.Mock;
@@ -43,20 +45,38 @@ function makeResponse(): FakeResponse {
 
 describe('AllExceptionsFilter', () => {
   describe('http context', () => {
-    it('passes an HttpException through unchanged (status + exact body)', () => {
+    it('normalizes an HttpException into the {statusCode, code, message} contract', () => {
+      const response = makeResponse();
+      const filter = new AllExceptionsFilter();
+
+      filter.catch(new BadRequestException('some detail'), httpHost(response));
+
+      expect(response.status).toHaveBeenCalledWith(400);
+      expect(response.json).toHaveBeenCalledWith({
+        statusCode: 400,
+        code: ErrorCode.BAD_REQUEST,
+        message: 'some detail',
+      });
+    });
+
+    it('preserves a DomainException code and details', () => {
       const response = makeResponse();
       const filter = new AllExceptionsFilter();
 
       filter.catch(
-        new BadRequestException('INVALID_OR_EXPIRED_PAIRING_CODE'),
+        DomainException.badRequest(
+          ErrorCode.SCREEN_LIMIT_REACHED,
+          'limit reached',
+          { limit: 25 },
+        ),
         httpHost(response),
       );
 
-      expect(response.status).toHaveBeenCalledWith(400);
       expect(response.json).toHaveBeenCalledWith({
-        message: 'INVALID_OR_EXPIRED_PAIRING_CODE',
-        error: 'Bad Request',
         statusCode: 400,
+        code: ErrorCode.SCREEN_LIMIT_REACHED,
+        message: 'limit reached',
+        details: { limit: 25 },
       });
     });
 
@@ -72,6 +92,7 @@ describe('AllExceptionsFilter', () => {
       expect(response.status).toHaveBeenCalledWith(500);
       expect(response.json).toHaveBeenCalledWith({
         statusCode: 500,
+        code: ErrorCode.INTERNAL_ERROR,
         message: 'Internal server error',
       });
       const [body] = response.json.mock.calls[0] as [{ message: string }];
@@ -109,7 +130,8 @@ describe('AllExceptionsFilter', () => {
       ).not.toThrow();
 
       expect(client.emit).toHaveBeenCalledWith('exception', {
-        status: 'error',
+        statusCode: 500,
+        code: ErrorCode.INTERNAL_ERROR,
         message: 'Internal server error',
       });
     });
@@ -131,9 +153,9 @@ describe('AllExceptionsFilter', () => {
       filter.catch(new BadRequestException('BAD_PAYLOAD'), wsHost(client));
 
       expect(client.emit).toHaveBeenCalledWith('exception', {
-        message: 'BAD_PAYLOAD',
-        error: 'Bad Request',
         statusCode: 400,
+        code: ErrorCode.BAD_REQUEST,
+        message: 'BAD_PAYLOAD',
       });
     });
 

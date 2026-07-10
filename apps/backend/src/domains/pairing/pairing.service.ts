@@ -1,8 +1,6 @@
 import {
   BadRequestException,
   ForbiddenException,
-  HttpException,
-  HttpStatus,
   Injectable,
   Logger,
   NotFoundException,
@@ -19,6 +17,8 @@ import {
 import * as bcrypt from 'bcryptjs';
 import { randomBytes, randomInt } from 'crypto';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { DomainException } from '../../common/errors/domain.exception';
+import { ErrorCode } from '../../common/errors/error-codes';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
 import { ClaimPairingSessionDto } from './dto/claim-pairing-session.dto';
 import { StartPairingSessionDto } from './dto/start-pairing-session.dto';
@@ -90,13 +90,10 @@ export class PairingService {
       this.logger.warn(
         `Pairing claim failed userId=${userId} workspaceId=${workspaceId} reason=LOCKED_OUT retryAfterSeconds=${retryAfterSeconds}`,
       );
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.TOO_MANY_REQUESTS,
-          message: 'TOO_MANY_FAILED_PAIRING_ATTEMPTS',
-          retryAfterSeconds,
-        },
-        HttpStatus.TOO_MANY_REQUESTS,
+      throw DomainException.tooManyRequests(
+        ErrorCode.TOO_MANY_FAILED_PAIRING_ATTEMPTS,
+        'Too many failed pairing attempts',
+        { retryAfterSeconds },
       );
     }
   }
@@ -156,7 +153,11 @@ export class PairingService {
     const limit = sub?.screenLimit ?? 25;
     const count = await tx.screen.count({ where: { workspaceId } });
     if (count >= limit) {
-      throw new BadRequestException('LIMIT_REACHED');
+      throw DomainException.badRequest(
+        ErrorCode.SCREEN_LIMIT_REACHED,
+        `Workspace already has ${count} of ${limit} allowed screens`,
+        { limit, current: count },
+      );
     }
   }
 
@@ -360,7 +361,10 @@ export class PairingService {
           },
         });
         if (!session) {
-          throw new BadRequestException('INVALID_OR_EXPIRED_PAIRING_CODE');
+          throw DomainException.badRequest(
+            ErrorCode.INVALID_OR_EXPIRED_PAIRING_CODE,
+            'Invalid or expired pairing code',
+          );
         }
 
         await this.assertWithinScreenLimitTx(tx, workspaceId);
@@ -426,14 +430,20 @@ export class PairingService {
         screen,
       };
     } catch (err) {
-      const reason = err instanceof Error ? err.message : String(err);
+      /**
+       * Match on the code, not the message. The counter used to compare
+       * `err.message === 'INVALID_OR_EXPIRED_PAIRING_CODE'`, which would have
+       * silently stopped counting the moment that message was reworded.
+       */
+      const isWrongCode =
+        err instanceof DomainException &&
+        err.code === ErrorCode.INVALID_OR_EXPIRED_PAIRING_CODE;
+
       this.logger.warn(
-        `Pairing claim failed userId=${userId} workspaceId=${workspaceId} reason=${reason}`,
+        `Pairing claim failed userId=${userId} workspaceId=${workspaceId} ` +
+          `reason=${err instanceof DomainException ? err.code : String(err)}`,
       );
-      if (
-        err instanceof BadRequestException &&
-        reason === 'INVALID_OR_EXPIRED_PAIRING_CODE'
-      ) {
+      if (isWrongCode) {
         await this.recordFailedClaimAttempt(userId, workspaceId);
       }
       throw err;

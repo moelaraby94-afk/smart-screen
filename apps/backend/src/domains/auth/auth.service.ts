@@ -1,18 +1,18 @@
 import { randomBytes, randomInt } from 'crypto';
 import {
   BadRequestException,
-  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
   Logger,
   NotFoundException,
-  ServiceUnavailableException,
   UnauthorizedException,
   forwardRef,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { DomainException } from '../../common/errors/domain.exception';
+import { ErrorCode } from '../../common/errors/error-codes';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { WorkspacesService } from '../workspaces/workspaces.service';
 import { AuditLogService } from '../../common/audit/audit-log.service';
@@ -71,10 +71,16 @@ export class AuthService {
     const email = dto.email.toLowerCase();
     const existing = await this.prisma.user.findUnique({ where: { email } });
     if (existing) {
-      throw new ConflictException('Email already registered');
+      throw DomainException.conflict(
+        ErrorCode.EMAIL_ALREADY_REGISTERED,
+        'Email already registered',
+      );
     }
     if (process.env.NODE_ENV === 'production' && !this.email.isConfigured()) {
-      throw new ServiceUnavailableException('Email is not configured');
+      throw DomainException.serviceUnavailable(
+        ErrorCode.EMAIL_NOT_CONFIGURED,
+        'Email is not configured',
+      );
     }
     const passwordHash = await bcrypt.hash(dto.password, 12);
     const code = String(randomInt(100000, 999999));
@@ -159,19 +165,33 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { email },
     });
-    if (!user) throw new BadRequestException('Invalid code');
+    if (!user)
+      throw DomainException.badRequest(
+        ErrorCode.INVALID_OTP,
+        'Invalid verification code',
+      );
     if (user.emailVerified) {
-      throw new BadRequestException('Email already verified');
+      throw DomainException.badRequest(
+        ErrorCode.EMAIL_ALREADY_VERIFIED,
+        'Email already verified',
+      );
     }
     if (
       !user.verificationCode ||
       !user.verificationCodeExpiresAt ||
       user.verificationCodeExpiresAt < new Date()
     ) {
-      throw new UnauthorizedException('Code expired');
+      throw DomainException.unauthorized(
+        ErrorCode.OTP_EXPIRED,
+        'Verification code expired',
+      );
     }
     const ok = await bcrypt.compare(dto.code, user.verificationCode);
-    if (!ok) throw new UnauthorizedException('Invalid code');
+    if (!ok)
+      throw DomainException.unauthorized(
+        ErrorCode.INVALID_OTP,
+        'Invalid verification code',
+      );
 
     await this.prisma.user.update({
       where: { id: user.id },
@@ -263,10 +283,17 @@ export class AuthService {
       !user.passwordResetExpiresAt ||
       user.passwordResetExpiresAt < new Date()
     ) {
-      throw new BadRequestException('Invalid or expired token');
+      throw DomainException.badRequest(
+        ErrorCode.INVALID_RESET_TOKEN,
+        'Invalid or expired reset token',
+      );
     }
     const valid = await bcrypt.compare(dto.token, user.passwordResetToken);
-    if (!valid) throw new BadRequestException('Invalid or expired token');
+    if (!valid)
+      throw DomainException.badRequest(
+        ErrorCode.INVALID_RESET_TOKEN,
+        'Invalid or expired reset token',
+      );
     const passwordHash = await bcrypt.hash(dto.newPassword, 12);
     await this.prisma.user.update({
       where: { id: user.id },
@@ -295,21 +322,33 @@ export class AuthService {
         emailVerified: true,
       },
     });
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user)
+      throw DomainException.unauthorized(
+        ErrorCode.INVALID_CREDENTIALS,
+        'Invalid credentials',
+      );
 
     const passwordMatches = await bcrypt.compare(
       dto.password,
       user.passwordHash,
     );
     if (!passwordMatches)
-      throw new UnauthorizedException('Invalid credentials');
-    if (!user.isActive) throw new UnauthorizedException('Account is disabled');
+      throw DomainException.unauthorized(
+        ErrorCode.INVALID_CREDENTIALS,
+        'Invalid credentials',
+      );
+    if (!user.isActive)
+      throw DomainException.unauthorized(
+        ErrorCode.ACCOUNT_DISABLED,
+        'Account is disabled',
+      );
 
     const isSuperAdmin = user.isSuperAdmin === true;
     const isStaff = user.platformStaffRole != null;
     if (!isSuperAdmin && !isStaff && user.emailVerified === false) {
-      throw new UnauthorizedException(
-        'Please verify your email before signing in.',
+      throw DomainException.unauthorized(
+        ErrorCode.EMAIL_NOT_VERIFIED,
+        'Email must be verified before signing in',
       );
     }
 

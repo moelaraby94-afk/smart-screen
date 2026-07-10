@@ -8,6 +8,8 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { UserRole } from '@prisma/client';
 import request from 'supertest';
 import { RolesGuard } from '../../common/auth/roles.guard';
+import { DomainException } from '../../common/errors/domain.exception';
+import { ErrorCode } from '../../common/errors/error-codes';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { UserThrottlerGuard } from '../../common/throttler/user-throttler.guard';
 import { JwtStrategy } from '../auth/jwt.strategy';
@@ -105,7 +107,7 @@ function createFakePrisma() {
   };
 }
 
-type ClaimResponse = { status: number; body: { message?: string } };
+type ClaimResponse = { status: number; body: { code?: string } };
 
 describe('POST /workspaces/:workspaceId/pairing-sessions/claim — brute-force defenses', () => {
   let app: INestApplication;
@@ -185,7 +187,7 @@ describe('POST /workspaces/:workspaceId/pairing-sessions/claim — brute-force d
         .send({ code: '000000' });
       responses.push({
         status: res.status,
-        body: res.body as { message?: string },
+        body: res.body as { code?: string },
       });
     }
 
@@ -193,14 +195,17 @@ describe('POST /workspaces/:workspaceId/pairing-sessions/claim — brute-force d
       responses.map((r, i) => ({
         attempt: i + 1,
         status: r.status,
-        message: r.body.message,
+        code: r.body.code,
       })),
     );
 
     // Attempts 1-5 reach PairingService and are rejected for a wrong/expired code.
     for (let i = 0; i < 5; i += 1) {
       expect(responses[i].status).toBe(400);
-      expect(responses[i].body.message).toBe('INVALID_OR_EXPIRED_PAIRING_CODE');
+      // Assert the stable code, not the prose message.
+      expect(responses[i].body.code).toBe(
+        ErrorCode.INVALID_OR_EXPIRED_PAIRING_CODE,
+      );
     }
 
     // Attempt 6 is rejected outright — the per-user ThrottlerGuard (5/min) trips
@@ -225,9 +230,13 @@ describe('POST /workspaces/:workspaceId/pairing-sessions/claim — brute-force d
     } catch (err) {
       lockedError = err;
     }
-    expect(lockedError).toMatchObject({
-      status: 429,
-      response: { message: 'TOO_MANY_FAILED_PAIRING_ATTEMPTS' },
+    expect(lockedError).toBeInstanceOf(DomainException);
+    expect((lockedError as DomainException).code).toBe(
+      ErrorCode.TOO_MANY_FAILED_PAIRING_ATTEMPTS,
+    );
+    expect((lockedError as DomainException).getStatus()).toBe(429);
+    expect((lockedError as DomainException).details).toMatchObject({
+      retryAfterSeconds: expect.any(Number) as unknown as number,
     });
   });
 
@@ -252,9 +261,10 @@ describe('POST /workspaces/:workspaceId/pairing-sessions/claim — brute-force d
     } catch (err) {
       unlockedError = err;
     }
-    expect(unlockedError).toMatchObject({
-      status: 400,
-      response: { message: 'INVALID_OR_EXPIRED_PAIRING_CODE' },
-    });
+    expect(unlockedError).toBeInstanceOf(DomainException);
+    expect((unlockedError as DomainException).code).toBe(
+      ErrorCode.INVALID_OR_EXPIRED_PAIRING_CODE,
+    );
+    expect((unlockedError as DomainException).getStatus()).toBe(400);
   });
 });

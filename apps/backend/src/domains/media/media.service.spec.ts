@@ -8,7 +8,8 @@ import {
 } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { ForbiddenException } from '@nestjs/common';
+import { DomainException } from '../../common/errors/domain.exception';
+import { ErrorCode } from '../../common/errors/error-codes';
 import { ConfigService } from '@nestjs/config';
 import { MediaService } from './media.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
@@ -169,7 +170,11 @@ describe('MediaService storage quota + write ordering', () => {
       usedBytes: PNG_1X1.length,
     });
 
-    await expect(upload(service)).rejects.toBeInstanceOf(ForbiddenException);
+    const error = await upload(service).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(DomainException);
+    expect((error as DomainException).code).toBe(
+      ErrorCode.STORAGE_LIMIT_REACHED,
+    );
 
     expect(mediaCreate).not.toHaveBeenCalled();
     expect(filesInWorkspace()).toHaveLength(0);
@@ -328,13 +333,17 @@ describe('MediaService storage quota + write ordering', () => {
         PNG_1X1.length,
       );
 
-      await expect(
-        service.duplicateMediaToWorkspace({
+      const error = await service
+        .duplicateMediaToWorkspace({
           sourceWorkspaceId: SOURCE_WS,
           mediaId: 'src_1',
           targetWorkspaceId: TARGET_WS,
-        }),
-      ).rejects.toBeInstanceOf(ForbiddenException);
+        })
+        .catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(DomainException);
+      expect((error as DomainException).code).toBe(
+        ErrorCode.STORAGE_LIMIT_REACHED,
+      );
 
       expect(mediaCreate).not.toHaveBeenCalled();
       expect(targetFiles()).toHaveLength(0);

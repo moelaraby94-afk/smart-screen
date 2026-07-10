@@ -4,6 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, ScreenStatus } from '@prisma/client';
+import { DomainException } from '../../common/errors/domain.exception';
+import { ErrorCode } from '../../common/errors/error-codes';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { PlaylistsService } from '../playlists/playlists.service';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
@@ -32,7 +34,16 @@ export class ScreensService {
     const limit = sub?.screenLimit ?? 25;
     const count = await this.prisma.screen.count({ where: { workspaceId } });
     if (count >= limit) {
-      throw new BadRequestException(`SCREEN_LIMIT_REACHED:${limit}`);
+      /**
+       * The limit travels as structured data. It used to be interpolated into
+       * the message (`SCREEN_LIMIT_REACHED:25`) and pulled back apart in the
+       * browser by `parseScreenLimitFromApiMessage`.
+       */
+      throw DomainException.badRequest(
+        ErrorCode.SCREEN_LIMIT_REACHED,
+        `Workspace already has ${count} of ${limit} allowed screens`,
+        { limit, current: count },
+      );
     }
   }
 

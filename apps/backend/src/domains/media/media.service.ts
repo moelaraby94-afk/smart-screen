@@ -1,11 +1,12 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
+import { DomainException } from '../../common/errors/domain.exception';
+import { ErrorCode } from '../../common/errors/error-codes';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { existsSync, mkdirSync, unlinkSync } from 'fs';
 import { copyFile, rename, unlink, writeFile } from 'fs/promises';
@@ -112,7 +113,15 @@ export class MediaService {
     });
     const used = BigInt(agg._sum.sizeBytes ?? 0);
     if (used + BigInt(additionalBytes) > sub.storageLimitBytes) {
-      throw new ForbiddenException('STORAGE_LIMIT_REACHED');
+      throw DomainException.forbidden(
+        ErrorCode.STORAGE_LIMIT_REACHED,
+        'Workspace storage limit reached',
+        {
+          limitBytes: Number(sub.storageLimitBytes),
+          usedBytes: Number(used),
+          requestedBytes: additionalBytes,
+        },
+      );
     }
   }
 
@@ -132,7 +141,11 @@ export class MediaService {
     /** The declared size is client-controlled; the buffer length is not. */
     const sizeBytes = params.buffer.length;
     if (sizeBytes > MAX_BYTES) {
-      throw new BadRequestException('File exceeds maximum allowed size.');
+      throw DomainException.badRequest(
+        ErrorCode.FILE_TOO_LARGE,
+        'File exceeds maximum allowed size',
+        { maxBytes: MAX_BYTES, sizeBytes },
+      );
     }
 
     /**
@@ -151,9 +164,13 @@ export class MediaService {
     const { fileTypeFromBuffer } = await import('file-type');
     const detected = await fileTypeFromBuffer(params.buffer);
     if (!detected || !ALLOWED_MIME.has(detected.mime)) {
-      throw new BadRequestException(
-        `File content does not match an allowed image/video type ` +
-          `(declared "${params.mimeType}", detected "${detected?.mime ?? 'unrecognized'}").`,
+      throw DomainException.badRequest(
+        ErrorCode.UNSUPPORTED_FILE_TYPE,
+        'File content does not match an allowed image/video type',
+        {
+          declared: params.mimeType,
+          detected: detected?.mime ?? 'unrecognized',
+        },
       );
     }
 
@@ -288,7 +305,10 @@ export class MediaService {
 
     const srcAbs = join(this.uploadRoot, ...media.relativePath.split('/'));
     if (!existsSync(srcAbs)) {
-      throw new BadRequestException('Media file is missing on disk.');
+      throw DomainException.badRequest(
+        ErrorCode.MEDIA_FILE_MISSING,
+        'Media file is missing on disk',
+      );
     }
 
     const dir = this.ensureUploadDir(params.targetWorkspaceId);
@@ -356,8 +376,10 @@ export class MediaService {
       where: { mediaId: id },
     });
     if (used > 0) {
-      throw new BadRequestException(
-        'Media is referenced by playlists. Remove it from playlists first.',
+      throw DomainException.badRequest(
+        ErrorCode.MEDIA_IN_USE,
+        'Media is referenced by playlists',
+        { playlistItemCount: used },
       );
     }
 
