@@ -35,6 +35,14 @@ export function ShellLogo({ locale, className }: Props) {
   }
 
   return (
+    /**
+     * Not `next/image`: the branding logo is served from whatever host the
+     * operator sets at runtime (MEDIA_PUBLIC_BASE_URL), and `next/image`
+     * requires every remote host to be declared in `images.remotePatterns` at
+     * build time. Decorative (`alt=""`) — the product name is rendered as text
+     * beside it.
+     */
+    // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
       alt=""

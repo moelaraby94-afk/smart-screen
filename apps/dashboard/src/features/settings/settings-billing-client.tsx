@@ -62,7 +62,7 @@ export function SettingsBillingClient() {
       setData((await res.json()) as BillingPayload);
       setLoading(false);
     })();
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void (async () => {

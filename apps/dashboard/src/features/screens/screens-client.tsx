@@ -1,5 +1,4 @@
 'use client';
-/* eslint-disable react-hooks/incompatible-library */
 
 import Link from 'next/link';
 import type { Route } from 'next';
@@ -47,7 +46,7 @@ import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
 import { ScreenQuickEditPanel } from '@/features/screens/screen-quick-edit-panel';
 import { useScreenActivePreview } from '@/features/screens/use-screen-active-preview';
-import { useApiScreens, type ScreenRow, type ScreenStatus } from './useApiScreens';
+import { useApiScreens, type ScreenRow } from './useApiScreens';
 import {
   deriveFleetReachability,
   ScreenFleetStatusBadge,

@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
     rules: {
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/refs": "off",
+      /** Logging goes through `@/lib/dev-log`; see the dashboard config. */
+      "no-console": "error",
     },
   },
 ]);

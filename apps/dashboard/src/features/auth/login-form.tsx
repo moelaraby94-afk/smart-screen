@@ -17,7 +17,6 @@ import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
 
 type LoginFormProps = {
-  locale: string;
   /** Dark glass login page (full-screen auth). */
   variant?: 'default' | 'dark';
   /** Split hero + form layout (login page provides columns). */
@@ -38,7 +37,6 @@ const glassInputDark =
   'h-12 rounded-xl border border-white/10 bg-[#1B254B]/55 text-[15px] text-white shadow-inner shadow-black/40 backdrop-blur-xl placeholder:text-white/35 focus-visible:border-[#FF6B00]/55 focus-visible:ring-2 focus-visible:ring-[#FF6B00]/25';
 
 export function LoginForm({
-  locale,
   variant = 'default',
   layout = 'card',
 }: LoginFormProps) {

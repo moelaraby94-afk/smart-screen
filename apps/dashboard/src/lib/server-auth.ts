@@ -48,6 +48,9 @@ export async function fetchAuthMeServer(): Promise<AuthMeServer> {
      * as a signed-out user, but both end in a redirect to /login. Log it, or the
      * next misconfiguration looks exactly like an expired session.
      */
+    // Server-only module: this must reach the server log in production, so it
+    // deliberately bypasses `dev-log` (which is stripped outside development).
+    // eslint-disable-next-line no-console
     console.error(
       `[server-auth] ${API_BASE}/auth/me failed; treating request as unauthenticated.`,
       error,

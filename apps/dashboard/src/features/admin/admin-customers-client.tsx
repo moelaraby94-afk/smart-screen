@@ -76,14 +76,6 @@ type UserRow = {
 
 type CustomerFilter = 'all' | 'active' | 'expired' | 'trial';
 
-function formatBytes(n: number, locale: string): string {
-  const nf = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
-  if (n < 1024) return `${nf.format(n)} B`;
-  if (n < 1024 * 1024) return `${nf.format(n / 1024)} KB`;
-  if (n < 1024 * 1024 * 1024) return `${nf.format(n / (1024 * 1024))} MB`;
-  return `${nf.format(n / (1024 * 1024 * 1024))} GB`;
-}
-
 function statusLabelClass(locale: string) {
   return locale === 'ar' ? 'normal-case' : 'uppercase tracking-wide';
 }

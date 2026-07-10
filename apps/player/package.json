@@ -7,8 +7,10 @@
     "dev:turbo": "next dev -p 3001 --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint .",
-    "test": "tsx --test \"src/**/*.test.ts\""
+    "lint": "eslint . --max-warnings=0",
+    "test": "tsx --test \"src/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

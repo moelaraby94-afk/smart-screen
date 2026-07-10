@@ -9,7 +9,6 @@ import {
   ChevronDown,
   LogOut,
   Moon,
-  Settings,
   SlidersHorizontal,
   Sun,
   UserRound,

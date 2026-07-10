@@ -7,7 +7,7 @@ on:
     branches: [main, master, develop]
 
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
     # Prisma CLI reads DATABASE_URL from the environment even for validate/generate (no live DB required).
     env:
@@ -26,27 +26,16 @@ jobs:
         working-directory: apps/backend
         run: npx prisma generate --config prisma.config.ts
 
-      - name: i18n check (dashboard)
-        run: npm run i18n:check
-
       - name: Prisma validate
         working-directory: apps/backend
         run: npx prisma validate --config prisma.config.ts
 
-      - name: Backend build
-        run: npm run build -w apps/backend
-
-      - name: Backend unit tests
-        run: npm run test -w apps/backend
-
-      - name: Dashboard lint
-        run: npm run lint -w apps/dashboard
-
-      - name: Dashboard build
-        run: npm run build -w apps/dashboard
-
-      - name: Player build
-        run: npm run build -w apps/player
+      # typecheck -> lint (--max-warnings=0) -> tests -> i18n -> builds.
+      # One script so that `npm run verify` locally runs exactly what CI runs.
+      # The previous workflow never linted the backend, never ran the player
+      # tests, and never typechecked anything that `next build` did not compile.
+      - name: Verify
+        run: npm run verify
 
       - name: Marketing build
         run: npm run build -w apps/marketing

@@ -18,6 +18,12 @@ const eslintConfig = defineConfig([
       // React Compiler / eslint-plugin-react-hooks: flags common data-fetch & reset patterns in effects.
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/refs": "off",
+      /**
+       * Logging goes through `@/lib/dev-log`, which strips itself in production.
+       * A bare `console.*` ships to the browser and can leak state. The few
+       * deliberate exceptions carry an inline disable explaining why.
+       */
+      "no-console": "error",
     },
   },
 ]);

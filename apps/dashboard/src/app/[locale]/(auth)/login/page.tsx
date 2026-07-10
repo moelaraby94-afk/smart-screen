@@ -33,7 +33,7 @@ export default async function LoginPage({ params }: Props) {
             <p className="mt-2 text-sm font-normal text-white/55">{t('description')}</p>
           </div>
           <Suspense fallback={<p className="text-sm text-white/45">{t('loading')}</p>}>
-            <LoginForm locale={locale} variant="dark" layout="split" />
+            <LoginForm variant="dark" layout="split" />
           </Suspense>
           <p className="mt-10 text-center text-sm text-white/45">
             <Link href={`/${locale}/register`} className="font-medium text-[#FF6B00]/90 hover:underline">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Circle, Ellipse, Group, Image as KonvaImage, Layer, Rect, Stage, Text } from 'react-konva';
+import { Ellipse, Group, Image as KonvaImage, Layer, Rect, Stage, Text } from 'react-konva';
 import useImage from 'use-image';
 import {
   type CanvasLayoutV1,

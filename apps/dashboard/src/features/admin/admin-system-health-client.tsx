@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import { Activity, Cpu, HardDrive, Radio, Server } from 'lucide-react';
@@ -37,7 +37,7 @@ export function AdminSystemHealthClient() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const res = await apiFetch('/admin/stats');
     if (!res.ok) {
       toast.error(t('loadFailed'));
@@ -46,13 +46,14 @@ export function AdminSystemHealthClient() {
     }
     setStats((await res.json()) as Stats);
     setError(null);
-  };
+  }, [t]);
 
   useEffect(() => {
     void load();
-    const t = window.setInterval(() => void load(), 10_000);
-    return () => window.clearInterval(t);
-  }, []);
+    // Named `intervalId`: the previous `t` shadowed the translator inside this effect.
+    const intervalId = window.setInterval(() => void load(), 10_000);
+    return () => window.clearInterval(intervalId);
+  }, [load]);
 
   const memPct =
     stats && stats.server.memoryTotalBytes > 0

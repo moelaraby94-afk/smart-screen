@@ -167,11 +167,16 @@ export function ClientHomeDashboard() {
     const payload = (await res.json()) as InsightsPayload;
     setInsights(payload);
     setLoading(false);
-  }, [workspaces.length, workspaceDataEpoch]);
+  }, [workspaces.length]);
 
+  /**
+   * `workspaceDataEpoch` belongs on the effect, not on `loadAll` — it is a
+   * refetch trigger, not something the callback reads. Same shape as
+   * billing-client.tsx.
+   */
   useEffect(() => {
     void loadAll();
-  }, [loadAll]);
+  }, [loadAll, workspaceDataEpoch]);
 
   useEffect(() => {
     if (!insights) return;

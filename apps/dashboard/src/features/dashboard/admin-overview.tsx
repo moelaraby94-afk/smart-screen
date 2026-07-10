@@ -88,7 +88,7 @@ export function AdminOverview({ locale }: Props) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   const metricsCards = stats
     ? [
