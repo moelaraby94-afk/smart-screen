@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { apiFetch, readApiErrorMessage } from '@/features/auth/session';
+import { apiFetch } from '@/features/auth/session';
+import { readApiError } from '@/features/api/api-error';
+import { useApiErrorMessage } from '@/features/api/use-api-error-message';
+import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 
 export type BranchPlaylistRow = {
   id: string;
@@ -17,6 +20,8 @@ export type BranchPlaylistRow = {
 
 export function useBranchPlaylists(workspaceId: string, onMutated: () => void) {
   const t = useTranslations('branchDetail');
+  const errorMessage = useApiErrorMessage();
+  const { toastResponseError } = useApiErrorToast();
   const [playlists, setPlaylists] = useState<BranchPlaylistRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -41,11 +46,11 @@ export function useBranchPlaylists(workspaceId: string, onMutated: () => void) {
     } else {
       setPlaylists([]);
       if (res.status !== 401) {
-        toast.error(await readApiErrorMessage(res));
+        await toastResponseError(res);
       }
     }
     setIsLoading(false);
-  }, [workspaceId]);
+  }, [workspaceId, toastResponseError]);
 
   useEffect(() => {
     void reload();
@@ -63,7 +68,7 @@ export function useBranchPlaylists(workspaceId: string, onMutated: () => void) {
           body: JSON.stringify({ workspaceId, name: trimmed }),
         });
         if (!res.ok) {
-          toast.error(await readApiErrorMessage(res));
+          await toastResponseError(res);
           return false;
         }
         toast.success(t('playlistCreated'));
@@ -74,7 +79,7 @@ export function useBranchPlaylists(workspaceId: string, onMutated: () => void) {
         setIsCreating(false);
       }
     },
-    [workspaceId, t, reload, onMutated],
+    [workspaceId, t, reload, onMutated, toastResponseError],
   );
 
   const duplicate = useCallback(
@@ -87,7 +92,7 @@ export function useBranchPlaylists(workspaceId: string, onMutated: () => void) {
           { method: 'POST' },
         );
         if (!res.ok) {
-          toast.error(await readApiErrorMessage(res));
+          await toastResponseError(res);
           return;
         }
         toast.success(t('playlistDuplicated'));
@@ -97,7 +102,7 @@ export function useBranchPlaylists(workspaceId: string, onMutated: () => void) {
         setDuplicatingId(null);
       }
     },
-    [workspaceId, t, reload, onMutated],
+    [workspaceId, t, reload, onMutated, toastResponseError],
   );
 
   const remove = useCallback(
@@ -111,7 +116,7 @@ export function useBranchPlaylists(workspaceId: string, onMutated: () => void) {
           { method: 'DELETE' },
         );
         if (!res.ok) {
-          toast.error(await readApiErrorMessage(res));
+          await toastResponseError(res);
           return false;
         }
         toast.success(t('playlistDeleted'));
@@ -122,7 +127,7 @@ export function useBranchPlaylists(workspaceId: string, onMutated: () => void) {
         setIsDeleting(false);
       }
     },
-    [workspaceId, t, reload, onMutated],
+    [workspaceId, t, reload, onMutated, toastResponseError],
   );
 
   const move = useCallback(
@@ -143,7 +148,7 @@ export function useBranchPlaylists(workspaceId: string, onMutated: () => void) {
           },
         );
         if (!cloneRes.ok) {
-          toast.error(await readApiErrorMessage(cloneRes));
+          await toastResponseError(cloneRes);
           return false;
         }
         if (alsoDeleteSource) {
@@ -152,7 +157,11 @@ export function useBranchPlaylists(workspaceId: string, onMutated: () => void) {
             { method: 'DELETE' },
           );
           if (!delRes.ok) {
-            toast.warning(t('playlistMovePartial', { message: await readApiErrorMessage(delRes) }));
+            toast.warning(
+              t('playlistMovePartial', {
+                message: errorMessage(await readApiError(delRes)),
+              }),
+            );
           } else {
             toast.success(t('playlistMoved'));
           }
@@ -166,7 +175,7 @@ export function useBranchPlaylists(workspaceId: string, onMutated: () => void) {
         setIsMoving(false);
       }
     },
-    [workspaceId, t, reload, onMutated],
+    [workspaceId, t, reload, onMutated, toastResponseError, errorMessage],
   );
 
   const update = useCallback(
@@ -188,7 +197,7 @@ export function useBranchPlaylists(workspaceId: string, onMutated: () => void) {
           },
         );
         if (!res.ok) {
-          toast.error(await readApiErrorMessage(res));
+          await toastResponseError(res);
           return false;
         }
         toast.success(t('playlistUpdated'));
@@ -199,7 +208,7 @@ export function useBranchPlaylists(workspaceId: string, onMutated: () => void) {
         setIsSavingEdit(false);
       }
     },
-    [workspaceId, t, reload, onMutated],
+    [workspaceId, t, reload, onMutated, toastResponseError],
   );
 
   return {

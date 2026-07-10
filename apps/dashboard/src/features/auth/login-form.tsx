@@ -10,9 +10,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   apiFetch,
-  readApiErrorMessage,
   setStoredAccessToken,
 } from './session';
+import { readApiError } from '@/features/api/api-error';
+import { useApiErrorMessage } from '@/features/api/use-api-error-message';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
 
@@ -41,6 +42,7 @@ export function LoginForm({
   layout = 'card',
 }: LoginFormProps) {
   const t = useTranslations('authForm');
+  const errorMessage = useApiErrorMessage();
   const activeLocale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -88,8 +90,7 @@ export function LoginForm({
         omitAuth: true,
       });
       if (!response.ok) {
-        const detail = await readApiErrorMessage(response);
-        throw new Error(detail);
+        throw new Error(errorMessage(await readApiError(response)));
       }
 
       const payload = (await response.json()) as AuthSuccessPayload;
@@ -113,8 +114,7 @@ export function LoginForm({
         omitAuth: true,
       });
       if (!response.ok) {
-        const detail = await readApiErrorMessage(response);
-        throw new Error(detail || t('devLoginFailed'));
+        throw new Error(errorMessage(await readApiError(response)));
       }
       const payload = (await response.json()) as AuthSuccessPayload;
       await applyAuthSuccess(payload);

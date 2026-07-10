@@ -16,7 +16,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
-import { apiFetch, readApiErrorMessage, setStoredAccessToken } from '@/features/auth/session';
+import { apiFetch, setStoredAccessToken } from '@/features/auth/session';
+import { readApiError } from '@/features/api/api-error';
+import { useApiErrorMessage } from '@/features/api/use-api-error-message';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { adminGlassTable } from '@/lib/admin-glass-table';
 import { cn } from '@/lib/utils';
@@ -50,6 +52,7 @@ type Props = {
 export function AdminCustomerWorkspaceClient({ customerId, workspaceId }: Props) {
   const locale = useLocale();
   const t = useTranslations('adminCustomerWorkspace');
+  const errorMessage = useApiErrorMessage();
   const tProfile = useTranslations('adminCustomerProfile');
   const { refreshWorkspaces } = useWorkspace();
   const [data, setData] = useState<WorkspacePayload | null>(null);
@@ -60,8 +63,7 @@ export function AdminCustomerWorkspaceClient({ customerId, workspaceId }: Props)
     setLoading(true);
     const res = await apiFetch(`/admin/customers/${customerId}/workspaces/${workspaceId}`);
     if (!res.ok) {
-      const detail = await readApiErrorMessage(res).catch(() => '');
-      toast.error(detail || t('loadFailed'));
+      toast.error(errorMessage(await readApiError(res)));
       setData(null);
       setLoading(false);
       return;
@@ -69,7 +71,7 @@ export function AdminCustomerWorkspaceClient({ customerId, workspaceId }: Props)
     const json = (await res.json()) as WorkspacePayload;
     setData(json);
     setLoading(false);
-  }, [customerId, workspaceId, t]);
+  }, [customerId, workspaceId, errorMessage]);
 
   useEffect(() => {
     void load();

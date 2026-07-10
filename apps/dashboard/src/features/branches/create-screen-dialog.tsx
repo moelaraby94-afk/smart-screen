@@ -14,11 +14,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  apiFetch,
-  parseScreenLimitFromApiMessage,
-  readApiErrorMessage,
-} from '@/features/auth/session';
+import { apiFetch } from '@/features/auth/session';
+import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 
 type PlaylistRow = { id: string; name: string };
 
@@ -33,6 +30,7 @@ type Props = {
 
 export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated }: Props) {
   const t = useTranslations('createScreenDialog');
+  const { toastResponseError } = useApiErrorToast();
   const [name, setName] = useState('');
   const [serialNumber, setSerialNumber] = useState('');
   const [location, setLocation] = useState('');
@@ -94,7 +92,7 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
           body: JSON.stringify({ workspaceId, name: newPlaylistName.trim() }),
         });
         if (!gr.ok) {
-          toast.error(await readApiErrorMessage(gr));
+          await toastResponseError(gr);
           return;
         }
         const created = (await gr.json()) as { id: string };
@@ -121,13 +119,12 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
         body: JSON.stringify(body),
       });
       if (!res.ok) {
-        const msg = await readApiErrorMessage(res);
-        const limit = parseScreenLimitFromApiMessage(msg);
-        if (limit !== null) {
-          toast.error(t('screenLimitReached', { limit }));
-        } else {
-          toast.error(msg);
-        }
+        /**
+         * No special case for the screen limit: the API answers
+         * SCREEN_LIMIT_REACHED with `details.limit`, and the message catalogue
+         * interpolates it. This used to parse the limit out of the error text.
+         */
+        await toastResponseError(res);
         return;
       }
       toast.success(t('success'));

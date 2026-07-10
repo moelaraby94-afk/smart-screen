@@ -45,7 +45,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiFetch, readApiErrorMessage } from '@/features/auth/session';
+import { apiFetch } from '@/features/auth/session';
+import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { useWorkspace, type WorkspaceSummary } from '@/features/workspace/workspace-context';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
@@ -128,6 +129,7 @@ function formatBytesLocale(n: number, locale: string): string {
 
 export function ClientHomeDashboard() {
   const t = useTranslations('clientHome');
+  const { toastResponseError } = useApiErrorToast();
   const tWs = useTranslations('clientHome.workspaceSummary');
   const tMetrics = useTranslations('overviewMetrics');
   const locale = useLocale();
@@ -221,7 +223,7 @@ export function ClientHomeDashboard() {
         },
       );
       if (!res.ok) {
-        toast.error(await readApiErrorMessage(res));
+        await toastResponseError(res);
         return;
       }
       toast.success(t('branchUpdated'));
@@ -240,6 +242,7 @@ export function ClientHomeDashboard() {
     bumpWorkspaceDataEpoch,
     loadAll,
     t,
+    toastResponseError,
   ]);
 
   const togglePause = useCallback(
@@ -256,7 +259,7 @@ export function ClientHomeDashboard() {
           },
         );
         if (!res.ok) {
-          toast.error(await readApiErrorMessage(res));
+          await toastResponseError(res);
           return;
         }
         toast.success(next ? t('branchPaused') : t('branchResumed'));
@@ -270,7 +273,7 @@ export function ClientHomeDashboard() {
         setPauseBusyId(null);
       }
     },
-    [refreshWorkspaces, workspaceId, bumpWorkspaceDataEpoch, loadAll, t],
+    [refreshWorkspaces, workspaceId, bumpWorkspaceDataEpoch, loadAll, t, toastResponseError],
   );
 
   const confirmDeleteBranch = useCallback(async () => {
@@ -282,7 +285,7 @@ export function ClientHomeDashboard() {
         method: 'DELETE',
       });
       if (!res.ok) {
-        toast.error(await readApiErrorMessage(res));
+        await toastResponseError(res);
         return;
       }
       toast.success(t('branchDeleted'));
@@ -306,6 +309,7 @@ export function ClientHomeDashboard() {
     locale,
     loadAll,
     t,
+    toastResponseError,
   ]);
 
   if (workspaces.length === 0) {

@@ -47,7 +47,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiFetch, readApiErrorMessage } from '@/features/auth/session';
+import { apiFetch } from '@/features/auth/session';
+import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { CreateScreenDialog } from '@/features/branches/create-screen-dialog';
 import { BranchWorkspaceToolbar, type BranchTab } from '@/features/branches/branch-workspace-toolbar';
@@ -69,6 +70,7 @@ type Props = {
 
 export function BranchDetailClient({ locale }: Props) {
   const t = useTranslations('branchDetail');
+  const { toastResponseError } = useApiErrorToast();
   const tToolbar = useTranslations('branchToolbar');
   const params = useParams();
   const workspaceIdParam = typeof params.workspaceId === 'string' ? params.workspaceId : '';
@@ -549,7 +551,7 @@ export function BranchDetailClient({ locale }: Props) {
                           { method: 'DELETE' },
                         );
                         if (!res.ok) {
-                          toast.error(await readApiErrorMessage(res));
+                          await toastResponseError(res);
                           return;
                         }
                         toast.success(t('screenDeleted'));

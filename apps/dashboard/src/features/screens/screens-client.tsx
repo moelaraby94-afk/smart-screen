@@ -18,6 +18,7 @@ import {
   Monitor,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -39,8 +40,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   apiFetch,
-  parseScreenLimitFromApiMessage,
-  readApiErrorMessage,
 } from '@/features/auth/session';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
@@ -514,6 +513,7 @@ function CreateScreenDialogContent({
   onSuccess: () => Promise<void>;
 }) {
   const t = useTranslations('screensClient.dialogs');
+  const { toastResponseError } = useApiErrorToast();
   const form = useForm<z.infer<typeof screenSchema>>({
     resolver: zodResolver(screenSchema),
     defaultValues: {
@@ -532,13 +532,8 @@ function CreateScreenDialogContent({
       }),
     });
     if (!response.ok) {
-      const msg = await readApiErrorMessage(response);
-      const limit = parseScreenLimitFromApiMessage(msg);
-      if (limit !== null) {
-        toast.error(t('screenLimitReached', { limit }));
-      } else {
-        toast.error(msg || t('createFailed'));
-      }
+      // SCREEN_LIMIT_REACHED carries `details.limit`; the catalogue formats it.
+      await toastResponseError(response);
       return;
     }
     toast.success(t('createSuccess'));

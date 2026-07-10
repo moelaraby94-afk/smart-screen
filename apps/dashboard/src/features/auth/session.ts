@@ -6,36 +6,12 @@ export function getApiBaseUrl() {
   return raw.replace(/\/+$/, '');
 }
 
-/** NestJS / validation errors: `{ message: string | string[] }` or plain text body */
-export async function readApiErrorMessage(response: Response): Promise<string> {
-  const text = await response.text();
-  if (!text?.trim()) {
-    return response.statusText || `HTTP ${response.status}`;
-  }
-  try {
-    const j = JSON.parse(text) as {
-      message?: unknown;
-      error?: string;
-    };
-    if (Array.isArray(j.message)) {
-      return j.message.map(String).join(', ');
-    }
-    if (typeof j.message === 'string') return j.message;
-    if (typeof j.error === 'string') return j.error;
-  } catch {
-    /* use raw text */
-  }
-  return text.length > 800 ? `${text.slice(0, 800)}…` : text;
-}
-
-const SCREEN_LIMIT_PREFIX = 'SCREEN_LIMIT_REACHED:';
-
-/** Parses `SCREEN_LIMIT_REACHED:{n}` from Nest `BadRequestException` bodies. */
-export function parseScreenLimitFromApiMessage(message: string): number | null {
-  if (!message.startsWith(SCREEN_LIMIT_PREFIX)) return null;
-  const n = Number(message.slice(SCREEN_LIMIT_PREFIX.length));
-  return Number.isFinite(n) ? n : null;
-}
+/**
+ * Error handling lives in `@/features/api`. There is deliberately no helper
+ * here that returns the server's `message`: it is English prose meant for logs,
+ * and rendering it is how Arabic users were shown English errors. Read the
+ * envelope with `readApiError()` and render `errors.<CODE>` instead.
+ */
 
 export type ApiFetchInit = RequestInit & { omitAuth?: boolean };
 

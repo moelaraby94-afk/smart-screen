@@ -11,9 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   apiFetch,
-  readApiErrorMessage,
   setStoredAccessToken,
 } from '@/features/auth/session';
+import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { COUNTRIES, guessCountryCode } from '@/lib/countries';
 
@@ -21,6 +21,7 @@ type Step = 'form' | 'otp';
 
 export function RegisterClient() {
   const t = useTranslations('registerClient');
+  const { toastResponseError } = useApiErrorToast();
   const tLegal = useTranslations('legal');
   const locale = useLocale();
   const router = useRouter();
@@ -65,7 +66,7 @@ export function RegisterClient() {
         return;
       }
       if (!res.ok) {
-        toast.error(await readApiErrorMessage(res).catch(() => t('registerFailed')));
+        await toastResponseError(res);
         return;
       }
       toast.success(t('otpSent'));
@@ -84,7 +85,7 @@ export function RegisterClient() {
         body: JSON.stringify({ email, code: otp }),
       });
       if (!res.ok) {
-        toast.error(await readApiErrorMessage(res).catch(() => t('invalidCode')));
+        await toastResponseError(res);
         return;
       }
       const payload = (await res.json()) as {
@@ -111,7 +112,7 @@ export function RegisterClient() {
         body: JSON.stringify({ email }),
       });
       if (!res.ok) {
-        toast.error(await readApiErrorMessage(res).catch(() => t('resendFailed')));
+        await toastResponseError(res);
         return;
       }
       toast.success(t('resendSent'));

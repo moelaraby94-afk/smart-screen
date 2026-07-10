@@ -4,7 +4,8 @@ import { useCallback, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { apiFetch, readApiErrorMessage } from '@/features/auth/session';
+import { apiFetch } from '@/features/auth/session';
+import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import type { ScreenRow } from '@/features/screens/useApiScreens';
 import type { BranchPlaylistRow } from './use-branch-playlists';
 
@@ -15,6 +16,7 @@ export function useScreenPlaybackAssignment(
   onAssigned: () => void,
 ) {
   const t = useTranslations('branchDetail');
+  const { toastResponseError } = useApiErrorToast();
   const [assigningScreenId, setAssigningScreenId] = useState<string | null>(null);
 
   const assign = useCallback(
@@ -31,7 +33,7 @@ export function useScreenPlaybackAssignment(
           },
         );
         if (!res.ok) {
-          toast.error(await readApiErrorMessage(res));
+          await toastResponseError(res);
           return;
         }
         const name = playlistId === null ? null : (playlists.find((p) => p.id === playlistId)?.name ?? null);
@@ -52,7 +54,7 @@ export function useScreenPlaybackAssignment(
         setAssigningScreenId(null);
       }
     },
-    [workspaceId, playlists, setScreens, t, onAssigned],
+    [workspaceId, playlists, setScreens, t, onAssigned, toastResponseError],
   );
 
   return { assigningScreenId, assign };

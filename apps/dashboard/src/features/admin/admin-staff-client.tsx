@@ -24,7 +24,8 @@ import {
 } from '@/components/ui/table';
 import { AdminEmptyState } from '@/components/admin/admin-empty-state';
 import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
-import { apiFetch, readApiErrorMessage } from '@/features/auth/session';
+import { apiFetch } from '@/features/auth/session';
+import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { adminGlassTable } from '@/lib/admin-glass-table';
 import { cn } from '@/lib/utils';
 
@@ -42,6 +43,7 @@ type StaffRow = {
 export function AdminStaffClient() {
   const locale = useLocale();
   const t = useTranslations('adminStaff');
+  const { toastResponseError } = useApiErrorToast();
   const [rows, setRows] = useState<StaffRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -106,8 +108,7 @@ export function AdminStaffClient() {
         }),
       });
       if (!res.ok) {
-        const detail = await readApiErrorMessage(res);
-        toast.error(detail || t('createFailed'));
+        await toastResponseError(res);
         return;
       }
       toast.success(t('created'));

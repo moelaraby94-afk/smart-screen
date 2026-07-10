@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
-import { apiFetch, readApiErrorMessage } from '@/features/auth/session';
+import { apiFetch } from '@/features/auth/session';
+import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { toast } from 'sonner';
 
 type SettingsPayload = {
@@ -27,6 +28,7 @@ const BRANDING_VARIANTS = [
 
 export function AdminSettingsClient() {
   const t = useTranslations('adminSettings');
+  const { toastResponseError } = useApiErrorToast();
   const [form, setForm] = useState({
     platformName: '',
     supportEmail: '',
@@ -73,7 +75,7 @@ export function AdminSettingsClient() {
         body: JSON.stringify(form),
       });
       if (!res.ok) {
-        toast.error(await readApiErrorMessage(res));
+        await toastResponseError(res);
         return;
       }
       toast.success(t('saved'));
@@ -96,7 +98,7 @@ export function AdminSettingsClient() {
         { method: 'POST', body: fd },
       );
       if (!res.ok) {
-        toast.error(await readApiErrorMessage(res));
+        await toastResponseError(res);
         return;
       }
       toast.success(t('branding.uploadSuccess'));

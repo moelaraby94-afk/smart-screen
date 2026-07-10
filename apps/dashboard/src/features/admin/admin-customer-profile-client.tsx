@@ -43,7 +43,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
-import { apiFetch, readApiErrorMessage, setStoredAccessToken } from '@/features/auth/session';
+import { apiFetch, setStoredAccessToken } from '@/features/auth/session';
+import { readApiError } from '@/features/api/api-error';
+import { useApiErrorMessage } from '@/features/api/use-api-error-message';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { adminGlassTable } from '@/lib/admin-glass-table';
 import { cn } from '@/lib/utils';
@@ -136,6 +138,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
   const locale = useLocale();
   const router = useRouter();
   const t = useTranslations('adminCustomerProfile');
+  const errorMessage = useApiErrorMessage();
   const { refreshWorkspaces } = useWorkspace();
   const [data, setData] = useState<ProfilePayload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -200,8 +203,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
         body: JSON.stringify(body),
       });
       if (!res.ok) {
-        const detail = await readApiErrorMessage(res);
-        throw new Error(detail);
+        throw new Error(errorMessage(await readApiError(res)));
       }
       toast.success(t('toastSubUpdated'));
       await load();

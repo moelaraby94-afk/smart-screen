@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
-import { apiFetch, parseScreenLimitFromApiMessage, readApiErrorMessage } from '@/features/auth/session';
+import { apiFetch } from '@/features/auth/session';
+import { readApiError } from '@/features/api/api-error';
+import { useApiErrorMessage } from '@/features/api/use-api-error-message';
 
 const SUCCESS_CLOSE_DELAY_MS = 2000;
 
@@ -14,7 +15,7 @@ export function usePlayerPairing(
     onClaimed: () => Promise<void>;
   },
 ) {
-  const t = useTranslations('branchDetail');
+  const errorMessage = useApiErrorMessage();
   const { canClaim, pairingActivityEpoch, onClaimed } = options;
 
   const [isOpen, setIsOpen] = useState(false);
@@ -82,14 +83,13 @@ export function usePlayerPairing(
         body: JSON.stringify(body),
       });
       if (!res.ok) {
-        const msg = await readApiErrorMessage(res);
-        if (msg.includes('LIMIT_REACHED') || parseScreenLimitFromApiMessage(msg) !== null) {
-          setError(t('pairingErrorLimit'));
-        } else if (msg.includes('INVALID_OR_EXPIRED_PAIRING_CODE')) {
-          setError(t('pairingErrorInvalid'));
-        } else {
-          setError(msg);
-        }
+        /**
+         * No branching on the failure: the message catalogue is keyed by the
+         * API's `code`, so screen-limit, wrong-code and lockout errors all
+         * resolve themselves. This used to sniff the server's English prose
+         * with `msg.includes('LIMIT_REACHED')`.
+         */
+        setError(errorMessage(await readApiError(res)));
         return;
       }
       void import('canvas-confetti').then((mod) => {
@@ -105,7 +105,7 @@ export function usePlayerPairing(
     } finally {
       setBusy(false);
     }
-  }, [workspaceId, canClaim, code, name, t, onClaimed, clearSuccessTimer, close]);
+  }, [workspaceId, canClaim, code, name, onClaimed, clearSuccessTimer, close, errorMessage]);
 
   return {
     isOpen,

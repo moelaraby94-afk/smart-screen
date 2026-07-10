@@ -19,7 +19,9 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { apiFetch, readApiErrorMessage } from '@/features/auth/session';
+import { apiFetch } from '@/features/auth/session';
+import { isApiError, readApiError } from '@/features/api/api-error';
+import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
 
@@ -141,6 +143,7 @@ function EmptyMediaIllustration() {
 export function MediaLibraryClient() {
   const locale = useLocale();
   const t = useTranslations('mediaClient');
+  const { toastApiError } = useApiErrorToast();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -275,14 +278,13 @@ export function MediaLibraryClient() {
             { method: 'POST', body: form },
           );
           if (!res.ok) {
-            const msg = await readApiErrorMessage(res);
-            if (
-              msg.includes('STORAGE_QUOTA_EXCEEDED') ||
-              msg.includes('STORAGE_LIMIT_REACHED')
-            ) {
-              throw new Error('STORAGE_QUOTA_EXCEEDED');
-            }
-            throw new Error(msg || 'Upload failed');
+            /**
+             * Abort the remaining files and let the catch report it. The API
+             * error object is thrown as-is; the uploader no longer has to guess
+             * whether the backend says STORAGE_QUOTA_EXCEEDED or
+             * STORAGE_LIMIT_REACHED, which is why it used to check for both.
+             */
+            throw await readApiError(res);
           }
         }
         toast.success(t('uploadComplete'));
@@ -290,12 +292,8 @@ export function MediaLibraryClient() {
         await loadFolders();
         bumpWorkspaceDataEpoch();
       } catch (e) {
-        const msg = e instanceof Error ? e.message : '';
-        if (
-          msg.includes('STORAGE_QUOTA_EXCEEDED') ||
-          msg.includes('STORAGE_LIMIT_REACHED')
-        ) {
-          toast.error(t('storageQuotaExceeded'));
+        if (isApiError(e)) {
+          toastApiError(e);
         } else {
           toast.error(t('uploadFailed'));
         }
@@ -303,7 +301,7 @@ export function MediaLibraryClient() {
         setPending(false);
       }
     },
-    [load, workspaceId, bumpWorkspaceDataEpoch, scope, t, selectedFolderId, loadFolders],
+    [load, workspaceId, bumpWorkspaceDataEpoch, scope, t, selectedFolderId, loadFolders, toastApiError],
   );
 
   const onDrop = useCallback(
