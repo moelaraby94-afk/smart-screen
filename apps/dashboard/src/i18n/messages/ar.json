@@ -1424,6 +1424,7 @@
     "MEDIA_IN_USE": "أزل هذه الوسيلة من قوائم التشغيل قبل حذفها.",
     "MEDIA_FILE_MISSING": "ملف الوسائط هذا غير موجود.",
     "UNSUPPORTED_PLAN": "هذه الخطة غير متاحة.",
-    "STRIPE_NOT_CONFIGURED": "لم يتم إعداد الفوترة بعد."
+    "STRIPE_NOT_CONFIGURED": "لم يتم إعداد الفوترة بعد.",
+    "TOO_MANY_LOGIN_ATTEMPTS": "محاولات دخول فاشلة كثيرة. حاول مرة أخرى بعد {retryAfterSeconds} ثانية."
   }
 }

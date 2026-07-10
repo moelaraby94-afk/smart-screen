@@ -16,6 +16,7 @@ import { ErrorCode } from '../../common/errors/error-codes';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { WorkspacesService } from '../workspaces/workspaces.service';
 import { AuditLogService } from '../../common/audit/audit-log.service';
+import { LoginLockoutService } from './login-lockout.service';
 import { EmailService } from '../email/email.service';
 import { passwordResetEmail, registerOtpEmail } from '../email/email-templates';
 import { LoginDto } from './dto/login.dto';
@@ -58,6 +59,7 @@ export class AuthService {
     @Inject(forwardRef(() => WorkspacesService))
     private readonly workspaces: WorkspacesService,
     private readonly auditLog: AuditLogService,
+    private readonly loginLockout: LoginLockoutService,
   ) {
     this.accessExpiresIn = this.parseDurationToSeconds(
       this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m'),
@@ -308,6 +310,9 @@ export class AuthService {
   }
 
   async login(dto: LoginDto, ipAddress?: string) {
+    // Per-account brute-force wall, independent of the per-IP rate limit.
+    await this.loginLockout.assertNotLockedOut(dto.email);
+
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email.toLowerCase() },
       select: {
@@ -322,21 +327,30 @@ export class AuthService {
         emailVerified: true,
       },
     });
-    if (!user)
+    if (!user) {
+      // Count the miss too, so lockout timing cannot reveal which emails exist.
+      await this.loginLockout.recordFailedAttempt(dto.email);
       throw DomainException.unauthorized(
         ErrorCode.INVALID_CREDENTIALS,
         'Invalid credentials',
       );
+    }
 
     const passwordMatches = await bcrypt.compare(
       dto.password,
       user.passwordHash,
     );
-    if (!passwordMatches)
+    if (!passwordMatches) {
+      await this.loginLockout.recordFailedAttempt(dto.email);
       throw DomainException.unauthorized(
         ErrorCode.INVALID_CREDENTIALS,
         'Invalid credentials',
       );
+    }
+
+    // Password was correct — clear the counter even if a later check rejects.
+    await this.loginLockout.clear(dto.email);
+
     if (!user.isActive)
       throw DomainException.unauthorized(
         ErrorCode.ACCOUNT_DISABLED,

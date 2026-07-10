@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
+import { LoginLockoutService } from './login-lockout.service';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { AuditLogModule } from '../../common/audit/audit-log.module';
 
@@ -25,7 +26,7 @@ import { AuditLogModule } from '../../common/audit/audit-log.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, LoginLockoutService],
   exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

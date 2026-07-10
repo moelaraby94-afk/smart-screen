@@ -1424,6 +1424,7 @@
     "MEDIA_IN_USE": "Remove this media from your playlists before deleting it.",
     "MEDIA_FILE_MISSING": "That media file is missing.",
     "UNSUPPORTED_PLAN": "That plan is not available.",
-    "STRIPE_NOT_CONFIGURED": "Billing is not configured yet."
+    "STRIPE_NOT_CONFIGURED": "Billing is not configured yet.",
+    "TOO_MANY_LOGIN_ATTEMPTS": "Too many failed sign-in attempts. Try again in {retryAfterSeconds} seconds."
   }
 }

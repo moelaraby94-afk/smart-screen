@@ -30,6 +30,8 @@ export const ErrorCode = {
   INVALID_OTP: 'INVALID_OTP',
   OTP_EXPIRED: 'OTP_EXPIRED',
   INVALID_RESET_TOKEN: 'INVALID_RESET_TOKEN',
+  /** details: { retryAfterSeconds: number } */
+  TOO_MANY_LOGIN_ATTEMPTS: 'TOO_MANY_LOGIN_ATTEMPTS',
   EMAIL_NOT_CONFIGURED: 'EMAIL_NOT_CONFIGURED',
 
   // --- workspace access

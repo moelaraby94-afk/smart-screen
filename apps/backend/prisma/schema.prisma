@@ -752,3 +752,30 @@ model AuditLog {
   @@index([createdAt])
 
 }
+
+/// Per-account brute-force lockout for sign-in. Rate limiting is per IP, so a
+/// distributed attempt against one account — or one from an office NAT — is
+/// otherwise unbounded. Keyed on the submitted email (not a userId) so a
+/// non-existent address is locked out identically to a real one, which stops
+/// the lockout from being used to enumerate accounts.
+model LoginLockout {
+
+  id            String   @id @default(cuid())
+
+  /// Lowercased email as submitted at sign-in.
+  email         String   @unique
+
+  /// Failed sign-in attempts within the current window (see windowStartAt).
+  failedCount   Int      @default(0)
+
+  /// Start of the current failure-counting window; failures outside it reset the counter.
+  windowStartAt DateTime
+
+  /// Set once failedCount hits the threshold; sign-in is refused while this is in the future.
+  lockedUntil   DateTime?
+
+  updatedAt     DateTime @updatedAt
+
+  @@index([lockedUntil])
+
+}
