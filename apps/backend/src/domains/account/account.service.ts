@@ -11,6 +11,7 @@ import { randomInt } from 'crypto';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { fromStorageLimitBytes } from '../../common/product/storage-limit';
+import { computeWorkspaceCapabilities } from '../../common/product/workspace-capabilities';
 import { EmailService } from '../email/email.service';
 import { emailChangeOtpEmail } from '../email/email-templates';
 
@@ -208,15 +209,16 @@ export class AccountService {
     const branches = await Promise.all(
       user.memberships.map(async (m) => {
         const workspaceId = m.workspace.id;
-        const [screens, playlists, media] = await Promise.all([
+        const [screens, playlists, mediaCount, mediaAgg] = await Promise.all([
           this.prisma.screen.findMany({
             where: { workspaceId },
             select: { id: true, status: true },
           }),
           this.prisma.playlist.count({ where: { workspaceId } }),
-          this.prisma.media.findMany({
+          this.prisma.media.count({ where: { workspaceId } }),
+          this.prisma.media.aggregate({
             where: { workspaceId },
-            select: { sizeBytes: true },
+            _sum: { sizeBytes: true },
           }),
         ]);
 
@@ -230,7 +232,19 @@ export class AccountService {
           { online: 0, offline: 0, maintenance: 0 },
         );
 
-        const storageBytes = media.reduce((sum, x) => sum + x.sizeBytes, 0);
+        const storageBytes = mediaAgg._sum.sizeBytes ?? 0;
+        const sub = m.workspace.subscription;
+        const storageLimitBytes = sub
+          ? fromStorageLimitBytes(sub.storageLimitBytes)
+          : null;
+        // The plan rules live in one place; the client renders these, not the math.
+        const capabilities = computeWorkspaceCapabilities(
+          { screenCount: screens.length, storageUsedBytes: storageBytes },
+          {
+            screenLimit: sub?.screenLimit ?? null,
+            storageLimitBytes,
+          },
+        );
         return {
           workspaceId,
           name: m.workspace.name,
@@ -240,21 +254,18 @@ export class AccountService {
           createdAt: m.workspace.createdAt.toISOString(),
           screens: screens.length,
           playlists,
-          mediaCount: media.length,
+          mediaCount,
           storageBytes,
           screenStatus,
-          subscription: m.workspace.subscription
+          capabilities,
+          subscription: sub
             ? {
-                plan: m.workspace.subscription.plan,
-                status: m.workspace.subscription.status,
-                seats: m.workspace.subscription.seats,
-                screenLimit: m.workspace.subscription.screenLimit,
-                storageLimitBytes: fromStorageLimitBytes(
-                  m.workspace.subscription.storageLimitBytes,
-                ),
-                currentPeriodEnd:
-                  m.workspace.subscription.currentPeriodEnd?.toISOString() ??
-                  null,
+                plan: sub.plan,
+                status: sub.status,
+                seats: sub.seats,
+                screenLimit: sub.screenLimit,
+                storageLimitBytes,
+                currentPeriodEnd: sub.currentPeriodEnd?.toISOString() ?? null,
               }
             : null,
         };

@@ -69,6 +69,22 @@ type InsightsBranch = {
   mediaCount: number;
   storageBytes: number;
   screenStatus: { online: number; offline: number; maintenance: number };
+  /** Backend-computed plan capabilities; the UI renders these, never the math. */
+  capabilities: {
+    screens: {
+      used: number;
+      limit: number | null;
+      remaining: number | null;
+      canCreate: boolean;
+    };
+    storage: {
+      usedBytes: number;
+      limitBytes: number | null;
+      remainingBytes: number | null;
+      usedPct: number | null;
+      canUpload: boolean;
+    };
+  };
   subscription: {
     plan: string;
     status: string;
@@ -322,11 +338,9 @@ export function ClientHomeDashboard() {
       : null;
   const currentWsName =
     workspaces.find((w: WorkspaceSummary) => w.id === workspaceId)?.name ?? '';
-  const storageQuota = currentWsRow?.subscription?.storageLimitBytes ?? null;
-  const storagePct =
-    storageQuota != null && storageQuota > 0
-      ? Math.min(100, Math.round((100 * currentWsRow!.storageBytes) / storageQuota))
-      : null;
+  // Percentage and quota come from the backend's capabilities, not recomputed here.
+  const storageQuota = currentWsRow?.capabilities.storage.limitBytes ?? null;
+  const storagePct = currentWsRow?.capabilities.storage.usedPct ?? null;
 
   const cardChrome =
     'group relative flex min-h-[160px] cursor-pointer flex-col rounded-2xl border border-[#FF6B00]/45 bg-[#FF6B00]/[0.07] p-5 pe-12 shadow-[0_0_32px_-12px_rgba(255,107,0,0.35)] transition-all duration-300 ease-out will-change-transform hover:-translate-y-1 hover:border-[#FF6B00]/55 hover:shadow-[0_0_40px_-8px_rgba(255,107,0,0.45)] dark:bg-[#FF6B00]/[0.05]';
