@@ -9,7 +9,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterStartDto } from './dto/register-start.dto';
@@ -29,7 +29,6 @@ export class AuthController {
 
   @HttpCode(200)
   @Post('register/start')
-  @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   async registerStart(@Body() dto: RegisterStartDto) {
     return this.authService.registerStart(dto);
@@ -37,13 +36,14 @@ export class AuthController {
 
   @HttpCode(200)
   @Post('register/resend')
-  @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   async registerResend(@Body() dto: RegisterResendDto) {
     return this.authService.registerResend(dto.email);
   }
 
+  /** 6-digit OTP: without a tight budget it is brute-forceable inside its 15-minute TTL. */
   @HttpCode(200)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('register/verify')
   async registerVerify(
     @Body() dto: RegisterVerifyDto,
@@ -60,19 +60,25 @@ export class AuthController {
 
   @HttpCode(200)
   @Post('forgot-password')
-  @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto.email);
   }
 
   @HttpCode(200)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
   }
 
+  /**
+   * The prime credential-stuffing target, and it had no limit of its own — it
+   * inherited only the module-wide default. Per IP; a per-account lockout is
+   * tracked separately.
+   */
   @HttpCode(200)
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @Post('login')
   async login(
     @Body() dto: LoginDto,

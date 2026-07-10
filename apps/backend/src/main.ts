@@ -44,6 +44,21 @@ async function bootstrap() {
   });
 
   /**
+   * Behind a reverse proxy, `req.ip` is the proxy's address unless Express is
+   * told how many hops to trust. That would put every client into one
+   * rate-limit bucket and write the proxy's address into the audit log.
+   *
+   * Configured as a hop count rather than `true`: trusting every hop lets a
+   * client spoof `X-Forwarded-For` and forge both its rate-limit identity and
+   * its audit-log IP. Set it to the number of proxies actually in front of the
+   * API (usually 1). Default 0 = direct exposure, no header trusted.
+   */
+  const trustProxyHops = Number(process.env.TRUST_PROXY_HOPS ?? '0');
+  if (Number.isInteger(trustProxyHops) && trustProxyHops > 0) {
+    app.set('trust proxy', trustProxyHops);
+  }
+
+  /**
    * contentSecurityPolicy/crossOriginEmbedderPolicy off: this is a pure
    * JSON + media-file API, not an HTML document — CSP belongs on the
    * dashboard's own responses (see apps/dashboard/next.config.ts), and COEP

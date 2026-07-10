@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { SentryModule } from '@sentry/nestjs/setup';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ConfigModule } from '@nestjs/config';
 import { AllExceptionsFilter } from './common/errors/all-exceptions.filter';
 import { CsrfModule } from './common/csrf/csrf.module';
@@ -28,8 +28,26 @@ import { EmailModule } from './domains/email/email.module';
   imports: [
     ...(process.env.SENTRY_DSN?.trim() ? [SentryModule.forRoot()] : []),
     ScheduleModule.forRoot(),
+    /**
+     * Baseline per-IP budget for the whole API. It exists to blunt
+     * unauthenticated floods and scanners, not to police normal use — the
+     * sensitive routes (login, password reset, pairing claim, billing) layer
+     * much tighter `@Throttle` limits on top, and those run after JwtAuthGuard
+     * so they can key on the user instead of the IP.
+     *
+     * Tracking is by IP, so `TRUST_PROXY_HOPS` must be set behind a reverse
+     * proxy or every client shares the proxy's bucket (see main.ts).
+     *
+     * Storage is in-memory: counters are per process. Running more than one
+     * backend instance needs a shared store (@nest-lab/throttler-storage-redis).
+     */
     ThrottlerModule.forRoot({
-      throttlers: [{ ttl: 60_000, limit: 120 }],
+      throttlers: [
+        {
+          ttl: 60_000,
+          limit: Number(process.env.RATE_LIMIT_PER_MINUTE ?? '300'),
+        },
+      ],
     }),
     ConfigModule.forRoot({ isGlobal: true }),
     EmailModule,
@@ -51,6 +69,16 @@ import { EmailModule } from './domains/email/email.module';
     WebhooksModule,
     MaintenanceModule,
   ],
-  providers: [{ provide: APP_FILTER, useClass: AllExceptionsFilter }],
+  providers: [
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
+    /**
+     * ThrottlerModule.forRoot() only *configures* the limit — nothing enforced
+     * it until now, because ThrottlerGuard was attached to five controllers by
+     * hand and the other eleven were wide open. Registering it as APP_GUARD
+     * applies the baseline everywhere; routes that must not be rate limited
+     * opt out explicitly with `@SkipThrottle()`.
+     */
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
 export class AppModule {}

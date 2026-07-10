@@ -6,9 +6,16 @@ import {
   Post,
   Req,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { StripeWebhookService } from './stripe-webhook.service';
 
+/**
+ * Never rate limited. Stripe delivers bursts and retries with backoff; a 429
+ * would drop billing events. The endpoint is protected instead by mandatory
+ * signature verification plus an idempotency key on (provider, externalId).
+ */
+@SkipThrottle()
 @Controller('webhooks/stripe')
 export class StripeWebhookController {
   constructor(private readonly stripeWebhooks: StripeWebhookService) {}

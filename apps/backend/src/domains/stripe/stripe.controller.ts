@@ -1,5 +1,5 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/auth/roles.guard';
@@ -21,7 +21,6 @@ export class StripeController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Post('checkout')
-  @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   createCheckout(@CurrentUser() user: JwtUser, @Body() dto: CreateCheckoutDto) {
     return this.subscriptions.createStripeCheckoutSession(
@@ -33,7 +32,6 @@ export class StripeController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Post('portal')
-  @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   createPortal(@CurrentUser() user: JwtUser, @Body() dto: CreatePortalDto) {
     return this.subscriptions.createBillingPortalSession(
