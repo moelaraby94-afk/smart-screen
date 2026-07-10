@@ -6,6 +6,9 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { DomainException } from '../../common/errors/domain.exception';
+import { buildPage } from '../../common/pagination/page';
+import { skipFor } from '../../common/pagination/pagination-query.dto';
+import { ListMediaDto } from './dto/list-media.dto';
 import { ErrorCode } from '../../common/errors/error-codes';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { existsSync, mkdirSync, unlinkSync } from 'fs';
@@ -24,14 +27,6 @@ const ALLOWED_MIME = new Set([
 ]);
 
 const MAX_BYTES = 150 * 1024 * 1024;
-
-/**
- * No pagination UI exists yet on the media library, so this isn't a page
- * size — it's a circuit breaker against an unbounded findMany() once a
- * workspace accumulates thousands of uploads. take/skip are accepted for
- * forward compatibility with an eventual "load more" UI.
- */
-const MEDIA_LIST_CAP = 500;
 
 @Injectable()
 export class MediaService {
@@ -253,24 +248,47 @@ export class MediaService {
     });
   }
 
-  async list(workspaceId: string, options?: { take?: number; skip?: number }) {
-    /**
-     * Clamp to [0, cap] — a negative `take` has special "last N" meaning to
-     * Prisma (reverse pagination from the end), which would defeat the cap
-     * entirely if passed through unclamped.
-     */
-    const take = Math.max(
-      0,
-      Math.min(options?.take ?? MEDIA_LIST_CAP, MEDIA_LIST_CAP),
+  async list(query: ListMediaDto) {
+    const where: Prisma.MediaWhereInput = {
+      workspaceId: query.workspaceId,
+      ...(query.folderId ? { folderId: query.folderId } : {}),
+    };
+    const [items, total] = await Promise.all([
+      this.prisma.media.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        include: { folder: true },
+        skip: skipFor(query),
+        take: query.limit,
+      }),
+      this.prisma.media.count({ where }),
+    ]);
+    return buildPage(
+      items.map((m) => this.toResponse(m)),
+      total,
+      query,
     );
-    const items = await this.prisma.media.findMany({
-      where: { workspaceId },
-      orderBy: { createdAt: 'desc' },
-      include: { folder: true },
-      take,
-      skip: Math.max(0, options?.skip ?? 0),
-    });
-    return items.map((m) => this.toResponse(m));
+  }
+
+  /**
+   * Aggregate counted in the database.
+   *
+   * `overview-metrics.tsx` used to download the whole media list and compute
+   * `arr.length` and `arr.reduce((a, m) => a + m.sizeBytes, 0)` in the browser —
+   * a full table scan over the wire to render two numbers.
+   */
+  async stats(workspaceId: string): Promise<{
+    count: number;
+    storageBytes: number;
+  }> {
+    const [count, aggregate] = await Promise.all([
+      this.prisma.media.count({ where: { workspaceId } }),
+      this.prisma.media.aggregate({
+        where: { workspaceId },
+        _sum: { sizeBytes: true },
+      }),
+    ]);
+    return { count, storageBytes: aggregate._sum.sizeBytes ?? 0 };
   }
 
   async getById(workspaceId: string, id: string) {

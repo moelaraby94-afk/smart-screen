@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiFetch } from '@/features/auth/session';
+import { readPageItems } from '@/features/api/page';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 
 type PlaylistRow = { id: string; name: string };
@@ -46,8 +47,7 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
     setLoadingPlaylists(true);
     const res = await apiFetch(`/playlists?workspaceId=${encodeURIComponent(workspaceId)}`);
     if (res.ok) {
-      const data = (await res.json()) as PlaylistRow[];
-      setPlaylists(Array.isArray(data) ? data : []);
+      setPlaylists(await readPageItems<PlaylistRow>(res));
     } else {
       setPlaylists([]);
     }

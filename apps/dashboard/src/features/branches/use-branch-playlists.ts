@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { apiFetch } from '@/features/auth/session';
+import { readPageItems } from '@/features/api/page';
 import { readApiError } from '@/features/api/api-error';
 import { useApiErrorMessage } from '@/features/api/use-api-error-message';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
@@ -39,10 +40,8 @@ export function useBranchPlaylists(workspaceId: string, onMutated: () => void) {
     setIsLoading(true);
     const res = await apiFetch(`/playlists?workspaceId=${encodeURIComponent(workspaceId)}`);
     if (res.ok) {
-      const data = (await res.json()) as BranchPlaylistRow[];
-      setPlaylists(
-        Array.isArray(data) ? data.map((p) => ({ ...p, isPublished: p.isPublished === true })) : [],
-      );
+      const data = await readPageItems<BranchPlaylistRow>(res);
+      setPlaylists(data.map((p) => ({ ...p, isPublished: p.isPublished === true })));
     } else {
       setPlaylists([]);
       if (res.status !== 401) {

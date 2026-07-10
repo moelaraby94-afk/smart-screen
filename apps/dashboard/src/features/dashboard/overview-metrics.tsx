@@ -6,14 +6,20 @@ import { useTranslations } from 'next-intl';
 import { Database, HardDrive, Monitor } from 'lucide-react';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { apiFetch } from '@/features/auth/session';
+import { readPage } from '@/features/api/page';
 import { useWorkspace } from '@/features/workspace/workspace-context';
-import type { MediaItem } from '@/features/media/media-library-client';
 
 function formatBytes(n: number): string {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
   return `${(n / (1024 * 1024)).toFixed(2)} MB`;
 }
+
+/** Mirrors GET /media/stats — counted in the database. */
+type MediaStats = {
+  count: number;
+  storageBytes: number;
+};
 
 export function OverviewMetrics() {
   const t = useTranslations('overviewMetrics');
@@ -35,22 +41,22 @@ export function OverviewMetrics() {
     setLoading(true);
     void (async () => {
       try {
+        const ws = encodeURIComponent(workspaceId);
+        /**
+         * Both numbers come from the database. This used to fetch up to 500
+         * screens and the entire media library, then compute `arr.length` and
+         * `arr.reduce(...)` in the browser to render two tiles.
+         */
         const [sRes, mRes] = await Promise.all([
-          apiFetch(
-            `/screens?workspaceId=${encodeURIComponent(workspaceId)}&page=1&limit=500`,
-          ),
-          apiFetch(`/media?workspaceId=${encodeURIComponent(workspaceId)}`),
+          apiFetch(`/screens?workspaceId=${ws}&page=1&limit=1`),
+          apiFetch(`/media/stats?workspaceId=${ws}`),
         ]);
         if (cancelled) return;
-        if (sRes.ok) {
-          const sJson = (await sRes.json()) as { total?: number };
-          setScreens(typeof sJson.total === 'number' ? sJson.total : 0);
-        } else setScreens(0);
+        setScreens((await readPage(sRes)).total);
         if (mRes.ok) {
-          const list = (await mRes.json()) as MediaItem[];
-          const arr = Array.isArray(list) ? list : [];
-          setMediaCount(arr.length);
-          setStorageBytes(arr.reduce((acc, m) => acc + (m.sizeBytes ?? 0), 0));
+          const stats = (await mRes.json()) as MediaStats;
+          setMediaCount(stats.count);
+          setStorageBytes(stats.storageBytes);
         } else {
           setMediaCount(0);
           setStorageBytes(0);

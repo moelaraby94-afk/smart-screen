@@ -16,6 +16,7 @@ import { RolesGuard } from '../../common/auth/roles.guard';
 import { Roles } from '../../common/auth/roles.decorator';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
+import { ListSchedulesDto } from './dto/list-schedules.dto';
 import { SchedulesService } from './schedules.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -25,8 +26,8 @@ export class SchedulesController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get()
-  list(@Query('workspaceId') workspaceId: string) {
-    return this.schedulesService.list(workspaceId);
+  list(@Query() query: ListSchedulesDto) {
+    return this.schedulesService.list(query.workspaceId, query);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)

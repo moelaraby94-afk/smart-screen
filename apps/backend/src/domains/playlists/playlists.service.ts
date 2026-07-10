@@ -5,6 +5,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import { buildPage } from '../../common/pagination/page';
+import {
+  PaginationQueryDto,
+  skipFor,
+} from '../../common/pagination/pagination-query.dto';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
@@ -40,16 +45,21 @@ export class PlaylistsService {
     });
   }
 
-  async list(workspaceId: string) {
-    return this.prisma.playlist.findMany({
-      where: { workspaceId },
-
-      orderBy: { updatedAt: 'desc' },
-
-      include: {
-        _count: { select: { items: true, screensInGroup: true } },
-      },
-    });
+  async list(workspaceId: string, query: PaginationQueryDto) {
+    const where = { workspaceId };
+    const [items, total] = await Promise.all([
+      this.prisma.playlist.findMany({
+        where,
+        orderBy: { updatedAt: 'desc' },
+        skip: skipFor(query),
+        take: query.limit,
+        include: {
+          _count: { select: { items: true, screensInGroup: true } },
+        },
+      }),
+      this.prisma.playlist.count({ where }),
+    ]);
+    return buildPage(items, total, query);
   }
 
   async getOne(workspaceId: string, id: string) {

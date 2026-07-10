@@ -21,6 +21,7 @@ import {
 } from '../../common/auth/current-user.decorator';
 import { CreateCanvasDto } from './dto/create-canvas.dto';
 import { UpdateCanvasDto } from './dto/update-canvas.dto';
+import { ListCanvasesDto } from './dto/list-canvases.dto';
 import { CanvasesService } from './canvases.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -30,9 +31,8 @@ export class CanvasesController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get()
-  list(@Query('workspaceId') workspaceId: string) {
-    if (!workspaceId) throw new BadRequestException('workspaceId is required');
-    return this.canvasesService.list(workspaceId);
+  list(@Query() query: ListCanvasesDto) {
+    return this.canvasesService.list(query.workspaceId, query);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)

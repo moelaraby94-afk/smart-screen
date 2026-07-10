@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiFetch } from '@/features/auth/session';
+import { readPageItems } from '@/features/api/page';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import type { MediaItem } from '@/features/media/media-library-client';
 
@@ -72,19 +73,19 @@ export function PlaylistStudioClient() {
   const loadLibrary = useCallback(async () => {
     if (!workspaceId) return;
     const res = await apiFetch(`/media?workspaceId=${encodeURIComponent(workspaceId)}`);
-    if (res.ok) setLibrary((await res.json()) as MediaItem[]);
+    if (res.ok) setLibrary(await readPageItems<MediaItem>(res));
   }, [workspaceId]);
 
   const loadPlaylists = useCallback(async () => {
     if (!workspaceId) return;
     const res = await apiFetch(`/playlists?workspaceId=${encodeURIComponent(workspaceId)}`);
-    if (res.ok) setPlaylists((await res.json()) as PlaylistSummary[]);
+    if (res.ok) setPlaylists(await readPageItems<PlaylistSummary>(res));
   }, [workspaceId]);
 
   const loadCanvasLibrary = useCallback(async () => {
     if (!workspaceId) return;
     const res = await apiFetch(`/canvases?workspaceId=${encodeURIComponent(workspaceId)}`);
-    if (res.ok) setCanvasLibrary((await res.json()) as CanvasSummary[]);
+    if (res.ok) setCanvasLibrary(await readPageItems<CanvasSummary>(res));
   }, [workspaceId]);
 
   const loadPlaylistDetail = useCallback(

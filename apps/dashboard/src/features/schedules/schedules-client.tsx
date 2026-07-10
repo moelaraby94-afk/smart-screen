@@ -23,6 +23,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiFetch } from '@/features/auth/session';
+import { readPageItems } from '@/features/api/page';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
@@ -86,16 +87,13 @@ export function SchedulesClient({ locale }: { locale: string }) {
         apiFetch(`/playlists?workspaceId=${encodeURIComponent(workspaceId)}`),
         apiFetch(`/screens?workspaceId=${encodeURIComponent(workspaceId)}&page=1&limit=200`),
       ]);
-      if (sRes.ok) setSchedules((await sRes.json()) as ScheduleApi[]);
+      if (sRes.ok) setSchedules(await readPageItems<ScheduleApi>(sRes));
       if (oRes.ok) {
         const o = (await oRes.json()) as { pairs: Array<[string, string]> };
         setPairs(o.pairs ?? []);
       }
-      if (pRes.ok) setPlaylists((await pRes.json()) as PlaylistOpt[]);
-      if (scRes.ok) {
-        const body = (await scRes.json()) as { items: ScreenOpt[] };
-        setScreens(body.items ?? []);
-      }
+      if (pRes.ok) setPlaylists(await readPageItems<PlaylistOpt>(pRes));
+      if (scRes.ok) setScreens(await readPageItems<ScreenOpt>(scRes));
     } finally {
       setLoading(false);
     }

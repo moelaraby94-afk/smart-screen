@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { apiFetch } from '@/features/auth/session';
+import { readPageItems } from '@/features/api/page';
 import { cn } from '@/lib/utils';
 import type { ScreenRow } from './useApiScreens';
 
@@ -52,14 +53,8 @@ export function ScreenQuickEditPanel({
       apiFetch(`/playlists?workspaceId=${encodeURIComponent(workspaceId)}`),
       apiFetch(`/schedules?workspaceId=${encodeURIComponent(workspaceId)}`),
     ]);
-    if (plRes.ok) {
-      const rows = (await plRes.json()) as PlaylistOpt[];
-      setPlaylists(Array.isArray(rows) ? rows : []);
-    }
-    if (schRes.ok) {
-      const rows = (await schRes.json()) as ScheduleOpt[];
-      setSchedules(Array.isArray(rows) ? rows : []);
-    }
+    if (plRes.ok) setPlaylists(await readPageItems<PlaylistOpt>(plRes));
+    if (schRes.ok) setSchedules(await readPageItems<ScheduleOpt>(schRes));
   }, [workspaceId]);
 
   useEffect(() => {

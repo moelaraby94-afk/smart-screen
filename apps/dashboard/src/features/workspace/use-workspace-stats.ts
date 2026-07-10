@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { apiFetch } from '@/features/auth/session';
+import { readPage } from '@/features/api/page';
 
 export type WorkspaceCounts = {
   media: number;
@@ -27,32 +28,33 @@ export function useWorkspaceStats(
       return;
     }
     let cancelled = false;
+    /**
+     * Three counts, three `total` fields. This used to download the entire media
+     * library and the entire playlist list and take `.length` of each — a full
+     * table scan over the wire per sidebar render, and a wrong number as soon as
+     * the server's page cap bit. `limit=1` fetches one row for its `total`.
+     */
+    const countOnly = (path: string) =>
+      apiFetch(`${path}&page=1&limit=1`);
+
     (async () => {
       try {
+        const ws = encodeURIComponent(workspaceId);
         const [mRes, sRes, pRes] = await Promise.all([
-          apiFetch(`/media?workspaceId=${encodeURIComponent(workspaceId)}`),
-          apiFetch(
-            `/screens?workspaceId=${encodeURIComponent(workspaceId)}&page=1&limit=500`,
-          ),
-          apiFetch(`/playlists?workspaceId=${encodeURIComponent(workspaceId)}`),
+          countOnly(`/media?workspaceId=${ws}`),
+          countOnly(`/screens?workspaceId=${ws}`),
+          countOnly(`/playlists?workspaceId=${ws}`),
         ]);
-        const mediaJson = mRes.ok ? await mRes.json() : [];
-        const screensJson = sRes.ok ? await sRes.json() : null;
-        const playlistsJson = pRes.ok ? await pRes.json() : [];
+        const [media, screens, playlists] = await Promise.all([
+          readPage(mRes),
+          readPage(sRes),
+          readPage(pRes),
+        ]);
         if (cancelled) return;
-        const media = Array.isArray(mediaJson) ? mediaJson : [];
-        const playlists = Array.isArray(playlistsJson) ? playlistsJson : [];
-        const total =
-          screensJson &&
-          typeof screensJson === 'object' &&
-          'total' in screensJson &&
-          typeof (screensJson as { total: unknown }).total === 'number'
-            ? (screensJson as { total: number }).total
-            : 0;
         setCounts({
-          media: media.length,
-          screens: total,
-          playlists: playlists.length,
+          media: media.total,
+          screens: screens.total,
+          playlists: playlists.total,
         });
       } catch {
         if (!cancelled) setCounts({ media: 0, screens: 0, playlists: 0 });

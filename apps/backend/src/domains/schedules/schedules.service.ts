@@ -5,6 +5,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { buildPage } from '../../common/pagination/page';
+import {
+  PaginationQueryDto,
+  skipFor,
+} from '../../common/pagination/pagination-query.dto';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { PlaylistsService } from '../playlists/playlists.service';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
@@ -22,15 +27,22 @@ export class SchedulesService {
     private readonly playlists: PlaylistsService,
   ) {}
 
-  async list(workspaceId: string) {
-    return this.prisma.schedule.findMany({
-      where: { workspaceId },
-      orderBy: [{ priority: 'desc' }, { startTime: 'asc' }],
-      include: {
-        playlist: { select: { id: true, name: true } },
-        screen: { select: { id: true, name: true } },
-      },
-    });
+  async list(workspaceId: string, query: PaginationQueryDto) {
+    const where = { workspaceId };
+    const [items, total] = await Promise.all([
+      this.prisma.schedule.findMany({
+        where,
+        orderBy: [{ priority: 'desc' }, { startTime: 'asc' }],
+        skip: skipFor(query),
+        take: query.limit,
+        include: {
+          playlist: { select: { id: true, name: true } },
+          screen: { select: { id: true, name: true } },
+        },
+      }),
+      this.prisma.schedule.count({ where }),
+    ]);
+    return buildPage(items, total, query);
   }
 
   async listOverlaps(workspaceId: string) {

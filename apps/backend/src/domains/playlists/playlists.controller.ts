@@ -22,6 +22,7 @@ import { ClonePlaylistDto } from './dto/clone-playlist.dto';
 import { CreatePlaylistDto } from './dto/create-playlist.dto';
 import { UpdatePlaylistDto } from './dto/update-playlist.dto';
 import { ReplacePlaylistItemsDto } from './dto/replace-playlist-items.dto';
+import { ListPlaylistsDto } from './dto/list-playlists.dto';
 import { PlaylistsService } from './playlists.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -31,8 +32,8 @@ export class PlaylistsController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get()
-  list(@Query('workspaceId') workspaceId: string) {
-    return this.playlistsService.list(workspaceId);
+  list(@Query() query: ListPlaylistsDto) {
+    return this.playlistsService.list(query.workspaceId, query);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)

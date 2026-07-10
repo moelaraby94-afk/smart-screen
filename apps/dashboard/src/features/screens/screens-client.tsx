@@ -18,6 +18,7 @@ import {
   Monitor,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { readPageItems } from '@/features/api/page';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { Button } from '@/components/ui/button';
 import {
@@ -273,8 +274,7 @@ export function ScreensClient({ locale }: Props) {
         `/playlists?workspaceId=${encodeURIComponent(workspaceId)}`,
       );
       if (!res.ok || cancelled) return;
-      const rows = (await res.json()) as PlaylistOption[];
-      setPlaylists(Array.isArray(rows) ? rows : []);
+      setPlaylists(await readPageItems<PlaylistOption>(res));
     })();
     return () => {
       cancelled = true;

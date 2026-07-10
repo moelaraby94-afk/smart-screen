@@ -1,15 +1,14 @@
 import { ScreenStatus } from '@prisma/client';
 import { Transform } from 'class-transformer';
-import {
-  IsBoolean,
-  IsEnum,
-  IsInt,
-  IsOptional,
-  IsString,
-  Min,
-} from 'class-validator';
+import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
+import { PaginationQueryDto } from '../../../common/pagination/pagination-query.dto';
 
-export class ListScreensDto {
+/**
+ * `page`/`limit` come from PaginationQueryDto, which clamps `limit` to
+ * MAX_PAGE_SIZE. Previously `limit` was `@Min(1)` with no ceiling, so
+ * `?limit=1000000` was accepted and the pagination did nothing.
+ */
+export class ListScreensDto extends PaginationQueryDto {
   @IsString()
   workspaceId!: string;
 
@@ -27,16 +26,4 @@ export class ListScreensDto {
   @IsBoolean()
   @IsOptional()
   ungrouped?: boolean;
-
-  @Transform(({ value }: { value: string }) => Number(value))
-  @IsInt()
-  @Min(1)
-  @IsOptional()
-  page = 1;
-
-  @Transform(({ value }: { value: string }) => Number(value))
-  @IsInt()
-  @Min(1)
-  @IsOptional()
-  limit = 12;
 }

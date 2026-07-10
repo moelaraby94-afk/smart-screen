@@ -3,6 +3,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { buildPage } from '../../common/pagination/page';
+import {
+  PaginationQueryDto,
+  skipFor,
+} from '../../common/pagination/pagination-query.dto';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
 import { CreateCanvasDto } from './dto/create-canvas.dto';
@@ -30,12 +35,19 @@ export class CanvasesService {
     });
   }
 
-  async list(workspaceId: string) {
-    return this.prisma.canvas.findMany({
-      where: { workspaceId },
-      orderBy: { updatedAt: 'desc' },
-      select: this.canvasSelect,
-    });
+  async list(workspaceId: string, query: PaginationQueryDto) {
+    const where = { workspaceId };
+    const [items, total] = await Promise.all([
+      this.prisma.canvas.findMany({
+        where,
+        orderBy: { updatedAt: 'desc' },
+        skip: skipFor(query),
+        take: query.limit,
+        select: this.canvasSelect,
+      }),
+      this.prisma.canvas.count({ where }),
+    ]);
+    return buildPage(items, total, query);
   }
 
   async getById(workspaceId: string, id: string) {

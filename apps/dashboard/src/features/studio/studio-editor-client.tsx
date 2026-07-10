@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiFetch } from '@/features/auth/session';
+import { readPageItems } from '@/features/api/page';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import type { MediaItem } from '@/features/media/media-library-client';
 import {
@@ -121,13 +122,13 @@ export function StudioEditorClient() {
   const loadLibrary = useCallback(async () => {
     if (!workspaceId) return;
     const res = await apiFetch(`/media?workspaceId=${encodeURIComponent(workspaceId)}`);
-    if (res.ok) setLibrary((await res.json()) as MediaItem[]);
+    if (res.ok) setLibrary(await readPageItems<MediaItem>(res));
   }, [workspaceId]);
 
   const loadCanvases = useCallback(async () => {
     if (!workspaceId) return;
     const res = await apiFetch(`/canvases?workspaceId=${encodeURIComponent(workspaceId)}`);
-    if (res.ok) setCanvases((await res.json()) as CanvasDto[]);
+    if (res.ok) setCanvases(await readPageItems<CanvasDto>(res));
   }, [workspaceId]);
 
   const loadCanvas = useCallback(

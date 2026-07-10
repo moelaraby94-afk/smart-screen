@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/features/auth/session';
+import { readPageItems } from '@/features/api/page';
 import { isApiError, readApiError } from '@/features/api/api-error';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { useWorkspace } from '@/features/workspace/workspace-context';
@@ -184,7 +185,7 @@ export function MediaLibraryClient() {
         workspaces.map(async (w) => {
           const res = await apiFetch(`/media?workspaceId=${encodeURIComponent(w.id)}`);
           if (!res.ok) return [] as MediaItem[];
-          const data = (await res.json()) as MediaItem[];
+          const data = await readPageItems<MediaItem>(res);
           return data.map((m) => ({
             ...m,
             workspaceId: w.id,
@@ -202,12 +203,7 @@ export function MediaLibraryClient() {
       return;
     }
     const res = await apiFetch(`/media?workspaceId=${encodeURIComponent(workspaceId)}`);
-    if (res.ok) {
-      const data = (await res.json()) as MediaItem[];
-      setItems(data);
-    } else {
-      setItems([]);
-    }
+    setItems(res.ok ? await readPageItems<MediaItem>(res) : []);
     setLoading(false);
   }, [workspaceId, scope, workspaces]);
 

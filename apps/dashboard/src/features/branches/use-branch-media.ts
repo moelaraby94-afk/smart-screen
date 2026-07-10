@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '@/features/auth/session';
+import { readPageItems } from '@/features/api/page';
 import { type MediaItem } from '@/features/media/media-library-client';
 
 export function useBranchMedia(workspaceId: string) {
@@ -17,8 +18,7 @@ export function useBranchMedia(workspaceId: string) {
     setIsLoading(true);
     const res = await apiFetch(`/media?workspaceId=${encodeURIComponent(workspaceId)}`);
     if (res.ok) {
-      const data = (await res.json()) as MediaItem[];
-      setMediaItems(Array.isArray(data) ? data : []);
+      setMediaItems(await readPageItems<MediaItem>(res));
     } else {
       setMediaItems([]);
     }

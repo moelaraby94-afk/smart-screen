@@ -19,6 +19,8 @@ import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/auth/roles.guard';
 import { Roles } from '../../common/auth/roles.decorator';
 import { FolderNameDto } from './dto/folder-name.dto';
+import { ListMediaDto } from './dto/list-media.dto';
+import { MediaStatsQueryDto } from './dto/media-stats-query.dto';
 import { MoveMediaFolderDto } from './dto/move-media-folder.dto';
 import { MediaService } from './media.service';
 
@@ -61,17 +63,15 @@ export class MediaController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get()
-  list(
-    @Query('workspaceId') workspaceId: string,
-    @Query('take') take?: string,
-    @Query('skip') skip?: string,
-  ) {
-    const parsedTake = take !== undefined ? Number(take) : undefined;
-    const parsedSkip = skip !== undefined ? Number(skip) : undefined;
-    return this.mediaService.list(workspaceId, {
-      take: Number.isFinite(parsedTake) ? parsedTake : undefined,
-      skip: Number.isFinite(parsedSkip) ? parsedSkip : undefined,
-    });
+  list(@Query() query: ListMediaDto) {
+    return this.mediaService.list(query);
+  }
+
+  /** Counted in the database so clients never download the library to total it. */
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
+  @Get('stats')
+  stats(@Query() query: MediaStatsQueryDto) {
+    return this.mediaService.stats(query.workspaceId);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)

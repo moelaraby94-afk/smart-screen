@@ -6,6 +6,8 @@ import {
 import { Prisma, ScreenStatus } from '@prisma/client';
 import { DomainException } from '../../common/errors/domain.exception';
 import { ErrorCode } from '../../common/errors/error-codes';
+import { buildPage } from '../../common/pagination/page';
+import { skipFor } from '../../common/pagination/pagination-query.dto';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { PlaylistsService } from '../playlists/playlists.service';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
@@ -95,26 +97,18 @@ export class ScreensService {
       ...(dto.status ? { status: dto.status } : {}),
       ...groupFilter,
     };
-    const skip = (dto.page - 1) * dto.limit;
-
     const [items, total] = await Promise.all([
       this.prisma.screen.findMany({
         where,
         orderBy: { createdAt: 'desc' },
-        skip,
+        skip: skipFor(dto),
         take: dto.limit,
         select: this.screenSelect,
       }),
       this.prisma.screen.count({ where }),
     ]);
 
-    return {
-      items,
-      page: dto.page,
-      limit: dto.limit,
-      total,
-      totalPages: Math.max(1, Math.ceil(total / dto.limit)),
-    };
+    return buildPage(items, total, dto);
   }
 
   async getById(workspaceId: string, id: string) {
