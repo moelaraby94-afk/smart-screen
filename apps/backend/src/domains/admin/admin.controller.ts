@@ -33,6 +33,7 @@ import { PatchCustomerSubscriptionDto } from './dto/patch-customer-subscription.
 import { CreateStaffDto } from './dto/create-staff.dto';
 import { UpdateStaffRoleDto } from './dto/update-staff-role.dto';
 import { UpdateAdminSettingsDto } from './dto/update-admin-settings.dto';
+import { SetMockPlanDto } from '../subscriptions/dto/set-mock-plan.dto';
 import { BrandingAssetsService } from './branding-assets.service';
 
 /**
@@ -179,11 +180,11 @@ export class AdminController {
   @UseGuards(SuperAdminDbGuard)
   mockWorkspaceSubscription(
     @Param('workspaceId') workspaceId: string,
-    @Body() body: { plan?: 'FREE' | 'PRO' },
+    @Body() dto: SetMockPlanDto,
   ) {
     return this.adminService.mockWorkspaceSubscriptionPlan(
       workspaceId,
-      body.plan ?? 'FREE',
+      dto.plan,
     );
   }
 

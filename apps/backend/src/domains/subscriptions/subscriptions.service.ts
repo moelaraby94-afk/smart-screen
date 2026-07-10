@@ -14,6 +14,7 @@ import {
 } from '@prisma/client';
 import Stripe from 'stripe';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import type { MockPlan } from './dto/set-mock-plan.dto';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
 import { assertMockBillingAllowed } from '../../common/product/mock-billing';
 import {
@@ -341,7 +342,7 @@ export class SubscriptionsService {
     });
   }
 
-  async setMockPlan(workspaceId: string, plan: 'FREE' | 'PRO') {
+  async setMockPlan(workspaceId: string, plan: MockPlan) {
     assertMockBillingAllowed();
     const sub = await this.prisma.subscription.findUnique({
       where: { workspaceId },

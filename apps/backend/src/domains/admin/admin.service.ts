@@ -23,6 +23,7 @@ import { assertMockBillingAllowed } from '../../common/product/mock-billing';
 import { UpdateAdminUserDto } from './dto/update-admin-user.dto';
 import { getAdminSettings, updateAdminSettings } from './admin-runtime.store';
 import { AuditLogService } from '../../common/audit/audit-log.service';
+import type { MockPlan } from '../subscriptions/dto/set-mock-plan.dto';
 import * as bcrypt from 'bcryptjs';
 
 const IDLE_LOGIN_DAYS = 90;
@@ -630,10 +631,7 @@ export class AdminService {
     }));
   }
 
-  async mockWorkspaceSubscriptionPlan(
-    workspaceId: string,
-    plan: 'FREE' | 'PRO',
-  ) {
+  async mockWorkspaceSubscriptionPlan(workspaceId: string, plan: MockPlan) {
     assertMockBillingAllowed();
     const w = await this.prisma.workspace.findUnique({
       where: { id: workspaceId },

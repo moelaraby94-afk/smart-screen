@@ -18,6 +18,8 @@ import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/auth/roles.guard';
 import { Roles } from '../../common/auth/roles.decorator';
+import { FolderNameDto } from './dto/folder-name.dto';
+import { MoveMediaFolderDto } from './dto/move-media-folder.dto';
 import { MediaService } from './media.service';
 
 const MAX_BYTES = 150 * 1024 * 1024;
@@ -94,11 +96,10 @@ export class MediaController {
   @Post('folders')
   createFolder(
     @Query('workspaceId') workspaceId: string,
-    @Body() body: { name?: string },
+    @Body() dto: FolderNameDto,
   ) {
     if (!workspaceId) throw new BadRequestException('workspaceId is required');
-    if (!body?.name) throw new BadRequestException('name is required');
-    return this.mediaService.createFolder(workspaceId, body.name);
+    return this.mediaService.createFolder(workspaceId, dto.name);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
@@ -106,11 +107,10 @@ export class MediaController {
   renameFolder(
     @Param('id') id: string,
     @Query('workspaceId') workspaceId: string,
-    @Body() body: { name?: string },
+    @Body() dto: FolderNameDto,
   ) {
     if (!workspaceId) throw new BadRequestException('workspaceId is required');
-    if (!body?.name) throw new BadRequestException('name is required');
-    return this.mediaService.renameFolder(workspaceId, id, body.name);
+    return this.mediaService.renameFolder(workspaceId, id, dto.name);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
@@ -128,13 +128,13 @@ export class MediaController {
   moveMediaFolder(
     @Param('id') id: string,
     @Query('workspaceId') workspaceId: string,
-    @Body() body: { folderId?: string | null },
+    @Body() dto: MoveMediaFolderDto,
   ) {
     if (!workspaceId) throw new BadRequestException('workspaceId is required');
     return this.mediaService.moveMediaToFolder(
       workspaceId,
       id,
-      body?.folderId ?? null,
+      dto.folderId ?? null,
     );
   }
 }
