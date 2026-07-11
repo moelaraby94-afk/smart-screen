@@ -1,12 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Route } from 'next';
 import { useLocale, useTranslations } from 'next-intl';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
-import { Film, Folder, FolderPlus, ImageIcon, Pencil, Trash2, Upload, Sparkles } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -34,6 +34,8 @@ import {
 } from '@/features/media/api/media-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
+import { EmptyMediaIllustration } from '@/features/media/media-preview-components';
+import { FolderSection, MediaGrid, type MediaFolder } from '@/features/media/media-grid-sections';
 
 export type MediaItem = {
   id: string;
@@ -42,113 +44,11 @@ export type MediaItem = {
   sizeBytes: number;
   publicUrl: string;
   createdAt: string;
-  /** Present when listing aggregated account media */
   workspaceId?: string;
   workspaceName?: string;
   folderId?: string | null;
   folderName?: string | null;
 };
-
-type MediaFolder = {
-  id: string;
-  name: string;
-  createdAt: string;
-  _count: { medias: number };
-};
-
-function MediaPreviewImage({ src, alt }: { src: string; alt: string }) {
-  const [failed, setFailed] = useState(false);
-  const t = useTranslations('mediaClient');
-  if (failed) {
-    return (
-      <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-muted p-2 text-center">
-        <ImageIcon className="h-8 w-8 shrink-0 text-primary/60" strokeWidth={1.5} />
-        <span className="px-1 text-[10px] leading-tight text-muted-foreground">{t('previewUnavailable')}</span>
-      </div>
-    );
-  }
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      alt={alt}
-      src={src}
-      className="h-full w-full object-cover"
-      onError={() => setFailed(true)}
-    />
-  );
-}
-
-function MediaPreviewVideo({ src }: { src: string }) {
-  const [failed, setFailed] = useState(false);
-  const t = useTranslations('mediaClient');
-  if (failed) {
-    return (
-      <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-muted p-2 text-center">
-        <Film className="h-8 w-8 shrink-0 text-primary/60" strokeWidth={1.5} />
-        <span className="px-1 text-[10px] leading-tight text-muted-foreground">{t('previewUnavailable')}</span>
-      </div>
-    );
-  }
-  return (
-    <video
-      src={src}
-      className="h-full w-full object-cover"
-      muted
-      playsInline
-      preload="metadata"
-      onError={() => setFailed(true)}
-    />
-  );
-}
-
-function EmptyMediaIllustration() {
-  return (
-    <div className="relative mx-auto flex max-w-md flex-col items-center">
-      <svg
-        viewBox="0 0 400 280"
-        className="h-48 w-full text-muted-foreground/20"
-        aria-hidden
-      >
-        <defs>
-          <linearGradient id="mg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="currentColor" stopOpacity="0.9" />
-            <stop offset="100%" stopColor="currentColor" stopOpacity="0.2" />
-          </linearGradient>
-        </defs>
-        <rect x="48" y="40" width="304" height="200" rx="24" fill="url(#mg)" opacity="0.35" />
-        <rect
-          x="72"
-          y="64"
-          width="120"
-          height="90"
-          rx="12"
-          fill="currentColor"
-          opacity="0.15"
-        />
-        <circle cx="260" cy="96" r="28" fill="hsl(var(--primary))" opacity="0.2" />
-        <path
-          d="M88 200h224"
-          stroke="currentColor"
-          strokeWidth="8"
-          strokeLinecap="round"
-          opacity="0.2"
-        />
-        <path
-          d="M88 220h160"
-          stroke="currentColor"
-          strokeWidth="8"
-          strokeLinecap="round"
-          opacity="0.12"
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center pt-8">
-        <div className="rounded-2xl border border-border bg-card px-6 py-4 shadow-sm">
-          <Sparkles className="mx-auto h-10 w-10 text-primary" strokeWidth={1.5} />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export function MediaLibraryClient() {
   const locale = useLocale();
@@ -165,9 +65,7 @@ export function MediaLibraryClient() {
   const [folders, setFolders] = useState<MediaFolder[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string>('all');
   const [newFolderName, setNewFolderName] = useState('');
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; workspaceId: string } | null>(
-    null,
-  );
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; workspaceId: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const autoSeedAttemptedRef = useRef(false);
 
@@ -266,12 +164,6 @@ export function MediaLibraryClient() {
           const folderId = selectedFolderId !== 'all' ? selectedFolderId : undefined;
           const res = await uploadMedia(workspaceId, file, folderId);
           if (!res.ok) {
-            /**
-             * Abort the remaining files and let the catch report it. The API
-             * error object is thrown as-is; the uploader no longer has to guess
-             * whether the backend says STORAGE_QUOTA_EXCEEDED or
-             * STORAGE_LIMIT_REACHED, which is why it used to check for both.
-             */
             throw await readApiError(res);
           }
         }
@@ -392,6 +284,14 @@ export function MediaLibraryClient() {
     await loadFolders();
   };
 
+  const filteredItems = useMemo(
+    () =>
+      selectedFolderId === 'all'
+        ? items
+        : items.filter((m) => (m.folderId ?? null) === selectedFolderId),
+    [items, selectedFolderId],
+  );
+
   if (scope === 'branch' && !workspaceId) {
     return <p className="text-[15px] text-muted-foreground">{t('selectWorkspace')}</p>;
   }
@@ -472,66 +372,16 @@ export function MediaLibraryClient() {
       </motion.div>
 
       {scope === 'branch' ? (
-        <div className="vc-card-surface rounded-2xl border border-border/70 p-4">
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <Folder className="h-4 w-4 text-primary" />
-            <p className="text-sm font-semibold text-foreground">{t('foldersTitle')}</p>
-          </div>
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setSelectedFolderId('all')}
-              className={cn(
-                'rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors',
-                selectedFolderId === 'all'
-                  ? 'border-primary/40 bg-primary/10 text-primary'
-                  : 'border-border text-muted-foreground hover:text-foreground',
-              )}
-            >
-              {t('allFolders')}
-            </button>
-            {folders.map((folder) => (
-              <div key={folder.id} className="inline-flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => setSelectedFolderId(folder.id)}
-                  className={cn(
-                    'rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors',
-                    selectedFolderId === folder.id
-                      ? 'border-primary/40 bg-primary/10 text-primary'
-                      : 'border-border text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  {folder.name} ({folder._count.medias})
-                </button>
-                <button type="button" onClick={() => void renameFolder(folder.id, folder.name)} className="rounded p-1 text-muted-foreground hover:text-foreground">
-                  <Pencil className="h-3.5 w-3.5" />
-                </button>
-                <button type="button" onClick={() => void deleteFolder(folder.id)} className="rounded p-1 text-muted-foreground hover:text-red-500">
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              placeholder={t('folderNamePlaceholder')}
-              className="h-9 min-w-[220px] rounded-lg border border-border bg-background px-3 text-sm"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-lg"
-              onClick={() => void createFolder()}
-              disabled={!newFolderName.trim()}
-            >
-              <FolderPlus className="me-1 h-4 w-4" />
-              {t('createFolder')}
-            </Button>
-          </div>
-        </div>
+        <FolderSection
+          folders={folders}
+          selectedFolderId={selectedFolderId}
+          setSelectedFolderId={setSelectedFolderId}
+          newFolderName={newFolderName}
+          setNewFolderName={setNewFolderName}
+          onCreateFolder={() => void createFolder()}
+          onRenameFolder={(fid, name) => void renameFolder(fid, name)}
+          onDeleteFolder={(fid) => void deleteFolder(fid)}
+        />
       ) : null}
 
       <div
@@ -573,95 +423,21 @@ export function MediaLibraryClient() {
             )}
           </div>
         ) : (
-          <div className="p-4 sm:p-6">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <p className="text-sm text-muted-foreground">
-                <span className="font-mono-nums text-foreground">{new Intl.NumberFormat(locale).format(items.length)}</span> {t('files')}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {isDragActive ? t('releaseToAdd') : t('dropMore')}
-              </p>
-            </div>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <AnimatePresence mode="popLayout">
-                {items
-                  .filter((m) =>
-                    selectedFolderId === 'all'
-                      ? true
-                      : (m.folderId ?? null) === selectedFolderId,
-                  )
-                  .map((m, i) => (
-                  <motion.div
-                    key={m.workspaceId ? `${m.workspaceId}-${m.id}` : m.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.96 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.96 }}
-                    transition={{ delay: i * 0.02, duration: 0.25 }}
-                    className="ngl-media-tile group relative overflow-hidden rounded-2xl"
-                  >
-                    <div className="relative aspect-[4/3] bg-black/80">
-                      {m.mimeType.startsWith('image/') ? (
-                        <MediaPreviewImage src={m.publicUrl} alt="" />
-                      ) : (
-                        <MediaPreviewVideo src={m.publicUrl} />
-                      )}
-                      <div className="absolute left-2 top-2 flex items-center gap-1 rounded-lg border border-border bg-card/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-foreground shadow-sm backdrop-blur-sm">
-                        {m.mimeType.startsWith('video/') ? (
-                          <Film className="ngl-media-icon-accent h-3 w-3" />
-                        ) : (
-                          <ImageIcon className="ngl-media-icon-accent h-3 w-3" />
-                        )}
-                        {m.mimeType.startsWith('video/') ? t('video') : t('image')}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const wid = m.workspaceId ?? workspaceId;
-                          if (!wid) return;
-                          setDeleteTarget({ id: m.id, workspaceId: wid });
-                        }}
-                        className="absolute end-2 top-2 flex h-9 w-9 items-center justify-center rounded-xl bg-black/55 text-white opacity-0 shadow-lg backdrop-blur transition hover:bg-red-600/90 group-hover:opacity-100"
-                        aria-label={t('delete')}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <div className="space-y-1 p-3">
-                      {scope === 'branch' ? (
-                        <select
-                          className="h-7 w-full rounded border border-border bg-background px-2 text-[11px]"
-                          value={m.folderId ?? 'all'}
-                          onChange={(e) => {
-                            void moveMedia(m.id, e.target.value);
-                          }}
-                        >
-                          <option value="all">{t('noFolder')}</option>
-                          {folders.map((folder) => (
-                            <option key={folder.id} value={folder.id}>
-                              {folder.name}
-                            </option>
-                          ))}
-                        </select>
-                      ) : null}
-                      {m.workspaceName ? (
-                        <p className="mb-1 truncate text-[10px] font-bold uppercase tracking-wide text-primary">
-                          {m.workspaceName}
-                        </p>
-                      ) : null}
-                      <p className="truncate text-sm font-medium leading-tight text-foreground">
-                        {m.originalName}
-                      </p>
-                      <p className="font-mono-nums text-xs text-muted-foreground">
-                        {new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(m.sizeBytes / 1024 / 1024)} MB
-                      </p>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          </div>
+          <MediaGrid
+            items={items}
+            filteredItems={filteredItems}
+            locale={locale}
+            scope={scope}
+            workspaceId={workspaceId}
+            folders={folders}
+            isDragActive={isDragActive}
+            onDelete={(m) => {
+              const wid = m.workspaceId ?? workspaceId;
+              if (!wid) return;
+              setDeleteTarget({ id: m.id, workspaceId: wid });
+            }}
+            onMoveMedia={moveMedia}
+          />
         )}
       </div>
 
