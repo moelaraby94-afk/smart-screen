@@ -1,254 +1,36 @@
 'use client';
 
-import Link from 'next/link';
-import type { Route } from 'next';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
-import {
-  Loader2,
-  MoreHorizontal,
-  PenLine,
-  Plus,
-  Power,
-  RefreshCw,
-  Monitor,
-} from 'lucide-react';
+import { Monitor, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { useScreenActions } from '@/features/screens/hooks/use-screen-actions';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
   fetchPlaylistOptions,
-  createScreen as apiCreateScreen,
   updateScreen as apiUpdateScreen,
   type PlaylistOption as ApiPlaylistOption,
 } from '@/features/screens/api/screens-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
-import { cn } from '@/lib/utils';
 import { ScreenQuickEditPanel } from '@/features/screens/screen-quick-edit-panel';
-import { useScreenActivePreview } from '@/features/screens/use-screen-active-preview';
 import { useApiScreens, type ScreenRow } from './useApiScreens';
-import {
-  deriveFleetReachability,
-  ScreenFleetStatusBadge,
-} from '@/features/screens/screen-fleet-status';
 import { useScreenRealtime } from './useScreenRealtime';
-
-const screenSchema = z.object({
-  name: z.string().min(2),
-  serialNumber: z.string().min(4),
-  location: z.string().optional(),
-});
-
-const editSchema = screenSchema.extend({
-  status: z.enum(['ONLINE', 'OFFLINE', 'MAINTENANCE']),
-});
+import { ScreenVisualCard } from '@/features/screens/screen-visual-card';
+import {
+  CreateScreenDialogContent,
+  EditScreenDialogContent,
+} from '@/features/screens/screen-dialogs';
 
 type Props = {
   locale: string;
 };
 
 type PlaylistOption = ApiPlaylistOption;
-
-function ScreenVisualCard({
-  screen,
-  locale,
-  workspaceId,
-  index,
-  onCardClick,
-  onEdit,
-  onDelete,
-  onRemote,
-  playlists,
-  canAssignPlayback,
-  assignPlaylistBusy,
-  onAssignPlaybackPlaylist,
-}: {
-  screen: ScreenRow;
-  locale: string;
-  workspaceId: string;
-  index: number;
-  onCardClick: (s: ScreenRow) => void;
-  onEdit: (s: ScreenRow) => void;
-  onDelete: (id: string) => void;
-  onRemote: (id: string, c: 'refresh_content' | 'restart') => void;
-  playlists: PlaylistOption[];
-  canAssignPlayback: boolean;
-  assignPlaylistBusy: boolean;
-  onAssignPlaybackPlaylist: (screenId: string, playlistId: string | null) => Promise<void>;
-}) {
-  const t = useTranslations('screensClient');
-  const { previewUrl, loading, previewRev } = useScreenActivePreview(
-    screen.id,
-    workspaceId,
-  );
-  const reach = deriveFleetReachability(screen.status, screen.lastSeenAt);
-
-  return (
-    <motion.article
-      layout
-      initial={{ opacity: 0, y: 14, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay: index * 0.04, type: 'spring', stiffness: 420, damping: 28 }}
-      whileHover={{ scale: 1.015, y: -2 }}
-      className={cn(
-        'group relative flex flex-col overflow-hidden rounded-2xl',
-        'border border-border bg-card shadow-sm',
-        'transition-colors duration-200 hover:border-primary/30 hover:shadow-md',
-        reach === 'online' && 'ngl-screen-card-live',
-      )}
-    >
-      <button
-        type="button"
-        onClick={() => onCardClick(screen)}
-        className="relative block w-full text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-      >
-        <div className="relative aspect-video w-full overflow-hidden bg-muted">
-          {previewUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={`${previewUrl}-${previewRev}`}
-              src={previewUrl}
-              alt=""
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-muted">
-              <Monitor className="h-12 w-12 text-white/25" strokeWidth={1.25} />
-            </div>
-          )}
-          {loading ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-xs font-medium text-foreground backdrop-blur-[1px]">
-              {t('loadingPreview')}
-            </div>
-          ) : null}
-          <div className="absolute start-3 top-3">
-            <ScreenFleetStatusBadge
-              status={screen.status}
-              lastSeenAt={screen.lastSeenAt}
-              locale={locale}
-            />
-          </div>
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent p-4 pt-10">
-            <p className="truncate text-base font-semibold text-white drop-shadow-md">{screen.name}</p>
-            <p className="font-mono text-[11px] text-white/70">{screen.serialNumber}</p>
-          </div>
-        </div>
-      </button>
-
-      <div className="flex flex-1 flex-col gap-3 border-t border-border bg-card p-4">
-        <div className="space-y-1.5">
-          <label className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-            {t('playbackPlaylist')}
-          </label>
-          <div className="relative">
-            <select
-              className={cn(
-                'h-10 w-full cursor-pointer appearance-none rounded-xl border border-border bg-background px-3 pe-9 text-[13px] font-medium text-foreground outline-none',
-                'focus-visible:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20',
-                'disabled:cursor-not-allowed disabled:opacity-50',
-              )}
-              disabled={!canAssignPlayback || assignPlaylistBusy}
-              value={screen.activePlaylistId ?? ''}
-              aria-label={t('playbackPlaylistAria')}
-              onClick={(e) => e.stopPropagation()}
-              onChange={(e) => {
-                const v = e.target.value;
-                void onAssignPlaybackPlaylist(screen.id, v || null);
-              }}
-            >
-              <option value="">{t('playbackPlaylistNone')}</option>
-              {playlists.map((pl) => (
-                <option key={pl.id} value={pl.id}>
-                  {pl.name}
-                </option>
-              ))}
-            </select>
-            {assignPlaylistBusy ? (
-              <span className="pointer-events-none absolute end-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              </span>
-            ) : null}
-          </div>
-        </div>
-        <div className="flex justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0 rounded-xl">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[11rem] rounded-xl">
-              <DropdownMenuItem onClick={() => onEdit(screen)}>{t('screenSettings')}</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => onDelete(screen.id)}
-              >
-                {t('deleteScreen')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
-          <Button
-            type="button"
-            size="sm"
-            className="h-9 flex-1 rounded-xl text-[13px] font-semibold"
-            asChild
-          >
-            <Link href={`/${locale}/studio` as Route}>
-              <PenLine className="me-1.5 h-3.5 w-3.5" />
-              {t('editDesign')}
-            </Link>
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="h-9 flex-1 rounded-xl text-[13px] font-medium"
-            onClick={() => onRemote(screen.id, 'refresh_content')}
-          >
-            <RefreshCw className="me-1.5 h-3.5 w-3.5" />
-            {t('refresh')}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="h-9 flex-1 rounded-xl border-destructive/30 bg-destructive/5 text-[13px] font-medium text-destructive hover:bg-destructive/10"
-            onClick={() => onRemote(screen.id, 'restart')}
-          >
-            <Power className="me-1.5 h-3.5 w-3.5" />
-            {t('powerOff')}
-          </Button>
-        </div>
-      </div>
-    </motion.article>
-  );
-}
 
 export function ScreensClient({ locale }: Props) {
   const t = useTranslations('screensClient');
@@ -332,7 +114,6 @@ export function ScreensClient({ locale }: Props) {
   const [openEdit, setOpenEdit] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
   const [quickScreen, setQuickScreen] = useState<ScreenRow | null>(null);
-
 
   const openQuick = (s: ScreenRow) => {
     setQuickScreen(s);
@@ -456,150 +237,6 @@ export function ScreensClient({ locale }: Props) {
           />
         ) : null}
       </Dialog>
-    </div>
-  );
-}
-
-function CreateScreenDialogContent({
-  workspaceId,
-  onSuccess,
-}: {
-  workspaceId: string;
-  onSuccess: () => Promise<void>;
-}) {
-  const t = useTranslations('screensClient.dialogs');
-  const { toastResponseError } = useApiErrorToast();
-  const form = useForm<z.infer<typeof screenSchema>>({
-    resolver: zodResolver(screenSchema),
-    defaultValues: {
-      name: '',
-      serialNumber: '',
-      location: '',
-    },
-  });
-
-  const submit = async (values: z.infer<typeof screenSchema>) => {
-    const response = await apiCreateScreen(workspaceId, values);
-    if (!response.ok) {
-      // SCREEN_LIMIT_REACHED carries `details.limit`; the catalogue formats it.
-      await toastResponseError(response);
-      return;
-    }
-    toast.success(t('createSuccess'));
-    form.reset();
-    await onSuccess();
-  };
-
-  return (
-    <DialogContent className="rounded-2xl border-border sm:max-w-md">
-      <DialogHeader>
-        <DialogTitle>{t('addTitle')}</DialogTitle>
-        <DialogDescription>{t('addDescription')}</DialogDescription>
-      </DialogHeader>
-      <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
-        <FieldInput label={t('screenName')} error={form.formState.errors.name?.message}>
-          <Input {...form.register('name')} className="rounded-xl" />
-        </FieldInput>
-        <FieldInput label={t('serialNumber')} error={form.formState.errors.serialNumber?.message}>
-          <Input {...form.register('serialNumber')} className="font-mono-nums rounded-xl" />
-        </FieldInput>
-        <FieldInput label={t('location')} error={form.formState.errors.location?.message}>
-          <Input {...form.register('location')} className="rounded-xl" />
-        </FieldInput>
-        <DialogFooter>
-          <Button type="submit" variant="cta" className="rounded-xl">
-            {t('create')}
-          </Button>
-        </DialogFooter>
-      </form>
-    </DialogContent>
-  );
-}
-
-function EditScreenDialogContent({
-  screen,
-  workspaceId,
-  onSuccess,
-}: {
-  screen: ScreenRow;
-  workspaceId: string;
-  onSuccess: () => Promise<void>;
-}) {
-  const t = useTranslations('screensClient.dialogs');
-  const form = useForm<z.infer<typeof editSchema>>({
-    resolver: zodResolver(editSchema),
-    defaultValues: {
-      name: screen.name,
-      serialNumber: screen.serialNumber,
-      location: screen.location ?? '',
-      status: screen.status,
-    },
-  });
-
-  const submit = async (values: z.infer<typeof editSchema>) => {
-    const response = await apiUpdateScreen(workspaceId, screen.id, {
-      name: values.name,
-      location: values.location,
-      status: values.status,
-    });
-    if (!response.ok) {
-      toast.error(t('updateFailed'));
-      return;
-    }
-    toast.success(t('updateSuccess'));
-    await onSuccess();
-  };
-
-  return (
-    <DialogContent className="rounded-2xl border-border sm:max-w-md">
-      <DialogHeader>
-        <DialogTitle>{t('editTitle')}</DialogTitle>
-        <DialogDescription>{t('editDescription')}</DialogDescription>
-      </DialogHeader>
-      <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
-        <FieldInput label={t('screenName')} error={form.formState.errors.name?.message}>
-          <Input {...form.register('name')} className="rounded-xl" />
-        </FieldInput>
-        <FieldInput label={t('serialNumber')}>
-          <Input {...form.register('serialNumber')} disabled className="font-mono-nums rounded-xl" />
-        </FieldInput>
-        <FieldInput label={t('location')} error={form.formState.errors.location?.message}>
-          <Input {...form.register('location')} className="rounded-xl" />
-        </FieldInput>
-        <FieldInput label={t('status')} error={form.formState.errors.status?.message}>
-          <select
-            className="h-11 w-full rounded-xl border border-border bg-card px-4 text-[15px] text-foreground outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
-            {...form.register('status')}
-          >
-            <option value="ONLINE">{t('online')}</option>
-            <option value="OFFLINE">{t('offline')}</option>
-            <option value="MAINTENANCE">{t('maintenance')}</option>
-          </select>
-        </FieldInput>
-        <DialogFooter>
-          <Button type="submit" variant="cta" className="rounded-xl">
-            {t('save')}
-          </Button>
-        </DialogFooter>
-      </form>
-    </DialogContent>
-  );
-}
-
-function FieldInput({
-  label,
-  children,
-  error,
-}: {
-  label: string;
-  children: React.ReactNode;
-  error?: string;
-}) {
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      {children}
-      {error ? <p className="text-xs text-red-600 dark:text-red-400">{error}</p> : null}
     </div>
   );
 }
