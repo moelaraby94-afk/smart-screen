@@ -2,813 +2,250 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Route } from 'next';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useLocale, useTranslations } from 'next-intl';
-import { motion } from 'framer-motion';
-import {
-  Clock3,
-  Database,
-  HardDrive,
-  Image as ImageIcon,
-  ListMusic,
-  Loader2,
-  Monitor,
-  MoreVertical,
-  Network,
-  Trash2,
-} from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useWorkspace } from '@/features/workspace/workspace-context';
 import {
   fetchAccountInsights,
-  updateWorkspace as apiUpdateWorkspace,
-  deleteWorkspace as apiDeleteWorkspace,
+  updateWorkspace,
+  deleteWorkspace,
 } from '@/features/dashboard/dashboard-api';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
-import { useWorkspace, type WorkspaceSummary } from '@/features/workspace/workspace-context';
-import { ICON_STROKE } from '@/lib/icon-stroke';
-import { cn } from '@/lib/utils';
-
-function formatBytes(n: number): string {
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
-  return `${(n / (1024 * 1024)).toFixed(2)} MB`;
-}
-
-type InsightsBranch = {
-  workspaceId: string;
-  name: string;
-  slug: string;
-  isPaused?: boolean;
-  role: string;
-  createdAt: string;
-  screens: number;
-  playlists: number;
-  mediaCount: number;
-  storageBytes: number;
-  screenStatus: { online: number; offline: number; maintenance: number };
-  /** Backend-computed plan capabilities; the UI renders these, never the math. */
-  capabilities: {
-    screens: {
-      used: number;
-      limit: number | null;
-      remaining: number | null;
-      canCreate: boolean;
-    };
-    storage: {
-      usedBytes: number;
-      limitBytes: number | null;
-      remainingBytes: number | null;
-      usedPct: number | null;
-      canUpload: boolean;
-    };
-  };
-  subscription: {
-    plan: string;
-    status: string;
-    seats: number;
-    screenLimit: number;
-    storageLimitBytes: number | null;
-    currentPeriodEnd: string | null;
-  } | null;
-};
-
-type InsightsPayload = {
-  account: { subscriptionStatus: string; subscriptionEndDate: string | null };
-  plan: {
-    plan: string;
-    status: string;
-    seats: number;
-    screenLimit: number;
-    currentPeriodEnd: string | null;
-  } | null;
-  totals: {
-    branches: number;
-    screens: number;
-    playlists: number;
-    mediaCount: number;
-    storageBytes: number;
-    screenStatus: { online: number; offline: number; maintenance: number };
-  };
-  branches: InsightsBranch[];
-};
-
-type HealthKey = 'paused' | 'healthy' | 'mixed' | 'down' | 'empty';
-
-function branchHealth(row: InsightsBranch): HealthKey {
-  if (row.isPaused === true) return 'paused';
-  if (row.screens === 0) return 'empty';
-  const { online, offline, maintenance } = row.screenStatus;
-  if (online === 0) return 'down';
-  if (offline > 0 || maintenance > 0) return 'mixed';
-  return 'healthy';
-}
-
-function canManageBranch(role: string): boolean {
-  return role === 'OWNER' || role === 'ADMIN';
-}
-
-function canDeleteBranch(role: string, isSuperAdmin: boolean): boolean {
-  return canManageBranch(role) || isSuperAdmin;
-}
-
-function formatBytesLocale(n: number, locale: string): string {
-  if (n < 1024) return new Intl.NumberFormat(locale).format(n) + ' B';
-  if (n < 1024 * 1024)
-    return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(n / 1024)} KB`;
-  if (n < 1024 * 1024 * 1024)
-    return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(n / (1024 * 1024))} MB`;
-  return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(n / (1024 * 1024 * 1024))} GB`;
-}
+import {
+  type InsightsBranch,
+  type InsightsPayload,
+} from '@/features/dashboard/home-dashboard-types';
+import {
+  WorkspaceSummarySection,
+  TotalsSection,
+  BranchCardsSection,
+} from '@/features/dashboard/home-dashboard-sections';
+import {
+  RenameBranchDialog,
+  DeleteBranchDialog,
+} from '@/features/dashboard/home-dashboard-dialogs';
 
 export function ClientHomeDashboard() {
   const t = useTranslations('clientHome');
-  const { toastResponseError } = useApiErrorToast();
-  const tWs = useTranslations('clientHome.workspaceSummary');
-  const tMetrics = useTranslations('overviewMetrics');
-  const locale = useLocale();
   const router = useRouter();
+  const { toastResponseError } = useApiErrorToast();
   const {
-    workspaces,
     workspaceId,
+    workspaces,
     setWorkspaceId,
-    bumpWorkspaceDataEpoch,
-    refreshWorkspaces,
-    workspaceDataEpoch,
     isSuperAdmin,
+    bumpWorkspaceDataEpoch,
   } = useWorkspace();
+
   const [insights, setInsights] = useState<InsightsPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedBranch, setSelectedBranch] = useState<InsightsBranch | null>(null);
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameValue, setRenameValue] = useState('');
   const [renameBusy, setRenameBusy] = useState(false);
-  const [pauseBusyId, setPauseBusyId] = useState<string | null>(null);
-  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<InsightsBranch | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [pauseBusyId, setPauseBusyId] = useState<string | null>(null);
 
-  const loadAll = useCallback(async () => {
-    if (workspaces.length === 0) {
-      setInsights(null);
-      setLoading(false);
-      return;
-    }
+  const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetchAccountInsights();
-    if (!res.ok) {
+    try {
+      const res = await fetchAccountInsights();
+      if (!res.ok) {
+        toast.error(t('toastLoadFailed'));
+        setInsights(null);
+        return;
+      }
+      const json = (await res.json()) as InsightsPayload;
+      setInsights(json);
+    } catch {
+      toast.error(t('toastLoadFailed'));
       setInsights(null);
+    } finally {
       setLoading(false);
-      return;
     }
-    const payload = (await res.json()) as InsightsPayload;
-    setInsights(payload);
-    setLoading(false);
-  }, [workspaces.length]);
-
-  /**
-   * `workspaceDataEpoch` belongs on the effect, not on `loadAll` — it is a
-   * refetch trigger, not something the callback reads. Same shape as
-   * billing-client.tsx.
-   */
-  useEffect(() => {
-    void loadAll();
-  }, [loadAll, workspaceDataEpoch]);
+  }, [t]);
 
   useEffect(() => {
-    if (!insights) return;
-    setSelectedBranch((prev) => {
-      if (!prev) return prev;
-      const row = insights.branches.find((b) => b.workspaceId === prev.workspaceId);
-      return row ?? null;
-    });
-  }, [insights]);
+    void load();
+  }, [load]);
 
-  const totals = insights?.totals ?? {
-    branches: 0,
-    screens: 0,
-    playlists: 0,
-    mediaCount: 0,
-    storageBytes: 0,
-    screenStatus: { online: 0, offline: 0, maintenance: 0 },
-  };
+  const currentWsRow = useMemo(
+    () => insights?.branches.find((b) => b.workspaceId === workspaceId) ?? null,
+    [insights, workspaceId],
+  );
+
+  const currentWsName = useMemo(
+    () => workspaces.find((w) => w.id === workspaceId)?.name ?? '',
+    [workspaces, workspaceId],
+  );
 
   const daysRemaining = useMemo(() => {
-    if (!insights?.account.subscriptionEndDate) return null;
-    const diffMs =
-      new Date(insights.account.subscriptionEndDate).getTime() - Date.now();
-    return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
-  }, [insights?.account.subscriptionEndDate]);
+    if (!insights) return null;
+    const end = insights.account.subscriptionEndDate;
+    if (!end) return null;
+    const diff = new Date(end).getTime() - Date.now();
+    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  }, [insights]);
+
+  const onOpenBranch = useCallback(
+    (wsId: string) => {
+      setWorkspaceId(wsId);
+      router.push(`/branches/${wsId}` as Route);
+    },
+    [setWorkspaceId, router],
+  );
+
+  const onRename = useCallback((row: InsightsBranch) => {
+    setRenameValue(row.name);
+    setRenameOpen(true);
+  }, []);
 
   const submitRename = useCallback(async () => {
     if (!selectedBranch) return;
     const name = renameValue.trim();
     if (name.length < 2) {
-      toast.error(t('renameTooShort'));
+      toast.error(t('toastNameMin'));
       return;
     }
     setRenameBusy(true);
     try {
-      const res = await apiUpdateWorkspace(selectedBranch.workspaceId, { name });
+      const res = await updateWorkspace(selectedBranch.workspaceId, { name });
       if (!res.ok) {
         await toastResponseError(res);
         return;
       }
-      toast.success(t('branchUpdated'));
+      toast.success(t('toastRenamed'));
       setRenameOpen(false);
-      await refreshWorkspaces(workspaceId);
       bumpWorkspaceDataEpoch();
-      await loadAll();
+      await load();
+    } catch {
+      toast.error(t('toastRenameFailed'));
     } finally {
       setRenameBusy(false);
     }
-  }, [
-    selectedBranch,
-    renameValue,
-    refreshWorkspaces,
-    workspaceId,
-    bumpWorkspaceDataEpoch,
-    loadAll,
-    t,
-    toastResponseError,
-  ]);
+  }, [selectedBranch, renameValue, t, toastResponseError, bumpWorkspaceDataEpoch, load]);
 
-  const togglePause = useCallback(
-    async (target: InsightsBranch) => {
-      const next = target.isPaused !== true;
-      setPauseBusyId(target.workspaceId);
+  const onTogglePause = useCallback(
+    async (row: InsightsBranch) => {
+      setPauseBusyId(row.workspaceId);
       try {
-        const res = await apiUpdateWorkspace(target.workspaceId, { isPaused: next });
+        const res = await updateWorkspace(row.workspaceId, {
+          isPaused: row.isPaused !== true,
+        });
         if (!res.ok) {
           await toastResponseError(res);
           return;
         }
-        toast.success(next ? t('branchPaused') : t('branchResumed'));
-        setSelectedBranch((prev) =>
-          prev?.workspaceId === target.workspaceId ? { ...prev, isPaused: next } : prev,
-        );
-        await refreshWorkspaces(workspaceId);
+        toast.success(row.isPaused === true ? t('toastResumed') : t('toastPaused'));
         bumpWorkspaceDataEpoch();
-        await loadAll();
+        await load();
+      } catch {
+        toast.error(t('toastPauseFailed'));
       } finally {
         setPauseBusyId(null);
       }
     },
-    [refreshWorkspaces, workspaceId, bumpWorkspaceDataEpoch, loadAll, t, toastResponseError],
+    [t, toastResponseError, bumpWorkspaceDataEpoch, load],
   );
 
-  const confirmDeleteBranch = useCallback(async () => {
-    if (!selectedBranch) return;
-    const deletedId = selectedBranch.workspaceId;
+  const onDelete = useCallback((row: InsightsBranch) => {
+    setDeleteTarget(row);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (!deleteTarget) return;
     setDeleteBusy(true);
     try {
-      const res = await apiDeleteWorkspace(deletedId);
+      const res = await deleteWorkspace(deleteTarget.workspaceId);
       if (!res.ok) {
         await toastResponseError(res);
         return;
       }
-      toast.success(t('branchDeleted'));
-      setDeleteOpen(false);
-      setSelectedBranch(null);
-      await refreshWorkspaces();
+      toast.success(t('toastDeleted'));
+      setDeleteTarget(null);
       bumpWorkspaceDataEpoch();
-      if (workspaceId === deletedId) {
-        router.push(`/${locale}/overview` as Route);
-      }
-      await loadAll();
+      await load();
+    } catch {
+      toast.error(t('toastDeleteFailed'));
     } finally {
       setDeleteBusy(false);
     }
-  }, [
-    selectedBranch,
-    refreshWorkspaces,
-    bumpWorkspaceDataEpoch,
-    workspaceId,
-    router,
-    locale,
-    loadAll,
-    t,
-    toastResponseError,
-  ]);
+  }, [deleteTarget, t, toastResponseError, bumpWorkspaceDataEpoch, load]);
 
-  if (workspaces.length === 0) {
-    return null;
-  }
-
-  const currentWsRow =
-    workspaceId && insights
-      ? insights.branches.find((b) => b.workspaceId === workspaceId)
-      : null;
-  const currentWsName =
-    workspaces.find((w: WorkspaceSummary) => w.id === workspaceId)?.name ?? '';
-  // Percentage and quota come from the backend's capabilities, not recomputed here.
-  const storageQuota = currentWsRow?.capabilities.storage.limitBytes ?? null;
-  const storagePct = currentWsRow?.capabilities.storage.usedPct ?? null;
-
-  const cardChrome =
-    'group relative flex min-h-[160px] cursor-pointer flex-col rounded-xl border border-border bg-card p-5 pe-12 shadow-sm transition-colors duration-200 hover:border-primary/30 hover:shadow-md';
-
-  const healthBadgeClass = (h: HealthKey) =>
-    h === 'healthy'
-      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-      : h === 'down'
-        ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-        : h === 'paused'
-          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-          : h === 'empty'
-            ? 'bg-muted text-muted-foreground'
-            : 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
-
-  const renderBranchDetailBody = (row: InsightsBranch) => {
-    const detailMetrics = [
-      {
-        label: tMetrics('screens'),
-        value: loading ? '…' : String(row.screens),
-        sub: tMetrics('screensSub'),
-        icon: Monitor,
-      },
-      {
-        label: tMetrics('media'),
-        value: loading ? '…' : String(row.mediaCount),
-        sub: tMetrics('mediaSub'),
-        icon: Database,
-      },
-      {
-        label: tMetrics('storage'),
-        value: loading ? '…' : formatBytes(row.storageBytes),
-        sub: tMetrics('storageSub'),
-        icon: HardDrive,
-      },
-    ];
+  if (loading && !insights) {
     return (
-      <div className="space-y-6">
-        <div
-          className={cn(
-            'inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold uppercase',
-            healthBadgeClass(branchHealth(row)),
-          )}
-        >
-          {t(`health.${branchHealth(row)}`)}
-        </div>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {detailMetrics.map((metric, i) => (
-            <motion.div
-              key={metric.label}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 * i, duration: 0.35 }}
-              className="vc-card-surface rounded-xl border border-border bg-card p-5"
-            >
-              <div className="relative flex items-start justify-between gap-4">
-                <div>
-                  <p className="vc-page-kicker">{metric.label}</p>
-                  <p className="mt-3 font-mono-nums text-2xl font-bold tracking-tight text-foreground  sm:text-3xl">
-                    {metric.value}
-                  </p>
-                  <p className="mt-2 text-sm text-muted-foreground">{metric.sub}</p>
-                </div>
-                <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20 sm:h-12 sm:w-12">
-                  <metric.icon
-                    className="h-5 w-5 text-primary sm:h-[22px] sm:w-[22px]"
-                    strokeWidth={ICON_STROKE}
-                  />
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-        <div className="grid grid-cols-2 gap-3 rounded-xl border border-border bg-muted/30 px-4 py-3 text-center">
-          <div>
-            <p className="text-[10px] font-medium text-muted-foreground">{t('card.playlists')}</p>
-            <p className="mt-2 font-mono text-sm font-semibold tabular-nums text-foreground">
-              {loading ? '…' : row.playlists}
-            </p>
-          </div>
-          <div>
-            <p className="text-[10px] font-medium text-muted-foreground">{t('card.online')}</p>
-            <p className="mt-2 font-mono text-sm font-semibold tabular-nums text-foreground">
-              {loading ? '…' : row.screenStatus.online}
-            </p>
-          </div>
-        </div>
-        <Button type="button" variant="outline" className="w-full rounded-xl" asChild>
-          <Link
-            href={`/${locale}/branches/${row.workspaceId}` as Route}
-            onClick={() => {
-              setWorkspaceId(row.workspaceId);
-              bumpWorkspaceDataEpoch();
-            }}
-          >
-            {t('openBranchDashboard')}
-          </Link>
-        </Button>
-        <p className="text-center text-[11px] text-muted-foreground">{t('branchCardMenuHint')}</p>
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <p className="text-sm text-muted-foreground">{t('loading')}</p>
       </div>
     );
-  };
+  }
+
+  if (!insights) {
+    return (
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 px-4 text-center">
+        <p className="text-sm font-medium text-muted-foreground">{t('loadFailed')}</p>
+        <button
+          type="button"
+          className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
+          onClick={() => void load()}
+        >
+          {t('retry')}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
-      {workspaceId && currentWsRow ? (
-        <motion.section
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className="vc-card-surface rounded-xl border border-border bg-card p-6 sm:p-8"
-        >
-          <p className="vc-page-kicker">{tWs('kicker')}</p>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight text-foreground">
-            {tWs('title', { name: currentWsName || currentWsRow.name })}
-          </h2>
-          <div className="mt-6 grid gap-6 sm:grid-cols-2">
-            <div className="rounded-xl border border-border bg-muted/20 p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                {tWs('screensLabel')}
-              </p>
-              <p className="mt-2 font-mono-nums text-3xl font-bold tabular-nums text-foreground">
-                {loading ? '…' : tWs('screensValue', { count: currentWsRow.screens })}
-              </p>
-            </div>
-            <div className="rounded-xl border border-border bg-muted/20 p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                {tWs('storageLabel')}
-              </p>
-              <p className="mt-2 text-sm text-foreground ">
-                {loading
-                  ? '…'
-                  : storageQuota != null && storageQuota > 0
-                    ? tWs('storageUsedOf', {
-                        used: formatBytesLocale(currentWsRow.storageBytes, locale),
-                        quota: formatBytesLocale(storageQuota, locale),
-                      })
-                    : tWs('storageUsedNoQuota', {
-                        used: formatBytesLocale(currentWsRow.storageBytes, locale),
-                      })}
-              </p>
-              {storagePct != null ? (
-                <div
-                  className="mt-4 h-2 w-full overflow-hidden rounded-full bg-muted"
-                  role="progressbar"
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={storagePct}
-                  aria-label={tWs('storageBarAria')}
-                >
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-[width] duration-500"
-                    style={{ width: `${storagePct}%` }}
-                  />
-                </div>
-              ) : (
-                <p className="mt-3 text-xs text-muted-foreground">{tWs('storageNoQuotaHint')}</p>
-              )}
-            </div>
-          </div>
-        </motion.section>
+      {currentWsRow ? (
+        <WorkspaceSummarySection
+          currentWsRow={currentWsRow}
+          currentWsName={currentWsName}
+          loading={loading}
+          locale={typeof window !== 'undefined' ? document.documentElement.lang || 'en' : 'en'}
+        />
       ) : null}
 
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight text-foreground ">
-              {t('totalsTitle')}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">{t('totalsSub')}</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-          {[
-            {
-              label: t('totalBranches'),
-              value: loading ? '…' : String(totals.branches),
-              icon: Network,
-            },
-            {
-              label: t('totalScreens'),
-              value: loading ? '…' : String(totals.screens),
-              icon: Monitor,
-            },
-            {
-              label: t('totalPlaylists'),
-              value: loading ? '…' : String(totals.playlists),
-              icon: ListMusic,
-            },
-            {
-              label: t('totalMedia'),
-              value: loading ? '…' : String(totals.mediaCount),
-              icon: ImageIcon,
-            },
-            {
-              label: t('totalStorage'),
-              value: loading ? '…' : formatBytes(totals.storageBytes),
-              icon: HardDrive,
-            },
-            {
-              label: t('subscriptionDaysLeft'),
-              value: loading ? '…' : daysRemaining == null ? t('notSet') : String(daysRemaining),
-              icon: Clock3,
-            },
-          ].map((item, i) => (
-            <motion.div
-              key={item.label}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 * i, duration: 0.35 }}
-              className="vc-card-surface rounded-xl border border-border bg-card p-5"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                    {item.label}
-                  </p>
-                  <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground ">
-                    {item.value}
-                  </p>
-                </div>
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
-                  <item.icon className="h-[18px] w-[18px] text-primary" strokeWidth={ICON_STROKE} />
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-        <div className="rounded-xl border border-primary/15 bg-primary/[0.03] p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-            {t('screenStatusSummary')}
-          </p>
-          <p className="mt-2 text-sm text-foreground ">
-            {t('screenStatusValues', {
-              online: totals.screenStatus.online,
-              offline: totals.screenStatus.offline,
-              maintenance: totals.screenStatus.maintenance,
-            })}
-          </p>
-        </div>
-      </section>
+      <TotalsSection
+        totals={insights.totals}
+        loading={loading}
+        daysRemaining={daysRemaining}
+      />
 
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight text-foreground ">
-              {t('branchesTitle')}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">{t('branchesSub')}</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-3">
-          {(insights?.branches ?? []).map((row, i: number) => {
-            const w = workspaces.find((x: WorkspaceSummary) => x.id === row.workspaceId);
-            if (!w) return null;
-            const branchHref = `/${locale}/branches/${row.workspaceId}`;
-            const h = branchHealth(row);
-            const selected = selectedBranch?.workspaceId === row.workspaceId;
-            const showMenu = canManageBranch(row.role);
-            const pauseBusy = pauseBusyId === row.workspaceId;
-            return (
-              <motion.div
-                key={w.id}
-                role="button"
-                tabIndex={0}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.04 * i, duration: 0.35 }}
-                className={cn(
-                  cardChrome,
-                  'bg-gradient-to-br from-card via-card to-primary/[0.03]',
-                  selected && 'ring-2 ring-primary/50 ring-offset-2 ring-offset-background',
-                )}
-                onClick={() => setSelectedBranch(row)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setSelectedBranch(row);
-                  }
-                }}
-              >
-                {showMenu ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute end-2 top-2 z-20 h-8 w-8 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary"
-                        aria-label={t('branchCardActionsAria')}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreVertical className="h-4 w-4" strokeWidth={ICON_STROKE} />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="min-w-[12rem]"
-                      onCloseAutoFocus={(e) => e.preventDefault()}
-                    >
-                      <DropdownMenuItem
-                        className="gap-2 font-semibold"
-                        onSelect={(e) => {
-                          e.preventDefault();
-                          setSelectedBranch(row);
-                          setRenameValue(row.name);
-                          setRenameOpen(true);
-                        }}
-                      >
-                        {t('renameBranch')}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="gap-2 font-semibold"
-                        disabled={pauseBusy}
-                        onSelect={(e) => {
-                          e.preventDefault();
-                          setSelectedBranch(row);
-                          void togglePause(row);
-                        }}
-                      >
-                        {pauseBusy ? (
-                          <Loader2 className="h-4 w-4 animate-spin" strokeWidth={ICON_STROKE} />
-                        ) : row.isPaused === true ? (
-                          t('resumeBranch')
-                        ) : (
-                          t('pauseBranch')
-                        )}
-                      </DropdownMenuItem>
-                      {canDeleteBranch(row.role, isSuperAdmin) ? (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="gap-2 font-semibold text-red-600 focus:text-red-600"
-                            onSelect={(e) => {
-                              e.preventDefault();
-                              setSelectedBranch(row);
-                              setDeleteOpen(true);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" strokeWidth={ICON_STROKE} />
-                            {t('deleteBranch')}
-                          </DropdownMenuItem>
-                        </>
-                      ) : null}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : null}
-                <div className="relative z-[1] flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <Link
-                      href={branchHref as Route}
-                      className="block truncate font-semibold text-foreground underline-offset-4 hover:underline "
-                      aria-label={t('openBranchAria', { name: w.name })}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setWorkspaceId(row.workspaceId);
-                        bumpWorkspaceDataEpoch();
-                      }}
-                    >
-                      {w.name}
-                    </Link>
-                  </div>
-                  <span
-                    className={cn(
-                      'shrink-0 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase',
-                      healthBadgeClass(h),
-                    )}
-                  >
-                    {t(`health.${h}`)}
-                  </span>
-                </div>
-                <div className="relative z-[1] mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
-                  <div>
-                    <p className="text-[10px] font-medium text-muted-foreground">{t('card.screens')}</p>
-                    <p className="font-mono text-sm font-semibold tabular-nums">
-                      {loading ? '…' : row.screens}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-medium text-muted-foreground">{t('card.playlists')}</p>
-                    <p className="font-mono text-sm font-semibold tabular-nums">
-                      {loading ? '…' : row.playlists}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-medium text-muted-foreground">{t('card.media')}</p>
-                    <p className="font-mono text-sm font-semibold tabular-nums">
-                      {loading ? '…' : row.mediaCount}
-                    </p>
-                  </div>
-                </div>
-                <div className="relative z-[1] mt-2 grid grid-cols-2 gap-2 border-t border-border pt-3 text-center">
-                  <div>
-                    <p className="text-[10px] font-medium text-muted-foreground">{t('card.storage')}</p>
-                    <p className="font-mono text-xs font-semibold tabular-nums">
-                      {loading ? '…' : formatBytes(row.storageBytes)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-medium text-muted-foreground">{t('card.online')}</p>
-                    <p className="font-mono text-xs font-semibold tabular-nums">
-                      {loading ? '…' : row.screenStatus.online}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+      <BranchCardsSection
+        branches={insights.branches}
+        workspaces={workspaces}
+        loading={loading}
+        locale={typeof window !== 'undefined' ? document.documentElement.lang || 'en' : 'en'}
+        isSuperAdmin={isSuperAdmin}
+        selectedBranch={selectedBranch}
+        setSelectedBranch={setSelectedBranch}
+        pauseBusyId={pauseBusyId}
+        onOpenBranch={onOpenBranch}
+        onRename={onRename}
+        onTogglePause={onTogglePause}
+        onDelete={onDelete}
+      />
 
-        <div className="vc-card-surface rounded-xl border border-border bg-card p-5 sm:p-6">
-          <h3 className="text-base font-semibold tracking-tight text-foreground ">
-            {t('branchPanelTitle')}
-          </h3>
-          {selectedBranch ? (
-            <div className="mt-4">{renderBranchDetailBody(selectedBranch)}</div>
-          ) : (
-            <p className="mt-4 text-sm text-muted-foreground">{t('selectBranchHint')}</p>
-          )}
-        </div>
-      </section>
+      <RenameBranchDialog
+        open={renameOpen}
+        onOpenChange={setRenameOpen}
+        value={renameValue}
+        setValue={setRenameValue}
+        busy={renameBusy}
+        onSubmit={submitRename}
+      />
 
-      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
-        <DialogContent className="rounded-2xl sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('renameDialogTitle')}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2 py-2">
-            <Label htmlFor="branch-rename">{t('renameLabel')}</Label>
-            <Input
-              id="branch-rename"
-              value={renameValue}
-              onChange={(e) => setRenameValue(e.target.value)}
-              className="rounded-xl"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') void submitRename();
-              }}
-            />
-          </div>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button type="button" variant="outline" className="rounded-xl" onClick={() => setRenameOpen(false)}>
-              {t('cancel')}
-            </Button>
-            <Button
-              type="button"
-              className="rounded-lg bg-primary font-semibold text-white hover:bg-primary/90"
-              disabled={renameBusy || !renameValue.trim() || renameValue.trim().length < 2}
-              onClick={() => void submitRename()}
-            >
-              {renameBusy ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={ICON_STROKE} /> : t('save')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent className="rounded-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('deleteBranchTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>{t('deleteBranchBody')}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
-            <AlertDialogCancel className="rounded-xl" disabled={deleteBusy}>
-              {t('cancel')}
-            </AlertDialogCancel>
-            <Button
-              type="button"
-              className="rounded-xl bg-red-600 font-semibold text-white hover:bg-red-600/90"
-              disabled={deleteBusy}
-              onClick={() => void confirmDeleteBranch()}
-            >
-              {deleteBusy ? (
-                <Loader2 className="h-4 w-4 animate-spin" strokeWidth={ICON_STROKE} />
-              ) : (
-                t('deleteBranchConfirm')
-              )}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteBranchDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        busy={deleteBusy}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }
