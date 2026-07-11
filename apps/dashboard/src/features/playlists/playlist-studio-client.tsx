@@ -3,24 +3,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   DragDropContext,
-  Draggable,
-  Droppable,
   type DropResult,
 } from '@hello-pangea/dnd';
 import { motion } from 'framer-motion';
-import {
-  ChevronDown,
-  ChevronUp,
-  Film,
-  GripVertical,
-  ImageIcon,
-  Layers,
-  Library,
-  PenLine,
-  Plus,
-  Save,
-  Trash2,
-} from 'lucide-react';
+import { Plus, Save } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -37,33 +23,21 @@ import { fetchMedia } from '@/features/media/api/media-api';
 import { readPageItems } from '@/features/api/page';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import type { MediaItem } from '@/features/media/media-library-client';
+import {
+  MediaLibraryPanel,
+  CanvasLibraryPanel,
+  type CanvasSummary,
+} from '@/features/playlists/playlist-library-panels';
+import {
+  PlaylistTimeline,
+  type Row,
+} from '@/features/playlists/playlist-timeline';
 
 type PlaylistSummary = {
   id: string;
   name: string;
   _count: { items: number };
 };
-
-type CanvasSummary = {
-  id: string;
-  name: string;
-};
-
-type Row =
-  | {
-      clientId: string;
-      kind: 'media';
-      mediaId: string;
-      durationSec: number;
-      media: MediaItem;
-    }
-  | {
-      clientId: string;
-      kind: 'canvas';
-      canvasId: string;
-      durationSec: number;
-      canvas: CanvasSummary;
-    };
 
 export function PlaylistStudioClient() {
   const t = useTranslations('playlistStudioClient');
@@ -108,31 +82,28 @@ export function PlaylistStudioClient() {
           canvas?: { id: string; name: string };
         }>;
       };
-      setRows(
-        data.items
-          .map((it) => {
-            if (it.kind === 'canvas' && it.canvas) {
-              return {
-                clientId: crypto.randomUUID(),
-                kind: 'canvas' as const,
-                canvasId: it.canvas.id,
-                durationSec: it.durationSec,
-                canvas: { id: it.canvas.id, name: it.canvas.name },
-              };
-            }
-            if (it.media) {
-              return {
-                clientId: crypto.randomUUID(),
-                kind: 'media' as const,
-                mediaId: it.media.id,
-                durationSec: it.durationSec,
-                media: it.media,
-              };
-            }
-            return null;
-          })
-          .filter((r): r is Row => r !== null),
-      );
+      const mapped: Array<Row | null> = data.items.map((it) => {
+        if (it.kind === 'canvas' && it.canvas) {
+          return {
+            clientId: crypto.randomUUID() as string,
+            kind: 'canvas' as const,
+            canvasId: it.canvas.id,
+            durationSec: it.durationSec,
+            canvas: { id: it.canvas.id, name: it.canvas.name },
+          };
+        }
+        if (it.media) {
+          return {
+            clientId: crypto.randomUUID() as string,
+            kind: 'media' as const,
+            mediaId: it.media.id,
+            durationSec: it.durationSec,
+            media: it.media,
+          };
+        }
+        return null;
+      });
+      setRows(mapped.filter((r): r is Row => r !== null));
     },
     [workspaceId],
   );
@@ -333,250 +304,15 @@ export function PlaylistStudioClient() {
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="grid gap-8 xl:grid-cols-2 xl:gap-10">
             <div className="space-y-8">
-              <div className="rounded-2xl border border-border bg-muted/30 p-1">
-                <div className="flex items-center gap-2 border-b border-border/50 px-5 py-4">
-                  <Library className="h-5 w-5 text-primary" />
-                  <h3 className="text-sm font-semibold tracking-tight text-foreground">
-                    {t('mediaLibrary')}
-                  </h3>
-                  <span className="ms-auto font-mono-nums text-xs text-muted-foreground">
-                    {t('assetsCount', { count: library.length })}
-                  </span>
-                </div>
-                <Droppable droppableId="library" direction="vertical">
-                  {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.droppableProps}
-                      className="max-h-[min(52vh,520px)] space-y-2 overflow-y-auto p-4"
-                    >
-                      {library.map((m, index) => (
-                        <Draggable key={m.id} draggableId={`lib-${m.id}`} index={index}>
-                          {(p) => (
-                            <div
-                              ref={p.innerRef}
-                              {...p.draggableProps}
-                              {...p.dragHandleProps}
-                              className="flex items-center gap-3 rounded-2xl border border-border/80 bg-card/80 px-3 py-2.5 shadow-sm transition hover:scale-[1.01] hover:shadow-md dark:bg-card/50"
-                            >
-                              <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
-                              <div className="relative h-10 w-14 shrink-0 overflow-hidden rounded-lg bg-muted">
-                                {m.mimeType.startsWith('image/') ? (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img
-                                    alt=""
-                                    src={m.publicUrl}
-                                    className="h-full w-full object-cover"
-                                  />
-                                ) : (
-                                  <video
-                                    src={m.publicUrl}
-                                    className="h-full w-full object-cover"
-                                    muted
-                                    playsInline
-                                  />
-                                )}
-                                <span className="absolute bottom-0.5 right-0.5 rounded bg-black/60 p-0.5">
-                                  {m.mimeType.startsWith('video/') ? (
-                                    <Film className="h-2.5 w-2.5 text-primary" />
-                                  ) : (
-                                    <ImageIcon className="h-2.5 w-2.5 text-white" />
-                                  )}
-                                </span>
-                              </div>
-                              <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-foreground">
-                                {m.originalName}
-                              </span>
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-              </div>
-
-              <div className="rounded-2xl border border-primary/20 bg-primary/[0.03] p-1">
-                <div className="flex items-center gap-2 border-b border-border/50 px-5 py-4">
-                  <PenLine className="h-5 w-5 text-primary" />
-                  <h3 className="text-sm font-semibold tracking-tight text-foreground">
-                    {t('canvasDesigns')}
-                  </h3>
-                  <span className="ms-auto font-mono-nums text-xs text-muted-foreground">
-                    {t('designsCount', { count: canvasLibrary.length })}
-                  </span>
-                </div>
-                <Droppable droppableId="canvas-library" direction="vertical">
-                  {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.droppableProps}
-                      className="max-h-[min(40vh,400px)] space-y-2 overflow-y-auto p-4"
-                    >
-                      {canvasLibrary.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">
-                          {t('canvasEmpty')}
-                        </p>
-                      ) : (
-                        canvasLibrary.map((c, index) => (
-                          <Draggable key={c.id} draggableId={`cvs-${c.id}`} index={index}>
-                            {(p) => (
-                              <div
-                                ref={p.innerRef}
-                                {...p.draggableProps}
-                                {...p.dragHandleProps}
-                                className="flex items-center gap-3 rounded-2xl border border-border/80 bg-card/80 px-3 py-2.5 shadow-sm transition hover:scale-[1.01] hover:shadow-md dark:bg-card/50"
-                              >
-                                <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary">
-                                  <PenLine className="h-5 w-5 text-white" />
-                                </span>
-                                <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-foreground">
-                                  {c.name}
-                                </span>
-                              </div>
-                            )}
-                          </Draggable>
-                        ))
-                      )}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-              </div>
+              <MediaLibraryPanel library={library} />
+              <CanvasLibraryPanel canvasLibrary={canvasLibrary} />
             </div>
-
-            <div className="rounded-2xl border-2 border-dashed border-border bg-muted/20 p-1 shadow-inner">
-              <div className="flex items-center gap-2 border-b border-border/50 px-5 py-4">
-                <Layers className="h-5 w-5 text-primary" />
-                <h3 className="text-sm font-semibold tracking-tight text-foreground">
-                  {t('programTimeline')}
-                </h3>
-                <span className="ms-auto font-mono-nums text-xs text-muted-foreground">
-                  {t('itemsCount', { count: rows.length })}
-                </span>
-              </div>
-              <Droppable droppableId="playlist" direction="vertical">
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className="min-h-[min(60vh,560px)] space-y-2 p-4"
-                  >
-                    {rows.map((row, index) => (
-                      <Draggable key={row.clientId} draggableId={row.clientId} index={index}>
-                        {(p) => (
-                          <div
-                            ref={p.innerRef}
-                            {...p.draggableProps}
-                            className="rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-primary/30 hover:shadow-md"
-                          >
-                            <div className="flex items-start gap-3">
-                              <button
-                                type="button"
-                                className="mt-1 text-muted-foreground"
-                                {...p.dragHandleProps}
-                              >
-                                <GripVertical className="h-4 w-4" />
-                              </button>
-                              <div className="relative h-12 w-20 shrink-0 overflow-hidden rounded-lg bg-muted">
-                                {row.kind === 'media' ? (
-                                  row.media.mimeType.startsWith('image/') ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img
-                                      alt=""
-                                      src={row.media.publicUrl}
-                                      className="h-full w-full object-cover"
-                                    />
-                                  ) : (
-                                    <video
-                                      src={row.media.publicUrl}
-                                      className="h-full w-full object-cover"
-                                      muted
-                                      playsInline
-                                    />
-                                  )
-                                ) : (
-                                  <div className="flex h-full w-full items-center justify-center bg-muted">
-                                    <PenLine className="h-6 w-6 text-primary" />
-                                  </div>
-                                )}
-                              </div>
-                              <div className="min-w-0 flex-1 space-y-2">
-                                <p className="truncate text-[15px] font-semibold text-foreground">
-                                  {row.kind === 'media'
-                                    ? row.media.originalName
-                                    : row.canvas.name}
-                                </p>
-                                <p className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
-                                  {row.kind === 'media' ? t('media') : t('canvas')}
-                                </p>
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <div className="flex flex-col gap-1">
-                                    <Label className="text-xs">{t('durationSec')}</Label>
-                                    {row.kind === 'media' &&
-                                    row.media.mimeType.startsWith('image/') ? (
-                                      <p className="max-w-[14rem] text-[11px] leading-snug text-muted-foreground">
-                                        {t('imageDurationHint')}
-                                      </p>
-                                    ) : null}
-                                  </div>
-                                  <Input
-                                    type="number"
-                                    min={1}
-                                    className="h-9 w-24 rounded-lg font-mono-nums"
-                                    value={row.durationSec}
-                                    onChange={(e) =>
-                                      updateDuration(row.clientId, Number(e.target.value) || 1)
-                                    }
-                                  />
-                                  <div className="ms-auto flex items-center gap-1">
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="icon"
-                                      className="h-9 w-9 shrink-0 rounded-lg"
-                                      disabled={index === 0}
-                                      title={t('moveUp')}
-                                      onClick={() => moveRow(index, -1)}
-                                    >
-                                      <ChevronUp className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="icon"
-                                      className="h-9 w-9 shrink-0 rounded-lg"
-                                      disabled={index >= rows.length - 1}
-                                      title={t('moveDown')}
-                                      onClick={() => moveRow(index, 1)}
-                                    >
-                                      <ChevronDown className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      className="text-red-500 hover:bg-red-500/10 hover:text-red-600"
-                                      onClick={() => removeRow(row.clientId)}
-                                    >
-                                      <Trash2 className="mr-1 h-4 w-4" />
-                                      {t('delete')}
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </div>
+            <PlaylistTimeline
+              rows={rows}
+              onUpdateDuration={updateDuration}
+              onRemoveRow={removeRow}
+              onMoveRow={moveRow}
+            />
           </div>
         </DragDropContext>
       )}
