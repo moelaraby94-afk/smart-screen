@@ -51,6 +51,9 @@ COPY --from=builder /repo/node_modules       ./node_modules
 COPY --from=builder /repo/apps/backend       ./apps/backend
 COPY --from=builder /repo/packages           ./packages
 
+# Ensure class-validator is hoisted to root node_modules for NestJS PackageLoader
+RUN npm install class-validator@0.14.1 --no-save 2>/dev/null || true
+
 # Non-root user: if a dependency RCE ever lands, the attacker doesn't get root
 # inside the container.
 RUN addgroup --system --gid 1001 appgroup && \
