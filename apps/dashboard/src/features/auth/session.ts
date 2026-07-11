@@ -35,9 +35,22 @@ function setAccessTokenMirrorCookie(token: string | null): void {
 
 let cachedCsrfToken: string | null = null;
 
-/** Persist access JWT for cross-origin API calls (Authorization header). */
+/**
+ * Persist access JWT for cross-origin API calls (Authorization header).
+ *
+ * In production the token is NEVER stored in localStorage or a non-httpOnly
+ * cookie — the backend already sets an httpOnly `cs_access_token` cookie,
+ * and `apiFetch` sends it via `credentials: 'include'`. Storing a second
+ * copy in localStorage would let any XSS read it directly, defeating the
+ * httpOnly protection entirely.
+ *
+ * The localStorage mirror + `cs_access_mirror` cookie are dev-only
+ * conveniences for cross-origin setups where the dashboard and API run on
+ * different ports and cookie SameSite rules interfere.
+ */
 export function setStoredAccessToken(token: string | null): void {
   if (typeof window === 'undefined') return;
+  if (process.env.NODE_ENV === 'production') return;
   if (token) localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, token);
   else localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
   setAccessTokenMirrorCookie(token);
@@ -45,6 +58,7 @@ export function setStoredAccessToken(token: string | null): void {
 
 export function getStoredAccessToken(): string | null {
   if (typeof window === 'undefined') return null;
+  if (process.env.NODE_ENV === 'production') return null;
   return localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
 }
 
