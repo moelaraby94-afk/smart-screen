@@ -90,7 +90,7 @@
 - ✅ `/health` → HTTP 200.
 - ✅ login حقيقي بالأدمن المزروع → بيرجّع user + workspaces + JWT صالح (HTTP 200).
 - ✅ `prisma migrate status` → "Database schema is up to date" (26 migration).
-- ✅ اختبارات الـ backend المتعلّقة بالتغييرات: 45/45.
+- ✅ اختبارات الـ backend كاملة: **130/130 (18 suite)** عبر `npm run test`؛ والمتعلّقة بالتغييرات مباشرةً: 45/45.
 - ✅ `next build` للداشبورد: أخضر.
 
 ### إعادة تعيين الـ DB المحلي (لو احتجتها)
@@ -106,11 +106,13 @@ docker compose exec -e ENABLE_DB_SEED=true backend npx prisma db seed
 
 ---
 
-## مشاكل معروفة / متابعات (خارج نطاق هذه الجلسة)
+## حالة الاختبارات
 
-1. **`media.service.spec.ts` بيفشل** بـ `TypeError: dynamic import without --experimental-vm-modules` — مشكلة إعداد jest/ESM **موجودة من قبل**، ملهاش علاقة بتغييرات الـ schema (متلمسش أي model اتغيّر). محتاجة ضبط jest للـ ESM.
-2. **`all-exceptions.filter.spec.ts` بيفشل في التشغيل المتوازي بس** وبينجح لوحده — **test pollution** بين الـ suites (suite بيغيّر global state من غير ما يرجّعه). موجودة من قبل.
-3. **الـ legacy refresh path مبيعملش rotation** — التوكن اللي اتعمل قبل الـ migration يفضل صالح لحد ما يخلص (نافذة replay صغيرة أثناء الهجرة). تحسين مقترح: تصفير `refreshTokenHash` عند أول إصدار جلسة جديدة للمستخدم.
+كل اختبارات الـ backend **خضراء: 130/130 (18 suite)** لما تتشغّل بالأمر الصح `npm run test -w apps/backend` (اللي بيمرّر `--experimental-vm-modules`، مطلوب لأن `media.service` بيستخدم dynamic `import()` لموديول ESM). تشغيل `npx jest` مباشرةً من غير الـ flag ده بيوقّع `media.service.spec` — ده **مشكلة استدعاء، مش فشل حقيقي**؛ الـ CI و `npm run verify` بيستخدموا الأمر الصح فهما أخضر.
+
+## متابعات (خارج نطاق هذه الجلسة)
+
+1. **الـ legacy refresh path مبيعملش rotation** — التوكن اللي اتعمل قبل الـ migration يفضل صالح لحد ما يخلص (نافذة replay صغيرة أثناء الهجرة). تحسين مقترح: تصفير `refreshTokenHash` عند أول إصدار جلسة جديدة للمستخدم. (مُدرَج كـ تاسك في [`docs/full-audit-and-remediation-plan.md`](./full-audit-and-remediation-plan.md)).
 
 ---
 
