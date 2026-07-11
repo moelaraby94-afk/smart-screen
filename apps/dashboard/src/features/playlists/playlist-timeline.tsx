@@ -89,7 +89,7 @@ export function PlaylistTimeline({
                           row.media.mimeType.startsWith('image/') ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
-                              alt=""
+                              alt={row.media.originalName}
                               src={row.media.publicUrl}
                               className="h-full w-full object-cover"
                             />

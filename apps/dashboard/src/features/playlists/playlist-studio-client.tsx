@@ -253,8 +253,9 @@ export function PlaylistStudioClient() {
       >
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:gap-8">
           <div className="min-w-[200px] flex-1 space-y-2">
-            <Label>{t('playlist')}</Label>
+            <Label htmlFor="playlist-select">{t('playlist')}</Label>
             <select
+              id="playlist-select"
               className="h-11 w-full rounded-2xl border border-border bg-card px-4 text-[15px] text-foreground outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
               value={playlistId}
               onChange={(e) => setPlaylistId(e.target.value)}

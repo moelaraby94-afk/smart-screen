@@ -91,8 +91,9 @@ export function CreateScheduleForm({
       </DialogHeader>
       <div className="grid gap-4 py-2">
         <div className="grid gap-2">
-          <Label>{t('fieldPlaylist')}</Label>
+          <Label htmlFor="sched-playlist">{t('fieldPlaylist')}</Label>
           <select
+            id="sched-playlist"
             className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm"
             value={playlistId}
             onChange={(e) => setPlaylistId(e.target.value)}
@@ -106,8 +107,9 @@ export function CreateScheduleForm({
           </select>
         </div>
         <div className="grid gap-2">
-          <Label>{t('fieldScreenOptional')}</Label>
+          <Label htmlFor="sched-screen">{t('fieldScreenOptional')}</Label>
           <select
+            id="sched-screen"
             className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm"
             value={screenId}
             onChange={(e) => setScreenId(e.target.value)}

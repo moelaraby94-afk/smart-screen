@@ -58,7 +58,7 @@ export function MediaLibraryPanel({ library }: MediaLibraryPanelProps) {
                       {m.mimeType.startsWith('image/') ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          alt=""
+                          alt={m.originalName}
                           src={m.publicUrl}
                           className="h-full w-full object-cover"
                         />

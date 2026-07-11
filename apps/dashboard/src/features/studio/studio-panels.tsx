@@ -142,7 +142,7 @@ export function StudioMediaStrip({ library }: MediaStripProps) {
           >
             {m.mimeType.startsWith('image/') ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={m.publicUrl} alt="" className="h-20 w-full object-cover" />
+              <img src={m.publicUrl} alt={m.originalName} className="h-20 w-full object-cover" />
             ) : (
               <video src={m.publicUrl} className="h-20 w-full object-cover" muted playsInline />
             )}

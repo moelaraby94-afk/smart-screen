@@ -291,8 +291,9 @@ export function StudioEditorClient() {
       >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-2">
-            <Label>{t('canvasSelect')}</Label>
+            <Label htmlFor="canvas-select">{t('canvasSelect')}</Label>
             <select
+              id="canvas-select"
               className="h-11 w-full max-w-md rounded-2xl border border-border bg-card px-4 text-[15px] outline-none focus:ring-4 focus:ring-primary/15"
               value={canvasId}
               onChange={(e) => setCanvasId(e.target.value)}

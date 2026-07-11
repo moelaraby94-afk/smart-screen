@@ -137,7 +137,10 @@ export function ScheduleCalendar({
                             background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.7) 100%)',
                           }}
                           title={`${sch.playlist.name} · ${sch.startTime}–${sch.endTime}`}
-                          onPointerDown={(e) => {
+                          role="button"
+                          tabIndex={canDrag ? 0 : -1}
+                          aria-label={`${sch.playlist.name}, ${sch.startTime} to ${sch.endTime}`}
+                          onPointerDown={(e: React.PointerEvent) => {
                             if (!canDrag) return;
                             e.currentTarget.setPointerCapture(e.pointerId);
                             dragRef.current = {
@@ -198,6 +201,7 @@ export function ScheduleList({ schedules, dayShort, onDelete, t }: ScheduleListP
               variant="ghost"
               size="icon"
               className="text-destructive hover:text-destructive"
+              aria-label={t('deleteScheduleAria')}
               onClick={() => onDelete(s.id)}
             >
               <Trash2 className="h-4 w-4" />

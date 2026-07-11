@@ -1,5 +1,6 @@
 'use client';
 
+import { useId } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -41,11 +42,17 @@ function FieldInput({
   children: React.ReactNode;
   error?: string;
 }) {
+  const fieldId = useId();
+  const errorId = useId();
   return (
     <div className="space-y-2">
-      <Label>{label}</Label>
-      {children}
-      {error ? <p className="text-xs text-red-600 dark:text-red-400">{error}</p> : null}
+      <Label htmlFor={fieldId}>{label}</Label>
+      <div id={fieldId}>
+        {children}
+      </div>
+      {error ? (
+        <p id={errorId} role="alert" className="text-xs text-red-600 dark:text-red-400">{error}</p>
+      ) : null}
     </div>
   );
 }

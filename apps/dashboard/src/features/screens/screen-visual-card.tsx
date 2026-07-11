@@ -90,7 +90,7 @@ export function ScreenVisualCard({
             <img
               key={`${previewUrl}-${previewRev}`}
               src={previewUrl}
-              alt=""
+              alt={t('screenPreviewAlt', { name: screen.name })}
               className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
             />
           ) : (
@@ -155,7 +155,7 @@ export function ScreenVisualCard({
         <div className="flex justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0 rounded-xl">
+              <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0 rounded-xl" aria-label={t('screenActionsAria')}>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>

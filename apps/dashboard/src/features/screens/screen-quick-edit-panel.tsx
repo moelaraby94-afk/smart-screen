@@ -181,6 +181,7 @@ export function ScreenQuickEditPanel({
                 size="icon"
                 variant="ghost"
                 className="shrink-0 rounded-xl"
+                aria-label={t('closePanel')}
                 onClick={() => onOpenChange(false)}
               >
                 <X className="h-5 w-5" />

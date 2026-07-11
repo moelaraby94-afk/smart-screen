@@ -255,8 +255,9 @@ export function SchedulesClient({ locale }: { locale: string }) {
         <p className="mb-4 text-sm text-muted-foreground">{t('overrideDesc')}</p>
         <div className="flex flex-wrap items-end gap-3">
           <div className="grid gap-2">
-            <Label>{t('fieldScreen')}</Label>
+            <Label htmlFor="override-screen">{t('fieldScreen')}</Label>
             <select
+              id="override-screen"
               className="h-10 min-w-[200px] rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
               value={overrideScreenId}
               onChange={(e) => setOverrideScreenId(e.target.value)}
@@ -270,8 +271,9 @@ export function SchedulesClient({ locale }: { locale: string }) {
             </select>
           </div>
           <div className="grid gap-2">
-            <Label>{t('fieldPlaylist')}</Label>
+            <Label htmlFor="override-playlist">{t('fieldPlaylist')}</Label>
             <select
+              id="override-playlist"
               className="h-10 min-w-[200px] rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
               value={overridePlaylistId}
               onChange={(e) => setOverridePlaylistId(e.target.value)}
