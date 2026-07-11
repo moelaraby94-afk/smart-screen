@@ -22,8 +22,16 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiFetch } from '@/features/auth/session';
-import { readPageItems } from '@/features/api/page';
+import {
+  fetchSchedules,
+  fetchScheduleOverlaps,
+  updateSchedule as apiUpdateSchedule,
+  createSchedule as apiCreateSchedule,
+  deleteSchedule as apiDeleteSchedule,
+  setScreenOverride as apiSetScreenOverride,
+} from '@/features/schedules/api/schedules-api';
+import { fetchPlaylistOptions } from '@/features/screens/api/screens-api';
+import { fetchScreens } from '@/features/screens/api/screens-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
@@ -81,19 +89,16 @@ export function SchedulesClient({ locale }: { locale: string }) {
     if (!workspaceId) return;
     setLoading(true);
     try {
-      const [sRes, oRes, pRes, scRes] = await Promise.all([
-        apiFetch(`/schedules?workspaceId=${encodeURIComponent(workspaceId)}`),
-        apiFetch(`/schedules/overlaps?workspaceId=${encodeURIComponent(workspaceId)}`),
-        apiFetch(`/playlists?workspaceId=${encodeURIComponent(workspaceId)}`),
-        apiFetch(`/screens?workspaceId=${encodeURIComponent(workspaceId)}&page=1&limit=200`),
+      const [sData, oData, pData, scData] = await Promise.all([
+        fetchSchedules(workspaceId),
+        fetchScheduleOverlaps(workspaceId),
+        fetchPlaylistOptions(workspaceId),
+        fetchScreens(workspaceId),
       ]);
-      if (sRes.ok) setSchedules(await readPageItems<ScheduleApi>(sRes));
-      if (oRes.ok) {
-        const o = (await oRes.json()) as { pairs: Array<[string, string]> };
-        setPairs(o.pairs ?? []);
-      }
-      if (pRes.ok) setPlaylists(await readPageItems<PlaylistOpt>(pRes));
-      if (scRes.ok) setScreens(await readPageItems<ScreenOpt>(scRes));
+      setSchedules(sData);
+      setPairs(oData.pairs ?? []);
+      setPlaylists(pData);
+      setScreens(scData);
     } finally {
       setLoading(false);
     }
@@ -146,17 +151,10 @@ export function SchedulesClient({ locale }: { locale: string }) {
     setDragActive(false);
     if (!d || !workspaceId) return;
     if (d.currentStart === d.origStart && d.currentEnd === d.origEnd) return;
-    const res = await apiFetch(
-      `/schedules/${d.id}?workspaceId=${encodeURIComponent(workspaceId)}`,
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          startTime: d.currentStart,
-          endTime: d.currentEnd,
-        }),
-      },
-    );
+    const res = await apiUpdateSchedule(workspaceId, d.id, {
+      startTime: d.currentStart,
+      endTime: d.currentEnd,
+    });
     if (!res.ok) {
       toast.error(t('saveFailed'));
       await load();
@@ -187,14 +185,10 @@ export function SchedulesClient({ locale }: { locale: string }) {
       toast.error(t('overrideNeed'));
       return;
     }
-    const res = await apiFetch(
-      `/screens/${overrideScreenId}/override?workspaceId=${encodeURIComponent(workspaceId)}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playlistId: overridePlaylistId, durationMinutes: 480 }),
-      },
-    );
+    const res = await apiSetScreenOverride(workspaceId, overrideScreenId, {
+      playlistId: overridePlaylistId,
+      durationMinutes: 480,
+    });
     if (!res.ok) {
       toast.error(t('overrideFailed'));
       return;
@@ -437,10 +431,7 @@ export function SchedulesClient({ locale }: { locale: string }) {
                   onClick={async () => {
                     if (!workspaceId) return;
                     if (!confirm(t('confirmDelete'))) return;
-                    const res = await apiFetch(
-                      `/schedules/${s.id}?workspaceId=${encodeURIComponent(workspaceId)}`,
-                      { method: 'DELETE' },
-                    );
+                    const res = await apiDeleteSchedule(workspaceId, s.id);
                     if (res.ok) {
                       toast.success(t('deleted'));
                       bumpWorkspaceDataEpoch();
@@ -504,18 +495,14 @@ function CreateScheduleForm({
     }
     setSaving(true);
     try {
-      const res = await apiFetch('/schedules', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          workspaceId,
-          playlistId,
-          screenId: screenId || null,
-          daysOfWeek: days,
-          startTime,
-          endTime,
-          priority,
-        }),
+      const res = await apiCreateSchedule({
+        workspaceId,
+        playlistId,
+        screenId: screenId || null,
+        daysOfWeek: days,
+        startTime,
+        endTime,
+        priority,
       });
       if (!res.ok) {
         toast.error(t('saveFailed'));

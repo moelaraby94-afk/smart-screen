@@ -19,10 +19,19 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { apiFetch } from '@/features/auth/session';
-import { readPageItems } from '@/features/api/page';
 import { isApiError, readApiError } from '@/features/api/api-error';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
+import {
+  fetchMedia,
+  fetchMediaFolders,
+  uploadMedia,
+  deleteMedia,
+  createFolder as apiCreateFolder,
+  renameFolder as apiRenameFolder,
+  deleteFolder as apiDeleteFolder,
+  moveMediaToFolder,
+  seedDemoContent,
+} from '@/features/media/api/media-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
 
@@ -183,9 +192,7 @@ export function MediaLibraryClient() {
       }
       const results = await Promise.all(
         workspaces.map(async (w) => {
-          const res = await apiFetch(`/media?workspaceId=${encodeURIComponent(w.id)}`);
-          if (!res.ok) return [] as MediaItem[];
-          const data = await readPageItems<MediaItem>(res);
+          const data = await fetchMedia(w.id);
           return data.map((m) => ({
             ...m,
             workspaceId: w.id,
@@ -202,8 +209,7 @@ export function MediaLibraryClient() {
       setLoading(false);
       return;
     }
-    const res = await apiFetch(`/media?workspaceId=${encodeURIComponent(workspaceId)}`);
-    setItems(res.ok ? await readPageItems<MediaItem>(res) : []);
+    setItems(await fetchMedia(workspaceId));
     setLoading(false);
   }, [workspaceId, scope, workspaces]);
 
@@ -212,15 +218,8 @@ export function MediaLibraryClient() {
       setFolders([]);
       return;
     }
-    const res = await apiFetch(
-      `/media/folders/list?workspaceId=${encodeURIComponent(workspaceId)}`,
-    );
-    if (!res.ok) {
-      setFolders([]);
-      return;
-    }
-    const rows = (await res.json()) as MediaFolder[];
-    setFolders(Array.isArray(rows) ? rows : []);
+    const rows = await fetchMediaFolders(workspaceId);
+    setFolders(rows);
   }, [workspaceId, scope]);
 
   useEffect(() => {
@@ -243,10 +242,7 @@ export function MediaLibraryClient() {
     if (autoSeedAttemptedRef.current) return;
     autoSeedAttemptedRef.current = true;
     void (async () => {
-      const res = await apiFetch(
-        `/workspaces/${encodeURIComponent(workspaceId)}/seed-demo`,
-        { method: 'POST' },
-      );
+      const res = await seedDemoContent(workspaceId);
       if (res.ok) {
         bumpWorkspaceDataEpoch();
         await load();
@@ -267,12 +263,8 @@ export function MediaLibraryClient() {
       setPending(true);
       try {
         for (const file of files) {
-          const form = new FormData();
-          form.append('file', file);
-          const res = await apiFetch(
-            `/media/upload?workspaceId=${encodeURIComponent(workspaceId)}${selectedFolderId !== 'all' ? `&folderId=${encodeURIComponent(selectedFolderId)}` : ''}`,
-            { method: 'POST', body: form },
-          );
+          const folderId = selectedFolderId !== 'all' ? selectedFolderId : undefined;
+          const res = await uploadMedia(workspaceId, file, folderId);
           if (!res.ok) {
             /**
              * Abort the remaining files and let the catch report it. The API
@@ -333,9 +325,7 @@ export function MediaLibraryClient() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     const ws = deleteTarget.workspaceId;
-    const res = await apiFetch(`/media/${deleteTarget.id}?workspaceId=${encodeURIComponent(ws)}`, {
-      method: 'DELETE',
-    });
+    const res = await deleteMedia(ws, deleteTarget.id);
     setDeleteTarget(null);
     if (!res.ok) {
       toast.error(t('deleteFailed'));
@@ -350,10 +340,7 @@ export function MediaLibraryClient() {
   const createFolder = async () => {
     const name = newFolderName.trim();
     if (!workspaceId || !name || scope === 'all') return;
-    const res = await apiFetch(
-      `/media/folders?workspaceId=${encodeURIComponent(workspaceId)}`,
-      { method: 'POST', body: JSON.stringify({ name }) },
-    );
+    const res = await apiCreateFolder(workspaceId, name);
     if (!res.ok) {
       toast.error(t('folderCreateFailed'));
       return;
@@ -367,10 +354,7 @@ export function MediaLibraryClient() {
     if (!workspaceId || scope === 'all') return;
     const name = window.prompt(t('folderRenamePrompt'), current)?.trim();
     if (!name || name === current) return;
-    const res = await apiFetch(
-      `/media/folders/${encodeURIComponent(folderId)}?workspaceId=${encodeURIComponent(workspaceId)}`,
-      { method: 'PATCH', body: JSON.stringify({ name }) },
-    );
+    const res = await apiRenameFolder(workspaceId, folderId, name);
     if (!res.ok) {
       toast.error(t('folderRenameFailed'));
       return;
@@ -383,10 +367,7 @@ export function MediaLibraryClient() {
     if (!workspaceId || scope === 'all') return;
     const confirmed = window.confirm(t('folderDeleteConfirm'));
     if (!confirmed) return;
-    const res = await apiFetch(
-      `/media/folders/${encodeURIComponent(folderId)}?workspaceId=${encodeURIComponent(workspaceId)}`,
-      { method: 'DELETE' },
-    );
+    const res = await apiDeleteFolder(workspaceId, folderId);
     if (!res.ok) {
       toast.error(t('folderDeleteFailed'));
       return;
@@ -402,13 +383,7 @@ export function MediaLibraryClient() {
   const moveMedia = async (mediaId: string, folderId: string) => {
     if (!workspaceId || scope === 'all') return;
     const nextFolderId = folderId === 'all' ? null : folderId;
-    const res = await apiFetch(
-      `/media/${encodeURIComponent(mediaId)}/folder?workspaceId=${encodeURIComponent(workspaceId)}`,
-      {
-        method: 'PATCH',
-        body: JSON.stringify({ folderId: nextFolderId }),
-      },
-    );
+    const res = await moveMediaToFolder(workspaceId, mediaId, nextFolderId);
     if (!res.ok) {
       toast.error(t('moveFolderFailed'));
       return;

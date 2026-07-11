@@ -9,8 +9,8 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { apiFetch } from '@/features/auth/session';
-import { readPageItems } from '@/features/api/page';
+import { fetchPlaylistOptions, updateScreen as apiUpdateScreen } from '@/features/screens/api/screens-api';
+import { fetchSchedules, updateSchedule as apiUpdateSchedule } from '@/features/schedules/api/schedules-api';
 import { cn } from '@/lib/utils';
 import type { ScreenRow } from './useApiScreens';
 
@@ -49,12 +49,12 @@ export function ScreenQuickEditPanel({
   const [busy, setBusy] = useState(false);
 
   const loadOptions = useCallback(async () => {
-    const [plRes, schRes] = await Promise.all([
-      apiFetch(`/playlists?workspaceId=${encodeURIComponent(workspaceId)}`),
-      apiFetch(`/schedules?workspaceId=${encodeURIComponent(workspaceId)}`),
+    const [pls, schs] = await Promise.all([
+      fetchPlaylistOptions(workspaceId),
+      fetchSchedules(workspaceId),
     ]);
-    if (plRes.ok) setPlaylists(await readPageItems<PlaylistOpt>(plRes));
-    if (schRes.ok) setSchedules(await readPageItems<ScheduleOpt>(schRes));
+    setPlaylists(pls);
+    setSchedules(schs);
   }, [workspaceId]);
 
   useEffect(() => {
@@ -74,15 +74,9 @@ export function ScreenQuickEditPanel({
     if (!screen) return;
     setBusy(true);
     try {
-      const res = await apiFetch(
-        `/screens/${screen.id}?workspaceId=${encodeURIComponent(workspaceId)}`,
-        {
-          method: 'PATCH',
-          body: JSON.stringify({
-            playlistGroupId: nextId || null,
-          }),
-        },
-      );
+      const res = await apiUpdateScreen(workspaceId, screen.id, {
+        playlistGroupId: nextId || null,
+      });
       if (!res.ok) {
         toast.error(t('couldNotUpdatePlaylistGroup'));
         return;
@@ -99,15 +93,9 @@ export function ScreenQuickEditPanel({
     if (!screen) return;
     setBusy(true);
     try {
-      const res = await apiFetch(
-        `/screens/${screen.id}?workspaceId=${encodeURIComponent(workspaceId)}`,
-        {
-          method: 'PATCH',
-          body: JSON.stringify({
-            activePlaylistId: nextId || null,
-          }),
-        },
-      );
+      const res = await apiUpdateScreen(workspaceId, screen.id, {
+        activePlaylistId: nextId || null,
+      });
       if (!res.ok) {
         toast.error(t('couldNotUpdatePlaylist'));
         return;
@@ -126,13 +114,7 @@ export function ScreenQuickEditPanel({
     try {
       const targeting = schedules.filter((s) => s.screenId === screen.id);
       for (const s of targeting) {
-        const clr = await apiFetch(
-          `/schedules/${s.id}?workspaceId=${encodeURIComponent(workspaceId)}`,
-          {
-            method: 'PATCH',
-            body: JSON.stringify({ screenId: null }),
-          },
-        );
+        const clr = await apiUpdateSchedule(workspaceId, s.id, { screenId: null });
         if (!clr.ok) {
           toast.error(t('couldNotUpdateSchedule'));
           setBusy(false);
@@ -146,13 +128,7 @@ export function ScreenQuickEditPanel({
         await loadOptions();
         return;
       }
-      const res = await apiFetch(
-        `/schedules/${schId}?workspaceId=${encodeURIComponent(workspaceId)}`,
-        {
-          method: 'PATCH',
-          body: JSON.stringify({ screenId: screen.id }),
-        },
-      );
+      const res = await apiUpdateSchedule(workspaceId, schId, { screenId: screen.id });
       if (!res.ok) {
         toast.error(t('couldNotAttachSchedule'));
         return;
