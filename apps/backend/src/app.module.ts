@@ -23,6 +23,7 @@ import { AccountModule } from './domains/account/account.module';
 import { WebhooksModule } from './domains/webhooks/webhooks.module';
 import { MaintenanceModule } from './domains/maintenance/maintenance.module';
 import { EmailModule } from './domains/email/email.module';
+import { HealthModule } from './common/health/health.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { EmailModule } from './domains/email/email.module';
     AccountModule,
     WebhooksModule,
     MaintenanceModule,
+    HealthModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

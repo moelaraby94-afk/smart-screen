@@ -76,11 +76,6 @@ async function bootstrap() {
   );
 
   const http = app.getHttpAdapter().getInstance();
-  const sendOk = (_req: express.Request, res: express.Response) => {
-    res.status(200).json({ status: 'ok' });
-  };
-  http.get('/', sendOk);
-  http.get('/health', sendOk);
   http.use(
     '/api/v1/webhooks/stripe',
     express.raw({ type: 'application/json' }),
@@ -111,7 +106,9 @@ async function bootstrap() {
     },
   });
   app.use(cookieParser());
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix('api/v1', {
+    exclude: ['health', 'ready'],
+  });
 
   let corsOrigin:
     | boolean

@@ -36,9 +36,9 @@ COPY --from=builder /app ./
 # فتح المنفذ (Railway PORT)
 EXPOSE 3000
 
-# اختبار الصحة (Healthcheck)
+# اختبار الجاهزية (Readiness probe) — يتحقق من اتصال DB
 HEALTHCHECK --interval=10s --timeout=5s --start-period=60s --retries=6 \
-  CMD node -e "const p=Number(process.env.PORT||3000);require('http').get('http://127.0.0.1:'+p+'/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+  CMD node -e "const p=Number(process.env.PORT||3000);require('http').get('http://127.0.0.1:'+p+'/ready',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
 
 # أمر التشغيل النهائي (تصحيح: migrate deploy مع npx والمسار الصحيح)
 CMD ["sh", "-c", "npx prisma migrate deploy --schema=apps/backend/prisma/schema.prisma && npm run start:prod --workspace=backend"]
