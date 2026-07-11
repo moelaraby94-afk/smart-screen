@@ -41,28 +41,28 @@ describe('session.ts — pure functions (P1-T5)', () => {
 
     afterEach(() => {
       if (originalNodeEnv === undefined) {
-        delete process.env.NODE_ENV;
+        delete (process.env as Record<string, string | undefined>).NODE_ENV;
       } else {
-        process.env.NODE_ENV = originalNodeEnv;
+        (process.env as Record<string, string | undefined>).NODE_ENV = originalNodeEnv;
       }
       localStorage.clear();
     });
 
     it('stores and retrieves a token in non-production', () => {
-      process.env.NODE_ENV = 'development';
+      (process.env as Record<string, string | undefined>).NODE_ENV = 'development';
       setStoredAccessToken('my-jwt-token');
       expect(getStoredAccessToken()).toBe('my-jwt-token');
     });
 
     it('is a no-op in production (returns null, does not store)', () => {
-      process.env.NODE_ENV = 'production';
+      (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
       setStoredAccessToken('my-jwt-token');
       expect(getStoredAccessToken()).toBeNull();
       expect(localStorage.getItem('cs_access_token')).toBeNull();
     });
 
     it('clears the token when passed null', () => {
-      process.env.NODE_ENV = 'development';
+      (process.env as Record<string, string | undefined>).NODE_ENV = 'development';
       setStoredAccessToken('my-jwt-token');
       expect(getStoredAccessToken()).toBe('my-jwt-token');
       setStoredAccessToken(null);

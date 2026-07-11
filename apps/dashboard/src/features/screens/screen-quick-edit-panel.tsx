@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { fetchPlaylistOptions, updateScreen as apiUpdateScreen } from '@/features/screens/api/screens-api';
 import { fetchSchedules, updateSchedule as apiUpdateSchedule } from '@/features/schedules/api/schedules-api';
+import { readPageItems } from '@/features/api/page';
 import { cn } from '@/lib/utils';
 import type { ScreenRow } from './useApiScreens';
 
@@ -49,12 +50,12 @@ export function ScreenQuickEditPanel({
   const [busy, setBusy] = useState(false);
 
   const loadOptions = useCallback(async () => {
-    const [pls, schs] = await Promise.all([
+    const [pls, schsRes] = await Promise.all([
       fetchPlaylistOptions(workspaceId),
       fetchSchedules(workspaceId),
     ]);
     setPlaylists(pls);
-    setSchedules(schs);
+    setSchedules(schsRes.ok ? await readPageItems<ScheduleOpt>(schsRes) : []);
   }, [workspaceId]);
 
   useEffect(() => {
