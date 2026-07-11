@@ -11,6 +11,8 @@ COPY package.json package-lock.json ./
 COPY apps/backend/package.json apps/backend/
 COPY apps/dashboard/package.json apps/dashboard/
 COPY apps/player/package.json apps/player/
+COPY apps/marketing/package.json apps/marketing/
+COPY packages/ ./packages/
 
 RUN npm ci
 

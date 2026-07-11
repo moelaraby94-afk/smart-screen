@@ -34,9 +34,6 @@ RUN npm run prisma:generate -w apps/backend
 
 RUN npm run build -w apps/backend
 
-# Drop dev dependencies before copying to the runner image
-RUN npm prune --omit=dev
-
 # ── Runner stage ──────────────────────────────────────────────────────────────
 FROM node:20-bookworm-slim
 WORKDIR /repo

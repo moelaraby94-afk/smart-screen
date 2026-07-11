@@ -44,7 +44,14 @@ services:
     environment:
       NODE_ENV: production
       PORT: '3000'
-      DATABASE_URL: ${DATABASE_URL:-postgresql://cloudsignage:cloudsignage_dev_password@db:5432/cloudsignage?schema=public}
+      # Hardcoded to the compose-internal DB service (db:5432), NOT ${DATABASE_URL:-...}.
+      # Compose auto-loads the repo-root .env, whose DATABASE_URL points at
+      # localhost:5433 (the host port mapping) for host-run Prisma tooling. Left as
+      # an override, that host value leaks into this container, where `localhost`
+      # is the container itself — so migrate deploy fails with P1001 (can't reach
+      # localhost:5433) and the backend crash-loops. Inside the network the db is
+      # only reachable as `db:5432`, and that never varies for local dev.
+      DATABASE_URL: postgresql://cloudsignage:cloudsignage_dev_password@db:5432/cloudsignage?schema=public
       # No defaults, deliberately. This service runs with NODE_ENV=production, and
       # main.ts refuses to start unless each of these is a strong, unique value
       # (>=32 chars, not a known placeholder, access != refresh). A default here
