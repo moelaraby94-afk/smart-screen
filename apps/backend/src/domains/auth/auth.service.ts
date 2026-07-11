@@ -834,6 +834,10 @@ export class AuthService {
       this.prisma.refreshToken.deleteMany({
         where: { userId, expiresAt: { lt: now } },
       }),
+      this.prisma.user.update({
+        where: { id: userId },
+        data: { refreshTokenHash: null },
+      }),
     ]);
   }
 

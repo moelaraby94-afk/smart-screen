@@ -275,6 +275,26 @@ describe('AuthService — multi-session refresh tokens (P1-T1)', () => {
     expect(result.refreshToken).toBeDefined();
   });
 
+  // ─── Test 3b (P1-T2): legacy refresh retires refreshTokenHash ─────────
+  it('retires the legacy refreshTokenHash after a successful legacy refresh', async () => {
+    const legacyToken = Buffer.from(
+      JSON.stringify({ sub: USER_ID, email: EMAIL, typ: 'refresh' }),
+    ).toString('base64url');
+
+    const legacyHash = await bcrypt.hash(legacyToken, 12);
+    fake.users.get(USER_ID)!.refreshTokenHash = legacyHash;
+
+    await authService.refreshTokens(legacyToken);
+
+    // The legacy hash must be cleared so the old token can't be reused.
+    expect(fake.users.get(USER_ID)!.refreshTokenHash).toBeNull();
+
+    // A second refresh with the same legacy token must now fail.
+    await expect(authService.refreshTokens(legacyToken)).rejects.toThrow(
+      'Invalid refresh token',
+    );
+  });
+
   // ─── Test 4: logout deletes all RefreshToken rows ─────────────────────
   it('logout deletes all refresh token sessions for the user', async () => {
     // Create two sessions.
