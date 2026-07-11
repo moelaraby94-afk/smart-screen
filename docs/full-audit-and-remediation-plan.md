@@ -235,8 +235,8 @@
 | P1 | 6 | 6 | ✅ كاملة — 214 اختبار خضراء |
 | P2 | 4 | 4 | ✅ كاملة — 257 اختبار خضراء |
 | P3 | ~10 | 10 | ✅ كاملة — صفر apiFetch في .tsx؛ 12 وحدة API + hooks |
-| P4 | ~9 | 0 | بعد P3 |
-| P5 | 4 | 0 | مستقلة — ممكن بالتوازي |
+| P4 | ~9 | 9 | ✅ كاملة — تفكيك God components + Accessibility (WCAG AA) |
+| P5 | 4 | 4 | ✅ كاملة — liveness/readiness, request correlation, Sentry PII, restore drill |
 | P6 | 5 | 0 | قرار منتج |
 
 **قاعدة الإنهاء:** تاسك ما يتشالش من الجدول إلا لما يكون معاه اختبار و`npm run verify` أخضر.
