@@ -113,7 +113,7 @@ export function SettingsProfileClient() {
 
   return (
     <div className="space-y-8">
-      <div className="vc-card-surface rounded-3xl border border-[#0F1729]/20 bg-gradient-to-br from-[#0F1729]/12 via-card/30 to-transparent p-6 shadow-[0_0_60px_-24px_rgba(10,15,29,0.45)] backdrop-blur-xl md:p-8">
+      <div className="vc-card-surface rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
         <h2 className="text-lg font-semibold tracking-tight">{t('title')}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t('subtitle')}</p>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -141,7 +141,7 @@ export function SettingsProfileClient() {
         </div>
         <Button
           type="button"
-          className="mt-6 rounded-2xl bg-gradient-to-r from-[#FF6B00] to-[#CC4400] font-semibold text-white shadow-lg shadow-[#0F1729]/25"
+          className="mt-6 rounded-xl font-semibold" variant="cta"
           disabled={saving}
           onClick={() => void saveProfile()}
         >

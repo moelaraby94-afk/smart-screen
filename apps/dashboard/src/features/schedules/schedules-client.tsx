@@ -211,11 +211,11 @@ export function SchedulesClient({ locale }: { locale: string }) {
 
   return (
     <div className="space-y-8">
-      <section className="vc-glass vc-card-surface rounded-3xl p-6 shadow-xl">
+      <section className="vc-card-surface rounded-2xl border border-border p-6 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FF6B00] to-[#CC4400] shadow-lg shadow-[#0F1729]/30">
-              <CalendarClock className="h-6 w-6 text-white" strokeWidth={1.75} />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+              <CalendarClock className="h-6 w-6 text-primary" strokeWidth={1.75} />
             </div>
             <div>
               <h2 className="text-lg font-semibold tracking-tight">{t('engineTitle')}</h2>
@@ -224,7 +224,7 @@ export function SchedulesClient({ locale }: { locale: string }) {
           </div>
           <Dialog open={openCreate} onOpenChange={setOpenCreate}>
             <DialogTrigger asChild>
-              <Button className="rounded-2xl bg-[#0F1729] hover:bg-[#0F1729]/90">
+              <Button className="rounded-xl font-semibold" variant="cta">
                 <Plus className="me-2 h-4 w-4" />
                 {t('addSchedule')}
               </Button>
@@ -247,18 +247,18 @@ export function SchedulesClient({ locale }: { locale: string }) {
         </div>
 
         <div className="mt-6 flex flex-wrap gap-4 text-xs">
-          <span className="inline-flex items-center gap-2 rounded-full bg-[#0F1729]/15 px-3 py-1 font-medium text-[#0F1729] ring-1 ring-[#0F1729]/25 dark:text-orange-200">
-            <span className="h-2 w-2 rounded-full bg-[#0F1729]" />
+          <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 font-medium text-primary ring-1 ring-primary/20">
+            <span className="h-2 w-2 rounded-full bg-primary" />
             {t('legendScheduled')}
           </span>
-          <span className="inline-flex items-center gap-2 rounded-full bg-[#FF6B00]/15 px-3 py-1 font-medium text-amber-900 ring-1 ring-[#FF6B00]/40 dark:text-amber-100">
-            <span className="h-2 w-2 rounded-full bg-[#FF6B00]" />
+          <span className="inline-flex items-center gap-2 rounded-full bg-accent/15 px-3 py-1 font-medium text-accent ring-1 ring-accent/30">
+            <span className="h-2 w-2 rounded-full bg-accent" />
             {t('legendOverlap')}
           </span>
         </div>
       </section>
 
-      <section className="vc-glass vc-card-surface rounded-3xl p-6 shadow-xl">
+      <section className="vc-card-surface rounded-2xl border border-border p-6 shadow-sm">
         <h3 className="mb-4 text-base font-semibold tracking-tight">{t('overrideTitle')}</h3>
         <p className="mb-4 text-sm text-muted-foreground">{t('overrideDesc')}</p>
         <div className="flex flex-wrap items-end gap-3">
@@ -295,7 +295,7 @@ export function SchedulesClient({ locale }: { locale: string }) {
           <Button
             type="button"
             onClick={() => void applyOverride()}
-            className="rounded-2xl bg-gradient-to-r from-[#FF6B00] to-amber-500 font-semibold text-amber-950 shadow-md hover:opacity-95"
+            className="rounded-xl font-semibold" variant="cta"
           >
             <Play className="me-2 h-4 w-4" />
             {t('overrideCta')}
@@ -303,7 +303,7 @@ export function SchedulesClient({ locale }: { locale: string }) {
         </div>
       </section>
 
-      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-card/90 to-card/40 p-4 shadow-2xl backdrop-blur-xl dark:from-card/60 dark:to-card/30 sm:p-6">
+      <section className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6">
         {loading ? (
           <div className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -331,20 +331,20 @@ export function SchedulesClient({ locale }: { locale: string }) {
               {[0, 1, 2, 3, 4, 5, 6].map((dow) => (
                 <div
                   key={dow}
-                  className="relative min-w-[100px] flex-1 rounded-2xl border border-white/5 bg-black/[0.02] dark:bg-white/[0.02]"
+                  className="relative min-w-[100px] flex-1 rounded-2xl border border-border bg-muted/20"
                   style={{ height: TOTAL_H + 28 }}
                 >
-                  <div className="sticky top-0 z-10 mb-1 flex h-7 items-center justify-center rounded-t-xl bg-gradient-to-b from-[#0F1729]/12 to-transparent text-center text-xs font-semibold text-foreground">
+                  <div className="sticky top-0 z-10 mb-1 flex h-7 items-center justify-center rounded-t-xl bg-muted/50 text-center text-xs font-semibold text-foreground">
                     {dayShort(dow)}
                   </div>
                   <div
-                    className="relative mx-0.5 rounded-xl border border-white/5"
+                    className="relative mx-0.5 rounded-xl border border-border/40"
                     style={{ height: TOTAL_H }}
                   >
                     {Array.from({ length: 24 }, (_, h) => (
                       <div
                         key={h}
-                        className="absolute start-0 end-0 border-t border-dashed border-white/5"
+                        className="absolute start-0 end-0 border-t border-dashed border-border/30"
                         style={{ top: h * PX_PER_HOUR }}
                       />
                     ))}
@@ -374,13 +374,13 @@ export function SchedulesClient({ locale }: { locale: string }) {
                             className={cn(
                               'absolute start-0.5 end-0.5 cursor-grab overflow-hidden rounded-lg px-1.5 py-1 text-[10px] font-medium leading-tight text-white shadow-lg active:cursor-grabbing',
                               isOver
-                                ? 'ring-2 ring-[#FF6B00] ring-offset-1 ring-offset-transparent'
+                                ? 'ring-2 ring-primary ring-offset-1 ring-offset-transparent'
                                 : 'ring-1 ring-white/20',
                             )}
                             style={{
                               top,
                               height: Math.max(hPx, 18),
-                              background: 'linear-gradient(135deg, #0F1729 0%, #6b21a8 100%)',
+                              background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.7) 100%)',
                             }}
                             title={`${sch.playlist.name} · ${sch.startTime}–${sch.endTime}`}
                             onPointerDown={(e) => {
@@ -575,7 +575,7 @@ function CreateScheduleForm({
                 className={cn(
                   'rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
                   days.includes(d)
-                    ? 'bg-[#0F1729] text-white shadow-md'
+                    ? 'bg-primary text-white shadow-sm'
                     : 'bg-muted text-muted-foreground hover:bg-muted/80',
                 )}
               >
@@ -623,7 +623,7 @@ function CreateScheduleForm({
         <Button
           type="button"
           disabled={saving}
-          className="rounded-2xl bg-[#0F1729] hover:bg-[#0F1729]/90"
+          className="rounded-xl font-semibold" variant="cta"
           onClick={() => void submit()}
         >
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : t('save')}

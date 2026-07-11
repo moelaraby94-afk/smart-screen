@@ -127,15 +127,16 @@ export function PlaylistScreensClient({ locale }: Props) {
 
       {isLoading ? (
         <div className="flex justify-center py-20">
-          <Loader2 className="h-10 w-10 animate-spin text-[#FF6B00]" />
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
         </div>
       ) : screens.length === 0 ? (
-        <div className="vc-card-surface rounded-2xl border border-dashed border-[#FF6B00]/25 p-10 text-center">
-          <Monitor className="mx-auto h-10 w-10 text-[#FF6B00]/70" strokeWidth={ICON_STROKE} />
-          <p className="mt-3 text-sm font-medium text-foreground dark:text-white">{t('empty')}</p>
+        <div className="vc-card-surface rounded-2xl border border-dashed border-border p-10 text-center">
+          <Monitor className="mx-auto h-10 w-10 text-muted-foreground" strokeWidth={ICON_STROKE} />
+          <p className="mt-3 text-sm font-medium text-foreground">{t('empty')}</p>
           <Button
             type="button"
-            className="mt-6 rounded-xl bg-[#FF6B00] font-semibold text-amber-950 hover:bg-[#FF6B00]/90"
+            variant="cta"
+            className="mt-6 rounded-xl font-semibold"
             onClick={() => setCreateScreenOpen(true)}
           >
             {t('addScreen')}
@@ -162,11 +163,12 @@ export function PlaylistScreensClient({ locale }: Props) {
               {screen.location ? (
                 <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{screen.location}</p>
               ) : null}
-              <div className="mt-4 flex flex-wrap gap-2 border-t border-white/10 pt-4">
+              <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">
                 <Button
                   type="button"
                   size="sm"
-                  className="rounded-xl bg-[#FF6B00] font-semibold text-amber-950 hover:bg-[#FF6B00]/90"
+                  variant="cta"
+                  className="rounded-xl font-semibold"
                   onClick={() => openEdit(screen)}
                 >
                   <PenLine className="me-2 h-3.5 w-3.5" strokeWidth={ICON_STROKE} />

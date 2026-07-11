@@ -42,7 +42,7 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
   return (
     <th
       className={cn(
-        'h-11 px-4 py-3 text-start align-middle text-[11px] font-semibold uppercase tracking-[0.12em] text-[#FF6B00] dark:text-[#FF9F4A]',
+        'h-11 px-4 py-3 text-start align-middle text-[11px] font-semibold uppercase tracking-[0.12em] text-primary',
         className,
       )}
       {...props}

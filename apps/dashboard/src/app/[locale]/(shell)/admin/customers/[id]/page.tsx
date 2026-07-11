@@ -19,8 +19,8 @@ export default async function AdminCustomerProfilePage({ params }: Props) {
           { label: tb('customerProfile') },
         ]}
       />
-      <header className="space-y-1 border-b border-[#FF6B00]/10 pb-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#94A3B8] dark:text-[#FF6B00]">
+      <header className="space-y-1 border-b border-border pb-4">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           {t('profileKicker')}
         </p>
         <h1 className="text-xl font-semibold tracking-tight">{t('profileTitle')}</h1>

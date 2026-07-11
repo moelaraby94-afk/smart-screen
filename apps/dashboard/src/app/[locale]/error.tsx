@@ -29,7 +29,7 @@ export default function LocaleError({ error, reset }: Props) {
       <button
         type="button"
         onClick={() => reset()}
-        className="rounded-xl bg-[#FF6B00] px-4 py-2 text-sm font-semibold text-white hover:bg-[#FF6B00]/90"
+        className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90"
       >
         {isArabic ? 'المحاولة مرة أخرى' : 'Try again'}
       </button>

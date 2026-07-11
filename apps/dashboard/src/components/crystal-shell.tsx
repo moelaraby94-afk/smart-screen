@@ -98,6 +98,12 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
 
   return (
     <div className="relative flex h-dvh min-h-0 flex-col overflow-x-hidden overflow-y-hidden bg-background text-foreground dark:bg-transparent">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg"
+      >
+        {t('skipToContent')}
+      </a>
       <ShellSidebar
         navLocale={navLocale}
         rtl={rtl}
@@ -115,14 +121,14 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
       {mobileNavOpen ? (
         <button
           type="button"
-          className="fixed inset-0 z-[78] bg-[rgba(27,37,75,0.55)] backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-[78] bg-black/40 backdrop-blur-sm lg:hidden"
           onClick={() => setMobileNavOpen(false)}
           aria-label={t('toggleMenu')}
         />
       ) : null}
 
       {/* Main column: fixed viewport height; only <main> scrolls — sidebar stays fixed, no document scroll */}
-      <div className="relative z-[20] flex min-h-0 flex-1 flex-col overflow-hidden lg:ms-[240px] lg:pl-8">
+      <div className="relative z-[20] flex min-h-0 flex-1 flex-col overflow-hidden lg:ms-[240px] lg:pl-6">
         <ShellHeader
           navLocale={navLocale}
           rtl={rtl}
@@ -138,7 +144,7 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
           headerInset={headerInset}
         />
         <ShellHeaderInsetSetterContext.Provider value={setHeaderInsetStable}>
-          <main className="vc-scrollbar relative z-[1] mx-auto min-h-0 w-full max-w-[1600px] flex-1 overflow-y-auto overscroll-y-contain px-3 py-5 sm:px-6 sm:py-8 lg:px-14 lg:py-16">
+          <main id="main-content" className="vc-scrollbar relative z-[1] mx-auto min-h-0 w-full max-w-[1600px] flex-1 overflow-y-auto overscroll-y-contain px-4 py-5 sm:px-6 sm:py-8 lg:px-10 lg:py-12">
             <PageTransition>
               <WorkspaceGate>{children}</WorkspaceGate>
             </PageTransition>

@@ -66,86 +66,81 @@ export function ForgotPasswordClient() {
   };
 
   return (
-    <div className="relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden px-4 py-12">
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_50%_-20%,rgba(10,15,29,0.45),transparent_55%)]"
-        aria-hidden
-      />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#030712] via-[#0a0614] to-[#030712]" aria-hidden />
+    <div className="relative flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-12">
+      <section className="w-full max-w-md">
+        <div className="rounded-2xl border border-border bg-card p-8 shadow-sm sm:p-10">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
+            {t('brand')}
+          </p>
+          <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground">
+            {token ? t('setNewPasswordTitle') : t('forgotPasswordTitle')}
+          </h1>
+          <p className="mt-3 text-sm text-muted-foreground">
+            {token
+              ? t('setNewPasswordDescription')
+              : t('forgotPasswordDescription')}
+          </p>
 
-      <section className="relative z-[1] w-full max-w-md">
-        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-px backdrop-blur-2xl dark:bg-black/25">
-          <div className="rounded-[1.65rem] bg-gradient-to-br from-white/[0.09] to-white/[0.02] px-8 py-10">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#FF6B00]/90">{t('brand')}</p>
-            <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white">
-              {token ? t('setNewPasswordTitle') : t('forgotPasswordTitle')}
-            </h1>
-            <p className="mt-3 text-sm text-white/60">
-              {token
-                ? t('setNewPasswordDescription')
-                : t('forgotPasswordDescription')}
-            </p>
+          {!token ? (
+            <form className="mt-8 space-y-4" onSubmit={(e) => void requestReset(e)}>
+              <div className="space-y-2">
+                <Label className="text-foreground">{t('email')}</Label>
+                <Input
+                  required
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="rounded-xl border-border bg-background text-foreground"
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={pending}
+                className="h-11 w-full rounded-xl font-semibold"
+                variant="cta"
+              >
+                {t('sendResetLink')}
+              </Button>
+            </form>
+          ) : (
+            <form className="mt-8 space-y-4" onSubmit={(e) => void resetPassword(e)}>
+              <div className="space-y-2">
+                <Label className="text-foreground">{t('email')}</Label>
+                <Input
+                  required
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="rounded-xl border-border bg-background text-foreground"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-foreground">{t('newPassword')}</Label>
+                <Input
+                  required
+                  type="password"
+                  minLength={8}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="rounded-xl border-border bg-background text-foreground"
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={pending}
+                className="h-11 w-full rounded-xl font-semibold"
+                variant="cta"
+              >
+                {t('updatePassword')}
+              </Button>
+            </form>
+          )}
 
-            {!token ? (
-              <form className="mt-8 space-y-4" onSubmit={(e) => void requestReset(e)}>
-                <div className="space-y-2">
-                  <Label className="text-white/80">{t('email')}</Label>
-                  <Input
-                    required
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="rounded-xl border-white/15 bg-white/5 text-white"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={pending}
-                  className="w-full rounded-2xl bg-gradient-to-r from-[#FF6B00] to-[#CC4400] font-semibold text-white"
-                >
-                  {t('sendResetLink')}
-                </Button>
-              </form>
-            ) : (
-              <form className="mt-8 space-y-4" onSubmit={(e) => void resetPassword(e)}>
-                <div className="space-y-2">
-                  <Label className="text-white/80">{t('email')}</Label>
-                  <Input
-                    required
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="rounded-xl border-white/15 bg-white/5 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-white/80">{t('newPassword')}
-                  </Label>
-                  <Input
-                    required
-                    type="password"
-                    minLength={8}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="rounded-xl border-white/15 bg-white/5 text-white"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={pending}
-                  className="w-full rounded-2xl bg-gradient-to-r from-[#FF6B00] to-amber-500 font-semibold text-amber-950"
-                >
-                  {t('updatePassword')}
-                </Button>
-              </form>
-            )}
-
-            <p className="mt-8 text-center text-sm text-white/50">
-              <Link href={`/${locale}/login`} className="font-semibold text-[#FF6B00] underline-offset-4 hover:underline">
-                {t('backToSignIn')}
-              </Link>
-            </p>
-          </div>
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            <Link href={`/${locale}/login`} className="font-semibold text-primary underline-offset-4 hover:underline">
+              {t('backToSignIn')}
+            </Link>
+          </p>
         </div>
       </section>
     </div>

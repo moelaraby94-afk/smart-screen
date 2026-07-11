@@ -117,8 +117,8 @@ export function AdminWorkspacesClient() {
                 <TableRow key={w.id} className={adminGlassTable.tbodyRow}>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FF6B00]/12">
-                        <Building2 className="h-4 w-4 text-[#94A3B8] dark:text-[#FF6B00]" />
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                        <Building2 className="h-4 w-4 text-primary" />
                       </span>
                       <div>
                         <p className="font-medium">{w.name}</p>
@@ -130,7 +130,7 @@ export function AdminWorkspacesClient() {
                     {w.ownerCustomerProfileId ? (
                       <Link
                         href={`/${locale}/admin/customers/${w.ownerCustomerProfileId}` as Route}
-                        className="block font-mono text-xs text-[#FF6B00] underline-offset-4 hover:underline"
+                        className="block font-mono text-xs text-primary underline-offset-4 hover:underline"
                       >
                         {w.ownerEmail ?? t('na')}
                       </Link>

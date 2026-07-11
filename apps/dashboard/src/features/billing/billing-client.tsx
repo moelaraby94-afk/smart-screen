@@ -143,7 +143,7 @@ export function BillingClient() {
           </div>
           <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
             <div className="flex items-center gap-3 rounded-2xl border border-border/80 bg-muted/30 px-5 py-4">
-              <CreditCard className="h-8 w-8 text-[#0F1729]" />
+              <CreditCard className="h-8 w-8 text-primary" />
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {t('currentPlan')}
@@ -172,12 +172,12 @@ export function BillingClient() {
             className={cn(
               'relative overflow-hidden rounded-3xl border p-8',
               !isPro
-                ? 'border-[#0F1729]/40 bg-gradient-to-br from-[#0F1729]/10 to-transparent shadow-lg shadow-[#0F1729]/10'
-                : 'border-border/80 bg-card/80',
+                ? 'border-primary/40 bg-gradient-to-br from-primary/10 to-transparent shadow-md'
+                : 'border-border bg-card',
             )}
           >
             {!isPro ? (
-              <span className="absolute end-4 top-4 rounded-full bg-[#FF6B00] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-950">
+              <span className="absolute end-4 top-4 rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
                 {t('current')}
               </span>
             ) : null}
@@ -209,7 +209,7 @@ export function BillingClient() {
               <Button
                 type="button"
                 variant="outline"
-                className="mt-8 w-full rounded-2xl border-[#0F1729]/20"
+                className="mt-8 w-full rounded-xl border-border"
                 disabled={savingPlan}
                 onClick={() => void applyMockPlan('FREE')}
               >
@@ -226,18 +226,18 @@ export function BillingClient() {
             className={cn(
               'relative overflow-hidden rounded-3xl border p-8',
               isPro
-                ? 'border-[#FF6B00]/45 bg-gradient-to-br from-[#FF6B00]/15 to-[#0F1729]/10 shadow-xl shadow-[#FF6B00]/15'
-                : 'border-border/80 bg-gradient-to-br from-muted/40 to-card',
+                ? 'border-primary/45 bg-gradient-to-br from-primary/15 to-accent/10 shadow-lg'
+                : 'border-border bg-gradient-to-br from-muted/40 to-card',
             )}
           >
             {isPro ? (
-              <span className="absolute end-4 top-4 rounded-full bg-[#FF6B00] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-950">
+              <span className="absolute end-4 top-4 rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
                 {t('current')}
               </span>
             ) : null}
             <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0F1729] to-[#1e293b] shadow-md">
-                <Sparkles className="h-6 w-6 text-[#FF6B00]" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+                <Sparkles className="h-6 w-6 text-primary" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold">{t('pro')}</h3>
@@ -255,7 +255,7 @@ export function BillingClient() {
                 t('proFeatures.portal'),
               ].map((feature) => (
                 <li key={feature} className="flex items-center gap-2">
-                  <Check className="h-4 w-4 shrink-0 text-[#0F1729] dark:text-[#FF6B00]" />
+                  <Check className="h-4 w-4 shrink-0 text-primary" />
                   {feature}
                 </li>
               ))}
@@ -263,7 +263,7 @@ export function BillingClient() {
             <div className="mt-8 flex flex-col gap-3">
               <Button
                 type="button"
-                className="w-full rounded-2xl bg-gradient-to-r from-[#FF6B00] to-amber-500 font-semibold text-amber-950 shadow-lg hover:opacity-95"
+                className="w-full rounded-xl font-semibold" variant="cta"
                 disabled={savingPlan || isPro}
                 onClick={() => void startStripeCheckout()}
               >
@@ -273,7 +273,7 @@ export function BillingClient() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full rounded-2xl border-dashed border-[#FF6B00]/40"
+                  className="w-full rounded-xl border-dashed border-primary/40"
                   disabled={savingPlan || isPro}
                   onClick={() => void applyMockPlan('PRO')}
                 >

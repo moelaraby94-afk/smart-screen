@@ -19,7 +19,7 @@ export function OverviewPageClient({ appTitle, headline, description }: Props) {
   if (isLoading) {
     return (
       <div className="flex min-h-[48vh] flex-col items-center justify-center gap-3 text-muted-foreground">
-        <Loader2 className="h-10 w-10 animate-spin text-[#FF6B00]" />
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
         <p className="text-sm font-medium">{t('loading')}</p>
       </div>
     );

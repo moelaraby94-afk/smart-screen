@@ -30,7 +30,7 @@ export function AdminBreadcrumbBar({ items, ariaLabel }: Props) {
           {i > 0 ? (
             <ChevronRight
               className={cn(
-                'h-3.5 w-3.5 shrink-0 text-[#FF6B00]/45',
+                'h-3.5 w-3.5 shrink-0 text-primary/50',
                 rtl && 'rotate-180',
               )}
               aria-hidden
@@ -39,7 +39,7 @@ export function AdminBreadcrumbBar({ items, ariaLabel }: Props) {
           {item.href ? (
             <Link
               href={item.href as Route}
-              className="rounded-md text-[#94A3B8] transition-colors hover:text-[#FF6B00] hover:underline"
+              className="rounded-md text-muted-foreground transition-colors hover:text-primary hover:underline"
             >
               {item.label}
             </Link>

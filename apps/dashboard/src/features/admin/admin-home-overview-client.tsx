@@ -130,7 +130,7 @@ export function AdminHomeOverviewClient() {
           transition={{ delay: 0.05 * i }}
           className="vc-card-surface relative overflow-hidden rounded-3xl p-7"
         >
-          <div className="absolute -end-6 -top-6 h-24 w-24 rounded-full bg-[#FF6B00]/10 blur-2xl" />
+          <div className="absolute -end-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
           <div className="relative flex items-start justify-between gap-4">
             <div>
               <p className="vc-page-kicker">{c.label}</p>
@@ -139,8 +139,8 @@ export function AdminHomeOverviewClient() {
               </p>
               <p className="mt-2 text-sm text-muted-foreground">{c.sub}</p>
             </div>
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FF6B00] to-amber-600 shadow-lg">
-              <c.icon className="h-6 w-6 text-amber-950" strokeWidth={ICON_STROKE} />
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+              <c.icon className="h-6 w-6 text-primary" strokeWidth={ICON_STROKE} />
             </div>
           </div>
         </motion.div>

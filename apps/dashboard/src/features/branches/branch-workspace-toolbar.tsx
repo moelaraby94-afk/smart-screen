@@ -39,8 +39,8 @@ const tabButtonClass = (active: boolean, inline: boolean) =>
       ? 'px-2.5 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm'
       : 'px-3.5 py-2.5 text-sm',
     active
-      ? 'border-[#FF6B00]/55 bg-[#FF6B00]/18 text-white'
-      : 'border-[#FF6B00]/25 bg-white/60 text-[#1B254B] hover:border-[#FF6B00]/50 hover:bg-[#FF6B00]/10 dark:border-white/15 dark:bg-[#1B254B]/50 dark:text-white dark:hover:bg-[#FF6B00]/15',
+      ? 'border-primary/40 bg-primary/10 text-primary'
+      : 'border-border bg-background text-muted-foreground hover:border-primary/30 hover:bg-muted',
   );
 
 export function BranchWorkspaceToolbar({
@@ -61,7 +61,7 @@ export function BranchWorkspaceToolbar({
     { key: 'media' as const, label: t('media'), icon: ImageIcon },
   ] as const;
 
-  const iconClass = cn('shrink-0 text-[#FF6B00]', inline ? 'h-3.5 w-3.5 sm:h-4 sm:w-4' : 'h-4 w-4');
+  const iconClass = cn('shrink-0 text-primary', inline ? 'h-3.5 w-3.5 sm:h-4 sm:w-4' : 'h-4 w-4');
 
   const inner = (
     <div
@@ -97,20 +97,20 @@ export function BranchWorkspaceToolbar({
         </DropdownMenuTrigger>
         <DropdownMenuContent align={inline ? 'end' : 'center'} className="min-w-[14rem]">
           <DropdownMenuItem className="gap-2 font-semibold" onClick={() => onNewPlaylist()}>
-            <Clapperboard className="h-4 w-4 text-[#FF6B00]" strokeWidth={ICON_STROKE} />
+            <Clapperboard className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
             {t('newPlaylist')}
           </DropdownMenuItem>
           <DropdownMenuItem className="gap-2 font-semibold" onClick={() => onNewScreen()}>
-            <Monitor className="h-4 w-4 text-[#FF6B00]" strokeWidth={ICON_STROKE} />
+            <Monitor className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
             {t('newScreen')}
           </DropdownMenuItem>
           <DropdownMenuItem className="gap-2 font-semibold" onClick={() => onNewMedia()}>
-            <ImageIcon className="h-4 w-4 text-[#FF6B00]" strokeWidth={ICON_STROKE} />
+            <ImageIcon className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
             {t('newMedia')}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem className="gap-2 font-semibold" onClick={() => onOpenPairingModal()}>
-            <Link2 className="h-4 w-4 text-[#FF6B00]" strokeWidth={ICON_STROKE} />
+            <Link2 className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
             {t('linkDisplay')}
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -126,8 +126,7 @@ export function BranchWorkspaceToolbar({
     <div className="flex w-full justify-center px-0">
       <div
         className={cn(
-          'inline-flex w-full max-w-max flex-col gap-3 rounded-3xl border border-[#FF6B00]/12 bg-gradient-to-br from-[#0F1729]/40 via-transparent to-[#FF6B00]/[0.06] p-4 sm:flex-row sm:items-center sm:gap-2',
-          'dark:border-white/10 dark:from-[#0B1220]/80',
+          'inline-flex w-full max-w-max flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:gap-2',
         )}
       >
         {inner}

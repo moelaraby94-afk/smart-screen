@@ -113,7 +113,7 @@ export function SettingsBillingClient() {
 
   return (
     <div className="space-y-8">
-      <div className="vc-card-surface rounded-3xl border border-[#0F1729]/20 bg-gradient-to-br from-[#0F1729]/10 via-card/40 to-transparent p-6 shadow-[0_0_50px_-20px_rgba(10,15,29,0.4)] md:p-8">
+      <div className="vc-card-surface rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
         <h2 className="text-lg font-semibold tracking-tight">{t('currentPlan')}</h2>
         <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
           <div>
@@ -161,7 +161,7 @@ export function SettingsBillingClient() {
         ) : null}
       </div>
 
-      <div className="vc-card-surface overflow-hidden rounded-3xl border border-[#0F1729]/15">
+      <div className="vc-card-surface overflow-hidden rounded-2xl border border-border">
         <div className="border-b border-border/60 px-6 py-4">
           <h3 className="font-semibold">{t('paymentHistory')}</h3>
         </div>

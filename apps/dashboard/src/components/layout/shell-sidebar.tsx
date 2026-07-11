@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import {
   Activity,
   CalendarClock,
-  ChevronDown,
   Clapperboard,
   CreditCard,
   Globe2,
@@ -23,21 +22,24 @@ import {
   ScrollText,
   Server,
   Settings,
-  SlidersHorizontal,
   Sun,
-  UserRound,
   UserCog,
   Users,
 } from 'lucide-react';
 import { ShellLogo } from '@/components/layout/shell-logo';
 import { pathWithLocale } from '@/components/language-switcher';
-import { WorkspaceSwitcher } from '@/features/workspace/workspace-switcher';
 import { apiFetch, setStoredAccessToken } from '@/features/auth/session';
-import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
 
-/** Sidebar nav: stronger strokes read on crystal-orange glass */
-const NAV_ICON_STROKE = 2;
+/* ═══════════════════════════════════════════════════════════════
+   Nimbus Rail v2 — Professional SaaS sidebar
+   • 240px wide, solid surface, no clutter
+   • Active: violet tinted bg + 3px rounded indicator bar
+   • 44px touch targets, 200ms transitions, cursor-pointer
+   • Navigation only — no workspace, no account section
+   ═══════════════════════════════════════════════════════════════ */
+
+const STROKE = 1.6;
 
 const CLIENT_NAV = [
   { key: 'home', hrefKey: 'overview' as const, icon: LayoutDashboard },
@@ -48,66 +50,9 @@ const CLIENT_NAV = [
   { key: 'team', hrefKey: 'team' as const, icon: Users },
 ] as const;
 
-/** Routes that open without a header workspace selection (media uses all-branches view). */
 const CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE = new Set<
   (typeof CLIENT_NAV)[number]['hrefKey']
 >(['overview', 'media']);
-
-/** Orange crystal — white labels; active = identity orange icon + glow + bg-white/5 */
-function shellNavAccent() {
-  return {
-    hover: 'hover:bg-white/10',
-    iconActive: 'text-[#FF6B00] drop-shadow-[0_0_8px_rgba(255,107,0,0.5)]',
-    iconInactive: 'text-white/90',
-    labelActive: 'font-bold text-white',
-    labelInactive: 'font-medium text-white/95',
-    section: 'font-bold text-white/95',
-  };
-}
-
-type ShellNavAccent = ReturnType<typeof shellNavAccent>;
-
-function shellNavLinkClass(active: boolean, accent: ShellNavAccent) {
-  return cn(
-    'group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[13px] transition-all duration-300',
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B00]/45',
-    'border-inline-start-[3px]',
-    active
-      ? 'bg-white/5 border-[#FF6B00]'
-      : cn('border-transparent', accent.labelInactive, accent.hover),
-  );
-}
-
-function ShellNavRow({
-  href,
-  label,
-  active,
-  accent,
-  icon: Icon,
-}: {
-  href: Route;
-  label: string;
-  active: boolean;
-  accent: ShellNavAccent;
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
-}) {
-  return (
-    <Link href={href} className={shellNavLinkClass(active, accent)}>
-      <Icon
-        className={cn('h-5 w-5 shrink-0', active ? accent.iconActive : accent.iconInactive)}
-        strokeWidth={NAV_ICON_STROKE}
-      />
-      <span
-        className={cn(
-          'min-w-0 flex-1 truncate',
-          active ? accent.labelActive : accent.labelInactive,
-        )}
-      >
-        {label}
-      </span>
-    </Link>
-  );
-}
 
 function hrefFor(
   locale: string,
@@ -160,36 +105,14 @@ function sovereignLinkActive(
 ): boolean {
   if (!pathname) return false;
   if (hrefKey === 'overview') return isOverviewPath(pathname, locale);
-  if (hrefKey === 'adminHome') {
-    return (
-      pathname === `/${locale}/admin` ||
-      pathname === `/${locale}/admin/`
-    );
-  }
-  if (hrefKey === 'adminCustomers') {
-    return (
-      pathname.startsWith(`/${locale}/admin/customers`) ||
-      pathname.startsWith(`/${locale}/admin/users`)
-    );
-  }
-  if (hrefKey === 'adminFleet') {
-    return pathname.startsWith(`/${locale}/admin/fleet`);
-  }
-  if (hrefKey === 'adminScreens') {
-    return pathname.startsWith(`/${locale}/admin/screens`);
-  }
-  if (hrefKey === 'adminStaff') {
-    return pathname.startsWith(`/${locale}/admin/staff`);
-  }
-  if (hrefKey === 'adminStats') {
-    return pathname.startsWith(`/${locale}/admin/stats`);
-  }
-  if (hrefKey === 'adminLogs') {
-    return pathname.startsWith(`/${locale}/admin/logs`);
-  }
-  if (hrefKey === 'adminSettings') {
-    return pathname.startsWith(`/${locale}/admin/settings`);
-  }
+  if (hrefKey === 'adminHome') return pathname === `/${locale}/admin` || pathname === `/${locale}/admin/`;
+  if (hrefKey === 'adminCustomers') return pathname.startsWith(`/${locale}/admin/customers`) || pathname.startsWith(`/${locale}/admin/users`);
+  if (hrefKey === 'adminFleet') return pathname.startsWith(`/${locale}/admin/fleet`);
+  if (hrefKey === 'adminScreens') return pathname.startsWith(`/${locale}/admin/screens`);
+  if (hrefKey === 'adminStaff') return pathname.startsWith(`/${locale}/admin/staff`);
+  if (hrefKey === 'adminStats') return pathname.startsWith(`/${locale}/admin/stats`);
+  if (hrefKey === 'adminLogs') return pathname.startsWith(`/${locale}/admin/logs`);
+  if (hrefKey === 'adminSettings') return pathname.startsWith(`/${locale}/admin/settings`);
   return false;
 }
 
@@ -201,6 +124,109 @@ function navCountFor(
   if (key === 'screens') return counts.screens;
   if (key === 'playlists') return counts.playlists;
   return null;
+}
+
+/* ── Nav Item ── */
+function NavItem({
+  href,
+  label,
+  active,
+  icon: Icon,
+  count,
+  onClick,
+}: {
+  href: Route;
+  label: string;
+  active: boolean;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  count?: number | null;
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      aria-current={active ? 'page' : undefined}
+      className={cn(
+        'group relative flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 text-[13px]',
+        'transition-colors duration-200',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30',
+        active
+          ? 'bg-primary/8 text-foreground'
+          : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+      )}
+>
+      {/* Active indicator bar */}
+      {active ? (
+        <span className="absolute inset-inline-start-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
+      ) : null}
+
+      <Icon
+        className={cn(
+          'h-5 w-5 shrink-0 transition-colors',
+          active ? 'text-primary' : 'text-muted-foreground/70 group-hover:text-foreground',
+        )}
+        strokeWidth={STROKE}
+      />
+      <span className={cn('min-w-0 flex-1 truncate', active ? 'font-semibold' : 'font-medium')}>
+        {label}
+      </span>
+      {count !== null && count !== undefined && count > 0 ? (
+        <span
+          className={cn(
+            'text-[10px] font-bold tabular-nums transition-colors',
+            active ? 'text-primary' : 'text-muted-foreground/50',
+          )}
+        >
+          {count}
+        </span>
+      ) : null}
+    </Link>
+  );
+}
+
+/* ── Section Label ── */
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="px-3 pt-5 pb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/40">
+      {children}
+    </p>
+  );
+}
+
+/* ── Bottom Icon Button ── */
+function IconButton({
+  label,
+  onClick,
+  href,
+  icon: Icon,
+  danger,
+}: {
+  label: string;
+  onClick?: () => void;
+  href?: Route;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  danger?: boolean;
+}) {
+  const cls = cn(
+    'flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg transition-colors duration-200',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30',
+    danger
+      ? 'text-muted-foreground/50 hover:bg-red-500/10 hover:text-red-500'
+      : 'text-muted-foreground/60 hover:bg-muted hover:text-foreground',
+  );
+  if (href) {
+    return (
+      <Link href={href} className={cls} aria-label={label} title={label}>
+        <Icon className="h-[18px] w-[18px]" strokeWidth={STROKE} />
+      </Link>
+    );
+  }
+  return (
+    <button type="button" onClick={onClick} className={cls} aria-label={label} title={label}>
+      <Icon className="h-[18px] w-[18px]" strokeWidth={STROKE} />
+    </button>
+  );
 }
 
 export type ShellSidebarProps = {
@@ -228,159 +254,104 @@ export function ShellSidebar({
   isLoading,
   isAuthenticated,
   mobileNavOpen,
-  showWorkspaceSwitcher,
 }: ShellSidebarProps) {
   const t = useTranslations('nav');
   const tUser = useTranslations('userMenu');
-  const accent = shellNavAccent();
   const router = useRouter();
   const pathnameActive = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
-  const [accountOpen, setAccountOpen] = React.useState(false);
   const isDark = resolvedTheme !== 'light';
 
   return (
     <aside
       key={`sidebar-${navLocale}-${sovereign ? 'admin' : 'workspace'}`}
       className={cn(
-        'fixed inset-y-0 z-[82] flex w-[240px] flex-col p-3 transition-transform duration-300 [inset-inline-start:0]',
+        'fixed inset-y-0 z-[82] flex w-[240px] flex-col [inset-inline-start:0]',
+        'transition-transform duration-300',
         rtl
-          ? mobileNavOpen
-            ? 'max-lg:translate-x-0'
-            : 'max-lg:translate-x-full'
-          : mobileNavOpen
-            ? 'max-lg:translate-x-0'
-            : 'max-lg:-translate-x-full',
+          ? mobileNavOpen ? 'max-lg:translate-x-0' : 'max-lg:translate-x-full'
+          : mobileNavOpen ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-full',
         'lg:translate-x-0',
       )}
     >
-      <div
-        className={cn(
-          'relative isolate flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-2xl',
-          'border-inline-end border-white/10',
-          'shadow-[0_24px_56px_-24px_rgba(0,0,0,0.35)]',
-        )}
-      >
-        {/* Navy → orange crystal glass (brand gradient) */}
-        <div
-          className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-b from-[#1B254B]/[0.93] via-[#1B254B]/55 to-[#FF6B00]/22"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute inset-0 rounded-2xl backdrop-blur-[30px]"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/[0.09]"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-[42%] rounded-t-2xl bg-gradient-to-b from-white/[0.07] to-transparent"
-          aria-hidden
-        />
-        <div
-          className={cn(
-            'relative z-[1] flex w-full shrink-0 items-center justify-center border-b border-white/10 px-3 py-3',
-          )}
-        >
-          <div className="flex w-full items-center justify-center rounded-xl bg-white/[0.12] p-2.5 ring-1 ring-inset ring-white/10">
-            <ShellLogo locale={navLocale} />
-          </div>
+      <div className="flex h-full min-h-0 flex-1 flex-col border-e border-border bg-card">
+        {/* ── Logo ── */}
+        <div className="flex shrink-0 items-center px-5 pt-5 pb-3">
+          <ShellLogo locale={navLocale} />
         </div>
+
+        {/* ── Nav ── */}
         <nav
           key={navLocale}
           className={cn(
-            'vc-scrollbar relative z-[1] flex flex-1 flex-col gap-1 overflow-y-auto px-2.5 py-4',
+            'vc-scrollbar flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-2',
             rtl ? 'text-right' : 'text-left',
           )}
         >
           {shellNavLoading ? (
-            <div className="flex flex-1 flex-col gap-2 px-1" aria-hidden>
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="h-12 animate-pulse rounded-2xl bg-white/20" />
+            <div className="flex flex-col gap-1 px-3 pt-4" aria-hidden aria-busy="true">
+              {Array.from({ length: 7 }).map((_, i) => (
+                <div key={i} className="h-12 animate-pulse rounded-xl bg-muted/40" />
               ))}
             </div>
           ) : sovereign ? (
             <>
-              <ShellNavRow
+              <NavItem
                 href={hrefFor(navLocale, 'overview') as Route}
                 label={t('overview')}
                 active={sovereignLinkActive(pathname, navLocale, 'overview')}
-                accent={accent}
                 icon={LayoutDashboard}
               />
-              <ShellNavRow
+              <NavItem
                 href={hrefFor(navLocale, 'adminHome') as Route}
                 label={t('adminHome')}
                 active={sovereignLinkActive(pathname, navLocale, 'adminHome')}
-                accent={accent}
                 icon={LayoutGrid}
               />
 
-              <p
-                className={cn(
-                  'px-3 pb-1 pt-6 text-[10px] uppercase tracking-[0.2em]',
-                  accent.section,
-                )}
-              >
-                {t('customersSection')}
-              </p>
-              <ShellNavRow
+              <SectionLabel>{t('customersSection')}</SectionLabel>
+              <NavItem
                 href={hrefFor(navLocale, 'adminCustomers') as Route}
                 label={t('adminCustomers')}
                 active={sovereignLinkActive(pathname, navLocale, 'adminCustomers')}
-                accent={accent}
                 icon={Users}
               />
-              <ShellNavRow
+              <NavItem
                 href={hrefFor(navLocale, 'adminFleet') as Route}
                 label={t('adminFleet')}
                 active={sovereignLinkActive(pathname, navLocale, 'adminFleet')}
-                accent={accent}
                 icon={Globe2}
               />
-              <ShellNavRow
+              <NavItem
                 href={hrefFor(navLocale, 'adminScreens') as Route}
                 label={t('adminScreens')}
                 active={sovereignLinkActive(pathname, navLocale, 'adminScreens')}
-                accent={accent}
                 icon={Server}
               />
 
-              <p
-                className={cn(
-                  'px-3 pb-1 pt-5 text-[10px] uppercase tracking-[0.2em]',
-                  accent.section,
-                )}
-              >
-                {t('staffSection')}
-              </p>
-              <ShellNavRow
+              <SectionLabel>{t('staffSection')}</SectionLabel>
+              <NavItem
                 href={hrefFor(navLocale, 'adminStaff') as Route}
                 label={t('adminStaff')}
                 active={sovereignLinkActive(pathname, navLocale, 'adminStaff')}
-                accent={accent}
                 icon={UserCog}
               />
-              <ShellNavRow
+              <NavItem
                 href={hrefFor(navLocale, 'adminStats') as Route}
                 label={t('adminStats')}
                 active={sovereignLinkActive(pathname, navLocale, 'adminStats')}
-                accent={accent}
                 icon={Activity}
               />
-              <ShellNavRow
+              <NavItem
                 href={hrefFor(navLocale, 'adminLogs') as Route}
                 label={t('adminLogs')}
                 active={sovereignLinkActive(pathname, navLocale, 'adminLogs')}
-                accent={accent}
                 icon={ScrollText}
               />
-              <ShellNavRow
+              <NavItem
                 href={hrefFor(navLocale, 'adminSettings') as Route}
                 label={t('adminSettings')}
                 active={sovereignLinkActive(pathname, navLocale, 'adminSettings')}
-                accent={accent}
                 icon={Settings}
               />
             </>
@@ -392,23 +363,20 @@ export function ShellSidebar({
                   item.hrefKey === 'overview'
                     ? isOverviewPath(pathname, navLocale)
                     : Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
-                const Icon = item.icon;
                 const count =
                   item.key === 'newPlaylist'
-                    ? workspaceId
-                      ? counts.playlists
-                      : null
+                    ? workspaceId ? counts.playlists : null
                     : item.key === 'newScreen'
-                      ? workspaceId
-                        ? counts.screens
-                        : null
-                      : workspaceId
-                        ? navCountFor(item.key, counts)
-                        : null;
+                      ? workspaceId ? counts.screens : null
+                      : workspaceId ? navCountFor(item.key, counts) : null;
                 return (
-                  <Link
+                  <NavItem
                     key={item.key}
                     href={href as Route}
+                    label={t(item.key)}
+                    active={active}
+                    icon={item.icon}
+                    count={count}
                     onClick={(e) => {
                       if (isLoading) {
                         e.preventDefault();
@@ -423,202 +391,67 @@ export function ShellSidebar({
                         toast.error(t('selectWorkspaceToast'));
                       }
                     }}
-                    className={shellNavLinkClass(active, accent)}
-                  >
-                    <Icon
-                      className={cn('h-5 w-5 shrink-0', active ? accent.iconActive : accent.iconInactive)}
-                      strokeWidth={NAV_ICON_STROKE}
-                    />
-                    <span
-                      className={cn(
-                        'min-w-0 flex-1 truncate',
-                        active ? accent.labelActive : accent.labelInactive,
-                      )}
-                    >
-                      {t(item.key)}
-                    </span>
-                    {count !== null && count > 0 ? (
-                      <span
-                        className={cn(
-                          'min-w-[1.5rem] rounded-md px-1.5 py-0.5 text-center text-[10px] font-semibold tabular-nums',
-                          'bg-white/20 text-white ring-1 ring-inset ring-white/35',
-                        )}
-                      >
-                        {count}
-                      </span>
-                    ) : null}
-                  </Link>
+                  />
                 );
               })}
-              <p
-                className={cn(
-                  'px-3 pb-1 pt-6 text-[10px] uppercase tracking-[0.2em]',
-                  accent.section,
-                )}
-              >
-                {t('accountSection')}
-              </p>
-              <ShellNavRow
+
+              <SectionLabel>{t('accountSection')}</SectionLabel>
+              <NavItem
                 href={`/${navLocale}/settings/profile` as Route}
                 label={t('profileSettings')}
                 active={Boolean(pathname?.startsWith(`/${navLocale}/settings/profile`))}
-                accent={accent}
                 icon={Settings}
               />
-              <ShellNavRow
+              <NavItem
                 href={`/${navLocale}/settings/billing` as Route}
                 label={t('billingAndPayments')}
                 active={Boolean(pathname?.startsWith(`/${navLocale}/settings/billing`))}
-                accent={accent}
                 icon={CreditCard}
               />
             </>
           )}
         </nav>
 
-        {/* Mobile/tablet account controls moved from header to sidebar end */}
-        {!sovereign ? (
-          <div className="relative z-[2] border-t border-white/10 px-2.5 pb-2 pt-3">
-            <Link
-              href={`/${navLocale}/settings/billing` as Route}
-              className={cn(
-                'inline-flex w-full items-center justify-center rounded-xl border border-[#FF6B00]/60',
-                'bg-gradient-to-r from-[#FF6B00] to-[#FF8A33] px-4 py-2.5 text-sm font-bold text-amber-950',
-                'shadow-[0_10px_30px_-14px_rgba(255,107,0,0.9)] transition hover:brightness-105',
-              )}
-            >
-              {t('upgradePlan')}
-            </Link>
-          </div>
-        ) : null}
-        <div className="relative z-[2] mt-auto border-t border-white/10 p-2.5 lg:hidden">
-          <div className="flex flex-col gap-2 rounded-xl bg-white/[0.06] p-2 ring-1 ring-inset ring-white/10">
-            {showWorkspaceSwitcher ? <WorkspaceSwitcher /> : null}
-            <button
-              type="button"
-              onClick={() => setAccountOpen((prev) => !prev)}
-              className={cn(
-                shellNavLinkClass(accountOpen, accent),
-                'border border-[#FF6B00]/55 bg-[#FF6B00]/[0.08] hover:bg-[#FF6B00]/[0.14]',
-              )}
-              aria-expanded={accountOpen}
-              aria-label={tUser('accountMenu')}
-            >
-              <UserRound className="h-5 w-5 shrink-0 text-[#FF6B00]" strokeWidth={NAV_ICON_STROKE} />
-              <span className="min-w-0 flex-1 truncate font-semibold text-white">{t('accountSection')}</span>
-              <ChevronDown
-                className={cn(
-                  'h-4 w-4 shrink-0 text-[#FFB37A] transition-transform duration-200',
-                  accountOpen && 'rotate-180',
-                )}
-                strokeWidth={ICON_STROKE}
-              />
-            </button>
+        {/* ── Bottom bar: theme + lang + logout ── */}
+        <div className="flex shrink-0 items-center gap-1.5 border-t border-border px-4 py-3">
+          <IconButton
+            label={isDark ? tUser('switchToLight') : tUser('switchToDark')}
+            onClick={() => setTheme(isDark ? 'light' : 'dark')}
+            icon={isDark ? Sun : Moon}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              router.replace(pathWithLocale(pathnameActive, navLocale === 'ar' ? 'en' : 'ar') as Route);
+              router.refresh();
+            }}
+            className={cn(
+              'flex h-9 cursor-pointer items-center justify-center rounded-lg px-2 text-[10px] font-bold uppercase transition-colors duration-200',
+              'text-muted-foreground/60 hover:bg-muted hover:text-foreground',
+            )}
+            aria-label={tUser('language')}
+            title={tUser('language')}
+          >
+            {navLocale === 'ar' ? 'EN' : 'AR'}
+          </button>
 
-            <div
-              className={cn(
-                'overflow-hidden transition-all duration-300',
-                accountOpen ? 'max-h-[420px] opacity-100' : 'max-h-0 opacity-0',
-              )}
-            >
-              <div className="mt-1 space-y-1.5 ps-2">
-                <div className="flex items-center justify-between rounded-xl border border-white/15 bg-white/[0.04] px-2 py-1.5">
-                  <span className="text-[11px] font-semibold text-white/85">{tUser('language')}</span>
-                  <div className="inline-flex rounded-full border border-[#FF6B00]/35 bg-[#FF6B00]/[0.08] p-0.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        router.replace(pathWithLocale(pathnameActive, 'ar') as Route);
-                        router.refresh();
-                      }}
-                      className={cn(
-                        'rounded-full px-2.5 py-1 text-[11px] font-bold transition-all',
-                        navLocale === 'ar'
-                          ? 'bg-[#FF6B00]/30 text-white'
-                          : 'text-white/75 hover:text-white',
-                      )}
-                    >
-                      {tUser('langArabic')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        router.replace(pathWithLocale(pathnameActive, 'en') as Route);
-                        router.refresh();
-                      }}
-                      className={cn(
-                        'rounded-full px-2.5 py-1 text-[11px] font-bold transition-all',
-                        navLocale === 'en'
-                          ? 'bg-[#FF6B00]/30 text-white'
-                          : 'text-white/75 hover:text-white',
-                      )}
-                    >
-                      {tUser('langEnglish')}
-                    </button>
-                  </div>
-                </div>
+          <div className="flex-1" />
 
-                <button
-                  type="button"
-                  onClick={() => setTheme(isDark ? 'light' : 'dark')}
-                  className={cn(
-                    'flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[13px] text-white/95 transition-colors',
-                    'hover:bg-white/10',
-                  )}
-                >
-                  {isDark ? (
-                    <Moon className="h-4 w-4 text-[#FF6B00]" strokeWidth={ICON_STROKE} />
-                  ) : (
-                    <Sun className="h-4 w-4 text-[#FF6B00]" strokeWidth={ICON_STROKE} />
-                  )}
-                  <span>{isDark ? tUser('switchToLight') : tUser('switchToDark')}</span>
-                </button>
-
-                <Link
-                  href={`/${navLocale}/settings/profile` as Route}
-                  className={cn(
-                    'flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[13px] text-white/95 transition-colors',
-                    'hover:bg-white/10',
-                  )}
-                >
-                  <UserRound className="h-4 w-4 text-[#FF6B00]" strokeWidth={ICON_STROKE} />
-                  <span>{tUser('profile')}</span>
-                </Link>
-
-                <Link
-                  href={`/${navLocale}/settings/billing` as Route}
-                  className={cn(
-                    'flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[13px] text-white/95 transition-colors',
-                    'hover:bg-white/10',
-                  )}
-                >
-                  <SlidersHorizontal className="h-4 w-4 text-[#FF6B00]" strokeWidth={ICON_STROKE} />
-                  <span>{tUser('settingsBilling')}</span>
-                </Link>
-
-                <button
-                  type="button"
-                  className={cn(
-                    'flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-[13px] text-red-300 transition-colors',
-                    'hover:bg-red-500/10',
-                  )}
-                  onClick={async () => {
-                    const res = await apiFetch('/auth/logout', { method: 'POST', body: '{}' });
-                    if (!res.ok) {
-                      toast.error(tUser('signOutFailed'));
-                      return;
-                    }
-                    setStoredAccessToken(null);
-                    router.push(`/${navLocale}/login`);
-                    router.refresh();
-                  }}
-                >
-                  <LogOut className="h-4 w-4" strokeWidth={ICON_STROKE} />
-                  <span>{tUser('signOut')}</span>
-                </button>
-              </div>
-            </div>
-          </div>
+          <IconButton
+            label={tUser('signOut')}
+            icon={LogOut}
+            danger
+            onClick={async () => {
+              const res = await apiFetch('/auth/logout', { method: 'POST', body: '{}' });
+              if (!res.ok) {
+                toast.error(tUser('signOutFailed'));
+                return;
+              }
+              setStoredAccessToken(null);
+              router.push(`/${navLocale}/login`);
+              router.refresh();
+            }}
+          />
         </div>
       </div>
     </aside>

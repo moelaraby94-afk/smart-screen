@@ -114,7 +114,7 @@ export function AdminSettingsClient() {
 
   return (
     <div className="space-y-6">
-      <section className="vc-card-surface rounded-3xl border border-[#FF6B00]/15 p-5">
+      <section className="vc-card-surface rounded-2xl border border-border p-5">
         <h3 className="mb-4 text-base font-semibold">{t('general.title')}</h3>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-1">
@@ -134,7 +134,7 @@ export function AdminSettingsClient() {
         </div>
       </section>
 
-      <section className="vc-card-surface rounded-3xl border border-[#FF6B00]/15 p-5">
+      <section className="vc-card-surface rounded-2xl border border-border p-5">
         <h3 className="mb-2 text-base font-semibold">{t('branding.title')}</h3>
         <p className="mb-6 text-sm text-muted-foreground">{t('branding.description')}</p>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -186,7 +186,7 @@ export function AdminSettingsClient() {
         </div>
       </section>
 
-      <section className="vc-card-surface rounded-3xl border border-[#FF6B00]/15 p-5">
+      <section className="vc-card-surface rounded-2xl border border-border p-5">
         <h3 className="mb-4 text-base font-semibold">{t('security.title')}</h3>
         <label className="flex items-center gap-2 text-sm">
           <input
@@ -198,7 +198,7 @@ export function AdminSettingsClient() {
         </label>
       </section>
 
-      <section className="vc-card-surface rounded-3xl border border-[#FF6B00]/15 p-5">
+      <section className="vc-card-surface rounded-2xl border border-border p-5">
         <h3 className="mb-4 text-base font-semibold">{t('localization.title')}</h3>
         <div className="max-w-xs space-y-1">
           <Label>{t('localization.defaultLanguage')}</Label>
@@ -214,7 +214,7 @@ export function AdminSettingsClient() {
       </section>
 
       <Button
-        className="bg-[#FF6B00] text-amber-950 hover:bg-[#FF6B00]/90"
+        className="font-semibold" variant="cta"
         disabled={saving}
         onClick={() => void save()}
       >

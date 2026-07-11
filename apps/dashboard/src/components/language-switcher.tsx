@@ -42,7 +42,7 @@ export function LanguageSwitcher({ className, compact = false }: Props) {
         <button
           type="button"
           className={cn(
-            'inline-flex h-9 items-center gap-1.5 rounded-full border border-[#FF6B00]/30 bg-white/50 px-2 text-[11px] font-semibold uppercase tracking-wide text-[#FF6B00] shadow-[0_4px_20px_-4px_rgba(255,107,0,0.12)] backdrop-blur-md transition hover:border-[#FF6B00]/45 hover:bg-white/70 dark:border-[#FF6B00]/35 dark:bg-[#FF6B00]/[0.07] dark:hover:bg-[#FF6B00]/12',
+            'inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-2 text-[11px] font-semibold uppercase tracking-wide text-foreground transition hover:bg-muted',
             className,
           )}
         >
@@ -52,13 +52,13 @@ export function LanguageSwitcher({ className, compact = false }: Props) {
           </span>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[9rem] rounded-2xl border-white/10 bg-card/95 backdrop-blur-xl">
-        <DropdownMenuItem asChild className="rounded-xl">
+      <DropdownMenuContent align="end" className="min-w-[9rem] rounded-lg border-border bg-card">
+        <DropdownMenuItem asChild className="rounded-lg">
           <Link href={hrefAr} className="cursor-pointer font-medium">
             {t('langArabic')}
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild className="rounded-xl">
+        <DropdownMenuItem asChild className="rounded-lg">
           <Link href={hrefEn} className="cursor-pointer font-medium">
             {t('langEnglish')}
           </Link>

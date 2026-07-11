@@ -34,7 +34,7 @@ export function SuperAdminGuard({ children }: { children: React.ReactNode }) {
   if (isLoading) {
     return (
       <div className="flex min-h-[calc(100vh-12rem)] flex-col items-center justify-center gap-3 text-muted-foreground">
-        <Loader2 className="h-10 w-10 animate-spin text-[#FF6B00]" />
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
         <p className="text-sm font-medium">{t('verifying')}</p>
       </div>
     );
@@ -43,7 +43,7 @@ export function SuperAdminGuard({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated || !isSuperAdmin) {
     return (
       <div className="flex min-h-[calc(100vh-12rem)] flex-col items-center justify-center gap-3 text-muted-foreground">
-        <Loader2 className="h-8 w-8 animate-spin text-[#FF6B00]" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }

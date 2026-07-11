@@ -240,7 +240,7 @@ export function StudioEditorClient() {
           y: 120,
           text: 'Headline',
           fontSize: 72,
-          fill: '#FF6B00',
+          fill: 'hsl(var(--primary))',
           fontFamily:
             '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif',
           opacity: 1,
@@ -263,7 +263,7 @@ export function StudioEditorClient() {
           y: 200,
           width: 400,
           height: 220,
-          fill: '#0F1729',
+          fill: 'hsl(var(--primary))',
           opacity: 0.95,
           cornerRadius: 12,
         },
@@ -285,7 +285,7 @@ export function StudioEditorClient() {
           y: 300,
           width: 280,
           height: 180,
-          fill: '#0F1729',
+          fill: 'hsl(var(--primary))',
           opacity: 0.9,
         },
       ],
@@ -355,7 +355,7 @@ export function StudioEditorClient() {
           y={obj.y}
           width={obj.width ?? 120}
           height={obj.height ?? 80}
-          fill={obj.fill ?? '#0F1729'}
+          fill={obj.fill ?? 'hsl(var(--primary))'}
           stroke={obj.stroke}
           strokeWidth={obj.strokeWidth ?? 0}
           cornerRadius={obj.cornerRadius ?? 0}
@@ -375,7 +375,7 @@ export function StudioEditorClient() {
           y={obj.y + rh}
           radiusX={rw}
           radiusY={rh}
-          fill={obj.fill ?? '#0F1729'}
+          fill={obj.fill ?? 'hsl(var(--primary))'}
           stroke={obj.stroke}
           strokeWidth={obj.strokeWidth ?? 0}
           rotation={obj.rotation ?? 0}
@@ -404,7 +404,7 @@ export function StudioEditorClient() {
             obj.fontFamily ??
             '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
           }
-          fill={obj.fill ?? '#FF6B00'}
+          fill={obj.fill ?? 'hsl(var(--primary))'}
           width={obj.width}
           height={obj.height}
           {...common}
@@ -433,7 +433,7 @@ export function StudioEditorClient() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="vc-card-surface rounded-3xl border border-[#0F1729]/20 p-5 shadow-[0_0_60px_rgba(10,15,29,0.18)]"
+        className="vc-card-surface rounded-2xl border border-border p-5 shadow-sm"
       >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-2">
@@ -493,13 +493,13 @@ export function StudioEditorClient() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
         <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap gap-2 rounded-2xl border border-white/10 bg-black/20 p-2 backdrop-blur-md">
+          <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-muted/30 p-2">
             <Button type="button" size="sm" variant="ghost" onClick={addText}>
-              <Type className="mr-1 h-4 w-4 text-[#FF6B00]" />
+              <Type className="mr-1 h-4 w-4 text-primary" />
               {t('toolText')}
             </Button>
             <Button type="button" size="sm" variant="ghost" onClick={addRect}>
-              <Shapes className="mr-1 h-4 w-4 text-[#0F1729]" />
+              <Shapes className="mr-1 h-4 w-4 text-primary" />
               {t('toolRect')}
             </Button>
             <Button type="button" size="sm" variant="ghost" onClick={addEllipse}>
@@ -529,7 +529,7 @@ export function StudioEditorClient() {
                 <Layer>
                   <Rect x={0} y={0} width={size.w} height={size.h} fill="transparent" />
                   <Group x={ox} y={oy} scaleX={scale} scaleY={scale}>
-                    <Rect x={0} y={0} width={dw} height={dh} fill="#030712" stroke="#0F1729" strokeWidth={2} />
+                    <Rect x={0} y={0} width={dw} height={dh} fill="hsl(var(--background))" stroke="hsl(var(--primary))" strokeWidth={2} />
                     {layout.objects.map((o) => renderObject(o))}
                   </Group>
                 </Layer>
@@ -576,10 +576,10 @@ export function StudioEditorClient() {
           <motion.aside
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="vc-card-surface h-fit rounded-3xl border border-[#FF6B00]/15 p-5"
+            className="vc-card-surface h-fit rounded-2xl border border-border p-5"
           >
             <p className="mb-4 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              <Layers className="h-4 w-4 text-[#FF6B00]" />
+              <Layers className="h-4 w-4 text-primary" />
               {t('properties')}
             </p>
             {selected ? (
@@ -591,7 +591,7 @@ export function StudioEditorClient() {
                       type="color"
                       className="h-10 w-14 cursor-pointer p-1"
                       value={
-                        selected.fill?.startsWith('#') ? selected.fill : '#0F1729'
+                        selected.fill?.startsWith('#') ? selected.fill : 'hsl(var(--primary))'
                       }
                       onChange={(e) => updateObject(selected.id, { fill: e.target.value })}
                     />
@@ -599,8 +599,8 @@ export function StudioEditorClient() {
                       type="button"
                       size="sm"
                       variant="outline"
-                      className="border-[#0F1729]/50 text-[#0F1729]"
-                      onClick={() => updateObject(selected.id, { fill: '#0F1729' })}
+                      className="border-primary/50 text-primary"
+                      onClick={() => updateObject(selected.id, { fill: 'hsl(var(--primary))' })}
                     >
                       {t('fillNavy')}
                     </Button>
@@ -608,8 +608,8 @@ export function StudioEditorClient() {
                       type="button"
                       size="sm"
                       variant="outline"
-                      className="border-[#FF6B00]/50 text-[#FF6B00]"
-                      onClick={() => updateObject(selected.id, { fill: '#FF6B00' })}
+                      className="border-accent/50 text-accent"
+                      onClick={() => updateObject(selected.id, { fill: 'hsl(var(--accent))' })}
                     >
                       {t('fillOrange')}
                     </Button>
@@ -626,7 +626,7 @@ export function StudioEditorClient() {
                     onChange={(e) =>
                       updateObject(selected.id, { opacity: Number(e.target.value) })
                     }
-                    className="w-full accent-[#FF6B00]"
+                    className="w-full accent-primary"
                   />
                 </div>
                 {selected.type === 'text' ? (

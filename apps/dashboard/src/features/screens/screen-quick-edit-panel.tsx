@@ -213,11 +213,11 @@ export function ScreenQuickEditPanel({
             <div className="flex-1 space-y-8 overflow-y-auto px-6 py-6">
               <div className="space-y-2">
                 <Label className="flex items-center gap-2 text-sm font-semibold">
-                  <FolderKanban className="h-4 w-4 text-[#0F1729]" />
+                  <FolderKanban className="h-4 w-4 text-primary" />
                   {t('screenPlaylistGroup')}
                 </Label>
                 <select
-                  className="h-11 w-full rounded-2xl border border-white/15 bg-white/5 px-3 text-[15px] font-medium outline-none ring-0 focus:border-[#0F1729]/40 focus:ring-2 focus:ring-[#0F1729]/20"
+                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none ring-0 focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
                   value={playlistGroupId}
                   disabled={busy}
                   onChange={(e) => {
@@ -238,11 +238,11 @@ export function ScreenQuickEditPanel({
 
               <div className="space-y-2">
                 <Label className="flex items-center gap-2 text-sm font-semibold">
-                  <ListMusic className="h-4 w-4 text-[#0F1729]" />
+                  <ListMusic className="h-4 w-4 text-primary" />
                   {t('activePlaylist')}
                 </Label>
                 <select
-                  className="h-11 w-full rounded-2xl border border-white/15 bg-white/5 px-3 text-[15px] font-medium outline-none ring-0 focus:border-[#0F1729]/40 focus:ring-2 focus:ring-[#0F1729]/20"
+                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none ring-0 focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
                   value={playlistId}
                   disabled={busy}
                   onChange={(e) => {
@@ -265,11 +265,11 @@ export function ScreenQuickEditPanel({
 
               <div className="space-y-2">
                 <Label className="flex items-center gap-2 text-sm font-semibold">
-                  <CalendarClock className="h-4 w-4 text-[#0F1729]" />
+                  <CalendarClock className="h-4 w-4 text-primary" />
                   {t('scheduleFocus')}
                 </Label>
                 <select
-                  className="h-11 w-full rounded-2xl border border-white/15 bg-white/5 px-3 text-[15px] font-medium outline-none focus:border-[#0F1729]/40 focus:ring-2 focus:ring-[#0F1729]/20"
+                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
                   value={scheduleId}
                   disabled={busy}
                   onChange={(e) => {
@@ -306,7 +306,7 @@ export function ScreenQuickEditPanel({
                 <Button
                   type="button"
                   variant="ghost"
-                  className="h-11 w-full rounded-2xl text-[#0F1729] hover:bg-[#0F1729]/10"
+                  className="h-11 w-full rounded-xl text-primary hover:bg-primary/10"
                   asChild
                 >
                   <Link href={`/${locale}/schedules` as Route}>{t('openScheduleEngine')}</Link>

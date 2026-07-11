@@ -318,7 +318,7 @@ export function PlaylistStudioClient() {
             </Button>
             <Button
               type="button"
-              className="rounded-2xl bg-gradient-to-r from-[#FF6B00] to-[#CC4400] font-semibold shadow-lg shadow-[#0F1729]/30"
+              className="rounded-xl font-semibold" variant="cta"
               onClick={() => void savePlaylist()}
               disabled={!playlistId || saving}
             >
@@ -337,9 +337,9 @@ export function PlaylistStudioClient() {
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="grid gap-8 xl:grid-cols-2 xl:gap-10">
             <div className="space-y-8">
-              <div className="rounded-3xl border border-[#0F1729]/15 bg-gradient-to-b from-[#0F1729]/[0.06] to-transparent p-1">
+              <div className="rounded-2xl border border-border bg-muted/30 p-1">
                 <div className="flex items-center gap-2 border-b border-border/50 px-5 py-4">
-                  <Library className="h-5 w-5 text-[#0F1729]" />
+                  <Library className="h-5 w-5 text-primary" />
                   <h3 className="text-sm font-semibold tracking-tight text-foreground">
                     {t('mediaLibrary')}
                   </h3>
@@ -382,7 +382,7 @@ export function PlaylistStudioClient() {
                                 )}
                                 <span className="absolute bottom-0.5 right-0.5 rounded bg-black/60 p-0.5">
                                   {m.mimeType.startsWith('video/') ? (
-                                    <Film className="h-2.5 w-2.5 text-[#FF6B00]" />
+                                    <Film className="h-2.5 w-2.5 text-primary" />
                                   ) : (
                                     <ImageIcon className="h-2.5 w-2.5 text-white" />
                                   )}
@@ -401,9 +401,9 @@ export function PlaylistStudioClient() {
                 </Droppable>
               </div>
 
-              <div className="rounded-3xl border border-[#FF6B00]/20 bg-gradient-to-b from-[#FF6B00]/[0.06] to-transparent p-1">
+              <div className="rounded-2xl border border-primary/20 bg-primary/[0.03] p-1">
                 <div className="flex items-center gap-2 border-b border-border/50 px-5 py-4">
-                  <PenLine className="h-5 w-5 text-[#FF6B00]" />
+                  <PenLine className="h-5 w-5 text-primary" />
                   <h3 className="text-sm font-semibold tracking-tight text-foreground">
                     {t('canvasDesigns')}
                   </h3>
@@ -433,7 +433,7 @@ export function PlaylistStudioClient() {
                                 className="flex items-center gap-3 rounded-2xl border border-border/80 bg-card/80 px-3 py-2.5 shadow-sm transition hover:scale-[1.01] hover:shadow-md dark:bg-card/50"
                               >
                                 <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#CC4400]">
+                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary">
                                   <PenLine className="h-5 w-5 text-white" />
                                 </span>
                                 <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-foreground">
@@ -451,9 +451,9 @@ export function PlaylistStudioClient() {
               </div>
             </div>
 
-            <div className="rounded-3xl border-2 border-dashed border-[#0F1729]/25 bg-gradient-to-br from-[#0F1729]/[0.07] via-card to-[#FF6B00]/[0.04] p-1 shadow-inner">
+            <div className="rounded-2xl border-2 border-dashed border-border bg-muted/20 p-1 shadow-inner">
               <div className="flex items-center gap-2 border-b border-border/50 px-5 py-4">
-                <Layers className="h-5 w-5 text-[#0F1729]" />
+                <Layers className="h-5 w-5 text-primary" />
                 <h3 className="text-sm font-semibold tracking-tight text-foreground">
                   {t('programTimeline')}
                 </h3>
@@ -474,7 +474,7 @@ export function PlaylistStudioClient() {
                           <div
                             ref={p.innerRef}
                             {...p.draggableProps}
-                            className="rounded-2xl border border-border/60 bg-card/95 p-4 shadow-md ring-1 ring-primary/5 transition hover:border-[#0F1729]/35 hover:shadow-lg dark:bg-card/80"
+                            className="rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-primary/30 hover:shadow-md"
                           >
                             <div className="flex items-start gap-3">
                               <button
@@ -502,8 +502,8 @@ export function PlaylistStudioClient() {
                                     />
                                   )
                                 ) : (
-                                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#0F1729] to-[#0c1220]">
-                                    <PenLine className="h-6 w-6 text-[#FF6B00]" />
+                                  <div className="flex h-full w-full items-center justify-center bg-muted">
+                                    <PenLine className="h-6 w-6 text-primary" />
                                   </div>
                                 )}
                               </div>

@@ -101,7 +101,7 @@ export function AdminLogsClient() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder={t('searchPlaceholder')}
-        className="max-w-md rounded-2xl border-[#FF6B00]/25 bg-card/40 backdrop-blur-sm"
+        className="max-w-md rounded-xl border-border bg-background"
         disabled={rows.length === 0}
       />
       <div className={adminGlassTable.wrap}>
@@ -161,7 +161,7 @@ export function AdminLogsClient() {
               </Table>
             </div>
             {showSearchEmpty ? (
-              <div className="border-t border-[#FF6B00]/10 px-6 py-10 text-center text-sm text-muted-foreground">
+              <div className="border-t border-border px-6 py-10 text-center text-sm text-muted-foreground">
                 {t('emptySearch')}
               </div>
             ) : null}

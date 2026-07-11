@@ -120,7 +120,7 @@ function statusPill(
     >
       {t('status.active')}
       {lifecycle === 'trial' ? (
-        <span className="ms-1 text-[10px] font-normal text-[#FF6B00]/90">· {t('status.trial')}</span>
+        <span className="ms-1 text-[10px] font-normal text-primary">· {t('status.trial')}</span>
       ) : null}
     </span>
   );
@@ -264,8 +264,8 @@ export function AdminCustomersClient() {
             value={filter}
             onChange={(e) => setFilter(e.target.value as CustomerFilter)}
             className={cn(
-              'h-10 flex-1 rounded-2xl border border-[#FF6B00]/25 bg-background px-3 text-sm font-medium',
-              'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B00]/40',
+              'h-10 flex-1 rounded-xl border border-border bg-background px-3 text-sm font-medium',
+              'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25',
             )}
           >
             <option value="all">{t('filters.all')}</option>
@@ -284,7 +284,7 @@ export function AdminCustomersClient() {
             placeholder={t('searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="rounded-2xl border-[#FF6B00]/20"
+            className="rounded-xl border-border"
           />
         </div>
       </div>
@@ -352,7 +352,7 @@ export function AdminCustomersClient() {
 
                       <span>{u.fullName}</span>
                       {u.businessName ? (
-                        <span className="ms-2 rounded-full border border-[#FF6B00]/30 bg-[#FF6B00]/10 px-2 py-0.5 text-[10px] font-semibold text-[#FF6B00]">
+                        <span className="ms-2 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
                           {u.businessName}
                         </span>
                       ) : null}
@@ -373,7 +373,7 @@ export function AdminCustomersClient() {
 
                   <TableCell className="align-middle text-xs">
                     <div className="flex justify-center">
-                      <span className="inline-flex items-center justify-center rounded-full border border-[#FF6B00]/20 bg-[#FF6B00]/10 px-2.5 py-0.5 text-[11px] font-semibold text-foreground">
+                      <span className="inline-flex items-center justify-center rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-foreground">
                         {formatSubscriptionStatus(u.subscriptionStatus, t)}
                       </span>
                     </div>
@@ -568,7 +568,7 @@ export function AdminCustomersClient() {
 
             <Button
 
-              className="rounded-2xl bg-[#FF6B00] font-semibold text-amber-950 hover:bg-[#FF6B00]/90"
+              className="rounded-xl font-semibold" variant="cta"
 
               onClick={() => void confirmImpersonate()}
 
@@ -612,7 +612,7 @@ export function AdminCustomersClient() {
 
             <Button
 
-              className="rounded-2xl bg-[#FF6B00] font-semibold text-amber-950 hover:bg-[#FF6B00]/90"
+              className="rounded-xl font-semibold" variant="cta"
 
               disabled={sendingReminder}
 

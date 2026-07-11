@@ -240,7 +240,7 @@ export function BranchDetailClient({ locale }: Props) {
               label: t('statTotal'),
               value: loading ? '…' : String(stats.total),
               icon: Monitor,
-              accent: 'from-[#0F1729]/80 to-[#1B254B]/60',
+              accent: 'from-primary/20 to-primary/5',
             },
             {
               label: t('statOnline'),
@@ -252,7 +252,7 @@ export function BranchDetailClient({ locale }: Props) {
               label: t('statInactive'),
               value: loading ? '…' : String(stats.inactive),
               icon: Power,
-              accent: 'from-rose-950/40 to-[#1B254B]/50',
+              accent: 'from-rose-500/15 to-muted',
               sub: loading
                 ? undefined
                 : t('inactiveDetail', {
@@ -267,7 +267,7 @@ export function BranchDetailClient({ locale }: Props) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.04 * i, duration: 0.35 }}
               className={cn(
-                'vc-card-surface relative overflow-hidden rounded-2xl border border-[#FF6B00]/12 p-5 dark:border-white/10',
+                'vc-card-surface relative overflow-hidden rounded-2xl border border-border p-5',
               )}
             >
               <div
@@ -288,8 +288,8 @@ export function BranchDetailClient({ locale }: Props) {
                     <p className="mt-1 text-[11px] text-white/55">{item.sub}</p>
                   ) : null}
                 </div>
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20">
-                  <item.icon className="h-5 w-5 text-[#FFB37A]" strokeWidth={ICON_STROKE} />
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+                  <item.icon className="h-5 w-5 text-primary" strokeWidth={ICON_STROKE} />
                 </div>
               </div>
             </motion.div>
@@ -310,24 +310,23 @@ export function BranchDetailClient({ locale }: Props) {
             type="button"
             className={cn(
               'inline-flex shrink-0 items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition',
-              'border-[#FF6B00]/25 bg-white/60 text-[#1B254B] hover:border-[#FF6B00]/50 hover:bg-[#FF6B00]/10',
-              'dark:border-white/15 dark:bg-[#1B254B]/50 dark:text-white dark:hover:bg-[#FF6B00]/15',
+              'border-border bg-background text-foreground hover:border-primary/30 hover:bg-muted',
             )}
             onClick={() => setCreateOpen(true)}
           >
-            <Plus className="h-4 w-4 shrink-0 text-[#FF6B00]" strokeWidth={ICON_STROKE} />
+            <Plus className="h-4 w-4 shrink-0 text-primary" strokeWidth={ICON_STROKE} />
             {t('addPlaylist')}
           </button>
         </div>
 
         {branchPlaylists.isLoading ? (
           <div className="flex justify-center py-16">
-            <Loader2 className="h-10 w-10 animate-spin text-[#FF6B00]" />
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
           </div>
         ) : branchPlaylists.playlists.length === 0 ? (
-          <div className="vc-card-surface rounded-2xl border border-dashed border-[#FF6B00]/25 p-10 text-center">
-            <Clapperboard className="mx-auto h-10 w-10 text-[#FF6B00]/70" strokeWidth={ICON_STROKE} />
-            <p className="mt-3 text-sm font-medium text-foreground dark:text-white">{t('noPlaylists')}</p>
+          <div className="vc-card-surface rounded-2xl border border-dashed border-border p-10 text-center">
+            <Clapperboard className="mx-auto h-10 w-10 text-muted-foreground" strokeWidth={ICON_STROKE} />
+            <p className="mt-3 text-sm font-medium text-foreground">{t('noPlaylists')}</p>
             <p className="mt-1 text-sm text-muted-foreground">{t('noPlaylistsHint')}</p>
           </div>
         ) : (
@@ -347,10 +346,9 @@ export function BranchDetailClient({ locale }: Props) {
                   <Link
                     href={`/${locale}/branches/${workspaceIdParam}/playlists/${pl.id}` as Route}
                     className={cn(
-                      'flex flex-col rounded-2xl border border-border/60 bg-card/50 p-5 pe-12 transition-all duration-300',
-                      'hover:-translate-y-0.5 hover:border-[#FF6B00]/45 hover:bg-[#FF6B00]/[0.06] hover:shadow-lg hover:shadow-[#FF6B00]/10',
-                      'dark:border-white/10 dark:bg-[#0F1729]/40',
-                      'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF6B00]',
+                      'flex flex-col rounded-2xl border border-border bg-card p-5 pe-12 transition-all duration-200',
+                      'hover:border-primary/30 hover:bg-primary/[0.03] hover:shadow-md',
+                      'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
                     )}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -363,9 +361,9 @@ export function BranchDetailClient({ locale }: Props) {
                           {t('playlistItemsCount', { count: pl._count.items })}
                         </p>
                       </div>
-                      <Clapperboard className="h-5 w-5 shrink-0 text-[#FF6B00]" strokeWidth={ICON_STROKE} />
+                      <Clapperboard className="h-5 w-5 shrink-0 text-primary" strokeWidth={ICON_STROKE} />
                     </div>
-                    <span className="mt-4 inline-flex items-center text-xs font-semibold text-[#FF6B00]">
+                    <span className="mt-4 inline-flex items-center text-xs font-semibold text-primary">
                       {t('openPlaylist')} →
                     </span>
                   </Link>
@@ -376,7 +374,7 @@ export function BranchDetailClient({ locale }: Props) {
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="absolute end-2 top-2 z-20 h-9 w-9 rounded-xl text-muted-foreground hover:bg-[#FF6B00]/12 hover:text-foreground"
+                          className="absolute end-2 top-2 z-20 h-9 w-9 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
                           aria-label={t('playlistActionsAria')}
                           onClick={(e) => e.preventDefault()}
                         >
@@ -393,7 +391,7 @@ export function BranchDetailClient({ locale }: Props) {
                           disabled={dupBusy}
                           onClick={() => void branchPlaylists.duplicate(pl)}
                         >
-                          <Copy className="h-4 w-4 text-[#FF6B00]" strokeWidth={ICON_STROKE} />
+                          <Copy className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
                           {t('playlistDuplicate')}
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -405,7 +403,7 @@ export function BranchDetailClient({ locale }: Props) {
                             setPlaylistEditOpen(true);
                           }}
                         >
-                          <PenLine className="h-4 w-4 text-[#FF6B00]" strokeWidth={ICON_STROKE} />
+                          <PenLine className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
                           {t('playlistEdit')}
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -415,7 +413,7 @@ export function BranchDetailClient({ locale }: Props) {
                             setMoveTargetId('');
                           }}
                         >
-                          <Monitor className="h-4 w-4 text-[#FF6B00]" strokeWidth={ICON_STROKE} />
+                          <Monitor className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
                           {t('playlistMoveToBranch')}
                         </DropdownMenuItem>
                         {canDeletePlaylist ? (
@@ -451,12 +449,12 @@ export function BranchDetailClient({ locale }: Props) {
           </div>
           {screensLoading ? (
             <div className="flex justify-center py-16">
-              <Loader2 className="h-10 w-10 animate-spin text-[#FF6B00]" />
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
             </div>
           ) : screens.length === 0 ? (
-            <div className="vc-card-surface rounded-2xl border border-dashed border-[#FF6B00]/25 p-10 text-center">
-              <Monitor className="mx-auto h-10 w-10 text-[#FF6B00]/70" strokeWidth={ICON_STROKE} />
-              <p className="mt-3 text-sm font-medium text-foreground dark:text-white">{t('noScreens')}</p>
+            <div className="vc-card-surface rounded-2xl border border-dashed border-border p-10 text-center">
+              <Monitor className="mx-auto h-10 w-10 text-muted-foreground" strokeWidth={ICON_STROKE} />
+              <p className="mt-3 text-sm font-medium text-foreground">{t('noScreens')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -490,7 +488,7 @@ export function BranchDetailClient({ locale }: Props) {
                         id={`screen-pl-${screen.id}`}
                         className={cn(
                           'h-10 w-full cursor-pointer appearance-none rounded-xl border border-input bg-background px-3 pe-9 text-sm outline-none',
-                          'focus-visible:ring-2 focus-visible:ring-[#FF6B00]/35',
+                          'focus-visible:ring-2 focus-visible:ring-primary/25',
                           'disabled:cursor-not-allowed disabled:opacity-50',
                         )}
                         disabled={!canEditPlaylist || screenAssignment.assigningScreenId === screen.id}
@@ -509,7 +507,7 @@ export function BranchDetailClient({ locale }: Props) {
                       </select>
                       {screenAssignment.assigningScreenId === screen.id ? (
                         <span className="pointer-events-none absolute end-2 top-1/2 -translate-y-1/2">
-                          <Loader2 className="h-4 w-4 animate-spin text-[#FF6B00]" strokeWidth={ICON_STROKE} />
+                          <Loader2 className="h-4 w-4 animate-spin text-primary" strokeWidth={ICON_STROKE} />
                         </span>
                       ) : null}
                     </div>
@@ -518,7 +516,7 @@ export function BranchDetailClient({ locale }: Props) {
                     <Button
                       type="button"
                       size="sm"
-                      className="rounded-lg bg-[#FF6B00] px-3 text-amber-950 hover:bg-[#FF6B00]/90"
+                      className="rounded-lg px-3 font-semibold" variant="cta"
                       onClick={() => {
                         setEditScreen(screen);
                         setEditOpen(true);
@@ -578,12 +576,12 @@ export function BranchDetailClient({ locale }: Props) {
           </div>
           {branchMedia.isLoading ? (
             <div className="flex justify-center py-16">
-              <Loader2 className="h-10 w-10 animate-spin text-[#FF6B00]" />
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
             </div>
           ) : branchMedia.mediaItems.length === 0 ? (
-            <div className="vc-card-surface rounded-2xl border border-dashed border-[#FF6B00]/25 p-10 text-center">
-              <ImageIcon className="mx-auto h-10 w-10 text-[#FF6B00]/70" strokeWidth={ICON_STROKE} />
-              <p className="mt-3 text-sm font-medium text-foreground dark:text-white">{t('noMedia')}</p>
+            <div className="vc-card-surface rounded-2xl border border-dashed border-border p-10 text-center">
+              <ImageIcon className="mx-auto h-10 w-10 text-muted-foreground" strokeWidth={ICON_STROKE} />
+              <p className="mt-3 text-sm font-medium text-foreground">{t('noMedia')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -617,7 +615,7 @@ export function BranchDetailClient({ locale }: Props) {
           {pairing.showProgressBanner ? (
             <p
               role="status"
-              className="rounded-xl border border-[#FF6B00]/40 bg-[#FF6B00]/12 px-3 py-2 text-center text-xs font-medium leading-relaxed text-foreground dark:text-amber-50"
+              className="rounded-xl border border-primary/40 bg-primary/12 px-3 py-2 text-center text-xs font-medium leading-relaxed text-foreground"
             >
               {t('pairingProgressBanner')}
             </p>
@@ -683,7 +681,7 @@ export function BranchDetailClient({ locale }: Props) {
                 </div>
                 <Button
                   type="button"
-                  className="h-11 w-full rounded-xl bg-[#FF6B00] font-semibold text-amber-950 hover:bg-[#FF6B00]/90"
+                  className="h-11 w-full rounded-xl font-semibold" variant="cta"
                   disabled={pairing.busy || pairing.code.length !== 6}
                   onClick={() => void pairing.claim()}
                 >
@@ -728,7 +726,7 @@ export function BranchDetailClient({ locale }: Props) {
             <label className="flex cursor-pointer items-start gap-3 text-sm">
               <input
                 type="checkbox"
-                className="mt-1 h-4 w-4 rounded border-input accent-[#FF6B00]"
+                className="mt-1 h-4 w-4 rounded border-input accent-primary"
                 checked={editPlaylistPublished}
                 onChange={(e) => setEditPlaylistPublished(e.target.checked)}
               />
@@ -752,7 +750,7 @@ export function BranchDetailClient({ locale }: Props) {
             </Button>
             <Button
               type="button"
-              className="rounded-xl bg-[#FF6B00] font-semibold text-amber-950"
+              className="rounded-xl font-semibold" variant="cta"
               disabled={branchPlaylists.isSavingEdit || !editPlaylistName.trim()}
               onClick={() => void savePlaylistEdit()}
             >
@@ -790,7 +788,7 @@ export function BranchDetailClient({ locale }: Props) {
             </Button>
             <Button
               type="button"
-              className="rounded-xl bg-[#FF6B00] font-semibold text-amber-950"
+              className="rounded-xl font-semibold" variant="cta"
               disabled={branchPlaylists.isCreating || !newName.trim()}
               onClick={() => void onCreatePlaylist()}
             >
@@ -820,7 +818,7 @@ export function BranchDetailClient({ locale }: Props) {
               id="move-branch"
               className={cn(
                 'flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background',
-                'focus-visible:outline focus-visible:ring-2 focus-visible:ring-[#FF6B00]/40',
+                'focus-visible:outline focus-visible:ring-2 focus-visible:ring-primary/40',
               )}
               value={moveTargetId}
               onChange={(e) => setMoveTargetId(e.target.value)}
@@ -849,7 +847,7 @@ export function BranchDetailClient({ locale }: Props) {
             </Button>
             <Button
               type="button"
-              className="rounded-xl bg-[#FF6B00] font-semibold text-amber-950 hover:bg-[#FF6B00]/90"
+              className="rounded-xl font-semibold" variant="cta"
               disabled={
                 !moveTargetId ||
                 branchPlaylists.isMoving ||
@@ -888,7 +886,7 @@ export function BranchDetailClient({ locale }: Props) {
           <label className="flex cursor-pointer items-start gap-3 px-1 text-sm">
             <input
               type="checkbox"
-              className="mt-1 h-4 w-4 rounded border-input accent-[#FF6B00]"
+              className="mt-1 h-4 w-4 rounded border-input accent-primary"
               checked={playlistDeleteForce}
               onChange={(e) => setPlaylistDeleteForce(e.target.checked)}
             />

@@ -182,7 +182,7 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
                   name="pmode"
                   checked={playlistMode === 'none'}
                   onChange={() => setPlaylistMode('none')}
-                  className="accent-[#FF6B00]"
+                  className="accent-primary"
                 />
                 {t('playlistNone')}
               </label>
@@ -192,13 +192,13 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
                   name="pmode"
                   checked={playlistMode === 'existing'}
                   onChange={() => setPlaylistMode('existing')}
-                  className="accent-[#FF6B00]"
+                  className="accent-primary"
                 />
                 {t('playlistExisting')}
               </label>
               {playlistMode === 'existing' ? (
                 <select
-                  className="h-11 w-full rounded-xl border border-white/15 bg-background px-3 text-sm"
+                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm"
                   value={existingPlaylistId}
                   onChange={(e) => setExistingPlaylistId(e.target.value)}
                   disabled={loadingPlaylists}
@@ -217,7 +217,7 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
                   name="pmode"
                   checked={playlistMode === 'new'}
                   onChange={() => setPlaylistMode('new')}
-                  className="accent-[#FF6B00]"
+                  className="accent-primary"
                 />
                 {t('playlistNew')}
               </label>
@@ -238,7 +238,8 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
           </Button>
           <Button
             type="button"
-            className="rounded-xl bg-[#FF6B00] font-semibold text-amber-950"
+            variant="cta"
+            className="rounded-xl font-semibold"
             disabled={submitting}
             onClick={() => void submit()}
           >

@@ -83,7 +83,7 @@ export function AdminSystemHealthClient() {
       value: new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(stats.server.loadAvg1m),
       sub: `${stats.server.hostname} · ${stats.server.platform}`,
       icon: Cpu,
-      accent: 'from-[#FF6B00] to-[#0c1220]',
+      accent: 'from-primary to-primary/70',
     },
     {
       label: t('cards.memory'),
@@ -97,7 +97,7 @@ export function AdminSystemHealthClient() {
       value: new Intl.NumberFormat(locale).format(stats.totalConnectedScreens),
       sub: `${new Intl.NumberFormat(locale).format(stats.totalActiveUsers)} ${t('users')} · ${new Intl.NumberFormat(locale).format(stats.totalWorkspaces)} ${t('workspaces')}`,
       icon: Activity,
-      accent: 'from-amber-400 to-[#FF6B00]',
+      accent: 'from-accent to-primary',
     },
   ];
 
@@ -106,11 +106,11 @@ export function AdminSystemHealthClient() {
       <motion.section
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="vc-card-surface rounded-3xl border border-[#FF6B00]/15 p-6 sm:p-8"
+        className="vc-card-surface rounded-2xl border border-border p-6 sm:p-8"
       >
         <div className="flex flex-wrap items-start gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FF6B00] to-amber-600 shadow-lg">
-            <Server className="h-6 w-6 text-amber-950" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+            <Server className="h-6 w-6 text-primary" />
           </div>
           <div>
             <h2 className="text-lg font-semibold tracking-tight">{t('title')}</h2>
@@ -133,7 +133,7 @@ export function AdminSystemHealthClient() {
             transition={{ delay: 0.04 * i }}
             className="vc-card-surface relative overflow-hidden rounded-3xl p-7"
           >
-            <div className="absolute -end-6 -top-6 h-24 w-24 rounded-full bg-[#FF6B00]/10 blur-2xl" />
+            <div className="absolute -end-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
             <div className="relative flex items-start justify-between gap-4">
               <div>
                 <p className="vc-page-kicker">{c.label}</p>

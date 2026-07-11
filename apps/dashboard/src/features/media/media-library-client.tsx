@@ -52,8 +52,8 @@ function MediaPreviewImage({ src, alt }: { src: string; alt: string }) {
   const t = useTranslations('mediaClient');
   if (failed) {
     return (
-      <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[#0F1729]/90 p-2 text-center">
-        <ImageIcon className="h-8 w-8 shrink-0 text-[#FF6B00]/70" strokeWidth={1.5} />
+      <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-muted p-2 text-center">
+        <ImageIcon className="h-8 w-8 shrink-0 text-primary/60" strokeWidth={1.5} />
         <span className="px-1 text-[10px] leading-tight text-muted-foreground">{t('previewUnavailable')}</span>
       </div>
     );
@@ -74,8 +74,8 @@ function MediaPreviewVideo({ src }: { src: string }) {
   const t = useTranslations('mediaClient');
   if (failed) {
     return (
-      <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[#0F1729]/90 p-2 text-center">
-        <Film className="h-8 w-8 shrink-0 text-[#FF6B00]/70" strokeWidth={1.5} />
+      <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-muted p-2 text-center">
+        <Film className="h-8 w-8 shrink-0 text-primary/60" strokeWidth={1.5} />
         <span className="px-1 text-[10px] leading-tight text-muted-foreground">{t('previewUnavailable')}</span>
       </div>
     );
@@ -97,7 +97,7 @@ function EmptyMediaIllustration() {
     <div className="relative mx-auto flex max-w-md flex-col items-center">
       <svg
         viewBox="0 0 400 280"
-        className="h-48 w-full text-[#0F1729]/25 dark:text-[#0F1729]/40"
+        className="h-48 w-full text-muted-foreground/20"
         aria-hidden
       >
         <defs>
@@ -116,7 +116,7 @@ function EmptyMediaIllustration() {
           fill="currentColor"
           opacity="0.15"
         />
-        <circle cx="260" cy="96" r="28" fill="#FF6B00" opacity="0.35" />
+        <circle cx="260" cy="96" r="28" fill="hsl(var(--primary))" opacity="0.2" />
         <path
           d="M88 200h224"
           stroke="currentColor"
@@ -133,8 +133,8 @@ function EmptyMediaIllustration() {
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center pt-8">
-        <div className="rounded-3xl border border-white/20 bg-white/10 px-6 py-4 shadow-2xl backdrop-blur-md dark:bg-black/20">
-          <Sparkles className="mx-auto h-10 w-10 text-[#FF6B00]" strokeWidth={1.5} />
+        <div className="rounded-2xl border border-border bg-card px-6 py-4 shadow-sm">
+          <Sparkles className="mx-auto h-10 w-10 text-primary" strokeWidth={1.5} />
         </div>
       </div>
     </div>
@@ -430,22 +430,22 @@ export function MediaLibraryClient() {
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="vc-glass vc-card-surface flex flex-col gap-6 rounded-3xl border border-[#FF6B00]/12 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8 dark:border-white/10"
+        className="vc-card-surface flex flex-col gap-6 rounded-2xl border border-border p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8"
       >
         <div className="min-w-0 flex-1">
           <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
             {scope === 'all' ? t('descriptionAllBranches') : t('description')}
           </p>
           {workspaces.length > 1 ? (
-            <div className="mt-4 inline-flex flex-wrap gap-2 rounded-2xl border border-[#FF6B00]/20 bg-[#0F1729]/30 p-1 dark:bg-black/20">
+            <div className="mt-4 inline-flex flex-wrap gap-1 rounded-xl border border-border bg-muted/50 p-1">
               <button
                 type="button"
                 onClick={() => setScope('branch')}
                 className={cn(
-                  'rounded-xl px-4 py-2 text-sm font-semibold transition',
+                  'rounded-lg px-4 py-2 text-sm font-semibold transition-colors',
                   scope === 'branch'
-                    ? 'border border-[#FF6B00]/55 bg-[#FF6B00]/18 text-white'
-                    : 'border border-transparent text-muted-foreground hover:text-foreground',
+                    ? 'bg-primary text-white'
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 {t('scopeBranch')}
@@ -454,10 +454,10 @@ export function MediaLibraryClient() {
                 type="button"
                 onClick={() => setScope('all')}
                 className={cn(
-                  'rounded-xl px-4 py-2 text-sm font-semibold transition',
+                  'rounded-lg px-4 py-2 text-sm font-semibold transition-colors',
                   scope === 'all'
-                    ? 'border border-[#FF6B00]/55 bg-[#FF6B00]/18 text-white'
-                    : 'border border-transparent text-muted-foreground hover:text-foreground',
+                    ? 'bg-primary text-white'
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 {t('scopeAll')}
@@ -474,39 +474,32 @@ export function MediaLibraryClient() {
             multiple
             onChange={onFileInputChange}
           />
-          <button
+          <Button
             type="button"
-            className={cn(
-              'inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition',
-              'border-[#FF6B00]/55 bg-[#FF6B00]/18 text-white hover:bg-[#FF6B00]/22',
-              (pending || scope === 'all') && 'pointer-events-none opacity-50',
-            )}
+            variant="cta"
+            className="rounded-xl font-semibold"
             onClick={onPickClick}
             disabled={pending || scope === 'all'}
           >
-            <Upload className="h-4 w-4 shrink-0 text-[#FFB37A]" strokeWidth={2} />
+            <Upload className="h-4 w-4 shrink-0" strokeWidth={2} />
             {pending ? t('uploading') : t('uploadFiles')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className={cn(
-              'inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition',
-              'border-[#FF6B00]/25 bg-white/60 text-[#1B254B] hover:border-[#FF6B00]/50 hover:bg-[#FF6B00]/10',
-              'dark:border-white/15 dark:bg-[#1B254B]/50 dark:text-white dark:hover:bg-[#FF6B00]/15',
-              (pending || scope === 'all') && 'pointer-events-none opacity-50',
-            )}
+            variant="outline"
+            className="rounded-xl"
             onClick={open}
             disabled={pending || scope === 'all'}
           >
             {t('browse')}
-          </button>
+          </Button>
         </div>
       </motion.div>
 
       {scope === 'branch' ? (
         <div className="vc-card-surface rounded-2xl border border-border/70 p-4">
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            <Folder className="h-4 w-4 text-[#FF6B00]" />
+            <Folder className="h-4 w-4 text-primary" />
             <p className="text-sm font-semibold text-foreground">{t('foldersTitle')}</p>
           </div>
           <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -514,10 +507,10 @@ export function MediaLibraryClient() {
               type="button"
               onClick={() => setSelectedFolderId('all')}
               className={cn(
-                'rounded-lg border px-2.5 py-1 text-xs font-semibold',
+                'rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors',
                 selectedFolderId === 'all'
-                  ? 'border-[#FF6B00]/60 bg-[#FF6B00]/15 text-foreground'
-                  : 'border-border text-muted-foreground',
+                  ? 'border-primary/40 bg-primary/10 text-primary'
+                  : 'border-border text-muted-foreground hover:text-foreground',
               )}
             >
               {t('allFolders')}
@@ -528,10 +521,10 @@ export function MediaLibraryClient() {
                   type="button"
                   onClick={() => setSelectedFolderId(folder.id)}
                   className={cn(
-                    'rounded-lg border px-2.5 py-1 text-xs font-semibold',
+                    'rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors',
                     selectedFolderId === folder.id
-                      ? 'border-[#FF6B00]/60 bg-[#FF6B00]/15 text-foreground'
-                      : 'border-border text-muted-foreground',
+                      ? 'border-primary/40 bg-primary/10 text-primary'
+                      : 'border-border text-muted-foreground hover:text-foreground',
                   )}
                 >
                   {folder.name} ({folder._count.medias})
@@ -571,8 +564,8 @@ export function MediaLibraryClient() {
         className={cn(
           'relative flex min-h-[320px] flex-1 flex-col rounded-3xl border-2 border-dashed transition-colors',
           isDragActive
-            ? 'border-[#0F1729]/60 bg-[#0F1729]/[0.06]'
-            : 'border-border/70 bg-muted/20',
+            ? 'border-primary/50 bg-primary/[0.04]'
+            : 'border-border bg-muted/20',
         )}
       >
         <input {...getInputProps()} />
@@ -591,17 +584,15 @@ export function MediaLibraryClient() {
               </p>
             </div>
             {scope === 'branch' ? (
-              <button
+              <Button
                 type="button"
-                className={cn(
-                  'inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition',
-                  'border-[#FF6B00]/55 bg-[#FF6B00]/18 text-white hover:bg-[#FF6B00]/22',
-                )}
+                variant="cta"
+                className="rounded-xl font-semibold"
                 onClick={onPickClick}
               >
-                <Upload className="h-4 w-4 shrink-0 text-[#FFB37A]" strokeWidth={2} />
+                <Upload className="h-4 w-4 shrink-0" strokeWidth={2} />
                 {t('uploadFirst')}
-              </button>
+              </Button>
             ) : (
               <p className="max-w-md text-sm text-muted-foreground">{t('emptyAllBranchesHint')}</p>
             )}
@@ -640,7 +631,7 @@ export function MediaLibraryClient() {
                       ) : (
                         <MediaPreviewVideo src={m.publicUrl} />
                       )}
-                      <div className="absolute left-2 top-2 flex items-center gap-1 rounded-lg border border-[#FF6B00]/25 bg-black/55 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/95 shadow-[0_0_16px_-4px_rgba(255, 107, 0,0.2)] backdrop-blur-md">
+                      <div className="absolute left-2 top-2 flex items-center gap-1 rounded-lg border border-border bg-card/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-foreground shadow-sm backdrop-blur-sm">
                         {m.mimeType.startsWith('video/') ? (
                           <Film className="ngl-media-icon-accent h-3 w-3" />
                         ) : (
@@ -680,7 +671,7 @@ export function MediaLibraryClient() {
                         </select>
                       ) : null}
                       {m.workspaceName ? (
-                        <p className="mb-1 truncate text-[10px] font-bold uppercase tracking-wide text-[#FF6B00]">
+                        <p className="mb-1 truncate text-[10px] font-bold uppercase tracking-wide text-primary">
                           {m.workspaceName}
                         </p>
                       ) : null}
@@ -700,7 +691,7 @@ export function MediaLibraryClient() {
       </div>
 
       <AlertDialog open={deleteTarget !== null} onOpenChange={() => setDeleteTarget(null)}>
-        <AlertDialogContent className="rounded-3xl border-border/80">
+        <AlertDialogContent className="rounded-2xl border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>{t('deleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>

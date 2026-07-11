@@ -52,10 +52,7 @@ export function UserMenu({ rtl, variant }: Props) {
     router.refresh();
   };
 
-  const accentIcon =
-    variant === 'sovereign'
-      ? 'text-[#94A3B8] dark:text-[#FF6B00]'
-      : 'text-[#64748B] dark:text-[#94A3B8]';
+  const accentIcon = 'text-primary';
 
   return (
     <DropdownMenu>
@@ -63,20 +60,16 @@ export function UserMenu({ rtl, variant }: Props) {
         <button
           type="button"
           className={cn(
-            'flex h-9 items-center gap-1 rounded-full border px-1.5 py-1 shadow-sm backdrop-blur-md transition-all',
+            'flex h-9 items-center gap-1 rounded-lg border px-1.5 py-1 transition-all',
             rtl && 'flex-row-reverse',
-            variant === 'sovereign'
-              ? 'border-[#FF6B00]/35 bg-[#FF6B00]/[0.07] ring-1 ring-[#FF6B00]/28 hover:border-[#FF6B00]/50 hover:bg-[#FF6B00]/12'
-              : 'border-white/10 bg-white/[0.04] ring-1 ring-[#0F1729]/25 hover:border-[#FF6B00]/30 dark:ring-white/10',
+            'border-border bg-card hover:bg-muted',
           )}
           aria-label={t('accountMenu')}
         >
           <span
             className={cn(
-              'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white shadow-inner',
-              variant === 'sovereign'
-                ? 'bg-gradient-to-br from-[#FF6B00] to-[#CC5500]'
-                : 'bg-gradient-to-br from-[#0F1729] to-[#1e293b]',
+              'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white',
+              'bg-primary',
             )}
           >
             <UserRound className="h-4 w-4" strokeWidth={ICON_STROKE} />
@@ -88,7 +81,7 @@ export function UserMenu({ rtl, variant }: Props) {
         align={rtl ? 'start' : 'end'}
         sideOffset={8}
         className={cn(
-          'z-[110] min-w-[14rem] rounded-2xl border-white/10 bg-card/95 p-2 backdrop-blur-xl dark:border-white/10',
+          'z-[110] min-w-[14rem] rounded-xl border border-border bg-card p-2',
           rtl && 'rtl',
         )}
       >
@@ -99,15 +92,12 @@ export function UserMenu({ rtl, variant }: Props) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
-        <div className="flex items-center justify-between gap-2 rounded-xl px-2 py-2">
+        <div className="flex items-center justify-between gap-2 rounded-lg px-2 py-2">
           <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
             {t('language')}
           </span>
           <div
-            className={cn(
-              'inline-flex rounded-full border border-[#FF6B00]/25 bg-muted/40 p-0.5',
-              variant === 'sovereign' && 'border-[#FF6B00]/35 bg-[#FF6B00]/[0.06]',
-            )}
+            className="inline-flex rounded-full border border-primary/20 bg-muted/40 p-0.5"
             role="group"
             aria-label={t('language')}
           >
@@ -115,9 +105,9 @@ export function UserMenu({ rtl, variant }: Props) {
               type="button"
               onClick={() => switchLocale(hrefAr)}
               className={cn(
-                'rounded-full px-2.5 py-1 text-[11px] font-bold transition-all',
+                'rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all',
                 activeLocale === 'ar'
-                  ? 'bg-[#FF6B00]/25 text-[#0F1729] shadow-sm dark:bg-[#FF6B00]/20 dark:text-[#FF6B00]'
+                  ? 'bg-primary text-white'
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
@@ -127,9 +117,9 @@ export function UserMenu({ rtl, variant }: Props) {
               type="button"
               onClick={() => switchLocale(hrefEn)}
               className={cn(
-                'rounded-full px-2.5 py-1 text-[11px] font-bold transition-all',
+                'rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all',
                 activeLocale === 'en'
-                  ? 'bg-[#FF6B00]/25 text-[#0F1729] shadow-sm dark:bg-[#FF6B00]/20 dark:text-[#FF6B00]'
+                  ? 'bg-primary text-white'
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
@@ -145,7 +135,7 @@ export function UserMenu({ rtl, variant }: Props) {
             setTheme(isDark ? 'light' : 'dark');
           }}
         >
-          <span className={cn('inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#FF6B00]/12', accentIcon)}>
+          <span className={cn('inline-flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10', accentIcon)}>
             {isDark ? <Moon className="h-4 w-4" strokeWidth={ICON_STROKE} /> : <Sun className="h-4 w-4" strokeWidth={ICON_STROKE} />}
           </span>
           <span className="flex-1">{isDark ? t('switchToLight') : t('switchToDark')}</span>
@@ -153,16 +143,16 @@ export function UserMenu({ rtl, variant }: Props) {
 
         <DropdownMenuSeparator />
 
-        <p className="px-2 pb-1 pt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+        <p className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           {t('sectionAccount')}
         </p>
-        <DropdownMenuItem asChild className="cursor-pointer gap-2 rounded-xl">
+        <DropdownMenuItem asChild className="cursor-pointer gap-2 rounded-lg">
           <Link href={`/${activeLocale}/settings/profile` as Route} className="flex items-center gap-2">
             <UserRound className={cn('h-4 w-4', accentIcon)} strokeWidth={ICON_STROKE} />
             {t('profile')}
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer gap-2 rounded-xl">
+        <DropdownMenuItem asChild className="cursor-pointer gap-2 rounded-lg">
           <Link href={`/${activeLocale}/settings/billing` as Route} className="flex items-center gap-2">
             <SlidersHorizontal className={cn('h-4 w-4', accentIcon)} strokeWidth={ICON_STROKE} />
             {t('settingsBilling')}
@@ -171,7 +161,7 @@ export function UserMenu({ rtl, variant }: Props) {
 
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="cursor-pointer gap-2 rounded-xl text-destructive focus:text-destructive"
+          className="cursor-pointer gap-2 rounded-lg text-destructive focus:text-destructive"
           onSelect={async (e) => {
             e.preventDefault();
             const res = await apiFetch('/auth/logout', { method: 'POST', body: '{}' });

@@ -343,18 +343,18 @@ export function ClientHomeDashboard() {
   const storagePct = currentWsRow?.capabilities.storage.usedPct ?? null;
 
   const cardChrome =
-    'group relative flex min-h-[160px] cursor-pointer flex-col rounded-2xl border border-[#FF6B00]/45 bg-[#FF6B00]/[0.07] p-5 pe-12 shadow-[0_0_32px_-12px_rgba(255,107,0,0.35)] transition-all duration-300 ease-out will-change-transform hover:-translate-y-1 hover:border-[#FF6B00]/55 hover:shadow-[0_0_40px_-8px_rgba(255,107,0,0.45)] dark:bg-[#FF6B00]/[0.05]';
+    'group relative flex min-h-[160px] cursor-pointer flex-col rounded-xl border border-border bg-card p-5 pe-12 shadow-sm transition-colors duration-200 hover:border-primary/30 hover:shadow-md';
 
   const healthBadgeClass = (h: HealthKey) =>
     h === 'healthy'
-      ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
       : h === 'down'
-        ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
+        ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
         : h === 'paused'
-          ? 'bg-amber-500/15 text-amber-800 dark:text-amber-200'
+          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
           : h === 'empty'
-            ? 'bg-slate-500/15 text-slate-600 dark:text-slate-300'
-            : 'bg-amber-500/15 text-amber-800 dark:text-amber-200';
+            ? 'bg-muted text-muted-foreground'
+            : 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
 
   const renderBranchDetailBody = (row: InsightsBranch) => {
     const detailMetrics = [
@@ -394,19 +394,19 @@ export function ClientHomeDashboard() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 * i, duration: 0.35 }}
-              className="vc-card-surface vc-stat-card-glow rounded-3xl border border-[#FF6B00]/10 p-6 dark:border-white/10"
+              className="vc-card-surface rounded-xl border border-border bg-card p-5"
             >
               <div className="relative flex items-start justify-between gap-4">
                 <div>
                   <p className="vc-page-kicker">{metric.label}</p>
-                  <p className="mt-3 font-mono-nums text-2xl font-bold tracking-tight text-foreground dark:text-white sm:text-3xl">
+                  <p className="mt-3 font-mono-nums text-2xl font-bold tracking-tight text-foreground  sm:text-3xl">
                     {metric.value}
                   </p>
-                  <p className="mt-2 text-sm text-muted-foreground dark:text-white/60">{metric.sub}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{metric.sub}</p>
                 </div>
-                <div className="vc-icon-glass-circle relative flex h-12 w-12 shrink-0 items-center justify-center ring-1 ring-white/10 sm:h-14 sm:w-14">
+                <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20 sm:h-12 sm:w-12">
                   <metric.icon
-                    className="h-5 w-5 text-[#FF6B00] sm:h-[26px] sm:w-[26px]"
+                    className="h-5 w-5 text-primary sm:h-[22px] sm:w-[22px]"
                     strokeWidth={ICON_STROKE}
                   />
                 </div>
@@ -414,16 +414,16 @@ export function ClientHomeDashboard() {
             </motion.div>
           ))}
         </div>
-        <div className="grid grid-cols-2 gap-3 rounded-2xl border border-border/60 bg-muted/20 px-4 py-3 text-center dark:border-white/10">
+        <div className="grid grid-cols-2 gap-3 rounded-xl border border-border bg-muted/30 px-4 py-3 text-center">
           <div>
             <p className="text-[10px] font-medium text-muted-foreground">{t('card.playlists')}</p>
-            <p className="font-mono text-sm font-semibold tabular-nums text-foreground dark:text-white">
+            <p className="mt-2 font-mono text-sm font-semibold tabular-nums text-foreground">
               {loading ? '…' : row.playlists}
             </p>
           </div>
           <div>
             <p className="text-[10px] font-medium text-muted-foreground">{t('card.online')}</p>
-            <p className="font-mono text-sm font-semibold tabular-nums text-foreground dark:text-white">
+            <p className="mt-2 font-mono text-sm font-semibold tabular-nums text-foreground">
               {loading ? '…' : row.screenStatus.online}
             </p>
           </div>
@@ -445,32 +445,32 @@ export function ClientHomeDashboard() {
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       {workspaceId && currentWsRow ? (
         <motion.section
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
-          className="vc-card-surface rounded-3xl border border-[#FF6B00]/15 p-6 sm:p-8 dark:border-white/10"
+          className="vc-card-surface rounded-xl border border-border bg-card p-6 sm:p-8"
         >
           <p className="vc-page-kicker">{tWs('kicker')}</p>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight text-foreground dark:text-white">
+          <h2 className="mt-2 text-xl font-semibold tracking-tight text-foreground">
             {tWs('title', { name: currentWsName || currentWsRow.name })}
           </h2>
           <div className="mt-6 grid gap-6 sm:grid-cols-2">
-            <div className="rounded-2xl border border-border/60 bg-muted/15 p-5 dark:border-white/10">
+            <div className="rounded-xl border border-border bg-muted/20 p-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                 {tWs('screensLabel')}
               </p>
-              <p className="mt-2 font-mono-nums text-3xl font-bold tabular-nums text-foreground dark:text-white">
+              <p className="mt-2 font-mono-nums text-3xl font-bold tabular-nums text-foreground">
                 {loading ? '…' : tWs('screensValue', { count: currentWsRow.screens })}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-muted/15 p-5 dark:border-white/10">
+            <div className="rounded-xl border border-border bg-muted/20 p-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                 {tWs('storageLabel')}
               </p>
-              <p className="mt-2 text-sm text-foreground dark:text-white">
+              <p className="mt-2 text-sm text-foreground ">
                 {loading
                   ? '…'
                   : storageQuota != null && storageQuota > 0
@@ -484,7 +484,7 @@ export function ClientHomeDashboard() {
               </p>
               {storagePct != null ? (
                 <div
-                  className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10"
+                  className="mt-4 h-2 w-full overflow-hidden rounded-full bg-muted"
                   role="progressbar"
                   aria-valuemin={0}
                   aria-valuemax={100}
@@ -492,7 +492,7 @@ export function ClientHomeDashboard() {
                   aria-label={tWs('storageBarAria')}
                 >
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#FF6B00] to-amber-400 transition-[width] duration-500"
+                    className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-[width] duration-500"
                     style={{ width: `${storagePct}%` }}
                   />
                 </div>
@@ -505,13 +505,15 @@ export function ClientHomeDashboard() {
       ) : null}
 
       <section className="space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
-            {t('totalsTitle')}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t('totalsSub')}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight text-foreground ">
+              {t('totalsTitle')}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t('totalsSub')}</p>
+          </div>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
           {[
             {
               label: t('totalBranches'),
@@ -549,29 +551,29 @@ export function ClientHomeDashboard() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 * i, duration: 0.35 }}
-              className="vc-card-surface rounded-2xl border border-[#FF6B00]/10 p-5 dark:border-white/10"
+              className="vc-card-surface rounded-xl border border-border bg-card p-5"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                     {item.label}
                   </p>
-                  <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground dark:text-white">
+                  <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground ">
                     {item.value}
                   </p>
                 </div>
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FF6B00]/12 ring-1 ring-[#FF6B00]/25">
-                  <item.icon className="h-5 w-5 text-[#FF6B00]" strokeWidth={ICON_STROKE} />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
+                  <item.icon className="h-[18px] w-[18px] text-primary" strokeWidth={ICON_STROKE} />
                 </div>
               </div>
             </motion.div>
           ))}
         </div>
-        <div className="rounded-2xl border border-[#FF6B00]/15 bg-[#FF6B00]/[0.04] p-4">
+        <div className="rounded-xl border border-primary/15 bg-primary/[0.03] p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             {t('screenStatusSummary')}
           </p>
-          <p className="mt-2 text-sm text-foreground dark:text-white">
+          <p className="mt-2 text-sm text-foreground ">
             {t('screenStatusValues', {
               online: totals.screenStatus.online,
               offline: totals.screenStatus.offline,
@@ -582,11 +584,13 @@ export function ClientHomeDashboard() {
       </section>
 
       <section className="space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
-            {t('branchesTitle')}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t('branchesSub')}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight text-foreground ">
+              {t('branchesTitle')}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t('branchesSub')}</p>
+          </div>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-3">
           {(insights?.branches ?? []).map((row, i: number) => {
@@ -607,8 +611,8 @@ export function ClientHomeDashboard() {
                 transition={{ delay: 0.04 * i, duration: 0.35 }}
                 className={cn(
                   cardChrome,
-                  'bg-gradient-to-br from-card/90 via-card/50 to-[#0F1729]/25 dark:from-[#0F1729]/80 dark:via-[#0B1220]/50 dark:to-black/20',
-                  selected && 'ring-2 ring-[#FF6B00]/70 ring-offset-2 ring-offset-background dark:ring-offset-[#0B1220]',
+                  'bg-gradient-to-br from-card via-card to-primary/[0.03]',
+                  selected && 'ring-2 ring-primary/50 ring-offset-2 ring-offset-background',
                 )}
                 onClick={() => setSelectedBranch(row)}
                 onKeyDown={(e) => {
@@ -625,7 +629,7 @@ export function ClientHomeDashboard() {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="absolute end-2 top-2 z-20 h-9 w-9 rounded-xl text-muted-foreground hover:bg-[#FF6B00]/12 hover:text-foreground"
+                        className="absolute end-2 top-2 z-20 h-8 w-8 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary"
                         aria-label={t('branchCardActionsAria')}
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -688,7 +692,7 @@ export function ClientHomeDashboard() {
                   <div className="min-w-0 flex-1">
                     <Link
                       href={branchHref as Route}
-                      className="block truncate font-semibold text-foreground underline-offset-4 hover:underline dark:text-white"
+                      className="block truncate font-semibold text-foreground underline-offset-4 hover:underline "
                       aria-label={t('openBranchAria', { name: w.name })}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -708,7 +712,7 @@ export function ClientHomeDashboard() {
                     {t(`health.${h}`)}
                   </span>
                 </div>
-                <div className="relative z-[1] mt-4 grid grid-cols-3 gap-2 border-t border-white/10 pt-4 text-center">
+                <div className="relative z-[1] mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
                   <div>
                     <p className="text-[10px] font-medium text-muted-foreground">{t('card.screens')}</p>
                     <p className="font-mono text-sm font-semibold tabular-nums">
@@ -728,7 +732,7 @@ export function ClientHomeDashboard() {
                     </p>
                   </div>
                 </div>
-                <div className="relative z-[1] mt-2 grid grid-cols-2 gap-2 border-t border-white/10 pt-3 text-center">
+                <div className="relative z-[1] mt-2 grid grid-cols-2 gap-2 border-t border-border pt-3 text-center">
                   <div>
                     <p className="text-[10px] font-medium text-muted-foreground">{t('card.storage')}</p>
                     <p className="font-mono text-xs font-semibold tabular-nums">
@@ -747,8 +751,8 @@ export function ClientHomeDashboard() {
           })}
         </div>
 
-        <div className="vc-card-surface rounded-2xl border border-[#FF6B00]/15 p-5 dark:border-white/10 sm:p-6">
-          <h3 className="text-base font-semibold tracking-tight text-foreground dark:text-white">
+        <div className="vc-card-surface rounded-xl border border-border bg-card p-5 sm:p-6">
+          <h3 className="text-base font-semibold tracking-tight text-foreground ">
             {t('branchPanelTitle')}
           </h3>
           {selectedBranch ? (
@@ -782,7 +786,7 @@ export function ClientHomeDashboard() {
             </Button>
             <Button
               type="button"
-              className="rounded-xl bg-[#FF6B00] font-semibold text-amber-950"
+              className="rounded-lg bg-primary font-semibold text-white hover:bg-primary/90"
               disabled={renameBusy || !renameValue.trim() || renameValue.trim().length < 2}
               onClick={() => void submitRename()}
             >

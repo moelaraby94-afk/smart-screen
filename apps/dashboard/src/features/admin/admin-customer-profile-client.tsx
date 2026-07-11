@@ -122,7 +122,7 @@ function lifecycleBadge(lifecycle: Lifecycle, t: (key: string) => string) {
   }
   if (lifecycle === 'trial') {
     return (
-      <span className="rounded-full border border-[#FF6B00]/45 bg-[#FF6B00]/12 px-3 py-1 text-xs font-semibold text-[#FF6B00]">
+      <span className="rounded-full border border-primary/45 bg-primary/12 px-3 py-1 text-xs font-semibold text-primary">
         {t('lifecycle.trial')}
       </span>
     );
@@ -334,12 +334,12 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
 
   if (!data) {
     return (
-      <div className="rounded-3xl border border-[#FF6B00]/15 bg-muted/20 p-8 text-center">
+      <div className="rounded-2xl border border-border bg-muted/20 p-8 text-center">
         <p className="text-sm text-muted-foreground">{t('notFound')}</p>
         <Button
           type="button"
           variant="outline"
-          className="mt-4 rounded-2xl border-[#FF6B00]/30"
+          className="mt-4 rounded-xl border-border"
           onClick={() => router.push(`/${locale}/admin/customers` as Route)}
         >
           {t('backToHub')}
@@ -357,7 +357,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <Link
           href={`/${locale}/admin/customers`}
-          className="inline-flex items-center gap-2 text-sm font-medium text-[#94A3B8] transition hover:text-[#FF6B00]"
+          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition hover:text-primary"
         >
           <ArrowLeft className="h-4 w-4" />
           {t('linkHub')}
@@ -366,7 +366,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
           <Button
             type="button"
             variant="outline"
-            className="rounded-2xl border-[#FF6B00]/35 bg-[#FF6B00]/5 hover:bg-[#FF6B00]/10"
+            className="rounded-xl border-primary/35 bg-primary/5 hover:bg-primary/10"
             disabled={sendingReminder}
             onClick={() => void sendReminder()}
           >
@@ -393,8 +393,8 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
             className={cn(
               'shrink-0 rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition-all sm:px-4',
               activeTab === tabId
-                ? 'border-[#FF6B00]/55 bg-[#FF6B00]/15 text-[#FF6B00] shadow-[0_0_24px_-8px_rgba(255,107,0,0.45)]'
-                : 'border-white/10 bg-card/30 text-muted-foreground hover:border-[#FF6B00]/30 hover:text-foreground',
+                ? 'border-primary/55 bg-primary/15 text-primary shadow-sm'
+                : 'border-border bg-card/30 text-muted-foreground hover:border-primary/30 hover:text-foreground',
             )}
           >
             {tabId === 'overview' && t('tabs.overview')}
@@ -412,11 +412,11 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
           aria-labelledby="customer-tab-overview"
           className="space-y-6"
         >
-          <section className="relative overflow-hidden rounded-3xl border border-[#FF6B00]/20 bg-gradient-to-br from-[#1a1208] via-card to-[#0f0a14] p-4 shadow-[0_0_60px_-20px_rgba(255, 107, 0,0.35)] sm:p-6 md:p-8">
-        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#FF6B00]/10 blur-3xl" />
+          <section className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6 md:p-8">
+        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
         <div className="relative flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="space-y-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#94A3B8]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
               {t('heroKicker')}
             </p>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -426,29 +426,29 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
               {lifecycleBadge(data.customerLifecycle, t)}
             </div>
             {data.businessName ? (
-              <p className="text-sm font-medium text-[#FF6B00]/90">{data.businessName}</p>
+              <p className="text-sm font-medium text-primary">{data.businessName}</p>
             ) : null}
             <div className="grid gap-2 text-sm sm:grid-cols-2">
               <div className="flex items-start gap-2 text-muted-foreground">
-                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[#FF6B00]/80" />
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary/80" />
                 <span className="font-mono text-xs text-foreground/90">{data.email}</span>
               </div>
               {data.phone ? (
                 <div className="flex items-start gap-2 text-muted-foreground">
-                  <Phone className="mt-0.5 h-4 w-4 shrink-0 text-[#FF6B00]/80" />
+                  <Phone className="mt-0.5 h-4 w-4 shrink-0 text-primary/80" />
                   <span className="text-foreground/90">{data.phone}</span>
                 </div>
               ) : null}
               {(data.country || data.city) && (
                 <div className="flex items-start gap-2 text-muted-foreground sm:col-span-2">
-                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#FF6B00]/80" />
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary/80" />
                   <span className="text-foreground/90">
                     {[data.city, data.country].filter(Boolean).join(', ')}
                   </span>
                 </div>
               )}
               <div className="flex items-start gap-2 text-muted-foreground">
-                <User className="mt-0.5 h-4 w-4 shrink-0 text-[#FF6B00]/80" />
+                <User className="mt-0.5 h-4 w-4 shrink-0 text-primary/80" />
                 <span>
                   {t('accountLabel')}:{' '}
                   <span className="text-foreground/90">
@@ -457,7 +457,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
                 </span>
               </div>
               <div className="flex items-start gap-2 text-muted-foreground">
-                <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-[#FF6B00]/80" />
+                <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-primary/80" />
                 <span>
                   {t('joined')}{' '}
                   {new Date(data.createdAt).toLocaleDateString(undefined, {
@@ -466,10 +466,10 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
                 </span>
               </div>
               <div className="flex items-start gap-2 text-muted-foreground sm:col-span-2">
-                <Gauge className="mt-0.5 h-4 w-4 shrink-0 text-[#FF6B00]/80" />
+                <Gauge className="mt-0.5 h-4 w-4 shrink-0 text-primary/80" />
                 <span>
                   {t('plan')}:{' '}
-                  <span className="font-medium text-[#FF6B00]/90">
+                  <span className="font-medium text-primary/90">
                     {data.subscriptionStatus === 'ACTIVE'
                       ? t('subscriptionPlan.ACTIVE')
                       : data.subscriptionStatus === 'TRIAL'
@@ -491,13 +491,13 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
             </div>
           </div>
 
-          <div className="grid min-w-[220px] gap-3 rounded-2xl border border-[#FF6B00]/15 bg-black/20 p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#94A3B8]">
+          <div className="grid min-w-[220px] gap-3 rounded-2xl border border-border/15 bg-muted/30 p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               {t('usageTitle')}
             </p>
             <div className="flex items-center justify-between gap-4">
               <span className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Monitor className="h-4 w-4 text-[#FF6B00]" />
+                <Monitor className="h-4 w-4 text-primary" />
                 {t('screens')}
               </span>
               <span className="font-mono text-lg font-semibold tabular-nums text-foreground">
@@ -506,10 +506,10 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
             </div>
             <div className="flex items-center justify-between gap-4">
               <span className="flex items-center gap-2 text-sm text-muted-foreground">
-                <HardDrive className="h-4 w-4 text-[#FF6B00]" />
+                <HardDrive className="h-4 w-4 text-primary" />
                 {t('storage')}
               </span>
-              <span className="font-mono text-lg font-semibold tabular-nums text-[#FF6B00]">
+              <span className="font-mono text-lg font-semibold tabular-nums text-primary">
                 {formatBytes(data.usage.totalStorageBytes)}
               </span>
             </div>
@@ -517,38 +517,38 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
         </div>
       </section>
 
-          <section className="rounded-3xl border border-[#FF6B00]/15 bg-muted/15 p-4 sm:p-6">
+          <section className="rounded-3xl border border-border/15 bg-muted/15 p-4 sm:p-6">
             <div className="mb-4 flex items-center gap-2">
-              <LayoutGrid className="h-5 w-5 shrink-0 text-[#FF6B00]" />
+              <LayoutGrid className="h-5 w-5 shrink-0 text-primary" />
               <h2 className="text-lg font-semibold tracking-tight">{t('overviewKpiTitle')}</h2>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-2xl border border-[#FF6B00]/10 bg-muted/25 p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">
+              <div className="rounded-2xl border border-border/10 bg-muted/25 p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {t('kpiBranches')}
                 </p>
                 <p className="mt-1 font-mono text-2xl font-semibold tabular-nums text-foreground">
                   {data.branches.length}
                 </p>
               </div>
-              <div className="rounded-2xl border border-[#FF6B00]/10 bg-muted/25 p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">
+              <div className="rounded-2xl border border-border/10 bg-muted/25 p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {t('screens')}
                 </p>
                 <p className="mt-1 font-mono text-2xl font-semibold tabular-nums text-foreground">
                   {data.usage.totalScreens}
                 </p>
               </div>
-              <div className="rounded-2xl border border-[#FF6B00]/10 bg-muted/25 p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">
+              <div className="rounded-2xl border border-border/10 bg-muted/25 p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {t('kpiPlaylists')}
                 </p>
                 <p className="mt-1 font-mono text-2xl font-semibold tabular-nums text-foreground">
                   {data.analytics.totalPlaylists}
                 </p>
               </div>
-              <div className="rounded-2xl border border-[#FF6B00]/10 bg-muted/25 p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">
+              <div className="rounded-2xl border border-border/10 bg-muted/25 p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {t('kpiMediaItems')}
                 </p>
                 <p className="mt-1 font-mono text-2xl font-semibold tabular-nums text-foreground">
@@ -567,9 +567,9 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
           aria-labelledby="customer-tab-subscription"
           className="space-y-6"
         >
-      <section className="rounded-3xl border border-[#FF6B00]/15 bg-muted/15 p-4 shadow-inner sm:p-6">
+      <section className="rounded-3xl border border-border/15 bg-muted/15 p-4 shadow-inner sm:p-6">
         <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold tracking-tight">
-          <Gauge className="h-5 w-5 text-[#FF6B00]" />
+          <Gauge className="h-5 w-5 text-primary" />
           {t('subscriptionTitle')}
         </h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -580,8 +580,8 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
               value={subStatus}
               onChange={(e) => setSubStatus(e.target.value as SubStatus)}
               className={cn(
-                'flex h-10 w-full rounded-xl border border-[#FF6B00]/25 bg-background px-3 text-sm',
-                'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B00]/40',
+                'flex h-10 w-full rounded-xl border border-primary/25 bg-background px-3 text-sm',
+                'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
               )}
             >
               <option value="ACTIVE">{t('subscriptionPlan.ACTIVE')}</option>
@@ -604,7 +604,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
             <label className="flex cursor-pointer items-center gap-2 text-sm">
               <input
                 type="checkbox"
-                className="h-4 w-4 rounded border-[#FF6B00]/40"
+                className="h-4 w-4 rounded border-primary/40"
                 checked={accountEnabled}
                 onChange={(e) => setAccountEnabled(e.target.checked)}
               />
@@ -612,7 +612,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
             </label>
             <Button
               type="button"
-              className="rounded-2xl bg-[#FF6B00] font-semibold text-amber-950 hover:bg-[#FF6B00]/90"
+              className="rounded-xl font-semibold" variant="cta"
               disabled={savingSub}
               onClick={() => void saveSubscription()}
             >
@@ -631,38 +631,38 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
           aria-labelledby="customer-tab-usage"
           className="space-y-6"
         >
-      <section className="rounded-3xl border border-[#FF6B00]/15 bg-card/40 p-4 sm:p-6">
+      <section className="rounded-3xl border border-border/15 bg-card/40 p-4 sm:p-6">
         <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold tracking-tight">
-          <BarChart3 className="h-5 w-5 text-[#FF6B00]" />
+          <BarChart3 className="h-5 w-5 text-primary" />
           {t('analyticsTitle')}
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl border border-[#FF6B00]/10 bg-muted/20 p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">
+          <div className="rounded-2xl border border-border/10 bg-muted/20 p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               {t('playlists')}
             </p>
             <p className="mt-1 font-mono text-2xl font-semibold tabular-nums">
               {data.analytics.totalPlaylists}
             </p>
           </div>
-          <div className="rounded-2xl border border-[#FF6B00]/10 bg-muted/20 p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">
+          <div className="rounded-2xl border border-border/10 bg-muted/20 p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               {t('mediaFiles')}
             </p>
             <p className="mt-1 font-mono text-2xl font-semibold tabular-nums">
               {data.analytics.totalMedia}
             </p>
           </div>
-          <div className="rounded-2xl border border-[#FF6B00]/10 bg-muted/20 p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">
+          <div className="rounded-2xl border border-border/10 bg-muted/20 p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               {t('mediaStorage')}
             </p>
-            <p className="mt-1 font-mono text-xl font-semibold tabular-nums text-[#FF6B00]">
+            <p className="mt-1 font-mono text-xl font-semibold tabular-nums text-primary">
               {formatBytes(data.analytics.totalMediaBytes)}
             </p>
           </div>
-          <div className="rounded-2xl border border-[#FF6B00]/10 bg-muted/20 p-4 sm:col-span-2 lg:col-span-1">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">
+          <div className="rounded-2xl border border-border/10 bg-muted/20 p-4 sm:col-span-2 lg:col-span-1">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               {t('screensByStatus')}
             </p>
             {statusEntries.length === 0 ? (
@@ -693,13 +693,13 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-[#FF6B00]" />
+            <Building2 className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-semibold tracking-tight">{t('branchesTitle')}</h2>
           </div>
           <Button
             type="button"
             size="sm"
-            className="rounded-xl bg-[#FF6B00] font-semibold text-amber-950 hover:bg-[#FF6B00]/90"
+            className="rounded-xl font-semibold" variant="cta"
             onClick={() => {
               setAddName('');
               setAddOpen(true);
@@ -727,7 +727,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
                     <TableCell>
                       <Link
                         href={`/${locale}/admin/customers/${customerId}/workspace/${b.id}` as Route}
-                        className="group block max-w-[min(100%,280px)] rounded-lg outline-none ring-offset-background transition hover:text-[#FF6B00] focus-visible:ring-2 focus-visible:ring-[#FF6B00]/40"
+                        className="group block max-w-[min(100%,280px)] rounded-lg outline-none ring-offset-background transition hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/40"
                         aria-label={t('openBranchDetails')}
                       >
                         <p className="font-medium group-hover:underline">{b.name}</p>
@@ -749,7 +749,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="rounded-lg border-[#FF6B00]/30 px-2"
+                          className="rounded-lg border-primary/30 px-2"
                           onClick={() => {
                             setEditWs(b);
                             setEditName(b.name);
@@ -769,7 +769,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
                         <Button
                           type="button"
                           size="sm"
-                          className="rounded-lg bg-[#FF6B00] px-2 font-semibold text-amber-950 hover:bg-[#FF6B00]/90"
+                          className="rounded-lg px-2 font-semibold" variant="cta"
                           disabled={impersonatingWs === b.id}
                           onClick={() => void impersonateBranch(b.id)}
                         >
@@ -809,7 +809,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
               {t('cancel')}
             </Button>
             <Button
-              className="rounded-2xl bg-[#FF6B00] font-semibold text-amber-950 hover:bg-[#FF6B00]/90"
+              className="rounded-xl font-semibold" variant="cta"
               disabled={adding}
               onClick={() => void createBranch()}
             >
@@ -837,7 +837,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
               {t('cancel')}
             </Button>
             <Button
-              className="rounded-2xl bg-[#FF6B00] font-semibold text-amber-950 hover:bg-[#FF6B00]/90"
+              className="rounded-xl font-semibold" variant="cta"
               disabled={savingWs}
               onClick={() => void saveBranchName()}
             >

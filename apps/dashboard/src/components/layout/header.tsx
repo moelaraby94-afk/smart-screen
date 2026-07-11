@@ -50,8 +50,8 @@ export function ShellHeader({
       variant="outline"
       size="icon"
       className={cn(
-        'h-8 w-8 shrink-0 rounded-full border-white/20 bg-white/60 backdrop-blur-sm transition-all dark:border-white/15 dark:bg-[#1B254B]/35',
-        'text-brand-orange hover:bg-white/80 dark:text-brand-orange dark:hover:bg-white/10',
+        'h-8 w-8 shrink-0 rounded-lg border-border bg-card transition-all',
+        'text-foreground hover:bg-muted',
         rtl && 'rotate-180',
       )}
       asChild
@@ -73,8 +73,8 @@ export function ShellHeader({
       {kicker ? (
         <p
           className={cn(
-            'text-[7px] font-semibold uppercase tracking-[0.2em] sm:text-[8px]',
-            'text-[#1B254B]/70 dark:text-white/60',
+            'text-[11px] font-semibold uppercase tracking-[0.16em]',
+            'text-muted-foreground',
           )}
         >
           {kicker}
@@ -84,8 +84,7 @@ export function ShellHeader({
         className={cn(
           'shell-header-title w-full truncate text-[15px] font-bold leading-tight tracking-tight sm:text-[17px]',
           headerInset && 'max-w-[10rem] sm:max-w-[14rem] lg:max-w-[18rem]',
-          'text-[#1B254B] dark:text-white',
-          'transition-colors',
+          'text-foreground',
         )}
       >
         {pageTitle}
@@ -98,20 +97,20 @@ export function ShellHeader({
       type="button"
       variant="outline"
       size="icon"
-      className="z-[80] h-8 w-8 shrink-0 rounded-full border-white/20 bg-white/60 backdrop-blur-sm dark:border-white/15 dark:bg-[#1B254B]/35 sm:h-9 sm:w-9 lg:hidden"
+      className="z-[80] h-8 w-8 shrink-0 rounded-lg border-border bg-card text-foreground hover:bg-muted sm:h-9 sm:w-9 lg:hidden"
       onClick={onToggleMobileNav}
       aria-label={t('toggleMenu')}
     >
       {mobileNavOpen ? (
-        <X className="h-4 w-4 text-[#1B254B] dark:text-white" strokeWidth={ICON_STROKE} />
+        <X className="h-4 w-4 text-foreground" strokeWidth={ICON_STROKE} />
       ) : (
-        <Menu className="h-4 w-4 text-[#1B254B] dark:text-white" strokeWidth={ICON_STROKE} />
+        <Menu className="h-4 w-4 text-foreground" strokeWidth={ICON_STROKE} />
       )}
     </Button>
   );
 
   const mobileLogo = (
-    <div className="flex h-9 items-center rounded-full border border-white/20 bg-white/60 px-3 backdrop-blur-sm dark:border-white/15 dark:bg-[#1B254B]/35 lg:hidden">
+    <div className="flex h-9 items-center rounded-lg border border-border bg-card px-3 lg:hidden">
       <ShellLogo locale={navLocale} className="max-h-[28px] max-w-[120px]" />
     </div>
   );
@@ -126,17 +125,27 @@ export function ShellHeader({
   return (
     <header
       className={cn(
-        'relative sticky top-0 z-[55] flex min-h-[52px] shrink-0 flex-col border-b-0',
-        'bg-transparent supports-[backdrop-filter]:bg-white/[0.04] supports-[backdrop-filter]:backdrop-blur-[2px]',
-        'dark:bg-transparent dark:supports-[backdrop-filter]:bg-[rgb(27_37_75_/0.06)]',
+        'relative sticky top-0 z-[55] flex min-h-[52px] shrink-0 flex-col',
+        'border-b border-border bg-background/80 backdrop-blur-md',
       )}
     >
       <div className="relative z-[3] mx-auto flex min-h-[52px] w-full max-w-[1600px] items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-10">
-        <div className="flex shrink-0 items-center">
-          {mobileLogo}
+        <div className="flex shrink-0 items-center lg:hidden">
+          {menuBtn}
         </div>
 
-        {/* Desktop title row only. Mobile/tablet header hides page title by request. */}
+        {/* Mobile/tablet: show page title between menu and actions */}
+        <div
+          dir={rtl ? 'rtl' : 'ltr'}
+          className={cn(
+            'flex min-w-0 flex-1 flex-row items-center gap-2 lg:hidden',
+          )}
+        >
+          {backBtn}
+          {titleBlock}
+        </div>
+
+        {/* Desktop: full title row with inset */}
         <div
           dir={rtl ? 'rtl' : 'ltr'}
           className={cn(
@@ -153,8 +162,9 @@ export function ShellHeader({
           ) : null}
         </div>
 
-        <div className="flex shrink-0 items-center">
-          {menuBtn}
+        {/* Mobile logo — hidden on desktop, hidden when nav is open on mobile */}
+        <div className={cn('hidden', 'lg:hidden')}>
+          {mobileLogo}
         </div>
 
         {desktopActions}
@@ -162,17 +172,13 @@ export function ShellHeader({
       {headerInset ? (
         <div
           dir={rtl ? 'rtl' : 'ltr'}
-          className="border-b border-[#FF6B00]/10 bg-background/40 px-3 py-2 backdrop-blur-sm supports-[backdrop-filter]:bg-white/[0.03] dark:border-white/10 dark:supports-[backdrop-filter]:bg-[rgb(27_37_75_/0.12)] lg:hidden"
+          className="border-b border-border bg-muted/30 px-3 py-2 lg:hidden"
         >
           <div className="mx-auto flex w-full max-w-[1600px] justify-center overflow-x-auto sm:px-3">
             {headerInset}
           </div>
         </div>
       ) : null}
-      <div
-        className="pointer-events-none h-px w-full shrink-0 bg-[#FF6B00] shadow-[0_0_10px_#FF6B00]"
-        aria-hidden
-      />
     </header>
   );
 }

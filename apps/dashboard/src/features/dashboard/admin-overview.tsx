@@ -97,8 +97,8 @@ export function AdminOverview({ locale }: Props) {
           value: formatUsd(stats.revenueUsdPlaceholder, locale),
           sub: t('cards.revenueSub'),
           icon: DollarSign,
-          accent: 'from-[#FF6B00] to-amber-500',
-          iconText: 'text-amber-950',
+          accent: 'from-primary to-accent',
+          iconText: 'text-white',
           href: `/${locale}/admin/billing`,
         },
         {
@@ -108,7 +108,7 @@ export function AdminOverview({ locale }: Props) {
           ),
           sub: t('cards.activeCustomersSub'),
           icon: Users,
-          accent: 'from-[#FF6B00] to-[#0c1220]',
+          accent: 'from-primary to-primary/70',
           iconText: 'text-white',
           href: `/${locale}/admin/customers`,
         },
@@ -126,7 +126,7 @@ export function AdminOverview({ locale }: Props) {
           value: new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(stats.server.loadAvg1m),
           sub: t('cards.systemHealthSub'),
           icon: Activity,
-          accent: 'from-[#0F1729] to-[#FF6B00]',
+          accent: 'from-primary/80 to-accent/80',
           iconText: 'text-white',
           href: `/${locale}/admin/stats`,
         },
@@ -152,13 +152,13 @@ export function AdminOverview({ locale }: Props) {
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="vc-glass vc-card-surface overflow-hidden rounded-3xl border-[#FF6B00]/20 bg-gradient-to-br from-[#FF6B00]/[0.08] via-transparent to-[#0F1729]/[0.06]"
+        className="vc-card-surface overflow-hidden rounded-2xl border border-border bg-card"
       >
         <div className="border-b border-border/60 px-8 py-10 sm:px-10 sm:py-12">
-          <p className="vc-page-kicker text-[#94A3B8] dark:text-[#FF6B00]">{t('kicker')}</p>
+          <p className="vc-page-kicker text-muted-foreground">{t('kicker')}</p>
           <h1 className="vc-page-title mt-2 max-w-3xl">{t('title')}</h1>
           <p className="vc-page-desc mt-4 max-w-2xl">{t('description')}</p>
-          <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-[#FF6B00]/30 bg-[#FF6B00]/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-900 dark:text-[#FF6B00]">
+          <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
             <Activity className="h-3.5 w-3.5" />
             {t('superAdmin')}
           </div>
@@ -185,15 +185,15 @@ export function AdminOverview({ locale }: Props) {
             <Link
               key={c.label}
               href={c.href as Route}
-              className="block outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B00]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-3xl"
+              className="block outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-2xl"
             >
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05 * i, duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
-                className="vc-card-surface group relative h-full overflow-hidden rounded-3xl p-7 transition hover:border-[#94A3B8]/40 hover:shadow-[0_0_28px_-12px_rgba(184,134,11,0.45)] dark:hover:border-[#FF6B00]/35 dark:hover:shadow-[0_0_32px_-10px_rgba(255, 107, 0,0.22)]"
+                className="vc-card-surface group relative h-full overflow-hidden rounded-2xl border border-border p-7 transition hover:border-primary/30 hover:shadow-md"
               >
-                <div className="absolute -end-6 -top-6 h-24 w-24 rounded-full bg-[#FF6B00]/10 blur-2xl transition group-hover:bg-[#FF6B00]/16" />
+                <div className="absolute -end-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl transition group-hover:bg-primary/15" />
                 <div className="relative flex items-start justify-between gap-4">
                   <div>
                     <p className="vc-page-kicker">{c.label}</p>
@@ -219,7 +219,7 @@ export function AdminOverview({ locale }: Props) {
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="vc-card-surface relative overflow-hidden rounded-3xl border-[#FF6B00]/20 p-7"
+            className="vc-card-surface relative overflow-hidden rounded-2xl border border-border p-7"
           >
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
@@ -251,8 +251,8 @@ export function AdminOverview({ locale }: Props) {
                     }}
                     labelStyle={{ color: 'rgba(255,255,255,0.85)' }}
                   />
-                  <Line type="monotone" dataKey="revenue" stroke="#FF6B00" strokeWidth={3} dot={false} />
-                  <Line type="monotone" dataKey="customers" stroke="#94A3B8" strokeWidth={3} dot={false} />
+                  <Line type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={3} dot={false} />
+                  <Line type="monotone" dataKey="customers" stroke="hsl(var(--muted-foreground))" strokeWidth={3} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -261,7 +261,7 @@ export function AdminOverview({ locale }: Props) {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.06 }}
-            className="vc-card-surface flex flex-col justify-between gap-4 rounded-3xl border border-[#FF6B00]/25 bg-muted/15 p-7"
+            className="vc-card-surface flex flex-col justify-between gap-4 rounded-2xl border border-border bg-muted/15 p-7"
           >
             <div>
               <p className="text-sm font-semibold text-foreground">{t('healthPanel.title')}</p>
@@ -300,7 +300,7 @@ export function AdminOverview({ locale }: Props) {
             </div>
             <Link
               href={`/${locale}/admin/stats`}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-[#94A3B8] dark:text-[#FF6B00] hover:underline"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
             >
               {t('healthPanel.openHealth')}
               <ArrowRight className="h-4 w-4" />

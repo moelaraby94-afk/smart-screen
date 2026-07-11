@@ -57,7 +57,7 @@ export function WorkspaceSwitcher() {
               aria-haspopup="menu"
             >
               <span className="flex min-w-0 flex-1 items-center gap-2.5">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#FF6B00] to-[#CC4400] shadow-sm shadow-[#1B254B]/25">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
                   <BriefcaseBusiness className="h-4 w-4 text-white" strokeWidth={ICON_STROKE} aria-hidden />
                 </span>
                 <span className="min-w-0 flex-1 text-start leading-snug">
@@ -88,7 +88,7 @@ export function WorkspaceSwitcher() {
             sideOffset={8}
             className={cn(
               appDropdownContentClass,
-              'z-[120] border-[#FF6B00]/15 bg-card/98 dark:border-white/10',
+              'z-[120] border-border bg-card',
             )}
             onCloseAutoFocus={(e) => e.preventDefault()}
           >
@@ -104,8 +104,8 @@ export function WorkspaceSwitcher() {
                   <DropdownMenuItem
                     key={workspace.id}
                     className={cn(
-                      'flex cursor-pointer items-start gap-3 rounded-xl px-3 py-2.5 text-[15px]',
-                      active && 'bg-[#FF6B00]/12 text-foreground',
+                      'flex cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5 text-[15px]',
+                      active && 'bg-primary/10 text-foreground',
                     )}
                     onSelect={(event) => {
                       event.preventDefault();
@@ -120,7 +120,7 @@ export function WorkspaceSwitcher() {
                       <span className="truncate font-semibold">{workspace.name}</span>
                     </span>
                     {active ? (
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#FF6B00]" strokeWidth={ICON_STROKE} aria-hidden />
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" strokeWidth={ICON_STROKE} aria-hidden />
                     ) : (
                       <span className="h-4 w-4 shrink-0" aria-hidden />
                     )}
@@ -136,7 +136,7 @@ export function WorkspaceSwitcher() {
           variant="ghost"
           size="icon"
           title={tWs('newWorkspaceTitle')}
-          className="h-10 w-10 shrink-0 rounded-xl border border-[#1B254B]/20 bg-white/40 text-[#1B254B] hover:bg-[#1B254B]/10 dark:border-[#FF6B00]/25 dark:bg-[#1B254B]/40 dark:text-[#FFBB88] dark:hover:bg-[#FF6B00]/10"
+          className="h-9 w-9 shrink-0 rounded-lg border border-border bg-card text-foreground hover:bg-muted"
           onClick={() => setCreateOpen(true)}
           aria-label={tWs('createWorkspaceAria')}
         >

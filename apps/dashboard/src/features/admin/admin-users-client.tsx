@@ -79,7 +79,7 @@ function roleBadge(
 ) {
   if (role === 'SUPER_ADMIN') {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-[#FF6B00]/15 px-2.5 py-0.5 text-xs font-semibold text-amber-900 dark:text-[#FF6B00]">
+      <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-0.5 text-xs font-semibold text-primary">
         <Shield className="h-3 w-3" />
         {t('platformRoles.SUPER_ADMIN')}
       </span>
@@ -87,7 +87,7 @@ function roleBadge(
   }
   if (role === 'ADMIN') {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-[#1B254B]/20 px-2.5 py-0.5 text-xs font-semibold text-[#1B254B] dark:text-orange-200">
+      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
         <UserCircle className="h-3 w-3" />
         {t('platformRoles.ADMIN')}
       </span>
@@ -222,7 +222,7 @@ export function AdminUsersClient() {
 
   return (
     <>
-      <div className="vc-card-surface overflow-hidden rounded-3xl border border-[#FF6B00]/15 shadow-[0_0_40px_-12px_rgba(255, 107, 0,0.25)]">
+      <div className="vc-card-surface overflow-hidden rounded-2xl border border-border shadow-sm">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -336,7 +336,7 @@ export function AdminUsersClient() {
             <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border/80 bg-muted/30 px-4 py-3">
               <input
                 type="checkbox"
-                className="mt-1 h-4 w-4 rounded border-border text-[#FF6B00] focus:ring-[#FF6B00]"
+                className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary"
                 checked={editSuper}
                 onChange={(e) => setEditSuper(e.target.checked)}
                 disabled={editRow?.id === meId}
@@ -353,7 +353,7 @@ export function AdminUsersClient() {
             </Button>
             <Button
               type="button"
-              className="bg-gradient-to-r from-[#FF6B00] to-amber-500 font-semibold text-amber-950 hover:opacity-95"
+              className="font-semibold" variant="cta"
               disabled={saving}
               onClick={() => void saveEdit()}
             >
@@ -392,7 +392,7 @@ export function AdminUsersClient() {
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-xl">{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
-              className="rounded-xl bg-gradient-to-r from-[#FF6B00] to-amber-500 font-semibold text-amber-950"
+              className="rounded-xl font-semibold bg-primary text-white hover:bg-primary/90"
               onClick={() => void confirmImpersonate()}
             >
               {t('continue')}

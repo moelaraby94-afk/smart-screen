@@ -88,13 +88,13 @@ export function TeamClient() {
       <motion.section
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="vc-glass vc-card-surface overflow-hidden rounded-3xl"
+        className="vc-card-surface overflow-hidden rounded-2xl border border-border"
       >
-        <div className="border-b border-border/60 bg-gradient-to-r from-[#0F1729]/12 via-transparent to-[#FF6B00]/10 px-8 py-8">
+        <div className="border-b border-border bg-muted/30 px-8 py-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0F1729] to-[#1e293b] shadow-lg shadow-[#0F1729]/35">
-                <Users className="h-7 w-7 text-white" strokeWidth={1.75} />
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+                <Users className="h-7 w-7 text-primary" strokeWidth={1.75} />
               </div>
               <div>
                 <p className="vc-page-kicker">{t('kicker')}</p>
@@ -110,7 +110,7 @@ export function TeamClient() {
         <div className="grid gap-8 p-8 lg:grid-cols-[1fr_380px]">
           <div>
             <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
-              <Shield className="h-4 w-4 text-[#0F1729]" />
+              <Shield className="h-4 w-4 text-primary" />
               {t('members')}
             </h3>
             {loading ? (
@@ -131,8 +131,8 @@ export function TeamClient() {
                         className={cn(
                           'rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide',
                           m.role === 'OWNER'
-                            ? 'bg-[#FF6B00]/20 text-amber-900 dark:text-amber-100'
-                            : 'bg-[#0F1729]/15 text-[#0F1729] dark:text-orange-200',
+                            ? 'bg-primary/15 text-primary'
+                            : 'bg-muted text-muted-foreground',
                         )}
                       >
                         {m.role}
@@ -147,9 +147,9 @@ export function TeamClient() {
             )}
           </div>
 
-          <div className="rounded-3xl border border-[#0F1729]/20 bg-gradient-to-b from-card to-muted/10 p-6 shadow-inner">
+          <div className="rounded-2xl border border-border bg-muted/20 p-6">
             <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold">
-              <UserPlus className="h-4 w-4 text-[#FF6B00]" />
+              <UserPlus className="h-4 w-4 text-primary" />
               {t('inviteTeammate')}
             </h3>
             <div className="space-y-4">
@@ -181,7 +181,7 @@ export function TeamClient() {
               </div>
               <Button
                 type="button"
-                className="w-full rounded-2xl bg-gradient-to-r from-[#FF6B00] to-[#CC4400] font-semibold shadow-md"
+                className="w-full rounded-xl font-semibold" variant="cta"
                 onClick={() => void sendInvite()}
                 disabled={sending}
               >

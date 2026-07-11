@@ -15,12 +15,11 @@ import {
 import { readApiError } from '@/features/api/api-error';
 import { useApiErrorMessage } from '@/features/api/use-api-error-message';
 import { useWorkspace } from '@/features/workspace/workspace-context';
-import { cn } from '@/lib/utils';
 
 type LoginFormProps = {
-  /** Dark glass login page (full-screen auth). */
+  /** Kept for API compatibility — no longer used. */
   variant?: 'default' | 'dark';
-  /** Split hero + form layout (login page provides columns). */
+  /** Kept for API compatibility — no longer used. */
   layout?: 'card' | 'split';
 };
 
@@ -34,8 +33,8 @@ const showDevTools =
   process.env.NODE_ENV === 'development' ||
   process.env.NEXT_PUBLIC_ENABLE_DEV_LOGIN === 'true';
 
-const glassInputDark =
-  'h-12 rounded-xl border border-white/10 bg-[#1B254B]/55 text-[15px] text-white shadow-inner shadow-black/40 backdrop-blur-xl placeholder:text-white/35 focus-visible:border-[#FF6B00]/55 focus-visible:ring-2 focus-visible:ring-[#FF6B00]/25';
+const nimbusInput =
+  'h-11 rounded-xl border border-border bg-card text-[15px] text-foreground placeholder:text-muted-foreground/50 focus-visible:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20';
 
 export function LoginForm({
   variant = 'default',
@@ -127,18 +126,15 @@ export function LoginForm({
     }
   };
 
-  const dark = variant === 'dark';
-  const split = layout === 'split' && dark;
+  const dark = false;
+  const split = false;
 
   return (
     <div className="space-y-6">
       <form className="space-y-5" onSubmit={onSubmit}>
         <div className="space-y-2">
           <label
-            className={cn(
-              'text-[13px] font-medium',
-              dark ? 'text-white/75' : 'text-foreground',
-            )}
+            className="text-[13px] font-medium text-foreground"
             htmlFor="email"
           >
             {t('email')}
@@ -151,15 +147,12 @@ export function LoginForm({
             required
             autoComplete="username"
             placeholder={t('emailPlaceholder')}
-            className={cn(split ? glassInputDark : dark ? glassInputDark : undefined)}
+            className={nimbusInput}
           />
         </div>
         <div className="space-y-2">
           <label
-            className={cn(
-              'text-[13px] font-medium',
-              dark ? 'text-white/75' : 'text-foreground',
-            )}
+            className="text-[13px] font-medium text-foreground"
             htmlFor="password"
           >
             {t('password')}
@@ -171,41 +164,30 @@ export function LoginForm({
             onChange={(event) => setPassword(event.target.value)}
             required
             autoComplete="current-password"
-            className={cn(split ? glassInputDark : dark ? glassInputDark : undefined)}
+            className={nimbusInput}
           />
         </div>
         {error ? (
-          <p
-            className={cn(
-              'text-sm',
-              dark ? 'text-red-300' : 'text-red-600 dark:text-red-400',
-            )}
-          >
-            {error}
-          </p>
+          <p className="text-sm text-destructive">{error}</p>
         ) : null}
         <div className="flex flex-wrap justify-between gap-2 text-xs">
           <Link
             href={`/${activeLocale}/forgot-password` as Route}
-            className={dark ? 'text-[#FF6B00]/90 hover:underline' : 'text-primary hover:underline'}
+            className="font-medium text-primary underline-offset-4 hover:underline"
           >
             {t('forgotPassword')}
           </Link>
           <Link
             href={`/${activeLocale}/register` as Route}
-            className={dark ? 'text-white/50 hover:text-white/80' : 'text-muted-foreground hover:text-foreground'}
+            className="font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
           >
             {t('createAccount')}
           </Link>
         </div>
         <Button
-          className={
-            dark
-              ? 'h-12 w-full rounded-xl bg-gradient-to-r from-[#FF6B00] to-[#CC4400] font-semibold text-white shadow-lg shadow-[#FF6B00]/25 hover:opacity-[0.97]'
-              : 'w-full'
-          }
+          className="h-11 w-full rounded-xl font-semibold"
           type="submit"
-          variant={dark ? 'default' : 'cta'}
+          variant="cta"
           disabled={pending}
         >
           {pending ? t('signingIn') : t('signIn')}
@@ -213,30 +195,14 @@ export function LoginForm({
       </form>
 
       {showDevTools ? (
-        <div
-          className={
-            dark
-              ? 'rounded-2xl border border-dashed border-[#FF6B00]/30 bg-[#FF6B00]/[0.06] p-4'
-              : 'rounded-2xl border border-dashed border-[#FF6B00]/40 bg-[#FF6B00]/5 p-4'
-          }
-        >
-          <p
-            className={
-              dark
-                ? 'text-xs font-medium text-[#FF6B00]/90'
-                : 'text-xs font-medium text-[#CC4400] dark:text-[#FF6B00]/90'
-            }
-          >
+        <div className="rounded-xl border border-dashed border-primary/30 bg-primary/[0.04] p-4">
+          <p className="text-xs font-medium text-primary">
             {t('debugDevOnly')}
           </p>
           <Button
             type="button"
             variant="outline"
-            className={
-              dark
-                ? 'mt-3 w-full rounded-xl border-white/15 bg-white/[0.04] text-white hover:bg-white/[0.08]'
-                : 'mt-3 w-full rounded-xl border-amber-500/50'
-            }
+            className="mt-3 w-full rounded-xl"
             disabled={pending}
             onClick={() => void onDevLogin()}
           >

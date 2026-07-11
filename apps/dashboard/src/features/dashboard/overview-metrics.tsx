@@ -105,7 +105,7 @@ export function OverviewMetrics() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.06 * i, duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
-          className="vc-card-surface vc-stat-card-glow group rounded-3xl p-8 transition hover:border-[#FF6B00]/20"
+          className="vc-card-surface vc-stat-card-glow group rounded-2xl border border-border p-8 transition hover:border-primary/20"
         >
           <div className="relative flex items-start justify-between gap-4">
             <div>
@@ -117,7 +117,7 @@ export function OverviewMetrics() {
             </div>
             <div className="vc-icon-glass-circle relative flex h-14 w-14 shrink-0 items-center justify-center ring-1 ring-white/10">
               <metric.icon
-                className="h-[26px] w-[26px] text-[#FF6B00]"
+                className="h-[26px] w-[26px] text-primary"
                 strokeWidth={ICON_STROKE}
               />
             </div>

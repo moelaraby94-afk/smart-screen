@@ -27,13 +27,13 @@ export function WorkspaceWelcome() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          className="vc-glass vc-card-surface relative max-w-lg overflow-hidden rounded-[2rem] p-10 text-center shadow-2xl"
+          className="vc-card-surface relative max-w-lg overflow-hidden rounded-2xl border border-border p-10 text-center shadow-sm"
         >
-          <div className="pointer-events-none absolute -start-20 -top-20 h-56 w-56 rounded-full bg-[#0F1729]/20 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-16 -end-16 h-48 w-48 rounded-full bg-[#FF6B00]/15 blur-3xl" />
+          <div className="pointer-events-none absolute -start-20 -top-20 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-16 -end-16 h-48 w-48 rounded-full bg-accent/10 blur-3xl" />
 
-          <div className="relative mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-[#0F1729] to-[#0c1220] shadow-xl shadow-[#0F1729]/40">
-            <Sparkles className="h-11 w-11 text-[#FF6B00]" strokeWidth={1.5} />
+          <div className="relative mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+            <Sparkles className="h-11 w-11 text-primary" strokeWidth={1.5} />
           </div>
 
           <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
@@ -47,7 +47,7 @@ export function WorkspaceWelcome() {
             <Button
               type="button"
               size="lg"
-              className="h-12 rounded-2xl bg-[#0F1729] px-8 text-base font-semibold text-white shadow-lg shadow-[#0F1729]/35 hover:bg-[#0F1729]/90"
+              className="h-12 rounded-xl px-8 text-base font-semibold" variant="cta"
               onClick={() => setCreateOpen(true)}
             >
               <Building2 className="me-2 h-5 w-5" />

@@ -149,12 +149,12 @@ export function AdminStaffClient() {
 
   return (
     <div className={cn(adminGlassTable.wrap, 'flex flex-col')}>
-      <div className="flex items-center justify-between border-b border-[#FF6B00]/15 bg-card/20 px-4 py-3 backdrop-blur-md sm:px-6">
+      <div className="flex items-center justify-between border-b border-border bg-muted/30 px-4 py-3 sm:px-6">
         <p className="text-sm font-semibold text-muted-foreground">{t('title')}</p>
         <Button
           type="button"
           onClick={() => setCreateOpen(true)}
-          className="rounded-xl bg-[#FF6B00] font-semibold text-amber-950 hover:bg-[#FF6B00]/90"
+          className="rounded-xl font-semibold" variant="cta"
         >
           <Plus className="me-2 h-4 w-4" />
           {t('create')}
@@ -198,9 +198,9 @@ export function AdminStaffClient() {
                   <TableCell className={adminGlassTable.statusCell}>
                     <div className={cn(adminGlassTable.statusInner, 'justify-start sm:ps-1')}>
                       <div className="flex w-full max-w-[280px] items-center gap-2">
-                        <Shield className="h-4 w-4 shrink-0 text-[#FF6B00]" aria-hidden />
+                        <Shield className="h-4 w-4 shrink-0 text-primary" aria-hidden />
                         <select
-                          className="h-10 w-full rounded-xl border border-border bg-card/80 px-3 text-[14px] font-medium shadow-inner outline-none backdrop-blur-sm focus:border-[#FF6B00]/40 focus:ring-2 focus:ring-[#FF6B00]/15"
+                          className="h-10 w-full rounded-xl border border-border bg-background px-3 text-[14px] font-medium outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
                           value={(u?.adminRole as StaffRole) ?? 'VIEWER'}
                           disabled={savingId === u?.id}
                           onChange={(e) => {
@@ -216,7 +216,7 @@ export function AdminStaffClient() {
                           ))}
                         </select>
                         {savingId === u?.id ? (
-                          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-[#FF6B00]" aria-hidden />
+                          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" aria-hidden />
                         ) : null}
                       </div>
                     </div>
@@ -251,12 +251,12 @@ export function AdminStaffClient() {
         </div>
       )}
 
-      <p className="border-t border-[#FF6B00]/10 px-6 py-4 text-[12px] text-muted-foreground">
+      <p className="border-t border-border px-6 py-4 text-[12px] text-muted-foreground">
         {t('footer')}
       </p>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="rounded-3xl border-[#FF6B00]/15 bg-card/95 backdrop-blur-xl">
+        <DialogContent className="rounded-2xl border border-border bg-card">
           <DialogHeader>
             <DialogTitle>{t('createDialog.title')}</DialogTitle>
           </DialogHeader>
@@ -293,7 +293,7 @@ export function AdminStaffClient() {
               {t('createDialog.cancel')}
             </Button>
             <Button
-              className="bg-[#FF6B00] font-semibold text-amber-950 hover:bg-[#FF6B00]/90"
+              className="font-semibold" variant="cta"
               onClick={() => void createStaff()}
               disabled={creating}
             >

@@ -111,19 +111,18 @@ function ScreenVisualCard({
       transition={{ delay: index * 0.04, type: 'spring', stiffness: 420, damping: 28 }}
       whileHover={{ scale: 1.015, y: -2 }}
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-[1.35rem]',
-        'border border-[rgba(147,51,234,0.28)] bg-[hsl(260_32%_11%/0.42)] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.45)] backdrop-blur-[36px]',
-        'ring-1 ring-[rgba(255,107,0,0.18)] transition-[border-color,box-shadow] duration-300',
-        'hover:border-[rgba(255, 107, 0,0.28)] hover:shadow-[0_0_40px_-12px_rgba(255, 107, 0,0.1)]',
+        'group relative flex flex-col overflow-hidden rounded-2xl',
+        'border border-border bg-card shadow-sm',
+        'transition-colors duration-200 hover:border-primary/30 hover:shadow-md',
         reach === 'online' && 'ngl-screen-card-live',
       )}
     >
       <button
         type="button"
         onClick={() => onCardClick(screen)}
-        className="relative block w-full text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F1729]/50"
+        className="relative block w-full text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
       >
-        <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-[#0F1729]/35 via-slate-900/45 to-black/65">
+        <div className="relative aspect-video w-full overflow-hidden bg-muted">
           {previewUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -133,12 +132,12 @@ function ScreenVisualCard({
               className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#0F1729]/25 to-[#0c1220]/40">
+            <div className="flex h-full w-full items-center justify-center bg-muted">
               <Monitor className="h-12 w-12 text-white/25" strokeWidth={1.25} />
             </div>
           )}
           {loading ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-xs font-medium text-white/80 backdrop-blur-[1px]">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-xs font-medium text-foreground backdrop-blur-[1px]">
               {t('loadingPreview')}
             </div>
           ) : null}
@@ -149,14 +148,14 @@ function ScreenVisualCard({
               locale={locale}
             />
           </div>
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-4 pt-10">
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent p-4 pt-10">
             <p className="truncate text-base font-semibold text-white drop-shadow-md">{screen.name}</p>
             <p className="font-mono text-[11px] text-white/70">{screen.serialNumber}</p>
           </div>
         </div>
       </button>
 
-      <div className="flex flex-1 flex-col gap-3 border-t border-white/10 bg-white/[0.04] p-4 dark:bg-black/10">
+      <div className="flex flex-1 flex-col gap-3 border-t border-border bg-card p-4">
         <div className="space-y-1.5">
           <label className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             {t('playbackPlaylist')}
@@ -164,8 +163,8 @@ function ScreenVisualCard({
           <div className="relative">
             <select
               className={cn(
-                'h-10 w-full cursor-pointer appearance-none rounded-xl border border-white/15 bg-black/25 px-3 pe-9 text-[13px] font-medium text-foreground outline-none',
-                'focus-visible:border-[#FF6B00]/50 focus-visible:ring-2 focus-visible:ring-[#FF6B00]/25',
+                'h-10 w-full cursor-pointer appearance-none rounded-xl border border-border bg-background px-3 pe-9 text-[13px] font-medium text-foreground outline-none',
+                'focus-visible:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20',
                 'disabled:cursor-not-allowed disabled:opacity-50',
               )}
               disabled={!canAssignPlayback || assignPlaylistBusy}
@@ -186,7 +185,7 @@ function ScreenVisualCard({
             </select>
             {assignPlaylistBusy ? (
               <span className="pointer-events-none absolute end-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center">
-                <Loader2 className="h-4 w-4 animate-spin text-[#FF6B00]" />
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
               </span>
             ) : null}
           </div>
@@ -198,11 +197,11 @@ function ScreenVisualCard({
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[11rem] rounded-2xl">
+            <DropdownMenuContent align="end" className="min-w-[11rem] rounded-xl">
               <DropdownMenuItem onClick={() => onEdit(screen)}>{t('screenSettings')}</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="text-red-400 focus:text-red-300"
+                className="text-destructive focus:text-destructive"
                 onClick={() => onDelete(screen.id)}
               >
                 {t('deleteScreen')}
@@ -214,7 +213,7 @@ function ScreenVisualCard({
           <Button
             type="button"
             size="sm"
-            className="h-9 flex-1 rounded-xl bg-white/10 text-[13px] font-semibold backdrop-blur-sm hover:bg-white/15"
+            className="h-9 flex-1 rounded-xl text-[13px] font-semibold"
             asChild
           >
             <Link href={`/${locale}/studio` as Route}>
@@ -226,7 +225,7 @@ function ScreenVisualCard({
             type="button"
             size="sm"
             variant="outline"
-            className="h-9 flex-1 rounded-xl border-white/20 bg-white/5 text-[13px] font-medium"
+            className="h-9 flex-1 rounded-xl text-[13px] font-medium"
             onClick={() => onRemote(screen.id, 'refresh_content')}
           >
             <RefreshCw className="me-1.5 h-3.5 w-3.5" />
@@ -236,7 +235,7 @@ function ScreenVisualCard({
             type="button"
             size="sm"
             variant="outline"
-            className="h-9 flex-1 rounded-xl border-red-500/30 bg-red-500/5 text-[13px] font-medium text-red-200 hover:bg-red-500/15"
+            className="h-9 flex-1 rounded-xl border-destructive/30 bg-destructive/5 text-[13px] font-medium text-destructive hover:bg-destructive/10"
             onClick={() => onRemote(screen.id, 'restart')}
           >
             <Power className="me-1.5 h-3.5 w-3.5" />
@@ -395,7 +394,7 @@ export function ScreensClient({ locale }: Props) {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="vc-glass vc-card-surface flex flex-col gap-4 rounded-3xl border border-[rgba(147,51,234,0.22)] p-6 sm:flex-row sm:items-center sm:justify-between"
+        className="vc-card-surface flex flex-col gap-4 rounded-2xl border border-border p-6 sm:flex-row sm:items-center sm:justify-between"
       >
         <div>
           <p className="vc-page-kicker">{t('fleet')}</p>
@@ -408,12 +407,12 @@ export function ScreensClient({ locale }: Props) {
           <p className="font-mono-nums text-xs text-muted-foreground">
             <span className="text-foreground">{new Intl.NumberFormat(locale).format(screens.length)}</span> {t('screensCount')}
           </p>
-          <Button variant="outline" className="rounded-2xl" onClick={() => void reload()}>
+          <Button variant="outline" className="rounded-xl" onClick={() => void reload()}>
             {t('refresh')}
           </Button>
           <Dialog open={openAdd} onOpenChange={setOpenAdd}>
             <DialogTrigger asChild>
-              <Button className="rounded-2xl bg-gradient-to-r from-[#FF6B00] to-[#CC4400] font-semibold shadow-lg shadow-[#0F1729]/30">
+              <Button className="rounded-xl font-semibold" variant="cta">
                 <Plus className="me-2 h-4 w-4" />
                 {t('addScreen')}
               </Button>
@@ -433,14 +432,14 @@ export function ScreensClient({ locale }: Props) {
       {isLoading ? (
         <p className="text-sm text-muted-foreground">{t('loading')}</p>
       ) : screens.length === 0 ? (
-        <div className="vc-card-surface flex flex-col items-center gap-4 rounded-3xl py-16">
-          <Monitor className="h-12 w-12 text-[#0F1729]/40" />
+        <div className="vc-card-surface flex flex-col items-center gap-4 rounded-2xl py-16">
+          <Monitor className="h-12 w-12 text-muted-foreground/40" />
           <p className="font-medium text-foreground">{t('emptyTitle')}</p>
           <p className="max-w-md text-center text-sm text-muted-foreground">
             {t('emptyDescription')}
           </p>
           <Button
-            className="rounded-2xl bg-gradient-to-r from-[#FF6B00] to-[#CC4400] font-semibold shadow-lg shadow-[#0F1729]/30"
+            className="rounded-xl font-semibold" variant="cta"
             onClick={() => setOpenAdd(true)}
           >
             <Plus className="me-2 h-4 w-4" />
@@ -542,7 +541,7 @@ function CreateScreenDialogContent({
   };
 
   return (
-    <DialogContent className="rounded-3xl border-border/80 sm:max-w-md">
+    <DialogContent className="rounded-2xl border-border sm:max-w-md">
       <DialogHeader>
         <DialogTitle>{t('addTitle')}</DialogTitle>
         <DialogDescription>{t('addDescription')}</DialogDescription>
@@ -558,7 +557,7 @@ function CreateScreenDialogContent({
           <Input {...form.register('location')} className="rounded-xl" />
         </FieldInput>
         <DialogFooter>
-          <Button type="submit" className="rounded-2xl bg-[#0F1729] hover:bg-[#0F1729]/90">
+          <Button type="submit" variant="cta" className="rounded-xl">
             {t('create')}
           </Button>
         </DialogFooter>
@@ -608,7 +607,7 @@ function EditScreenDialogContent({
   };
 
   return (
-    <DialogContent className="rounded-3xl border-border/80 sm:max-w-md">
+    <DialogContent className="rounded-2xl border-border sm:max-w-md">
       <DialogHeader>
         <DialogTitle>{t('editTitle')}</DialogTitle>
         <DialogDescription>{t('editDescription')}</DialogDescription>
@@ -634,7 +633,7 @@ function EditScreenDialogContent({
           </select>
         </FieldInput>
         <DialogFooter>
-          <Button type="submit" className="rounded-2xl bg-[#0F1729] hover:bg-[#0F1729]/90">
+          <Button type="submit" variant="cta" className="rounded-xl">
             {t('save')}
           </Button>
         </DialogFooter>

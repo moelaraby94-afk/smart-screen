@@ -48,6 +48,7 @@
     "closeMenuLabel": "Close menu",
     "toggleMenuLabel": "Toggle menu",
     "toggleMenu": "Toggle menu",
+    "skipToContent": "Skip to content",
     "returnToAdmin": "Return to admin",
     "adminLogs": "Audit logs",
     "adminSettings": "Global settings"

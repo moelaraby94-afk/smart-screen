@@ -105,8 +105,8 @@ export function AdminScreensClient() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FF6B00]/12">
-                          <Monitor className="h-4 w-4 text-[#94A3B8] dark:text-[#FF6B00]" />
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                          <Monitor className="h-4 w-4 text-primary" />
                         </span>
                         <span className="font-medium">{s.name}</span>
                       </div>

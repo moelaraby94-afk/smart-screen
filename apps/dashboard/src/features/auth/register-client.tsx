@@ -122,178 +122,174 @@ export function RegisterClient() {
   };
 
   return (
-    <div className="relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden px-4 py-12">
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_50%_-20%,rgba(10,15,29,0.45),transparent_55%),radial-gradient(ellipse_80%_60%_at_100%_50%,rgba(255, 107, 0,0.12),transparent_50%)]"
-        aria-hidden
-      />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#030712] via-[#0a0614] to-[#030712]" aria-hidden />
+    <div className="relative flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-12">
+      <section className="w-full max-w-lg">
+        <div className="rounded-2xl border border-border bg-card p-8 shadow-sm sm:p-10">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
+            {t('brand')}
+          </p>
+          <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            {step === 'form' ? t('createWorkspaceTitle') : t('verifyEmailTitle')}
+          </h1>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            {step === 'form'
+              ? t('formDescription')
+              : t('otpDescription', { email })}
+          </p>
 
-      <section className="relative z-[1] w-full max-w-lg">
-        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-px shadow-[0_25px_80px_-20px_rgba(10,15,29,0.45)] backdrop-blur-2xl dark:bg-black/25">
-          <div className="rounded-[1.65rem] bg-gradient-to-br from-white/[0.09] to-white/[0.02] px-8 py-10 sm:px-10 sm:py-12">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#FF6B00]/90">{t('brand')}</p>
-            <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-              {step === 'form' ? t('createWorkspaceTitle') : t('verifyEmailTitle')}
-            </h1>
-            <p className="mt-3 text-sm leading-relaxed text-white/60">
-              {step === 'form'
-                ? t('formDescription')
-                : t('otpDescription', { email })}
-            </p>
-
-            {step === 'form' ? (
-              <form className="mt-8 space-y-4" onSubmit={(e) => void submitForm(e)}>
+          {step === 'form' ? (
+            <form className="mt-8 space-y-4" onSubmit={(e) => void submitForm(e)}>
+              <div className="space-y-2">
+                <Label className="text-foreground">{t('businessName')}</Label>
+                <Input
+                  required
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  className="rounded-xl border-border bg-background text-foreground"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-foreground">{t('yourName')}</Label>
+                <Input
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="rounded-xl border-border bg-background text-foreground"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-foreground">{t('email')}</Label>
+                <Input
+                  required
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="rounded-xl border-border bg-background text-foreground"
+                />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label className="text-white/80">{t('businessName')}</Label>
-                  <Input
-                    required
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    className="rounded-xl border-white/15 bg-white/5 text-white"
-                  />
+                  <Label className="text-foreground">{t('country')}</Label>
+                  <select
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className="flex h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+                  >
+                    {COUNTRIES.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.flag} {c.name} ({c.dial})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-white/80">{t('yourName')}</Label>
-                  <Input
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="rounded-xl border-white/15 bg-white/5 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-white/80">{t('email')}</Label>
-                  <Input
-                    required
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="rounded-xl border-white/15 bg-white/5 text-white"
-                  />
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label className="text-white/80">{t('country')}</Label>
-                    <select
-                      value={country}
-                      onChange={(e) => setCountry(e.target.value)}
-                      className="flex h-10 w-full rounded-xl border border-white/15 bg-white/5 px-3 text-sm text-white outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-[#FF6B00]/40"
-                    >
-                      {COUNTRIES.map((c) => (
-                        <option key={c.code} value={c.code} className="bg-[#0a0614]">
-                          {c.flag} {c.name} ({c.dial})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-white/80">{t('phone')}</Label>
-                    <div className="flex gap-2">
-                      <span className="flex h-10 min-w-[3.5rem] items-center justify-center rounded-xl border border-white/15 bg-white/5 text-xs text-white/80">
-                        {dial}
-                      </span>
-                      <Input
-                        required
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 14))}
-                        className="rounded-xl border-white/15 bg-white/5 text-white"
-                        placeholder={t('phonePlaceholder')}
-                      />
-                    </div>
+                  <Label className="text-foreground">{t('phone')}</Label>
+                  <div className="flex gap-2">
+                    <span className="flex h-10 min-w-[3.5rem] items-center justify-center rounded-xl border border-border bg-muted text-xs text-muted-foreground">
+                      {dial}
+                    </span>
+                    <Input
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 14))}
+                      className="rounded-xl border-border bg-background text-foreground"
+                      placeholder={t('phonePlaceholder')}
+                    />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-white/80">{t('city')}</Label>
-                  <Input
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="rounded-xl border-white/15 bg-white/5 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-white/80">{t('password')}</Label>
-                  <Input
-                    required
-                    type="password"
-                    minLength={8}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="rounded-xl border-white/15 bg-white/5 text-white"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={pending}
-                  className="w-full rounded-2xl bg-gradient-to-r from-[#FF6B00] to-[#CC4400] font-semibold text-white shadow-lg shadow-[#0F1729]/30"
-                >
-                  {t('continue')}
-                </Button>
-              </form>
-            ) : (
-              <form className="mt-8 space-y-4" onSubmit={(e) => void submitOtp(e)}>
-                <div className="space-y-2">
-                  <Label className="text-white/80">{t('code6Digits')}</Label>
-                  <Input
-                    required
-                    inputMode="numeric"
-                    maxLength={6}
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    className="rounded-xl border-white/15 bg-white/5 text-center font-mono text-2xl tracking-[0.4em] text-white"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={pending || otp.length !== 6}
-                  className="w-full rounded-2xl bg-gradient-to-r from-[#FF6B00] to-amber-500 font-semibold text-amber-950"
-                >
-                  {t('activateAccount')}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="w-full text-white/70"
-                  onClick={() => setStep('form')}
-                >
-                  {t('back')}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full rounded-2xl border-white/20 bg-transparent text-white/85 hover:bg-white/5"
-                  disabled={pending}
-                  onClick={() => void resendOtp()}
-                >
-                  {pending ? t('resending') : t('resendCode')}
-                </Button>
-              </form>
-            )}
-
-            <p className="mt-6 text-center text-xs leading-relaxed text-white/50">
-              {t('legalPrefix')}{' '}
-              <Link
-                href={`/${locale}/terms`}
-                className="font-semibold text-[#FF6B00] underline-offset-4 hover:underline"
+              </div>
+              <div className="space-y-2">
+                <Label className="text-foreground">{t('city')}</Label>
+                <Input
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  className="rounded-xl border-border bg-background text-foreground"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-foreground">{t('password')}</Label>
+                <Input
+                  required
+                  type="password"
+                  minLength={8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="rounded-xl border-border bg-background text-foreground"
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={pending}
+                className="h-11 w-full rounded-xl font-semibold"
+                variant="cta"
               >
-                {tLegal('termsLink')}
-              </Link>{' '}
-              {t('legalAnd')}{' '}
-              <Link
-                href={`/${locale}/privacy`}
-                className="font-semibold text-[#FF6B00] underline-offset-4 hover:underline"
+                {t('continue')}
+              </Button>
+            </form>
+          ) : (
+            <form className="mt-8 space-y-4" onSubmit={(e) => void submitOtp(e)}>
+              <div className="space-y-2">
+                <Label className="text-foreground">{t('code6Digits')}</Label>
+                <Input
+                  required
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="rounded-xl border-border bg-background text-center font-mono text-2xl tracking-[0.4em] text-foreground"
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={pending || otp.length !== 6}
+                className="h-11 w-full rounded-xl font-semibold"
+                variant="cta"
               >
-                {tLegal('privacyLink')}
-              </Link>
-              .
-            </p>
+                {t('activateAccount')}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full text-muted-foreground"
+                onClick={() => setStep('form')}
+              >
+                {t('back')}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full rounded-xl"
+                disabled={pending}
+                onClick={() => void resendOtp()}
+              >
+                {pending ? t('resending') : t('resendCode')}
+              </Button>
+            </form>
+          )}
 
-            <p className="mt-6 text-center text-sm text-white/50">
-              <Link href={`/${locale}/login`} className="font-semibold text-[#FF6B00] underline-offset-4 hover:underline">
-                {t('backToSignIn')}
-              </Link>
-            </p>
-          </div>
+          <p className="mt-6 text-center text-xs leading-relaxed text-muted-foreground">
+            {t('legalPrefix')}{' '}
+            <Link
+              href={`/${locale}/terms`}
+              className="font-semibold text-primary underline-offset-4 hover:underline"
+            >
+              {tLegal('termsLink')}
+            </Link>{' '}
+            {t('legalAnd')}{' '}
+            <Link
+              href={`/${locale}/privacy`}
+              className="font-semibold text-primary underline-offset-4 hover:underline"
+            >
+              {tLegal('privacyLink')}
+            </Link>
+            .
+          </p>
+
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            <Link href={`/${locale}/login`} className="font-semibold text-primary underline-offset-4 hover:underline">
+              {t('backToSignIn')}
+            </Link>
+          </p>
         </div>
       </section>
     </div>

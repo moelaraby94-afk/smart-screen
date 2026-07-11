@@ -8,8 +8,8 @@ export default async function SettingsProfilePage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: 'settingsPages' });
   return (
     <main className="space-y-6">
-      <header className="space-y-1 border-b border-[#0F1729]/15 pb-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#0F1729] dark:text-[#FFBB88]">
+      <header className="space-y-1 border-b border-border pb-4">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           {t('profileKicker')}
         </p>
         <h1 className="text-xl font-semibold tracking-tight">{t('profileTitle')}</h1>

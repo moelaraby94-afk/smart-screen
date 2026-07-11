@@ -115,7 +115,7 @@ export function WorkspaceCreateDialog({ open, onOpenChange, onCreated }: Props) 
           <Button
             type="button"
             disabled={saving}
-            className="rounded-2xl bg-[#0F1729] font-semibold text-white shadow-lg shadow-[#0F1729]/35 hover:bg-[#0F1729]/90"
+            className="rounded-xl font-semibold" variant="cta"
             onClick={() => void submit()}
           >
             {saving ? (

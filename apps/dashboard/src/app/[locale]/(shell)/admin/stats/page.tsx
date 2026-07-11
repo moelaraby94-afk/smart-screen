@@ -23,7 +23,7 @@ export default async function AdminStatsPage({
         ]}
       />
       <header className="space-y-3">
-        <p className="vc-page-kicker text-[#94A3B8] dark:text-[#FF6B00]">{tCommon('system')}</p>
+        <p className="vc-page-kicker text-muted-foreground">{tCommon('system')}</p>
         <h1 className="vc-page-title">{t('pageTitle')}</h1>
         <p className="vc-page-desc max-w-2xl">{t('pageDescription')}</p>
       </header>
