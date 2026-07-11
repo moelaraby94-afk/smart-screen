@@ -53,7 +53,7 @@ type PlayerTickerPayload = {
 
 type BootMode = 'pending' | 'jwt' | 'kiosk' | 'pairing' | 'none';
 
-export function PlayerRuntime() {
+export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
   const envSerial = useMemo(
     () => process.env.NEXT_PUBLIC_PLAYER_SCREEN_SERIAL?.trim() ?? '',
     [],
@@ -61,7 +61,7 @@ export function PlayerRuntime() {
   const [kioskSerial, setKioskSerial] = useState(envSerial);
   const [storageReady, setStorageReady] = useState(false);
   const [pairedSecret, setPairedSecret] = useState('');
-  const envSecret = process.env.NEXT_PUBLIC_PLAYER_HEARTBEAT_SECRET?.trim();
+  const envSecret = kioskSecret;
   /**
    * A screen paired through the pairing flow authenticates with its own secret
    * (Screen.pairingSecretHash); the shared env secret only works for screens
@@ -566,7 +566,7 @@ export function PlayerRuntime() {
       <div className="relative min-h-screen min-h-[100dvh] bg-[#030712]">
         <LoadingOverlay behind label="Waiting for pairing…" />
         <div className="relative z-10">
-          <PlayerPairingWait />
+          <PlayerPairingWait kioskSecret={kioskSecret} />
         </div>
       </div>
     );

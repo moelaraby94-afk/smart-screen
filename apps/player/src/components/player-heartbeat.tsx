@@ -112,9 +112,9 @@ function PlayerHeartbeatInner({ serialNumber, secret }: InnerProps) {
   );
 }
 
-export function PlayerHeartbeat() {
+export function PlayerHeartbeat({ kioskSecret = '' }: { kioskSecret?: string }) {
   const serialNumber = process.env.NEXT_PUBLIC_PLAYER_SCREEN_SERIAL?.trim();
-  const secret = process.env.NEXT_PUBLIC_PLAYER_HEARTBEAT_SECRET?.trim();
+  const secret = kioskSecret;
 
   if (!serialNumber || !secret) {
     return (

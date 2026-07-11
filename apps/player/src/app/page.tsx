@@ -1,5 +1,6 @@
 import { PlayerRuntime } from '@/components/player-runtime';
 
 export default function Home() {
-  return <PlayerRuntime />;
+  const kioskSecret = process.env.PLAYER_HEARTBEAT_SECRET?.trim() || '';
+  return <PlayerRuntime kioskSecret={kioskSecret} />;
 }

@@ -72,10 +72,12 @@ export async function startPlayerPairingSession(body?: {
   playerPlatform?: 'ANDROID' | 'TIZEN' | 'WEBOS' | 'WEB';
   resolutionWidth?: number;
   resolutionHeight?: number;
-  /** When set with `NEXT_PUBLIC_PLAYER_HEARTBEAT_SECRET`, notifies this workspace (`pairing:started`). */
+  /** When set with kioskSecret, notifies this workspace (`pairing:started`). */
   workspaceId?: string;
+  /** Server-injected kiosk secret (replaces NEXT_PUBLIC_ env var). */
+  kioskSecret?: string;
 }): Promise<StartPairingSessionResponse> {
-  const secret = process.env.NEXT_PUBLIC_PLAYER_HEARTBEAT_SECRET?.trim();
+  const secret = body?.kioskSecret?.trim();
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (secret) headers['x-player-secret'] = secret;
   const res = await fetch(`${getApiBaseUrl()}/player/pairing/sessions`, {

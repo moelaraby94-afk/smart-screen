@@ -20,7 +20,7 @@ function getRealtimeBaseUrl(): string {
 
 type Phase = 'starting' | 'waiting' | 'error';
 
-export function PlayerPairingWait() {
+export function PlayerPairingWait({ kioskSecret = '' }: { kioskSecret?: string }) {
   const [phase, setPhase] = useState<Phase>('starting');
   const [error, setError] = useState<string | null>(null);
   const [pairingCode, setPairingCode] = useState('');
@@ -47,6 +47,7 @@ export function PlayerPairingWait() {
         const row = await startPlayerPairingSession({
           playerPlatform: 'WEB',
           ...(hintWs ? { workspaceId: hintWs } : {}),
+          ...(kioskSecret ? { kioskSecret } : {}),
         });
         if (cancelled) return;
         sessionRef.current = {
