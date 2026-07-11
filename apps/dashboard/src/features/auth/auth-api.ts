@@ -49,3 +49,7 @@ export async function resetPassword(data: Record<string, unknown>): Promise<Resp
     body: JSON.stringify(data),
   } as ApiFetchInit);
 }
+
+export async function logout(): Promise<Response> {
+  return apiFetch('/auth/logout', { method: 'POST', body: '{}' });
+}

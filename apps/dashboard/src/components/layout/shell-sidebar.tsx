@@ -28,7 +28,8 @@ import {
 } from 'lucide-react';
 import { ShellLogo } from '@/components/layout/shell-logo';
 import { pathWithLocale } from '@/components/language-switcher';
-import { apiFetch, setStoredAccessToken } from '@/features/auth/session';
+import { setStoredAccessToken } from '@/features/auth/session';
+import { logout as apiLogout } from '@/features/auth/auth-api';
 import { cn } from '@/lib/utils';
 
 /* ═══════════════════════════════════════════════════════════════
@@ -442,7 +443,7 @@ export function ShellSidebar({
             icon={LogOut}
             danger
             onClick={async () => {
-              const res = await apiFetch('/auth/logout', { method: 'POST', body: '{}' });
+              const res = await apiLogout();
               if (!res.ok) {
                 toast.error(tUser('signOutFailed'));
                 return;

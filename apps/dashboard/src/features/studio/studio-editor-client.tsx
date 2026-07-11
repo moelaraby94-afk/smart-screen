@@ -26,7 +26,13 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiFetch } from '@/features/auth/session';
+import {
+  fetchCanvases as apiFetchCanvases,
+  fetchCanvas as apiFetchCanvas,
+  updateCanvas as apiUpdateCanvas,
+  createCanvas as apiCreateCanvas,
+} from '@/features/studio/studio-api';
+import { fetchMedia } from '@/features/media/api/media-api';
 import { readPageItems } from '@/features/api/page';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import type { MediaItem } from '@/features/media/media-library-client';
@@ -121,22 +127,20 @@ export function StudioEditorClient() {
 
   const loadLibrary = useCallback(async () => {
     if (!workspaceId) return;
-    const res = await apiFetch(`/media?workspaceId=${encodeURIComponent(workspaceId)}`);
-    if (res.ok) setLibrary(await readPageItems<MediaItem>(res));
+    const items = await fetchMedia(workspaceId);
+    setLibrary(items);
   }, [workspaceId]);
 
   const loadCanvases = useCallback(async () => {
     if (!workspaceId) return;
-    const res = await apiFetch(`/canvases?workspaceId=${encodeURIComponent(workspaceId)}`);
+    const res = await apiFetchCanvases(workspaceId);
     if (res.ok) setCanvases(await readPageItems<CanvasDto>(res));
   }, [workspaceId]);
 
   const loadCanvas = useCallback(
     async (id: string) => {
       if (!workspaceId || !id) return;
-      const res = await apiFetch(
-        `/canvases/${id}?workspaceId=${encodeURIComponent(workspaceId)}`,
-      );
+      const res = await apiFetchCanvas(workspaceId, id);
       if (!res.ok) return;
       const c = (await res.json()) as CanvasDto;
       setName(c.name);
@@ -180,19 +184,13 @@ export function StudioEditorClient() {
     }
     setSaving(true);
     try {
-      const res = await apiFetch(
-        `/canvases/${canvasId}?workspaceId=${encodeURIComponent(workspaceId)}`,
-        {
-          method: 'PATCH',
-          body: JSON.stringify({
-            name: name.trim() || 'Untitled',
-            width: dw,
-            height: dh,
-            layoutData: layout,
-            durationSec: 15,
-          }),
-        },
-      );
+      const res = await apiUpdateCanvas(workspaceId, canvasId, {
+        name: name.trim() || 'Untitled',
+        width: dw,
+        height: dh,
+        layoutData: layout,
+        durationSec: 15,
+      });
       if (!res.ok) throw new Error('fail');
       toast.success(t('saved'));
       await loadCanvases();
@@ -205,18 +203,12 @@ export function StudioEditorClient() {
 
   const createCanvas = async () => {
     if (!workspaceId) return;
-    const res = await apiFetch(
-      `/canvases?workspaceId=${encodeURIComponent(workspaceId)}`,
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          name: `Design ${canvases.length + 1}`,
-          width: 1920,
-          height: 1080,
-          layoutData: emptyLayout(),
-        }),
-      },
-    );
+    const res = await apiCreateCanvas(workspaceId, {
+      name: `Design ${canvases.length + 1}`,
+      width: 1920,
+      height: 1080,
+      layoutData: emptyLayout(),
+    });
     if (!res.ok) {
       toast.error(t('createFailed'));
       return;

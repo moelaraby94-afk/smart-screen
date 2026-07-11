@@ -5,8 +5,7 @@ import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { Database, HardDrive, Monitor } from 'lucide-react';
 import { ICON_STROKE } from '@/lib/icon-stroke';
-import { apiFetch } from '@/features/auth/session';
-import { readPage } from '@/features/api/page';
+import { fetchScreenCount, fetchMediaStats } from '@/features/dashboard/dashboard-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 
 function formatBytes(n: number): string {
@@ -47,12 +46,12 @@ export function OverviewMetrics() {
          * screens and the entire media library, then compute `arr.length` and
          * `arr.reduce(...)` in the browser to render two tiles.
          */
-        const [sRes, mRes] = await Promise.all([
-          apiFetch(`/screens?workspaceId=${ws}&page=1&limit=1`),
-          apiFetch(`/media/stats?workspaceId=${ws}`),
+        const [screenCount, mRes] = await Promise.all([
+          fetchScreenCount(ws),
+          fetchMediaStats(ws),
         ]);
         if (cancelled) return;
-        setScreens((await readPage(sRes)).total);
+        setScreens(screenCount);
         if (mRes.ok) {
           const stats = (await mRes.json()) as MediaStats;
           setMediaCount(stats.count);

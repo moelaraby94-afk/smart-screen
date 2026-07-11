@@ -47,7 +47,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiFetch } from '@/features/auth/session';
+import { deleteBranchScreen as apiDeleteBranchScreen } from '@/features/branches/branches-api';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { CreateScreenDialog } from '@/features/branches/create-screen-dialog';
@@ -544,10 +544,7 @@ export function BranchDetailClient({ locale }: Props) {
                       onClick={async () => {
                         const ok = window.confirm(t('screenDeleteConfirm'));
                         if (!ok) return;
-                        const res = await apiFetch(
-                          `/screens/${encodeURIComponent(screen.id)}?workspaceId=${encodeURIComponent(workspaceIdParam)}`,
-                          { method: 'DELETE' },
-                        );
+                        const res = await apiDeleteBranchScreen(workspaceIdParam, screen.id);
                         if (!res.ok) {
                           await toastResponseError(res);
                           return;

@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import { Loader2, Monitor, PenLine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { apiFetch } from '@/features/auth/session';
+import { fetchPlaylistDetail as apiFetchPlaylistDetail } from '@/features/branches/branches-api';
 import { CreateScreenDialog } from '@/features/branches/create-screen-dialog';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { ScreenQuickEditPanel } from '@/features/screens/screen-quick-edit-panel';
@@ -85,9 +85,7 @@ export function PlaylistScreensClient({ locale }: Props) {
     }
     let cancelled = false;
     void (async () => {
-      const res = await apiFetch(
-        `/playlists/${encodeURIComponent(playlistIdParam)}?workspaceId=${encodeURIComponent(workspaceIdParam)}`,
-      );
+      const res = await apiFetchPlaylistDetail(workspaceIdParam, playlistIdParam);
       if (!res.ok || cancelled) return;
       const row = (await res.json()) as { name?: string };
       if (!cancelled) setPlaylistName(typeof row.name === 'string' ? row.name : null);

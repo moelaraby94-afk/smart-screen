@@ -45,7 +45,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiFetch } from '@/features/auth/session';
+import {
+  fetchAccountInsights,
+  updateWorkspace as apiUpdateWorkspace,
+  deleteWorkspace as apiDeleteWorkspace,
+} from '@/features/dashboard/dashboard-api';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { useWorkspace, type WorkspaceSummary } from '@/features/workspace/workspace-context';
 import { ICON_STROKE } from '@/lib/icon-stroke';
@@ -176,7 +180,7 @@ export function ClientHomeDashboard() {
       return;
     }
     setLoading(true);
-    const res = await apiFetch('/account/insights');
+    const res = await fetchAccountInsights();
     if (!res.ok) {
       setInsights(null);
       setLoading(false);
@@ -230,14 +234,7 @@ export function ClientHomeDashboard() {
     }
     setRenameBusy(true);
     try {
-      const res = await apiFetch(
-        `/workspaces/${encodeURIComponent(selectedBranch.workspaceId)}`,
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name }),
-        },
-      );
+      const res = await apiUpdateWorkspace(selectedBranch.workspaceId, { name });
       if (!res.ok) {
         await toastResponseError(res);
         return;
@@ -266,14 +263,7 @@ export function ClientHomeDashboard() {
       const next = target.isPaused !== true;
       setPauseBusyId(target.workspaceId);
       try {
-        const res = await apiFetch(
-          `/workspaces/${encodeURIComponent(target.workspaceId)}`,
-          {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ isPaused: next }),
-          },
-        );
+        const res = await apiUpdateWorkspace(target.workspaceId, { isPaused: next });
         if (!res.ok) {
           await toastResponseError(res);
           return;
@@ -297,9 +287,7 @@ export function ClientHomeDashboard() {
     const deletedId = selectedBranch.workspaceId;
     setDeleteBusy(true);
     try {
-      const res = await apiFetch(`/workspaces/${encodeURIComponent(deletedId)}`, {
-        method: 'DELETE',
-      });
+      const res = await apiDeleteWorkspace(deletedId);
       if (!res.ok) {
         await toastResponseError(res);
         return;

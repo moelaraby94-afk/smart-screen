@@ -14,7 +14,11 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiFetch } from '@/features/auth/session';
+import {
+  fetchBranchPlaylists as apiFetchBranchPlaylists,
+  createBranchPlaylist as apiCreateBranchPlaylist,
+  createBranchScreen as apiCreateBranchScreen,
+} from '@/features/branches/branches-api';
 import { readPageItems } from '@/features/api/page';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 
@@ -45,7 +49,7 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
   const loadPlaylists = useCallback(async () => {
     if (!workspaceId) return;
     setLoadingPlaylists(true);
-    const res = await apiFetch(`/playlists?workspaceId=${encodeURIComponent(workspaceId)}`);
+    const res = await apiFetchBranchPlaylists(workspaceId);
     if (res.ok) {
       setPlaylists(await readPageItems<PlaylistRow>(res));
     } else {
@@ -86,11 +90,7 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
       let playlistGroupId: string | null | undefined = undefined;
 
       if (playlistMode === 'new') {
-        const gr = await apiFetch('/playlists', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ workspaceId, name: newPlaylistName.trim() }),
-        });
+        const gr = await apiCreateBranchPlaylist(workspaceId, newPlaylistName.trim());
         if (!gr.ok) {
           await toastResponseError(gr);
           return;
@@ -113,11 +113,7 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
         body.playlistGroupId = playlistGroupId ?? null;
       }
 
-      const res = await apiFetch('/screens', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+      const res = await apiCreateBranchScreen(body);
       if (!res.ok) {
         /**
          * No special case for the screen limit: the API answers

@@ -26,7 +26,14 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiFetch } from '@/features/auth/session';
+import {
+  fetchCanvases as apiFetchCanvases,
+  fetchPlaylists as apiFetchPlaylists,
+  fetchPlaylistDetail as apiFetchPlaylistDetail,
+  createPlaylist as apiCreatePlaylist,
+  updatePlaylistItems as apiUpdatePlaylistItems,
+} from '@/features/studio/studio-api';
+import { fetchMedia } from '@/features/media/api/media-api';
 import { readPageItems } from '@/features/api/page';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import type { MediaItem } from '@/features/media/media-library-client';
@@ -72,28 +79,26 @@ export function PlaylistStudioClient() {
 
   const loadLibrary = useCallback(async () => {
     if (!workspaceId) return;
-    const res = await apiFetch(`/media?workspaceId=${encodeURIComponent(workspaceId)}`);
-    if (res.ok) setLibrary(await readPageItems<MediaItem>(res));
+    const items = await fetchMedia(workspaceId);
+    setLibrary(items);
   }, [workspaceId]);
 
   const loadPlaylists = useCallback(async () => {
     if (!workspaceId) return;
-    const res = await apiFetch(`/playlists?workspaceId=${encodeURIComponent(workspaceId)}`);
+    const res = await apiFetchPlaylists(workspaceId);
     if (res.ok) setPlaylists(await readPageItems<PlaylistSummary>(res));
   }, [workspaceId]);
 
   const loadCanvasLibrary = useCallback(async () => {
     if (!workspaceId) return;
-    const res = await apiFetch(`/canvases?workspaceId=${encodeURIComponent(workspaceId)}`);
+    const res = await apiFetchCanvases(workspaceId);
     if (res.ok) setCanvasLibrary(await readPageItems<CanvasSummary>(res));
   }, [workspaceId]);
 
   const loadPlaylistDetail = useCallback(
     async (id: string) => {
       if (!workspaceId) return;
-      const res = await apiFetch(
-        `/playlists/${id}?workspaceId=${encodeURIComponent(workspaceId)}`,
-      );
+      const res = await apiFetchPlaylistDetail(workspaceId, id);
       if (!res.ok) return;
       const data = (await res.json()) as {
         items: Array<{
@@ -150,10 +155,7 @@ export function PlaylistStudioClient() {
 
   const createPlaylist = async () => {
     if (!workspaceId || !newName.trim()) return;
-    const res = await apiFetch('/playlists', {
-      method: 'POST',
-      body: JSON.stringify({ workspaceId, name: newName.trim() }),
-    });
+    const res = await apiCreatePlaylist(workspaceId, newName.trim());
     if (!res.ok) {
       toast.error(t('couldNotCreatePlaylist'));
       return;
@@ -254,13 +256,7 @@ export function PlaylistStudioClient() {
               },
         ),
       };
-      const res = await apiFetch(
-        `/playlists/${playlistId}/items?workspaceId=${encodeURIComponent(workspaceId)}`,
-        {
-          method: 'PATCH',
-          body: JSON.stringify(body),
-        },
-      );
+      const res = await apiUpdatePlaylistItems(workspaceId, playlistId, body);
       if (!res.ok) throw new Error('save failed');
       toast.success(t('playlistSaved'));
       bumpWorkspaceDataEpoch();

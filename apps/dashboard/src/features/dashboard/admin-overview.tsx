@@ -21,7 +21,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { apiFetch } from '@/features/auth/session';
+import { fetchAdminStats } from '@/features/admin/admin-api';
 
 type GlobalStats = {
   revenueUsdPlaceholder: number;
@@ -73,7 +73,7 @@ export function AdminOverview({ locale }: Props) {
     let cancelled = false;
     void (async () => {
       const startedAt = performance.now();
-      const res = await apiFetch('/admin/stats');
+      const res = await fetchAdminStats();
       if (!res.ok) {
         if (!cancelled) setError(t('loadFailed'));
         return;

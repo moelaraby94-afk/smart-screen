@@ -23,7 +23,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { apiFetch, setStoredAccessToken } from '@/features/auth/session';
+import { setStoredAccessToken } from '@/features/auth/session';
+import { logout as apiLogout } from '@/features/auth/auth-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
@@ -164,7 +165,7 @@ export function UserMenu({ rtl, variant }: Props) {
           className="cursor-pointer gap-2 rounded-lg text-destructive focus:text-destructive"
           onSelect={async (e) => {
             e.preventDefault();
-            const res = await apiFetch('/auth/logout', { method: 'POST', body: '{}' });
+            const res = await apiLogout();
             if (!res.ok) {
               toast.error(t('signOutFailed'));
               return;
