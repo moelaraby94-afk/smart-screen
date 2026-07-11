@@ -1,27 +1,15 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Ellipse,
-  Group,
-  Image as KonvaImage,
-  Layer,
-  Rect,
-  Stage,
-  Text,
-} from 'react-konva';
-import useImage from 'use-image';
-import { toast } from 'sonner';
-import {
   Circle as CircleIcon,
-  Image as ImageIcon,
-  Layers,
   Plus,
   Save,
   Shapes,
   Type,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +29,8 @@ import {
   type CanvasObjectJson,
   emptyLayout,
 } from '@/features/studio/canvas-layout';
+import { CanvasStageView } from '@/features/studio/studio-canvas-shapes';
+import { StudioPropertiesPanel, StudioMediaStrip } from '@/features/studio/studio-panels';
 
 type CanvasDto = {
   id: string;
@@ -58,45 +48,6 @@ function parseLayout(raw: unknown): CanvasLayoutV1 {
     return { version: 1, objects: o.objects as CanvasObjectJson[] };
   }
   return emptyLayout();
-}
-
-function ImageShape({
-  obj,
-  onSelect,
-  onMove,
-}: {
-  obj: CanvasObjectJson;
-  onSelect: () => void;
-  onMove: (id: string, x: number, y: number) => void;
-}) {
-  const [img] = useImage(obj.imageUrl ?? '', 'anonymous');
-  if (!img || !obj.width || !obj.height) return null;
-  return (
-    <KonvaImage
-      id={obj.id}
-      name={obj.id}
-      image={img}
-      x={obj.x}
-      y={obj.y}
-      width={obj.width}
-      height={obj.height}
-      rotation={obj.rotation ?? 0}
-      opacity={obj.opacity ?? 1}
-      draggable
-      onClick={(e) => {
-        e.cancelBubble = true;
-        onSelect();
-      }}
-      onTap={(e) => {
-        e.cancelBubble = true;
-        onSelect();
-      }}
-      onDragEnd={(e) => {
-        const n = e.target;
-        onMove(obj.id, n.x(), n.y());
-      }}
-    />
-  );
 }
 
 export function StudioEditorClient() {
@@ -175,6 +126,14 @@ export function StudioEditorClient() {
       ...prev,
       objects: prev.objects.map((o) => (o.id === id ? { ...o, ...patch } : o)),
     }));
+  };
+
+  const removeObject = (id: string) => {
+    setLayout((prev) => ({
+      ...prev,
+      objects: prev.objects.filter((o) => o.id !== id),
+    }));
+    setSelectedId(null);
   };
 
   const save = async () => {
@@ -319,103 +278,6 @@ export function StudioEditorClient() {
     e.dataTransfer.dropEffect = 'copy';
   };
 
-  const renderObject = (obj: CanvasObjectJson) => {
-    const common = {
-      id: obj.id,
-      name: obj.id,
-      rotation: obj.rotation ?? 0,
-      opacity: obj.opacity ?? 1,
-      draggable: true as const,
-      onClick: (e: { cancelBubble: boolean }) => {
-        e.cancelBubble = true;
-        setSelectedId(obj.id);
-      },
-      onDragEnd: (e: {
-        target: { x: () => number; y: () => number; getLayer: () => unknown };
-      }) => {
-        const n = e.target;
-        updateObject(obj.id, { x: n.x(), y: n.y() });
-        n.getLayer();
-      },
-    };
-
-    if (obj.type === 'rect') {
-      return (
-        <Rect
-          key={obj.id}
-          x={obj.x}
-          y={obj.y}
-          width={obj.width ?? 120}
-          height={obj.height ?? 80}
-          fill={obj.fill ?? 'hsl(var(--primary))'}
-          stroke={obj.stroke}
-          strokeWidth={obj.strokeWidth ?? 0}
-          cornerRadius={obj.cornerRadius ?? 0}
-          {...common}
-        />
-      );
-    }
-    if (obj.type === 'ellipse') {
-      const rw = (obj.width ?? 120) / 2;
-      const rh = (obj.height ?? 80) / 2;
-      return (
-        <Ellipse
-          key={obj.id}
-          id={obj.id}
-          name={obj.id}
-          x={obj.x + rw}
-          y={obj.y + rh}
-          radiusX={rw}
-          radiusY={rh}
-          fill={obj.fill ?? 'hsl(var(--primary))'}
-          stroke={obj.stroke}
-          strokeWidth={obj.strokeWidth ?? 0}
-          rotation={obj.rotation ?? 0}
-          opacity={obj.opacity ?? 1}
-          draggable
-          onClick={(e) => {
-            e.cancelBubble = true;
-            setSelectedId(obj.id);
-          }}
-          onDragEnd={(e) => {
-            const n = e.target;
-            updateObject(obj.id, { x: n.x() - rw, y: n.y() - rh });
-          }}
-        />
-      );
-    }
-    if (obj.type === 'text') {
-      return (
-        <Text
-          key={obj.id}
-          x={obj.x}
-          y={obj.y}
-          text={obj.text ?? ''}
-          fontSize={obj.fontSize ?? 48}
-          fontFamily={
-            obj.fontFamily ??
-            '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
-          }
-          fill={obj.fill ?? 'hsl(var(--primary))'}
-          width={obj.width}
-          height={obj.height}
-          {...common}
-        />
-      );
-    }
-    if (obj.type === 'image') {
-      return (
-        <ImageShape
-          key={obj.id}
-          obj={obj}
-          onSelect={() => setSelectedId(obj.id)}
-          onMove={(id, x, y) => updateObject(id, { x, y })}
-        />
-      );
-    }
-    return null;
-  };
-
   if (!workspaceId) {
     return <p className="text-muted-foreground">{t('needWorkspace')}</p>;
   }
@@ -505,156 +367,35 @@ export function StudioEditorClient() {
             className="relative overflow-hidden rounded-3xl border border-cyan-500/15 bg-gradient-to-b from-zinc-950/90 to-black shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
             style={{ minHeight: 420 }}
           >
-            <div
-              ref={containerRef}
-              className="h-[min(62vh,640px)] w-full"
+            <CanvasStageView
+              size={size}
+              ox={ox}
+              oy={oy}
+              scale={scale}
+              dw={dw}
+              dh={dh}
+              layout={layout}
+              onSelect={setSelectedId}
+              onUpdateObject={updateObject}
+              onStageClick={() => setSelectedId(null)}
               onDrop={onDropMedia}
               onDragOver={onDragOver}
-            >
-              <Stage
-                width={size.w}
-                height={size.h}
-                onMouseDown={(e) => {
-                  if (e.target === e.target.getStage()) setSelectedId(null);
-                }}
-              >
-                <Layer>
-                  <Rect x={0} y={0} width={size.w} height={size.h} fill="transparent" />
-                  <Group x={ox} y={oy} scaleX={scale} scaleY={scale}>
-                    <Rect x={0} y={0} width={dw} height={dh} fill="hsl(var(--background))" stroke="hsl(var(--primary))" strokeWidth={2} />
-                    {layout.objects.map((o) => renderObject(o))}
-                  </Group>
-                </Layer>
-              </Stage>
-            </div>
+              containerRef={containerRef}
+              dropHint={t('dropHint')}
+            />
             <p className="pointer-events-none absolute bottom-3 start-4 text-[11px] font-medium uppercase tracking-[0.2em] text-white/35">
               {t('dropHint')}
             </p>
           </motion.div>
 
-          <div className="rounded-3xl border border-border/60 bg-card/40 p-4 backdrop-blur-xl">
-            <p className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              <ImageIcon className="h-4 w-4" />
-              {t('mediaStrip')}
-            </p>
-            <div className="flex gap-3 overflow-x-auto pb-1">
-              {library.map((m) => (
-                <div
-                  key={m.id}
-                  draggable
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData(
-                      'application/canvas-media',
-                      JSON.stringify({ publicUrl: m.publicUrl, mediaId: m.id }),
-                    );
-                    e.dataTransfer.effectAllowed = 'copy';
-                  }}
-                  className="w-28 shrink-0 cursor-grab overflow-hidden rounded-2xl border border-border/80 bg-muted/50 active:cursor-grabbing"
-                >
-                  {m.mimeType.startsWith('image/') ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={m.publicUrl} alt="" className="h-20 w-full object-cover" />
-                  ) : (
-                    <video src={m.publicUrl} className="h-20 w-full object-cover" muted playsInline />
-                  )}
-                  <p className="truncate px-2 py-1 text-[10px] text-muted-foreground">{m.originalName}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          <StudioMediaStrip library={library} />
         </div>
 
-        <AnimatePresence>
-          <motion.aside
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="vc-card-surface h-fit rounded-2xl border border-border p-5"
-          >
-            <p className="mb-4 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              <Layers className="h-4 w-4 text-primary" />
-              {t('properties')}
-            </p>
-            {selected ? (
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <Label className="text-xs">{t('fill')}</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="color"
-                      className="h-10 w-14 cursor-pointer p-1"
-                      value={
-                        selected.fill?.startsWith('#') ? selected.fill : 'hsl(var(--primary))'
-                      }
-                      onChange={(e) => updateObject(selected.id, { fill: e.target.value })}
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="border-primary/50 text-primary"
-                      onClick={() => updateObject(selected.id, { fill: 'hsl(var(--primary))' })}
-                    >
-                      {t('fillNavy')}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="border-accent/50 text-accent"
-                      onClick={() => updateObject(selected.id, { fill: 'hsl(var(--accent))' })}
-                    >
-                      {t('fillOrange')}
-                    </Button>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">{t('opacity')}</Label>
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.05}
-                    value={selected.opacity ?? 1}
-                    onChange={(e) =>
-                      updateObject(selected.id, { opacity: Number(e.target.value) })
-                    }
-                    className="w-full accent-primary"
-                  />
-                </div>
-                {selected.type === 'text' ? (
-                  <div className="space-y-1">
-                    <Label className="text-xs">{t('fontSize')}</Label>
-                    <Input
-                      type="number"
-                      min={8}
-                      max={400}
-                      value={selected.fontSize ?? 48}
-                      onChange={(e) =>
-                        updateObject(selected.id, { fontSize: Number(e.target.value) || 48 })
-                      }
-                    />
-                  </div>
-                ) : null}
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => {
-                    setLayout((prev) => ({
-                      ...prev,
-                      objects: prev.objects.filter((o) => o.id !== selected.id),
-                    }));
-                    setSelectedId(null);
-                  }}
-                >
-                  {t('removeObject')}
-                </Button>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">{t('selectObject')}</p>
-            )}
-          </motion.aside>
-        </AnimatePresence>
+        <StudioPropertiesPanel
+          selected={selected}
+          onUpdateObject={updateObject}
+          onRemoveObject={removeObject}
+        />
       </div>
     </div>
   );
