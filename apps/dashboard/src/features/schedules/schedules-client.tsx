@@ -32,6 +32,7 @@ import {
 } from '@/features/schedules/api/schedules-api';
 import { fetchPlaylistOptions } from '@/features/screens/api/screens-api';
 import { fetchScreens } from '@/features/screens/api/screens-api';
+import { readPageItems } from '@/features/api/page';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
@@ -89,13 +90,13 @@ export function SchedulesClient({ locale }: { locale: string }) {
     if (!workspaceId) return;
     setLoading(true);
     try {
-      const [sData, oData, pData, scData] = await Promise.all([
+      const [sRes, oData, pData, scData] = await Promise.all([
         fetchSchedules(workspaceId),
         fetchScheduleOverlaps(workspaceId),
         fetchPlaylistOptions(workspaceId),
         fetchScreens(workspaceId),
       ]);
-      setSchedules(sData);
+      setSchedules(sRes.ok ? await readPageItems<ScheduleApi>(sRes) : []);
       setPairs(oData.pairs ?? []);
       setPlaylists(pData);
       setScreens(scData);

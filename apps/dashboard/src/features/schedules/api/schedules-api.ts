@@ -1,16 +1,7 @@
 import { apiFetch } from '@/features/auth/session';
-import { readPageItems } from '@/features/api/page';
 
-export type ScheduleRow = {
-  id: string;
-  screenId: string | null;
-  playlist: { id: string; name: string };
-};
-
-export async function fetchSchedules(workspaceId: string): Promise<ScheduleRow[]> {
-  const res = await apiFetch(`/schedules?workspaceId=${encodeURIComponent(workspaceId)}`);
-  if (!res.ok) return [];
-  return readPageItems<ScheduleRow>(res);
+export async function fetchSchedules(workspaceId: string): Promise<Response> {
+  return apiFetch(`/schedules?workspaceId=${encodeURIComponent(workspaceId)}`);
 }
 
 export async function updateSchedule(
