@@ -38,6 +38,8 @@ type TokenPayload = {
    * accepted so a deploy does not sign every user out.
    */
   typ?: 'access' | 'refresh';
+  /** Session identifier — only on refresh tokens, used to look up the stored hash. */
+  sid?: string;
 };
 
 type TokenPair = {
@@ -212,7 +214,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
     });
-    await this.setRefreshTokenHash(user.id, tokens.refreshToken);
+    await this.setRefreshTokenSession(user.id, tokens.refreshToken, tokens.sessionId);
 
     const workspaceList = await this.buildWorkspaceListForUser(user.id, false);
 
@@ -297,15 +299,18 @@ export class AuthService {
         'Invalid or expired reset token',
       );
     const passwordHash = await bcrypt.hash(dto.newPassword, 12);
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        passwordHash,
-        passwordResetToken: null,
-        passwordResetExpiresAt: null,
-        refreshTokenHash: null,
-      },
-    });
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          passwordHash,
+          passwordResetToken: null,
+          passwordResetExpiresAt: null,
+          refreshTokenHash: null,
+        },
+      }),
+      this.prisma.refreshToken.deleteMany({ where: { userId: user.id } }),
+    ]);
     return { ok: true };
   }
 
@@ -375,7 +380,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
     });
-    await this.setRefreshTokenHash(user.id, tokens.refreshToken);
+    await this.setRefreshTokenSession(user.id, tokens.refreshToken, tokens.sessionId);
 
     if (isSuperAdmin) {
       try {
@@ -461,7 +466,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
     });
-    await this.setRefreshTokenHash(user.id, tokens.refreshToken);
+    await this.setRefreshTokenSession(user.id, tokens.refreshToken, tokens.sessionId);
 
     if (isSuperAdmin) {
       await this.workspaces.ensureAdminControlEntry(user.id);
@@ -492,6 +497,7 @@ export class AuthService {
       'dev-refresh-secret',
     );
     let userId: string;
+    let sessionId: string | undefined;
     let impersonatedByFromRefresh: string | undefined;
     try {
       const decoded = await this.jwtService.verifyAsync<TokenPayload>(
@@ -505,6 +511,7 @@ export class AuthService {
         throw new UnauthorizedException('Invalid refresh token');
       }
       userId = decoded.sub;
+      sessionId = decoded.sid;
       impersonatedByFromRefresh = decoded.impersonatedBy;
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
@@ -512,14 +519,41 @@ export class AuthService {
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, isActive: true, refreshTokenHash: true },
+      select: { id: true, email: true, isActive: true },
     });
-    if (!user || !user.isActive || !user.refreshTokenHash) {
+    if (!user || !user.isActive) {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    const isValid = await bcrypt.compare(refreshToken, user.refreshTokenHash);
-    if (!isValid) throw new UnauthorizedException('Invalid refresh token');
+    // Look up the stored hash by sessionId (from the JWT sid claim).
+    // Falls back to legacy refreshTokenHash on User for tokens minted
+    // before the multi-session migration.
+    if (sessionId) {
+      const stored = await this.prisma.refreshToken.findUnique({
+        where: { userId_sessionId: { userId, sessionId } },
+      });
+      if (!stored) throw new UnauthorizedException('Invalid refresh token');
+
+      const isValid = await bcrypt.compare(refreshToken, stored.tokenHash);
+      if (!isValid) throw new UnauthorizedException('Invalid refresh token');
+
+      // Rotate: delete the old session, issue a new one.
+      await this.prisma.refreshToken.delete({ where: { id: stored.id } });
+    } else {
+      // Legacy path: token has no sid claim (pre-migration).
+      const legacyUser = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { refreshTokenHash: true },
+      });
+      if (!legacyUser?.refreshTokenHash) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+      const isValid = await bcrypt.compare(
+        refreshToken,
+        legacyUser.refreshTokenHash,
+      );
+      if (!isValid) throw new UnauthorizedException('Invalid refresh token');
+    }
 
     const tokens = await this.issueTokenPair(
       { sub: user.id, email: user.email },
@@ -527,15 +561,12 @@ export class AuthService {
         ? { impersonatedBy: impersonatedByFromRefresh }
         : undefined,
     );
-    await this.setRefreshTokenHash(user.id, tokens.refreshToken);
+    await this.setRefreshTokenSession(user.id, tokens.refreshToken, tokens.sessionId);
     return tokens;
   }
 
   async logout(userId: string): Promise<void> {
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { refreshTokenHash: null },
-    });
+    await this.prisma.refreshToken.deleteMany({ where: { userId } });
   }
 
   /**
@@ -572,7 +603,7 @@ export class AuthService {
       },
       { impersonatedBy: actorUserId },
     );
-    await this.setRefreshTokenHash(target.id, tokens.refreshToken);
+    await this.setRefreshTokenSession(target.id, tokens.refreshToken, tokens.sessionId);
 
     return {
       user: {
@@ -612,7 +643,7 @@ export class AuthService {
       sub: superAdmin.id,
       email: superAdmin.email,
     });
-    await this.setRefreshTokenHash(superAdmin.id, tokens.refreshToken);
+    await this.setRefreshTokenSession(superAdmin.id, tokens.refreshToken, tokens.sessionId);
 
     const workspaceList = await this.buildWorkspaceListForUser(
       superAdmin.id,
@@ -747,7 +778,7 @@ export class AuthService {
   private async issueTokenPair(
     payload: TokenPayload,
     options?: { impersonatedBy?: string },
-  ): Promise<TokenPair> {
+  ): Promise<TokenPair & { sessionId: string }> {
     const accessSecret = this.configService.get<string>(
       'JWT_ACCESS_SECRET',
       'dev-access-secret',
@@ -756,6 +787,8 @@ export class AuthService {
       'JWT_REFRESH_SECRET',
       'dev-refresh-secret',
     );
+
+    const sessionId = randomBytes(16).toString('hex');
 
     const tokenPayload = {
       ...payload,
@@ -773,7 +806,7 @@ export class AuthService {
         },
       ),
       this.jwtService.signAsync(
-        { ...tokenPayload, typ: 'refresh' },
+        { ...tokenPayload, typ: 'refresh', sid: sessionId },
         {
           secret: refreshSecret,
           expiresIn: this.refreshExpiresIn,
@@ -781,18 +814,27 @@ export class AuthService {
       ),
     ]);
 
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken, sessionId };
   }
 
-  private async setRefreshTokenHash(
+  private async setRefreshTokenSession(
     userId: string,
     refreshToken: string,
+    sessionId: string,
   ): Promise<void> {
     const hash = await bcrypt.hash(refreshToken, 12);
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { refreshTokenHash: hash },
-    });
+    const now = new Date();
+    const refreshSeconds = this.refreshExpiresIn;
+    const expiresAt = new Date(now.getTime() + refreshSeconds * 1000);
+
+    await this.prisma.$transaction([
+      this.prisma.refreshToken.create({
+        data: { userId, sessionId, tokenHash: hash, expiresAt },
+      }),
+      this.prisma.refreshToken.deleteMany({
+        where: { userId, expiresAt: { lt: now } },
+      }),
+    ]);
   }
 
   private parseDurationToSeconds(value: string): number {

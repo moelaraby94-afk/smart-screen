@@ -203,7 +203,9 @@ model User {
 
   payments         PaymentRecord[]
 
-  pairingClaimLockout PairingClaimLockout?
+  pairingClaimLockout PairingClaimLockout[]
+
+  refreshTokens     RefreshToken[]
 
 }
 
@@ -430,7 +432,11 @@ model PairingClaimLockout {
 
   id            String   @id @default(cuid())
 
-  userId        String   @unique
+  userId        String
+
+  /// IP address of the claim attempt. Used alongside userId so that
+  /// multiple accounts from the same IP still accumulate failures.
+  ip            String   @default("unknown")
 
   /// Wrong-code claim attempts within the current window (see windowStartAt).
   failedCount   Int      @default(0)
@@ -445,7 +451,41 @@ model PairingClaimLockout {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, ip])
+
+  @@index([ip, lockedUntil])
+
   @@index([lockedUntil])
+
+}
+
+
+
+/// Per-session refresh token storage (replaces the single refreshTokenHash on User).
+/// Each login/impersonation creates a new row; logout deletes all rows for the user.
+/// The sessionId is embedded in the JWT refresh payload so the token can be looked
+/// up directly without scanning every hash.
+model RefreshToken {
+
+  id          String   @id @default(cuid())
+
+  userId      String
+
+  /// Random session identifier embedded in the JWT `sid` claim.
+  sessionId   String
+
+  tokenHash   String
+
+  /// When the refresh token expires (mirrors JWT exp).
+  expiresAt   DateTime
+
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sessionId])
+
+  @@index([userId, expiresAt])
 
 }
 

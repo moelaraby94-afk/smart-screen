@@ -78,9 +78,10 @@ export class PairingService {
   private async assertClaimNotLockedOut(
     userId: string,
     workspaceId: string,
+    ip?: string,
   ): Promise<void> {
     const lockout = await this.prisma.pairingClaimLockout.findUnique({
-      where: { userId },
+      where: { userId_ip: { userId, ip: ip ?? 'unknown' } },
     });
     const now = new Date();
     if (lockout?.lockedUntil && lockout.lockedUntil > now) {
@@ -108,10 +109,11 @@ export class PairingService {
   private async recordFailedClaimAttempt(
     userId: string,
     workspaceId: string,
+    ip?: string,
   ): Promise<void> {
     const now = new Date();
     const existing = await this.prisma.pairingClaimLockout.findUnique({
-      where: { userId },
+      where: { userId_ip: { userId, ip: ip ?? 'unknown' } },
     });
 
     const windowExpired =
@@ -127,8 +129,8 @@ export class PairingService {
         : null;
 
     await this.prisma.pairingClaimLockout.upsert({
-      where: { userId },
-      create: { userId, failedCount, windowStartAt, lockedUntil },
+      where: { userId_ip: { userId, ip: ip ?? 'unknown' } },
+      create: { userId, ip: ip ?? 'unknown', failedCount, windowStartAt, lockedUntil },
       update: { failedCount, windowStartAt, lockedUntil },
     });
 
@@ -228,6 +230,12 @@ export class PairingService {
             playerPlatform,
             resolutionWidth,
             resolutionHeight,
+            /**
+             * When the player already knows its workspace (e.g. re-pairing
+             * from a dashboard-initiated flow), pin the session to that
+             * workspace so no other tenant can claim the code.
+             */
+            ...(notifyWorkspaceId ? { workspaceId: notifyWorkspaceId } : {}),
           },
           select: {
             id: true,
@@ -344,8 +352,9 @@ export class PairingService {
     workspaceId: string,
     userId: string,
     dto: ClaimPairingSessionDto,
+    ip?: string,
   ) {
-    await this.assertClaimNotLockedOut(userId, workspaceId);
+    await this.assertClaimNotLockedOut(userId, workspaceId, ip);
 
     try {
       await this.assertWorkspaceAdmin(workspaceId, userId);
@@ -358,6 +367,16 @@ export class PairingService {
             code,
             status: ScreenPairingSessionStatus.PENDING,
             expiresAt: { gt: now },
+            /**
+             * Tenant isolation: if the session was pinned to a workspace
+             * at start time, only that workspace may claim it. Sessions
+             * with workspaceId = null are unrestricted (player-initiated
+             * pairing without a prior workspace context).
+             */
+            OR: [
+              { workspaceId: null },
+              { workspaceId },
+            ],
           },
         });
         if (!session) {
@@ -444,7 +463,7 @@ export class PairingService {
           `reason=${err instanceof DomainException ? err.code : String(err)}`,
       );
       if (isWrongCode) {
-        await this.recordFailedClaimAttempt(userId, workspaceId);
+        await this.recordFailedClaimAttempt(userId, workspaceId, ip);
       }
       throw err;
     }

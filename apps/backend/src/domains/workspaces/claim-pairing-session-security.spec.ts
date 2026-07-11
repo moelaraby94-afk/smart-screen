@@ -28,6 +28,7 @@ import { WorkspacesService } from './workspaces.service';
 type FakeLockoutRow = {
   id: string;
   userId: string;
+  ip: string | null;
   failedCount: number;
   windowStartAt: Date;
   lockedUntil: Date | null;
@@ -65,8 +66,9 @@ function createFakePrisma() {
       ),
     },
     pairingClaimLockout: {
-      findUnique: jest.fn(({ where }: { where: { userId: string } }) => {
-        return lockouts.get(where.userId) ?? null;
+      findUnique: jest.fn(({ where }: { where: { userId_ip: { userId: string; ip: string | null } } }) => {
+        const key = `${where.userId_ip.userId}:${where.userId_ip.ip ?? 'null'}`;
+        return lockouts.get(key) ?? null;
       }),
       upsert: jest.fn(
         ({
@@ -74,21 +76,28 @@ function createFakePrisma() {
           create,
           update,
         }: {
-          where: { userId: string };
+          where: { userId_ip: { userId: string; ip: string | null } };
           create: Omit<FakeLockoutRow, 'id'>;
           update: Partial<FakeLockoutRow>;
         }) => {
-          const existing = lockouts.get(where.userId);
+          const key = `${where.userId_ip.userId}:${where.userId_ip.ip ?? 'null'}`;
+          const existing = lockouts.get(key);
           const row: FakeLockoutRow = existing
             ? { ...existing, ...update }
-            : { id: `lock_${where.userId}`, ...create };
-          lockouts.set(where.userId, row);
+            : { id: `lock_${key}`, ...create };
+          lockouts.set(key, row);
           return row;
         },
       ),
       deleteMany: jest.fn(({ where }: { where: { userId: string } }) => {
-        const existed = lockouts.delete(where.userId);
-        return { count: existed ? 1 : 0 };
+        let count = 0;
+        for (const [key, row] of lockouts) {
+          if (key.startsWith(`${where.userId}:`)) {
+            lockouts.delete(key);
+            count += 1;
+          }
+        }
+        return { count };
       }),
     },
     $transaction: jest.fn(
@@ -214,7 +223,12 @@ describe('POST /workspaces/:workspaceId/pairing-sessions/claim — brute-force d
 
     // The 5th failure (within the 10-minute window) should have tripped the
     // 30-minute lockout in the DB-backed counter.
-    const lockoutRow = fakePrisma.lockouts.get(userId);
+    // The lockout row is keyed by (userId, ip); req.ip for this in-process
+    // request is the loopback address, whose exact form varies by platform, so
+    // locate the row by its userId prefix rather than hardcoding the ip.
+    const lockoutRow = [...fakePrisma.lockouts.entries()].find(([key]) =>
+      key.startsWith(`${userId}:`),
+    )?.[1];
     expect(lockoutRow?.failedCount).toBe(5);
     expect(lockoutRow?.lockedUntil).not.toBeNull();
     expect(lockoutRow?.lockedUntil?.getTime()).toBeGreaterThan(Date.now());
@@ -224,9 +238,14 @@ describe('POST /workspaces/:workspaceId/pairing-sessions/claim — brute-force d
     // rate limit, that keeps rejecting the user.
     let lockedError: unknown;
     try {
-      await pairingService.claimSession(workspaceId, userId, {
-        code: '123456',
-      });
+      // Use the same ip the HTTP attempts were recorded under, so the direct
+      // call hits the same (userId, ip) lockout bucket rather than a fresh one.
+      await pairingService.claimSession(
+        workspaceId,
+        userId,
+        { code: '123456' },
+        lockoutRow?.ip ?? undefined,
+      );
     } catch (err) {
       lockedError = err;
     }
@@ -243,9 +262,10 @@ describe('POST /workspaces/:workspaceId/pairing-sessions/claim — brute-force d
   it('lets the user try again once the 30-minute lockout window has actually elapsed', async () => {
     // Simulate "30 minutes later" by seeding an already-expired lockedUntil,
     // rather than waiting in wall-clock time.
-    fakePrisma.lockouts.set(userId, {
-      id: `lock_${userId}`,
+    fakePrisma.lockouts.set(`${userId}:unknown`, {
+      id: `lock_${userId}:unknown`,
       userId,
+      ip: 'unknown',
       failedCount: 5,
       windowStartAt: new Date(Date.now() - 40 * 60 * 1000),
       lockedUntil: new Date(Date.now() - 1000),

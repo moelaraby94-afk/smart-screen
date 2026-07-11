@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
@@ -23,6 +24,7 @@ import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { WorkspacesService } from './workspaces.service';
+import type { Request } from 'express';
 
 @Controller('workspaces')
 export class WorkspacesController {
@@ -99,8 +101,9 @@ export class WorkspacesController {
     @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: JwtUser,
     @Body() dto: ClaimPairingSessionDto,
+    @Req() req: Request,
   ) {
-    return this.pairing.claimSession(workspaceId, user.sub, dto);
+    return this.pairing.claimSession(workspaceId, user.sub, dto, req.ip);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
