@@ -10,9 +10,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  apiFetch,
   setStoredAccessToken,
 } from '@/features/auth/session';
+import {
+  registerStart as apiRegisterStart,
+  registerVerify as apiRegisterVerify,
+  registerResend as apiRegisterResend,
+} from '@/features/auth/auth-api';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { COUNTRIES, guessCountryCode } from '@/lib/countries';
@@ -48,18 +52,15 @@ export function RegisterClient() {
     e.preventDefault();
     setPending(true);
     try {
-      const res = await apiFetch('/auth/register/start', {
-        method: 'POST',
-        body: JSON.stringify({
-          email,
-          businessName,
-          fullName,
-          phone: `${dial} ${phone}`.trim(),
-          country,
-          city: city || undefined,
-          password,
-          locale,
-        }),
+      const res = await apiRegisterStart({
+        email,
+        businessName,
+        fullName,
+        phone: `${dial} ${phone}`.trim(),
+        country,
+        city: city || undefined,
+        password,
+        locale,
       });
       if (res.status === 409) {
         toast.error(t('emailExists'));
@@ -80,10 +81,7 @@ export function RegisterClient() {
     e.preventDefault();
     setPending(true);
     try {
-      const res = await apiFetch('/auth/register/verify', {
-        method: 'POST',
-        body: JSON.stringify({ email, code: otp }),
-      });
+      const res = await apiRegisterVerify(email, otp);
       if (!res.ok) {
         await toastResponseError(res);
         return;
@@ -107,10 +105,7 @@ export function RegisterClient() {
     if (!email.trim()) return;
     setPending(true);
     try {
-      const res = await apiFetch('/auth/register/resend', {
-        method: 'POST',
-        body: JSON.stringify({ email }),
-      });
+      const res = await apiRegisterResend(email);
       if (!res.ok) {
         await toastResponseError(res);
         return;

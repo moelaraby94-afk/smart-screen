@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiFetch } from '@/features/auth/session';
+import { createWorkspace as apiCreateWorkspace } from '@/features/workspace/workspace-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 
 type Props = {
@@ -53,11 +53,7 @@ export function WorkspaceCreateDialog({ open, onOpenChange, onCreated }: Props) 
     }
     setSaving(true);
     try {
-      const res = await apiFetch('/workspaces', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: trimmed }),
-      });
+      const res = await apiCreateWorkspace(trimmed);
       if (!res.ok) {
         toast.error(await readApiError(res));
         return;

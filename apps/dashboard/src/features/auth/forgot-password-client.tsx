@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiFetch } from '@/features/auth/session';
+import { forgotPassword as apiForgotPassword, resetPassword as apiResetPassword } from '@/features/auth/auth-api';
 
 export function ForgotPasswordClient() {
   const t = useTranslations('forgotPasswordClient');
@@ -25,10 +25,7 @@ export function ForgotPasswordClient() {
     e.preventDefault();
     setPending(true);
     try {
-      const res = await apiFetch('/auth/forgot-password', {
-        method: 'POST',
-        body: JSON.stringify({ email }),
-      });
+      const res = await apiForgotPassword(email);
       if (!res.ok) {
         toast.error(t('requestFailed'));
         return;
@@ -47,13 +44,10 @@ export function ForgotPasswordClient() {
     }
     setPending(true);
     try {
-      const res = await apiFetch('/auth/reset-password', {
-        method: 'POST',
-        body: JSON.stringify({
-          email,
-          token,
-          newPassword,
-        }),
+      const res = await apiResetPassword({
+        email,
+        token,
+        newPassword,
       });
       if (!res.ok) {
         toast.error(t('resetFailed'));

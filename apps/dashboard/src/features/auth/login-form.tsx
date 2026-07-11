@@ -9,9 +9,9 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
-  apiFetch,
   setStoredAccessToken,
 } from './session';
+import { login as apiLogin, devLogin as apiDevLogin } from './auth-api';
 import { readApiError } from '@/features/api/api-error';
 import { useApiErrorMessage } from '@/features/api/use-api-error-message';
 import { useWorkspace } from '@/features/workspace/workspace-context';
@@ -83,11 +83,7 @@ export function LoginForm({
     setError(null);
     try {
       setStoredAccessToken(null);
-      const response = await apiFetch('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-        omitAuth: true,
-      });
+      const response = await apiLogin(email, password);
       if (!response.ok) {
         throw new Error(errorMessage(await readApiError(response)));
       }
@@ -108,10 +104,7 @@ export function LoginForm({
     setError(null);
     try {
       setStoredAccessToken(null);
-      const response = await apiFetch('/auth/dev-login', {
-        method: 'POST',
-        omitAuth: true,
-      });
+      const response = await apiDevLogin();
       if (!response.ok) {
         throw new Error(errorMessage(await readApiError(response)));
       }

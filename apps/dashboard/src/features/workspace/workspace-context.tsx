@@ -10,7 +10,8 @@ import {
   useState,
 } from 'react';
 import { io } from 'socket.io-client';
-import { apiFetch, getStoredAccessToken } from '@/features/auth/session';
+import { getStoredAccessToken } from '@/features/auth/session';
+import { fetchCurrentUser } from './workspace-api';
 
 export type WorkspaceSummary = {
   id: string;
@@ -125,7 +126,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const refreshWorkspaces = useCallback(async (preferredWorkspaceId?: string | null) => {
     setIsLoading(true);
     try {
-      const response = await apiFetch('/auth/me', { method: 'GET' });
+      const response = await fetchCurrentUser();
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
           resetToLoggedOut();
