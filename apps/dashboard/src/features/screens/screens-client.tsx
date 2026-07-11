@@ -18,8 +18,8 @@ import {
   Monitor,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { readPageItems } from '@/features/api/page';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
+import { useScreenActions } from '@/features/screens/hooks/use-screen-actions';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -40,8 +40,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  apiFetch,
-} from '@/features/auth/session';
+  fetchPlaylistOptions,
+  createScreen as apiCreateScreen,
+  updateScreen as apiUpdateScreen,
+  type PlaylistOption as ApiPlaylistOption,
+} from '@/features/screens/api/screens-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
 import { ScreenQuickEditPanel } from '@/features/screens/screen-quick-edit-panel';
@@ -67,7 +70,7 @@ type Props = {
   locale: string;
 };
 
-type PlaylistOption = { id: string; name: string };
+type PlaylistOption = ApiPlaylistOption;
 
 function ScreenVisualCard({
   screen,
@@ -269,11 +272,8 @@ export function ScreensClient({ locale }: Props) {
     }
     let cancelled = false;
     void (async () => {
-      const res = await apiFetch(
-        `/playlists?workspaceId=${encodeURIComponent(workspaceId)}`,
-      );
-      if (!res.ok || cancelled) return;
-      setPlaylists(await readPageItems<PlaylistOption>(res));
+      const items = await fetchPlaylistOptions(workspaceId);
+      if (!cancelled) setPlaylists(items);
     })();
     return () => {
       cancelled = true;
@@ -285,27 +285,27 @@ export function ScreensClient({ locale }: Props) {
     bumpWorkspaceDataEpoch();
   }, [reload, bumpWorkspaceDataEpoch]);
 
+  const { onDelete, sendRemoteCommand } = useScreenActions({
+    workspaceId,
+    setScreens,
+    reload,
+    bumpWorkspaceDataEpoch,
+  });
+
   const assignPlaybackPlaylist = useCallback(
     async (screenId: string, playlistId: string | null) => {
       if (!workspaceId) return;
       setAssignPlaylistScreenId(screenId);
       try {
-        const res = await apiFetch(
-          `/screens/${encodeURIComponent(screenId)}?workspaceId=${encodeURIComponent(workspaceId)}`,
-          {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ activePlaylistId: playlistId }),
-          },
-        );
+        const playlistName =
+          playlistId === null
+            ? null
+            : (playlists.find((p) => p.id === playlistId)?.name ?? null);
+        const res = await apiUpdateScreen(workspaceId, screenId, { activePlaylistId: playlistId });
         if (!res.ok) {
           toast.error(t('playlistAssignFailed'));
           return;
         }
-        const name =
-          playlistId === null
-            ? null
-            : (playlists.find((p) => p.id === playlistId)?.name ?? null);
         setScreens((prev) =>
           prev.map((s) =>
             s.id === screenId
@@ -313,7 +313,7 @@ export function ScreensClient({ locale }: Props) {
                   ...s,
                   activePlaylistId: playlistId,
                   activePlaylist:
-                    playlistId && name ? { id: playlistId, name } : null,
+                    playlistId && playlistName ? { id: playlistId, name: playlistName } : null,
                 }
               : s,
           ),
@@ -333,50 +333,6 @@ export function ScreensClient({ locale }: Props) {
   const [quickOpen, setQuickOpen] = useState(false);
   const [quickScreen, setQuickScreen] = useState<ScreenRow | null>(null);
 
-  const onDelete = useCallback(
-    async (id: string) => {
-      if (!workspaceId) return;
-      const response = await apiFetch(
-        `/screens/${id}?workspaceId=${encodeURIComponent(workspaceId)}`,
-        { method: 'DELETE' },
-      );
-      if (!response.ok) {
-        toast.error(t('deleteFailed'));
-        return;
-      }
-      toast.success(t('deleted'));
-      await reload();
-      bumpWorkspaceDataEpoch();
-    },
-    [reload, workspaceId, bumpWorkspaceDataEpoch, t],
-  );
-
-  const sendRemoteCommand = useCallback(
-    async (screenId: string, command: 'identify' | 'refresh_content' | 'restart') => {
-      if (!workspaceId) return;
-      const response = await apiFetch(
-        `/screens/${screenId}/remote-command?workspaceId=${encodeURIComponent(workspaceId)}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ command }),
-        },
-      );
-      if (!response.ok) {
-        toast.error(t('remoteFailed'));
-        return;
-      }
-      toast.success(
-        command === 'refresh_content'
-          ? t('remoteRefreshOk')
-          : t('remotePowerOk'),
-      );
-      if (command === 'refresh_content') {
-        bumpWorkspaceDataEpoch();
-      }
-    },
-    [workspaceId, t, bumpWorkspaceDataEpoch],
-  );
 
   const openQuick = (s: ScreenRow) => {
     setQuickScreen(s);
@@ -523,13 +479,7 @@ function CreateScreenDialogContent({
   });
 
   const submit = async (values: z.infer<typeof screenSchema>) => {
-    const response = await apiFetch('/screens', {
-      method: 'POST',
-      body: JSON.stringify({
-        workspaceId,
-        ...values,
-      }),
-    });
+    const response = await apiCreateScreen(workspaceId, values);
     if (!response.ok) {
       // SCREEN_LIMIT_REACHED carries `details.limit`; the catalogue formats it.
       await toastResponseError(response);
@@ -587,17 +537,11 @@ function EditScreenDialogContent({
   });
 
   const submit = async (values: z.infer<typeof editSchema>) => {
-    const response = await apiFetch(
-      `/screens/${screen.id}?workspaceId=${encodeURIComponent(workspaceId)}`,
-      {
-        method: 'PATCH',
-        body: JSON.stringify({
-          name: values.name,
-          location: values.location,
-          status: values.status,
-        }),
-      },
-    );
+    const response = await apiUpdateScreen(workspaceId, screen.id, {
+      name: values.name,
+      location: values.location,
+      status: values.status,
+    });
     if (!response.ok) {
       toast.error(t('updateFailed'));
       return;
