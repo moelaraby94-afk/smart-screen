@@ -6,6 +6,7 @@ import type { Response } from 'express';
 import express from 'express';
 import { join } from 'path';
 import { AppModule } from './app.module';
+import { AppLogger } from './common/request-context/app-logger';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { assertProductionSecretsAreSet } from './common/config/assert-production-secrets';
@@ -41,6 +42,7 @@ async function bootstrap() {
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bodyParser: false,
+    logger: new AppLogger(),
   });
 
   /**

@@ -24,6 +24,7 @@ import { WebhooksModule } from './domains/webhooks/webhooks.module';
 import { MaintenanceModule } from './domains/maintenance/maintenance.module';
 import { EmailModule } from './domains/email/email.module';
 import { HealthModule } from './common/health/health.module';
+import { RequestContextModule } from './common/request-context/request-context.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { HealthModule } from './common/health/health.module';
     WebhooksModule,
     MaintenanceModule,
     HealthModule,
+    RequestContextModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
