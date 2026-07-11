@@ -24,7 +24,12 @@ import {
 } from '@/components/ui/table';
 import { AdminEmptyState } from '@/components/admin/admin-empty-state';
 import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
-import { apiFetch } from '@/features/auth/session';
+import {
+  fetchAdminStaff,
+  updateStaffRole as apiUpdateStaffRole,
+  createStaff as apiCreateStaff,
+  updateAdminUser as apiUpdateAdminUser,
+} from './admin-api';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { adminGlassTable } from '@/lib/admin-glass-table';
 import { cn } from '@/lib/utils';
@@ -62,7 +67,7 @@ export function AdminStaffClient() {
   const inviteRoleOptions = roleOptions.filter((r) => r.value !== 'SUPER_ADMIN');
 
   const load = useCallback(async () => {
-    const res = await apiFetch('/admin/staff');
+    const res = await fetchAdminStaff();
     if (!res.ok) {
       toast.error(t('loadFailed'));
       setLoading(false);
@@ -80,10 +85,7 @@ export function AdminStaffClient() {
   const updateRole = async (userId: string, role: StaffRole) => {
     setSavingId(userId);
     try {
-      const res = await apiFetch(`/admin/staff/${userId}/role`, {
-        method: 'PATCH',
-        body: JSON.stringify({ adminRole: role }),
-      });
+      const res = await apiUpdateStaffRole(userId, role);
       if (!res.ok) {
         toast.error(t('updateRoleFailed'));
         return;
@@ -98,14 +100,11 @@ export function AdminStaffClient() {
   const createStaff = async () => {
     setCreating(true);
     try {
-      const res = await apiFetch('/admin/staff', {
-        method: 'POST',
-        body: JSON.stringify({
-          fullName: newName.trim(),
-          email: newEmail.trim().toLowerCase(),
-          password: newPassword,
-          adminRole: newRole,
-        }),
+      const res = await apiCreateStaff({
+        fullName: newName.trim(),
+        email: newEmail.trim().toLowerCase(),
+        password: newPassword,
+        adminRole: newRole,
       });
       if (!res.ok) {
         await toastResponseError(res);
@@ -126,10 +125,7 @@ export function AdminStaffClient() {
   const disableStaff = async (userId: string) => {
     setSavingId(userId);
     try {
-      const res = await apiFetch(`/admin/users/${userId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ isActive: false }),
-      });
+      const res = await apiUpdateAdminUser(userId, { isActive: false });
       if (!res.ok) {
         toast.error(t('disableFailed'));
         return;

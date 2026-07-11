@@ -43,7 +43,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
-import { apiFetch, setStoredAccessToken } from '@/features/auth/session';
+import { setStoredAccessToken } from '@/features/auth/session';
+import {
+  fetchAdminCustomer as apiFetchAdminCustomer,
+  updateCustomerSubscription as apiUpdateCustomerSubscription,
+  createCustomerWorkspace as apiCreateCustomerWorkspace,
+  updateCustomerWorkspace as apiUpdateCustomerWorkspace,
+  deleteCustomerWorkspace as apiDeleteCustomerWorkspace,
+  impersonateUser as apiImpersonateUser,
+  sendCustomerReminder as apiSendCustomerReminder,
+} from './admin-api';
 import { readApiError } from '@/features/api/api-error';
 import { useApiErrorMessage } from '@/features/api/use-api-error-message';
 import { useWorkspace } from '@/features/workspace/workspace-context';
@@ -164,7 +173,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await apiFetch(`/admin/customers/${customerId}`);
+    const res = await apiFetchAdminCustomer(customerId);
     if (!res.ok) {
       toast.error(t('toastLoadFailed'));
       setData(null);
@@ -198,10 +207,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
           ? new Date(subEndLocal).toISOString()
           : null,
       };
-      const res = await apiFetch(`/admin/customers/${customerId}/subscription`, {
-        method: 'PATCH',
-        body: JSON.stringify(body),
-      });
+      const res = await apiUpdateCustomerSubscription(customerId, body);
       if (!res.ok) {
         throw new Error(errorMessage(await readApiError(res)));
       }
@@ -222,10 +228,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
     }
     setAdding(true);
     try {
-      const res = await apiFetch(`/admin/customers/${customerId}/workspaces`, {
-        method: 'POST',
-        body: JSON.stringify({ name }),
-      });
+      const res = await apiCreateCustomerWorkspace(customerId, name);
       if (!res.ok) throw new Error('Failed');
       toast.success(t('toastWsCreated'));
       setAddOpen(false);
@@ -247,13 +250,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
     }
     setSavingWs(true);
     try {
-      const res = await apiFetch(
-        `/admin/customers/${customerId}/workspaces/${editWs.id}`,
-        {
-          method: 'PATCH',
-          body: JSON.stringify({ name }),
-        },
-      );
+      const res = await apiUpdateCustomerWorkspace(customerId, editWs.id, { name });
       if (!res.ok) throw new Error('Failed');
       toast.success(t('toastBranchUpdated'));
       setEditWs(null);
@@ -269,10 +266,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
     if (!deleteWs) return;
     setDeleting(true);
     try {
-      const res = await apiFetch(
-        `/admin/customers/${customerId}/workspaces/${deleteWs.id}`,
-        { method: 'DELETE' },
-      );
+      const res = await apiDeleteCustomerWorkspace(customerId, deleteWs.id);
       if (!res.ok) throw new Error('Failed');
       toast.success(t('toastWsRemoved'));
       setDeleteWs(null);
@@ -288,10 +282,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
     if (!data) return;
     setImpersonatingWs(workspaceId);
     try {
-      const res = await apiFetch(`/admin/users/${data.id}/impersonate`, {
-        method: 'POST',
-        body: JSON.stringify({ workspaceId }),
-      });
+      const res = await apiImpersonateUser(data.id, { workspaceId });
       if (!res.ok) {
         toast.error(t('toastImpersonateFailed'));
         return;
@@ -315,9 +306,7 @@ export function AdminCustomerProfileClient({ customerId }: { customerId: string 
   const sendReminder = async () => {
     setSendingReminder(true);
     try {
-      const res = await apiFetch(`/admin/customers/${customerId}/reminder`, {
-        method: 'POST',
-      });
+      const res = await apiSendCustomerReminder(customerId);
       if (!res.ok) throw new Error('Failed');
       const body = (await res.json()) as { message?: string };
       toast.success(body.message ?? t('toastReminderDefault'));

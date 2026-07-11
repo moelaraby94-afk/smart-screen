@@ -41,7 +41,14 @@ import {
 } from '@/components/ui/table';
 import { AdminEmptyState } from '@/components/admin/admin-empty-state';
 import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
-import { apiFetch, setStoredAccessToken } from '@/features/auth/session';
+import { setStoredAccessToken } from '@/features/auth/session';
+import { fetchCurrentUser } from '@/features/workspace/workspace-api';
+import {
+  fetchAdminCustomers,
+  updateAdminUser as apiUpdateAdminUser,
+  impersonateUser as apiImpersonateUser,
+  sendCustomerReminder as apiSendCustomerReminder,
+} from './admin-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { adminGlassTable } from '@/lib/admin-glass-table';
 import { cn } from '@/lib/utils';
@@ -165,8 +172,8 @@ export function AdminCustomersClient() {
     if (q) params.set('q', q);
     const qs = params.toString();
     const [meRes, listRes] = await Promise.all([
-      apiFetch('/auth/me'),
-      apiFetch(`/admin/customers${qs ? `?${qs}` : ''}`),
+      fetchCurrentUser(),
+      fetchAdminCustomers(qs),
     ]);
     if (meRes.ok) {
       const me = (await meRes.json()) as { id: string };
@@ -188,10 +195,7 @@ export function AdminCustomersClient() {
 
   const confirmSuspend = async () => {
     if (!suspendTarget) return;
-    const res = await apiFetch(`/admin/users/${suspendTarget.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ isActive: false }),
-    });
+    const res = await apiUpdateAdminUser(suspendTarget.id, { isActive: false });
     setSuspendTarget(null);
     if (!res.ok) {
       toast.error(t('suspendFailed'));
@@ -205,10 +209,7 @@ export function AdminCustomersClient() {
     if (!impersonateTarget) return;
     const target = impersonateTarget;
     setImpersonateTarget(null);
-    const res = await apiFetch(`/admin/users/${target.id}/impersonate`, {
-      method: 'POST',
-      body: JSON.stringify({}),
-    });
+    const res = await apiImpersonateUser(target.id);
     if (!res.ok) {
       toast.error(t('impersonateFailed'));
       return;
@@ -230,9 +231,7 @@ export function AdminCustomersClient() {
     if (!reminderTarget) return;
     setSendingReminder(true);
     try {
-      const res = await apiFetch(`/admin/customers/${reminderTarget.id}/reminder`, {
-        method: 'POST',
-      });
+      const res = await apiSendCustomerReminder(reminderTarget.id);
       setReminderTarget(null);
       if (!res.ok) throw new Error('fail');
       const body = (await res.json()) as { message?: string };

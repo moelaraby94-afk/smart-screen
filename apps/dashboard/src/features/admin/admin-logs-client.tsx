@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/table';
 import { AdminEmptyState } from '@/components/admin/admin-empty-state';
 import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
-import { apiFetch } from '@/features/auth/session';
+import { fetchAdminLogs } from './admin-api';
 import { adminGlassTable } from '@/lib/admin-glass-table';
 import { cn } from '@/lib/utils';
 
@@ -56,7 +56,7 @@ export function AdminLogsClient() {
   useEffect(() => {
     let mounted = true;
     void (async () => {
-      const res = await apiFetch('/admin/logs');
+      const res = await fetchAdminLogs();
       if (!res.ok) {
         if (mounted) {
           setRows([]);

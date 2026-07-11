@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { HardDrive, Link2, MonitorSmartphone, Activity } from 'lucide-react';
 import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
 import { toast } from 'sonner';
-import { apiFetch } from '@/features/auth/session';
+import { fetchAdminStats } from './admin-api';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 
 type AdminOverview = {
@@ -40,7 +40,7 @@ export function AdminHomeOverviewClient() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const res = await apiFetch('/admin/stats');
+    const res = await fetchAdminStats();
     if (!res.ok) {
       toast.error(t('loadFailed'));
       setError(t('failed'));

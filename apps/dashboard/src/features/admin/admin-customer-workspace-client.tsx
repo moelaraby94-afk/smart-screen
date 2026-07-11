@@ -16,7 +16,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
-import { apiFetch, setStoredAccessToken } from '@/features/auth/session';
+import { setStoredAccessToken } from '@/features/auth/session';
+import {
+  fetchCustomerWorkspace as apiFetchCustomerWorkspace,
+  impersonateUser as apiImpersonateUser,
+} from './admin-api';
 import { readApiError } from '@/features/api/api-error';
 import { useApiErrorMessage } from '@/features/api/use-api-error-message';
 import { useWorkspace } from '@/features/workspace/workspace-context';
@@ -61,7 +65,7 @@ export function AdminCustomerWorkspaceClient({ customerId, workspaceId }: Props)
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await apiFetch(`/admin/customers/${customerId}/workspaces/${workspaceId}`);
+    const res = await apiFetchCustomerWorkspace(customerId, workspaceId);
     if (!res.ok) {
       toast.error(errorMessage(await readApiError(res)));
       setData(null);
@@ -81,10 +85,7 @@ export function AdminCustomerWorkspaceClient({ customerId, workspaceId }: Props)
     if (!data) return;
     setImpersonating(true);
     try {
-      const res = await apiFetch(`/admin/users/${data.customerId}/impersonate`, {
-        method: 'POST',
-        body: JSON.stringify({ workspaceId: data.workspace.id }),
-      });
+      const res = await apiImpersonateUser(data.customerId, { workspaceId: data.workspace.id });
       if (!res.ok) {
         toast.error(tProfile('toastImpersonateFailed'));
         return;

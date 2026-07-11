@@ -6,7 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
-import { apiFetch } from '@/features/auth/session';
+import {
+  fetchAdminSettings,
+  updateAdminSettings as apiUpdateAdminSettings,
+  uploadBrandingImage as apiUploadBrandingImage,
+} from './admin-api';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { toast } from 'sonner';
 
@@ -44,7 +48,7 @@ export function AdminSettingsClient() {
   useEffect(() => {
     let mounted = true;
     void (async () => {
-      const res = await apiFetch('/admin/settings');
+      const res = await fetchAdminSettings();
       if (!res.ok) {
         if (mounted) setLoading(false);
         return;
@@ -70,10 +74,7 @@ export function AdminSettingsClient() {
   const save = async () => {
     setSaving(true);
     try {
-      const res = await apiFetch('/admin/settings', {
-        method: 'PATCH',
-        body: JSON.stringify(form),
-      });
+      const res = await apiUpdateAdminSettings(form);
       if (!res.ok) {
         await toastResponseError(res);
         return;
@@ -91,12 +92,7 @@ export function AdminSettingsClient() {
     if (!file) return;
     setUploading(variant);
     try {
-      const fd = new FormData();
-      fd.append('file', file);
-      const res = await apiFetch(
-        `/admin/settings/branding/upload?variant=${encodeURIComponent(variant)}`,
-        { method: 'POST', body: fd },
-      );
+      const res = await apiUploadBrandingImage(variant, file);
       if (!res.ok) {
         await toastResponseError(res);
         return;

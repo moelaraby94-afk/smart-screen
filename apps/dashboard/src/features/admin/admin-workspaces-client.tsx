@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/table';
 import { AdminEmptyState } from '@/components/admin/admin-empty-state';
 import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
-import { apiFetch } from '@/features/auth/session';
+import { fetchAdminWorkspaces, mockWorkspacePlan as apiMockWorkspacePlan } from './admin-api';
 import { adminGlassTable } from '@/lib/admin-glass-table';
 import { cn } from '@/lib/utils';
 
@@ -54,7 +54,7 @@ export function AdminWorkspacesClient() {
   const [mockingId, setMockingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const res = await apiFetch('/admin/workspaces');
+    const res = await fetchAdminWorkspaces();
     if (!res.ok) {
       toast.error(t('loadFailed'));
       setLoading(false);
@@ -72,11 +72,7 @@ export function AdminWorkspacesClient() {
   const mockPlan = async (workspaceId: string, plan: 'FREE' | 'PRO') => {
     setMockingId(workspaceId);
     try {
-      const res = await apiFetch(`/admin/workspaces/${workspaceId}/subscription-mock`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan }),
-      });
+      const res = await apiMockWorkspacePlan(workspaceId, plan);
       if (!res.ok) {
         toast.error(t('mockFailed'));
         return;

@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Activity, Cpu, HardDrive, Radio, Server } from 'lucide-react';
 import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
 import { toast } from 'sonner';
-import { apiFetch } from '@/features/auth/session';
+import { fetchAdminStats } from './admin-api';
 
 type Stats = {
   revenueUsdPlaceholder: number;
@@ -38,7 +38,7 @@ export function AdminSystemHealthClient() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const res = await apiFetch('/admin/stats');
+    const res = await fetchAdminStats();
     if (!res.ok) {
       toast.error(t('loadFailed'));
       setError(t('failed'));

@@ -12,7 +12,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { apiFetch } from '@/features/auth/session';
+import {
+  fetchAccountBilling,
+  fetchCurrentSubscription,
+  createStripePortal as apiCreateStripePortal,
+} from '@/features/billing/billing-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 
 type Payment = {
@@ -53,7 +57,7 @@ export function SettingsBillingClient() {
 
   useEffect(() => {
     void (async () => {
-      const res = await apiFetch('/account/billing');
+      const res = await fetchAccountBilling();
       if (!res.ok) {
         toast.error(t('loadFailed'));
         setLoading(false);
@@ -70,9 +74,7 @@ export function SettingsBillingClient() {
         setPortalAvailable(false);
         return;
       }
-      const res = await apiFetch(
-        `/subscriptions/current?workspaceId=${encodeURIComponent(workspaceId)}`,
-      );
+      const res = await fetchCurrentSubscription(workspaceId);
       if (!res.ok) {
         setPortalAvailable(false);
         return;
@@ -89,10 +91,7 @@ export function SettingsBillingClient() {
     }
     setPortalBusy(true);
     try {
-      const res = await apiFetch('/stripe/portal', {
-        method: 'POST',
-        body: JSON.stringify({ workspaceId, locale }),
-      });
+      const res = await apiCreateStripePortal(workspaceId, locale);
       if (!res.ok) {
         toast.error(t('portalFailed'));
         return;

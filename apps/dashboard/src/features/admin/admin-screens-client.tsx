@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/table';
 import { AdminEmptyState } from '@/components/admin/admin-empty-state';
 import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
-import { apiFetch } from '@/features/auth/session';
+import { fetchAdminScreens } from './admin-api';
 import type { ScreenStatus } from '@/features/screens/useApiScreens';
 import { ScreenFleetStatusBadge } from '@/features/screens/screen-fleet-status';
 import { adminGlassTable } from '@/lib/admin-glass-table';
@@ -45,7 +45,7 @@ export function AdminScreensClient() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const res = await apiFetch('/admin/screens');
+    const res = await fetchAdminScreens();
     if (!res.ok) {
       toast.error(t('loadFailed'));
       setLoading(false);

@@ -5,7 +5,8 @@ import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { apiFetch, setStoredAccessToken } from '@/features/auth/session';
+import { setStoredAccessToken } from '@/features/auth/session';
+import { exitImpersonation as apiExitImpersonation } from './admin-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 
 export function ImpersonationReturnButton() {
@@ -16,7 +17,7 @@ export function ImpersonationReturnButton() {
   if (!impersonatedBySuperAdminId) return null;
 
   const onExit = async () => {
-    const res = await apiFetch('/auth/exit-impersonation', { method: 'POST' });
+    const res = await apiExitImpersonation();
     if (!res.ok) {
       toast.error(t('restoreFailed'));
       return;

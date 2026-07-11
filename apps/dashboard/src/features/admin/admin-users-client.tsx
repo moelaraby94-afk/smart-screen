@@ -47,7 +47,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { apiFetch, setStoredAccessToken } from '@/features/auth/session';
+import { setStoredAccessToken } from '@/features/auth/session';
+import { fetchCurrentUser } from '@/features/workspace/workspace-api';
+import {
+  fetchAdminUsers,
+  updateAdminUser as apiUpdateAdminUser,
+  impersonateUser as apiImpersonateUser,
+} from './admin-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
 
@@ -120,8 +126,8 @@ export function AdminUsersClient() {
 
   const load = useCallback(async () => {
     const [meRes, listRes] = await Promise.all([
-      apiFetch('/auth/me'),
-      apiFetch('/admin/users'),
+      fetchCurrentUser(),
+      fetchAdminUsers(),
     ]);
     if (meRes.ok) {
       const me = (await meRes.json()) as { id: string };
@@ -152,12 +158,9 @@ export function AdminUsersClient() {
     if (!editRow) return;
     setSaving(true);
     try {
-      const res = await apiFetch(`/admin/users/${editRow.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          fullName: editName.trim(),
-          isSuperAdmin: editSuper,
-        }),
+      const res = await apiUpdateAdminUser(editRow.id, {
+        fullName: editName.trim(),
+        isSuperAdmin: editSuper,
       });
       if (!res.ok) {
         const t = await res.text();
@@ -175,10 +178,7 @@ export function AdminUsersClient() {
 
   const confirmSuspend = async () => {
     if (!suspendTarget) return;
-    const res = await apiFetch(`/admin/users/${suspendTarget.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ isActive: false }),
-    });
+    const res = await apiUpdateAdminUser(suspendTarget.id, { isActive: false });
     setSuspendTarget(null);
     if (!res.ok) {
       toast.error(t('suspendFailed'));
@@ -192,9 +192,7 @@ export function AdminUsersClient() {
     if (!impersonateTarget) return;
     const target = impersonateTarget;
     setImpersonateTarget(null);
-    const res = await apiFetch(`/admin/users/${target.id}/impersonate`, {
-      method: 'POST',
-    });
+    const res = await apiImpersonateUser(target.id);
     if (!res.ok) {
       toast.error(t('impersonateFailed'));
       return;

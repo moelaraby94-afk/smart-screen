@@ -13,7 +13,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { apiFetch } from '@/features/auth/session';
+import { fetchCurrentUser } from '@/features/workspace/workspace-api';
+import {
+  updateProfile as apiUpdateProfile,
+  requestEmailChange as apiRequestEmailChange,
+  verifyEmailChange as apiVerifyEmailChange,
+} from '@/features/billing/billing-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 
 type Me = {
@@ -39,7 +44,7 @@ export function SettingsProfileClient() {
   const [emailStep, setEmailStep] = useState<'request' | 'verify'>('request');
 
   const load = useCallback(async () => {
-    const res = await apiFetch('/auth/me');
+    const res = await fetchCurrentUser();
     if (!res.ok) {
       setLoading(false);
       return;
@@ -59,13 +64,10 @@ export function SettingsProfileClient() {
   const saveProfile = async () => {
     setSaving(true);
     try {
-      const res = await apiFetch('/account/profile', {
-        method: 'PATCH',
-        body: JSON.stringify({
-          fullName: fullName.trim(),
-          businessName: businessName.trim(),
-          phone: phone.trim(),
-        }),
+      const res = await apiUpdateProfile({
+        fullName: fullName.trim(),
+        businessName: businessName.trim(),
+        phone: phone.trim(),
       });
       if (!res.ok) throw new Error(t('updateFailed'));
       toast.success(t('saved'));
@@ -79,10 +81,7 @@ export function SettingsProfileClient() {
   };
 
   const requestEmailChange = async () => {
-    const res = await apiFetch('/account/email/request', {
-      method: 'POST',
-      body: JSON.stringify({ newEmail: newEmail.trim() }),
-    });
+    const res = await apiRequestEmailChange(newEmail.trim());
     if (!res.ok) {
       toast.error(t('emailRequestFailed'));
       return;
@@ -92,10 +91,7 @@ export function SettingsProfileClient() {
   };
 
   const verifyEmailChange = async () => {
-    const res = await apiFetch('/account/email/verify', {
-      method: 'POST',
-      body: JSON.stringify({ newEmail: newEmail.trim(), code: emailOtp }),
-    });
+    const res = await apiVerifyEmailChange(newEmail.trim(), emailOtp);
     if (!res.ok) {
       toast.error(t('invalidCode'));
       return;

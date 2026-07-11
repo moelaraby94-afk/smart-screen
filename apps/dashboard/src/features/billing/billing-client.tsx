@@ -6,7 +6,12 @@ import { Check, CreditCard, Sparkles, Zap } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { apiFetch } from '@/features/auth/session';
+import {
+  fetchCurrentSubscription,
+  setMockPlan as apiSetMockPlan,
+  createStripePortal as apiCreateStripePortal,
+  createStripeCheckout as apiCreateStripeCheckout,
+} from '@/features/billing/billing-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
 
@@ -34,9 +39,7 @@ export function BillingClient() {
   const load = useCallback(async () => {
     if (!workspaceId) return;
     setLoading(true);
-    const res = await apiFetch(
-      `/subscriptions/current?workspaceId=${encodeURIComponent(workspaceId)}`,
-    );
+    const res = await fetchCurrentSubscription(workspaceId);
     if (res.ok) {
       setSub((await res.json()) as SubPayload);
     } else {
@@ -53,10 +56,7 @@ export function BillingClient() {
     async (next: 'FREE' | 'PRO') => {
       if (!workspaceId) return;
       setSavingPlan(true);
-      const res = await apiFetch(
-        `/subscriptions/mock-plan?workspaceId=${encodeURIComponent(workspaceId)}`,
-        { method: 'PATCH', body: JSON.stringify({ plan: next }) },
-      );
+      const res = await apiSetMockPlan(workspaceId, next);
       if (!res.ok) {
         toast.error(t('mockPlanSaveFailed'));
         setSavingPlan(false);
@@ -75,10 +75,7 @@ export function BillingClient() {
     if (!workspaceId) return;
     setSavingPlan(true);
     try {
-      const res = await apiFetch('/stripe/portal', {
-        method: 'POST',
-        body: JSON.stringify({ workspaceId, locale }),
-      });
+      const res = await apiCreateStripePortal(workspaceId, locale);
       if (!res.ok) {
         toast.error(t('portalFailed'));
         return;
@@ -98,10 +95,7 @@ export function BillingClient() {
     if (!workspaceId) return;
     setSavingPlan(true);
     try {
-      const res = await apiFetch('/stripe/checkout', {
-        method: 'POST',
-        body: JSON.stringify({ workspaceId, plan: 'PRO' }),
-      });
+      const res = await apiCreateStripeCheckout(workspaceId, 'PRO');
       if (!res.ok) {
         toast.error(t('stripeCheckoutFailed'));
         return;

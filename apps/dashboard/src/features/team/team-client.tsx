@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiFetch } from '@/features/auth/session';
+import { fetchMembers as apiFetchMembers, inviteMember as apiInviteMember } from '@/features/team/team-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
 
@@ -40,7 +40,7 @@ export function TeamClient() {
   const load = useCallback(async () => {
     if (!workspaceId) return;
     setLoading(true);
-    const res = await apiFetch(`/workspaces/${workspaceId}/members`);
+    const res = await apiFetchMembers(workspaceId);
     if (res.ok) {
       setMembers((await res.json()) as Member[]);
     } else {
@@ -60,11 +60,7 @@ export function TeamClient() {
     }
     setSending(true);
     try {
-      const res = await apiFetch(`/workspaces/${workspaceId}/invites`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), role }),
-      });
+      const res = await apiInviteMember(workspaceId, email.trim(), role);
       const data = (await res.json()) as { message?: string };
       if (!res.ok) {
         toast.error(t('inviteFailed'));
