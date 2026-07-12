@@ -49,6 +49,12 @@ export class ScreensController {
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
+  @Get('analytics')
+  analytics(@Query('workspaceId') workspaceId: string) {
+    return this.screensService.getAnalytics(workspaceId);
+  }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get(':id/active-content')
   activeContent(
     @Param('id') id: string,

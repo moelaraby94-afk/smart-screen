@@ -1,4 +1,4 @@
-import { PlayerPlatform, ScreenStatus } from '@prisma/client';
+import { PlayerPlatform, ScreenOrientation, ScreenStatus } from '@prisma/client';
 import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class UpdateScreenDto {
@@ -41,4 +41,8 @@ export class UpdateScreenDto {
   @Max(4320)
   @IsOptional()
   resolutionHeight?: number;
+
+  @IsEnum(ScreenOrientation)
+  @IsOptional()
+  orientation?: ScreenOrientation;
 }

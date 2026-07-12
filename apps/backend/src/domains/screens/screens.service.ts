@@ -225,6 +225,9 @@ export class ScreensService {
         ...(dto.resolutionHeight !== undefined
           ? { resolutionHeight: dto.resolutionHeight }
           : {}),
+        ...(dto.orientation !== undefined
+          ? { orientation: dto.orientation }
+          : {}),
       },
       select: this.screenSelect,
     });
@@ -280,6 +283,59 @@ export class ScreensService {
     await this.prisma.screen.delete({ where: { id } });
   }
 
+  async getAnalytics(workspaceId: string) {
+    const screens = await this.prisma.screen.findMany({
+      where: { workspaceId },
+      select: {
+        id: true,
+        status: true,
+        lastSeenAt: true,
+        activePlaylistId: true,
+        createdAt: true,
+      },
+    });
+
+    const total = screens.length;
+    const byStatus = { ONLINE: 0, OFFLINE: 0, MAINTENANCE: 0 };
+    let withPlaylist = 0;
+    let totalUptimeSec = 0;
+    const now = Date.now();
+
+    for (const s of screens) {
+      byStatus[s.status] = (byStatus[s.status] ?? 0) + 1;
+      if (s.activePlaylistId) withPlaylist++;
+
+      if (s.status === 'ONLINE' && s.lastSeenAt) {
+        totalUptimeSec += Math.min(
+          (now - s.lastSeenAt.getTime()) / 1000,
+          86400,
+        );
+      }
+    }
+
+    const uptimePercent = total > 0
+      ? Math.round((byStatus.ONLINE / total) * 100)
+      : 0;
+
+    const avgLastSeen = screens
+      .map((s) => s.lastSeenAt)
+      .filter((d): d is Date => d !== null)
+      .sort((a, b) => b.getTime() - a.getTime());
+
+    const newestSeen = avgLastSeen[0]?.toISOString() ?? null;
+    const oldestSeen = avgLastSeen[avgLastSeen.length - 1]?.toISOString() ?? null;
+
+    return {
+      total,
+      byStatus,
+      uptimePercent,
+      withPlaylist,
+      withoutPlaylist: total - withPlaylist,
+      newestSeen,
+      oldestSeen,
+    };
+  }
+
   private readonly screenSelect = {
     id: true,
     workspaceId: true,
@@ -303,6 +359,7 @@ export class ScreensService {
     playerPlatform: true,
     resolutionWidth: true,
     resolutionHeight: true,
+    orientation: true,
     createdAt: true,
     updatedAt: true,
   } satisfies Prisma.ScreenSelect;

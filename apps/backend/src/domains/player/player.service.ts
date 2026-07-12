@@ -82,6 +82,7 @@ export class PlayerService {
         serialNumber: true,
         workspaceId: true,
         playerTicker: true,
+        orientation: true,
         pairingSecretHash: true,
         workspace: { select: { isPaused: true, name: true } },
       },
@@ -107,6 +108,7 @@ export class PlayerService {
       workspaceId: screen.workspaceId,
       workspaceName: screen.workspace.name,
       ticker: screen.playerTicker ?? null,
+      orientation: screen.orientation,
       playlist: playlist ?? {
         workspaceId: screen.workspaceId,
         screenId: screen.id,
@@ -209,6 +211,7 @@ export class PlayerService {
         serialNumber: true,
         workspaceId: true,
         playerTicker: true,
+        orientation: true,
       },
     });
     if (!screen) throw new NotFoundException('No screen in workspace');
@@ -223,6 +226,7 @@ export class PlayerService {
       workspaceId: screen.workspaceId,
       workspaceName: ws.name,
       ticker: screen.playerTicker ?? null,
+      orientation: screen.orientation,
       playlist: playlist ?? {
         workspaceId: screen.workspaceId,
         screenId: screen.id,
