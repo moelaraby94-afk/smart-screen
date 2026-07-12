@@ -365,8 +365,10 @@
     "needWorkspace": "Select a workspace first.",
     "emptyTitle": "No schedules yet",
     "emptyDescription": "Create your first schedule to control when playlists air on your screens.",
+    "calDay": "Day",
     "calWeek": "Week",
     "calMonth": "Month",
+    "calDayCount": "schedules",
     "calToday": "Today",
     "calLoading": "Loading…",
     "calMore": "+{count} more"

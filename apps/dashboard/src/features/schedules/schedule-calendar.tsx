@@ -60,12 +60,24 @@ export function ScheduleCalendar({
   onDragStart,
 }: ScheduleCalendarProps) {
   const t = useTranslations('schedules');
-  const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('week');
 
   return (
     <section className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6">
       <div className="mb-4 flex items-center justify-between">
         <div className="inline-flex rounded-xl border border-border bg-muted/30 p-0.5">
+          <button
+            type="button"
+            onClick={() => setViewMode('day')}
+            className={cn(
+              'rounded-lg px-3 py-1.5 text-xs font-semibold transition',
+              viewMode === 'day'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {t('calDay')}
+          </button>
           <button
             type="button"
             onClick={() => setViewMode('week')}
@@ -100,6 +112,14 @@ export function ScheduleCalendar({
         </div>
       ) : viewMode === 'week' ? (
         <WeekView
+          schedules={schedules}
+          overlapIds={overlapIds}
+          dayShort={dayShort}
+          dragRef={dragRef}
+          onDragStart={onDragStart}
+        />
+      ) : viewMode === 'day' ? (
+        <DayView
           schedules={schedules}
           overlapIds={overlapIds}
           dayShort={dayShort}
@@ -229,6 +249,142 @@ function WeekView({
             ))}
           </div>
         </div>
+  );
+}
+
+function DayView({
+  schedules,
+  overlapIds,
+  dayShort,
+  dragRef,
+  onDragStart,
+}: Omit<ScheduleCalendarProps, 'loading' | 'locale' | 'viewMode'>) {
+  const t = useTranslations('schedules');
+  const [selectedDow, setSelectedDow] = useState(() => new Date().getDay());
+
+  const daySchedules = schedules.filter((s) => s.daysOfWeek.includes(selectedDow));
+
+  return (
+    <div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-1">
+          {[0, 1, 2, 3, 4, 5, 6].map((dow) => (
+            <button
+              key={dow}
+              type="button"
+              onClick={() => setSelectedDow(dow)}
+              className={cn(
+                'rounded-lg px-3 py-1.5 text-xs font-semibold transition',
+                selectedDow === dow
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+              )}
+            >
+              {dayShort(dow)}
+            </button>
+          ))}
+        </div>
+        <span className="text-xs text-muted-foreground">
+          {daySchedules.length} {t('calDayCount')}
+        </span>
+      </div>
+
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        <div
+          className="sticky start-0 z-20 flex shrink-0 flex-col border-e border-border/60 pe-2 text-[11px] text-muted-foreground"
+          style={{ width: 56, height: TOTAL_H + 28 }}
+        >
+          <div className="h-7 shrink-0" />
+          {Array.from({ length: 24 }, (_, h) => (
+            <div
+              key={h}
+              className="flex shrink-0 items-start justify-end border-t border-border/30 pt-0.5"
+              style={{ height: PX_PER_HOUR }}
+            >
+              {formatHHmm(h * 60)}
+            </div>
+          ))}
+        </div>
+
+        <div className="relative min-w-0 flex-1 rounded-2xl border border-border bg-muted/20" style={{ height: TOTAL_H + 28 }}>
+          <div className="sticky top-0 z-10 mb-1 flex h-7 items-center justify-center rounded-t-xl bg-muted/50 text-center text-sm font-semibold text-foreground">
+            {dayShort(selectedDow)}
+          </div>
+          <div
+            className="relative mx-1 rounded-xl border border-border/40"
+            style={{ height: TOTAL_H }}
+          >
+            {Array.from({ length: 24 }, (_, h) => (
+              <div
+                key={h}
+                className="absolute start-0 end-0 border-t border-dashed border-border/30"
+                style={{ top: h * PX_PER_HOUR }}
+              />
+            ))}
+            {daySchedules.flatMap((sch) => {
+              const segs = segmentsForColumn(
+                sch.daysOfWeek,
+                sch.startTime,
+                sch.endTime,
+                selectedDow,
+              );
+              return segs.map((seg, idx) => {
+                const hPx = heightPxForSegment(seg.startMin, seg.endMin, PX_PER_HOUR);
+                const top = topPxForMinute(seg.startMin, PX_PER_HOUR);
+                const isOver = overlapIds.has(sch.id);
+                const canDrag = parseHHmm(sch.startTime) < parseHHmm(sch.endTime);
+                return (
+                  <motion.div
+                    key={`${sch.id}-${idx}`}
+                    layout
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={cn(
+                      'absolute start-1 end-1 cursor-grab overflow-hidden rounded-lg px-2 py-1.5 text-xs font-medium leading-tight text-white shadow-lg active:cursor-grabbing',
+                      isOver
+                        ? 'ring-2 ring-primary ring-offset-1 ring-offset-transparent'
+                        : 'ring-1 ring-white/20',
+                    )}
+                    style={{
+                      top,
+                      height: Math.max(hPx, 22),
+                      background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.7) 100%)',
+                    }}
+                    title={`${sch.playlist.name} · ${sch.startTime}–${sch.endTime}`}
+                    role="button"
+                    tabIndex={canDrag ? 0 : -1}
+                    aria-label={`${sch.playlist.name}, ${sch.startTime} to ${sch.endTime}`}
+                    onPointerDown={(e: React.PointerEvent) => {
+                      if (!canDrag) return;
+                      e.currentTarget.setPointerCapture(e.pointerId);
+                      dragRef.current = {
+                        id: sch.id,
+                        startY: e.clientY,
+                        origStart: sch.startTime,
+                        origEnd: sch.endTime,
+                        currentStart: sch.startTime,
+                        currentEnd: sch.endTime,
+                      };
+                      onDragStart();
+                    }}
+                  >
+                    <p className="truncate opacity-95">{sch.playlist.name}</p>
+                    <p className="truncate text-[10px] opacity-75">
+                      {sch.startTime} – {sch.endTime}
+                    </p>
+                    {sch.screen && (
+                      <p className="truncate text-[10px] opacity-60">
+                        {sch.screen.name}
+                      </p>
+                    )}
+                  </motion.div>
+                );
+              });
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

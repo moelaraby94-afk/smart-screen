@@ -365,8 +365,10 @@
     "needWorkspace": "اختر مساحة عمل أولا.",
     "emptyTitle": "لا توجد جدولة بعد",
     "emptyDescription": "أنشئ أول جدولة للتحكم في وقت عرض قوائم التشغيل على شاشاتك.",
+    "calDay": "يوم",
     "calWeek": "أسبوع",
     "calMonth": "شهر",
+    "calDayCount": "جدولة",
     "calToday": "اليوم",
     "calLoading": "جارٍ التحميل…",
     "calMore": "+{count} أخرى"
