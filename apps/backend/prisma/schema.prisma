@@ -28,6 +28,20 @@ enum UserRole {
 
 
 
+enum InvitationStatus {
+
+  PENDING
+
+  ACCEPTED
+
+  EXPIRED
+
+  CANCELLED
+
+}
+
+
+
 /// Internal Cloud Signage employees (governance). Null = customer / tenant user only.
 enum PlatformStaffRole {
 
@@ -48,6 +62,18 @@ enum ScreenStatus {
   OFFLINE
 
   MAINTENANCE
+
+}
+
+
+
+enum ScreenOrientation {
+
+  AUTO
+
+  LANDSCAPE
+
+  PORTRAIT
 
 }
 
@@ -193,11 +219,22 @@ model User {
 
   pendingEmailOtpExpiresAt DateTime?
 
+  /// TOTP secret (base32) for 2FA. Null when 2FA is not enabled.
+  twoFactorSecret   String?
+
+  /// Whether 2FA is enabled. Secret is kept for re-enabling convenience.
+  twoFactorEnabled  Boolean           @default(false)
+
+  /// Backup codes (bcrypt hashes, JSON array) for account recovery.
+  twoFactorBackupCodes String?
+
   createdAt        DateTime          @default(now())
 
   updatedAt        DateTime          @updatedAt
 
   memberships      WorkspaceMember[]
+
+  sentInvitations  WorkspaceInvitation[] @relation("SentInvitations")
 
   createdCanvases  Canvas[]          @relation("CanvasCreatedBy")
 
@@ -287,6 +324,8 @@ model Workspace {
 
   subscription  Subscription?
 
+  invitations   WorkspaceInvitation[]
+
 }
 
 
@@ -310,6 +349,40 @@ model WorkspaceMember {
 
 
   @@unique([workspaceId, userId])
+
+}
+
+
+
+model WorkspaceInvitation {
+
+  id          String           @id @default(cuid())
+
+  workspaceId String
+
+  email       String
+
+  role        UserRole         @default(VIEWER)
+
+  token       String           @unique
+
+  status      InvitationStatus @default(PENDING)
+
+  invitedById String
+
+  createdAt   DateTime         @default(now())
+
+  expiresAt   DateTime
+
+  acceptedAt  DateTime?
+
+  workspace   Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  invitedBy   User             @relation("SentInvitations", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, email])
+
+  @@index([email])
 
 }
 
@@ -345,6 +418,9 @@ model Screen {
   resolutionWidth  Int            @default(1920)
 
   resolutionHeight Int            @default(1080)
+
+  /// Player orientation lock: auto follows screen aspect, portrait forces 90° rotation, landscape forces 0°.
+  orientation      ScreenOrientation @default(AUTO)
 
   /// Hash (bcrypt) of a per-screen secret generated at pairing time. Replaces
   /// the shared PLAYER_HEARTBEAT_SECRET for screens paired after this was

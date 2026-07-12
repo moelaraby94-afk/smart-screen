@@ -6,6 +6,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { LoginLockoutService } from './login-lockout.service';
+import { TwoFactorService } from './two-factor.service';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { AuditLogModule } from '../../common/audit/audit-log.module';
 
@@ -26,7 +27,7 @@ import { AuditLogModule } from '../../common/audit/audit-log.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, LoginLockoutService],
+  providers: [AuthService, JwtStrategy, LoginLockoutService, TwoFactorService],
   exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -11,7 +12,10 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
+import { TwoFactorService } from './two-factor.service';
 import { LoginDto } from './dto/login.dto';
+import { LoginTwoFactorDto } from './dto/login-two-factor.dto';
+import { VerifyTwoFactorDto } from './dto/verify-two-factor.dto';
 import { RegisterStartDto } from './dto/register-start.dto';
 import { RegisterVerifyDto } from './dto/register-verify.dto';
 import { RegisterResendDto } from './dto/register-resend.dto';
@@ -25,7 +29,10 @@ import type { Request, Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly twoFactorService: TwoFactorService,
+  ) {}
 
   @HttpCode(200)
   @Post('register/start')
@@ -86,8 +93,28 @@ export class AuthController {
     @Req() request: Request,
   ) {
     const result = await this.authService.login(dto, request.ip);
+    if ('requiresTwoFactor' in result) {
+      return result;
+    }
     setAuthCookies(response, result.accessToken, result.refreshToken);
 
+    return {
+      user: result.user,
+      workspaces: result.workspaces,
+      accessToken: result.accessToken,
+    };
+  }
+
+  @HttpCode(200)
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @Post('login-2fa')
+  async loginWithTwoFactor(
+    @Body() dto: LoginTwoFactorDto,
+    @Res({ passthrough: true }) response: Response,
+    @Req() request: Request,
+  ) {
+    const result = await this.authService.loginWithTwoFactor(dto, request.ip);
+    setAuthCookies(response, result.accessToken, result.refreshToken);
     return {
       user: result.user,
       workspaces: result.workspaces,
@@ -164,5 +191,63 @@ export class AuthController {
   ): Promise<void> {
     await this.authService.logout(user.sub);
     clearAuthCookies(response);
+  }
+
+  // ─── 2FA Management ─────────────────────────────────────────────
+
+  @UseGuards(JwtAuthGuard)
+  @Get('2fa/status')
+  async get2faStatus(@CurrentUser() user: JwtUser) {
+    const enabled = await this.twoFactorService.isTwoFactorEnabled(user.sub);
+    return { enabled };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(200)
+  @Post('2fa/setup')
+  async setup2fa(@CurrentUser() user: JwtUser) {
+    const userData = await this.authService.me(user.sub, user.impersonatedBy);
+    if (!userData) throw new NotFoundException('User not found');
+    return this.twoFactorService.generateSecret(userData.email);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(200)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post('2fa/enable')
+  async enable2fa(
+    @CurrentUser() user: JwtUser,
+    @Body() dto: VerifyTwoFactorDto,
+  ) {
+    if (!dto.secret) {
+      throw new BadRequestException('Secret is required');
+    }
+    const result = await this.twoFactorService.enableTwoFactor(
+      user.sub,
+      dto.secret,
+      dto.token,
+    );
+    await this.authService.logTwoFactorAction(user.sub, '2FA_ENABLED');
+    return result;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(200)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post('2fa/disable')
+  async disable2fa(
+    @CurrentUser() user: JwtUser,
+    @Body() dto: VerifyTwoFactorDto,
+  ) {
+    const enabled = await this.twoFactorService.isTwoFactorEnabled(user.sub);
+    if (!enabled) {
+      return { ok: true };
+    }
+    if (!dto.token?.trim()) {
+      throw new BadRequestException('Verification code is required');
+    }
+    await this.twoFactorService.disableTwoFactor(user.sub, dto.token);
+    await this.authService.logTwoFactorAction(user.sub, '2FA_DISABLED');
+    return { ok: true };
   }
 }

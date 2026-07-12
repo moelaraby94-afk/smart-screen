@@ -8,6 +8,18 @@ export async function login(email: string, password: string): Promise<Response> 
   } as ApiFetchInit);
 }
 
+export async function login2fa(
+  email: string,
+  password: string,
+  twoFactorToken: string,
+): Promise<Response> {
+  return apiFetch('/auth/login-2fa', {
+    method: 'POST',
+    body: JSON.stringify({ email, password, twoFactorToken }),
+    omitAuth: true,
+  } as ApiFetchInit);
+}
+
 export async function devLogin(): Promise<Response> {
   return apiFetch('/auth/dev-login', {
     method: 'POST',

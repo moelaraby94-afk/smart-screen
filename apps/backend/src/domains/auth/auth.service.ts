@@ -17,9 +17,11 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 import { WorkspacesService } from '../workspaces/workspaces.service';
 import { AuditLogService } from '../../common/audit/audit-log.service';
 import { LoginLockoutService } from './login-lockout.service';
+import { TwoFactorService } from './two-factor.service';
 import { EmailService } from '../email/email.service';
 import { passwordResetEmail, registerOtpEmail } from '../email/email-templates';
 import { LoginDto } from './dto/login.dto';
+import { LoginTwoFactorDto } from './dto/login-two-factor.dto';
 import { RegisterStartDto } from './dto/register-start.dto';
 import { RegisterVerifyDto } from './dto/register-verify.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -47,6 +49,27 @@ type TokenPair = {
   refreshToken: string;
 };
 
+type LoginResult =
+  | {
+      requiresTwoFactor: true;
+      email: string;
+    }
+  | {
+      user: {
+        id: string;
+        email: string;
+        fullName: string;
+        locale: string;
+        isSuperAdmin: boolean;
+        platformStaffRole: string | null;
+        emailVerified: boolean;
+      };
+      workspaces: Array<{ id: string; name: string; slug: string; role: string }>;
+      accessToken: string;
+      refreshToken: string;
+      sessionId: string;
+    };
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -62,6 +85,7 @@ export class AuthService {
     private readonly workspaces: WorkspacesService,
     private readonly auditLog: AuditLogService,
     private readonly loginLockout: LoginLockoutService,
+  private readonly twoFactor: TwoFactorService,
   ) {
     this.accessExpiresIn = this.parseDurationToSeconds(
       this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m'),
@@ -314,7 +338,7 @@ export class AuthService {
     return { ok: true };
   }
 
-  async login(dto: LoginDto, ipAddress?: string) {
+  async login(dto: LoginDto, ipAddress?: string): Promise<LoginResult> {
     // Per-account brute-force wall, independent of the per-IP rate limit.
     await this.loginLockout.assertNotLockedOut(dto.email);
 
@@ -330,6 +354,8 @@ export class AuthService {
         isSuperAdmin: true,
         platformStaffRole: true,
         emailVerified: true,
+        twoFactorEnabled: true,
+        twoFactorSecret: true,
       },
     });
     if (!user) {
@@ -371,6 +397,14 @@ export class AuthService {
       );
     }
 
+    // If 2FA is enabled, return a flag instead of tokens.
+    if (user.twoFactorEnabled) {
+      return {
+        requiresTwoFactor: true,
+        email: user.email,
+      } satisfies LoginResult;
+    }
+
     await this.prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
@@ -386,6 +420,128 @@ export class AuthService {
       try {
         await this.auditLog.append({
           action: 'Super Admin Logged In',
+          adminName: user.fullName,
+          targetCustomer: '—',
+          ipAddress: ipAddress ?? 'n/a',
+        });
+      } catch (err) {
+        this.logger.error(
+          '[auth] Super admin audit log failed',
+          err instanceof Error ? err.stack : String(err),
+        );
+      }
+      await this.workspaces.ensureAdminControlEntry(user.id);
+    }
+
+    const workspaceList = await this.buildWorkspaceListForUser(
+      user.id,
+      isSuperAdmin,
+    );
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        locale: user.locale,
+        isSuperAdmin,
+        platformStaffRole: user.platformStaffRole ?? null,
+        emailVerified: user.emailVerified,
+      },
+      workspaces: workspaceList,
+      ...tokens,
+    };
+  }
+
+  /** Second step of login when 2FA is enabled. */
+  async loginWithTwoFactor(dto: LoginTwoFactorDto, ipAddress?: string): Promise<Exclude<LoginResult, { requiresTwoFactor: true }>> {
+    await this.loginLockout.assertNotLockedOut(dto.email);
+
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email.toLowerCase() },
+      select: {
+        id: true,
+        email: true,
+        passwordHash: true,
+        fullName: true,
+        locale: true,
+        isActive: true,
+        isSuperAdmin: true,
+        platformStaffRole: true,
+        emailVerified: true,
+        twoFactorEnabled: true,
+        twoFactorSecret: true,
+      },
+    });
+    if (!user) {
+      await this.loginLockout.recordFailedAttempt(dto.email);
+      throw DomainException.unauthorized(
+        ErrorCode.INVALID_CREDENTIALS,
+        'Invalid credentials',
+      );
+    }
+
+    const passwordMatches = await bcrypt.compare(
+      dto.password,
+      user.passwordHash,
+    );
+    if (!passwordMatches) {
+      await this.loginLockout.recordFailedAttempt(dto.email);
+      throw DomainException.unauthorized(
+        ErrorCode.INVALID_CREDENTIALS,
+        'Invalid credentials',
+      );
+    }
+
+    await this.loginLockout.clear(dto.email);
+
+    if (!user.isActive)
+      throw DomainException.unauthorized(
+        ErrorCode.ACCOUNT_DISABLED,
+        'Account is disabled',
+      );
+
+    if (!user.twoFactorEnabled || !user.twoFactorSecret) {
+      throw DomainException.badRequest(
+        ErrorCode.INVALID_CREDENTIALS,
+        '2FA is not enabled for this account',
+      );
+    }
+
+    // Check TOTP token or backup code
+    const isTotpValid = this.twoFactor.verifyToken(
+      dto.twoFactorToken,
+      user.twoFactorSecret,
+    );
+    if (!isTotpValid) {
+      const isBackupCode = await this.twoFactor.verifyAndConsumeBackupCode(
+        user.id,
+        dto.twoFactorToken,
+      );
+      if (!isBackupCode) {
+        throw DomainException.unauthorized(
+          ErrorCode.INVALID_CREDENTIALS,
+          'Invalid 2FA code',
+        );
+      }
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+
+    const isSuperAdmin = user.isSuperAdmin === true;
+    const tokens = await this.issueTokenPair({
+      sub: user.id,
+      email: user.email,
+    });
+    await this.setRefreshTokenSession(user.id, tokens.refreshToken, tokens.sessionId);
+
+    if (isSuperAdmin) {
+      try {
+        await this.auditLog.append({
+          action: 'Super Admin Logged In (2FA)',
           adminName: user.fullName,
           targetCustomer: '—',
           ipAddress: ipAddress ?? 'n/a',
@@ -739,6 +895,29 @@ export class AuthService {
       ...profile,
       memberships: user.memberships,
     };
+  }
+
+  /** Log a 2FA-related action to the audit trail. */
+  async logTwoFactorAction(userId: string, action: string): Promise<void> {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { fullName: true, email: true },
+      });
+      if (user) {
+        await this.auditLog.append({
+          action,
+          adminName: user.fullName,
+          targetCustomer: user.email,
+          ipAddress: 'n/a',
+        });
+      }
+    } catch (err) {
+      this.logger.error(
+        '[auth] 2FA audit log failed',
+        err instanceof Error ? err.stack : String(err),
+      );
+    }
   }
 
   private async buildWorkspaceListForUser(

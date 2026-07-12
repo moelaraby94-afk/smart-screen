@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import {
   setStoredAccessToken,
 } from './session';
-import { login as apiLogin, devLogin as apiDevLogin } from './auth-api';
+import { login as apiLogin, login2fa as apiLogin2fa, devLogin as apiDevLogin } from './auth-api';
 import { readApiError } from '@/features/api/api-error';
 import { useApiErrorMessage } from '@/features/api/use-api-error-message';
 import { useWorkspace } from '@/features/workspace/workspace-context';
@@ -50,6 +50,8 @@ export function LoginForm({
   const [password, setPassword] = useState('');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsTwoFactor, setNeedsTwoFactor] = useState(false);
+  const [twoFactorToken, setTwoFactorToken] = useState('');
 
   const applyAuthSuccess = async (payload: AuthSuccessPayload) => {
     if (payload.accessToken) {
@@ -88,6 +90,33 @@ export function LoginForm({
         throw new Error(errorMessage(await readApiError(response)));
       }
 
+      const payload = (await response.json()) as AuthSuccessPayload & {
+        requiresTwoFactor?: boolean;
+      };
+      if (payload.requiresTwoFactor) {
+        setNeedsTwoFactor(true);
+        setPending(false);
+        return;
+      }
+      await applyAuthSuccess(payload);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : t('loginFailed');
+      setError(message);
+      toast.error(message);
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const onTwoFactorSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setPending(true);
+    setError(null);
+    try {
+      const response = await apiLogin2fa(email, password, twoFactorToken.trim());
+      if (!response.ok) {
+        throw new Error(errorMessage(await readApiError(response)));
+      }
       const payload = (await response.json()) as AuthSuccessPayload;
       await applyAuthSuccess(payload);
     } catch (e) {
@@ -124,7 +153,53 @@ export function LoginForm({
 
   return (
     <div className="space-y-6">
-      <form className="space-y-5" onSubmit={onSubmit}>
+      {needsTwoFactor ? (
+        <form className="space-y-5" onSubmit={onTwoFactorSubmit}>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">{t('twoFactorPrompt')}</p>
+            <label
+              className="text-[13px] font-medium text-foreground"
+              htmlFor="twoFactorToken"
+            >
+              {t('twoFactorLabel')}
+            </label>
+            <Input
+              id="twoFactorToken"
+              type="text"
+              value={twoFactorToken}
+              onChange={(event) => setTwoFactorToken(event.target.value)}
+              required
+              maxLength={8}
+              autoComplete="one-time-code"
+              placeholder="000000"
+              className={`${nimbusInput} text-center font-mono text-lg tracking-widest`}
+            />
+          </div>
+          {error ? (
+            <p className="text-sm text-destructive">{error}</p>
+          ) : null}
+          <Button
+            className="h-11 w-full rounded-xl font-semibold"
+            type="submit"
+            variant="cta"
+            disabled={pending || twoFactorToken.trim().length < 6}
+          >
+            {pending ? t('signingIn') : t('verify')}
+          </Button>
+          <button
+            type="button"
+            className="w-full text-center text-xs font-medium text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              setNeedsTwoFactor(false);
+              setTwoFactorToken('');
+              setError(null);
+            }}
+          >
+            {t('backToLogin')}
+          </button>
+        </form>
+      ) : (
+        <form className="space-y-5" onSubmit={onSubmit}>
         <div className="space-y-2">
           <label
             className="text-[13px] font-medium text-foreground"
@@ -186,8 +261,9 @@ export function LoginForm({
           {pending ? t('signingIn') : t('signIn')}
         </Button>
       </form>
+      )}
 
-      {showDevTools ? (
+      {showDevTools && !needsTwoFactor ? (
         <div className="rounded-xl border border-dashed border-primary/30 bg-primary/[0.04] p-4">
           <p className="text-xs font-medium text-primary">
             {t('debugDevOnly')}
