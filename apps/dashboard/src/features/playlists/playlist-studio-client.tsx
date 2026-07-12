@@ -6,7 +6,7 @@ import {
   type DropResult,
 } from '@hello-pangea/dnd';
 import { motion } from 'framer-motion';
-import { Plus, Save, ListVideo, Eye, EyeOff, Play, Copy } from 'lucide-react';
+import { Plus, Save, ListVideo, Eye, EyeOff, Play, Copy, FolderInput } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -46,7 +46,7 @@ type PlaylistSummary = {
 
 export function PlaylistStudioClient() {
   const t = useTranslations('playlistStudioClient');
-  const { workspaceId, bumpWorkspaceDataEpoch } = useWorkspace();
+  const { workspaceId, workspaces, bumpWorkspaceDataEpoch } = useWorkspace();
   const [library, setLibrary] = useState<MediaItem[]>([]);
   const [canvasLibrary, setCanvasLibrary] = useState<CanvasSummary[]>([]);
   const [playlists, setPlaylists] = useState<PlaylistSummary[]>([]);
@@ -58,6 +58,8 @@ export function PlaylistStudioClient() {
   const [togglingPublish, setTogglingPublish] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
+  const [cloning, setCloning] = useState(false);
+  const [cloneTargetWs, setCloneTargetWs] = useState('');
 
   const loadLibrary = useCallback(async () => {
     if (!workspaceId) return;
@@ -292,6 +294,26 @@ export function PlaylistStudioClient() {
     }
   };
 
+  const cloneToWorkspace = async () => {
+    if (!workspaceId || !playlistId || !cloneTargetWs) return;
+    setCloning(true);
+    try {
+      const res = await apiFetch(
+        `/playlists/${encodeURIComponent(playlistId)}/clone-to-workspace?workspaceId=${encodeURIComponent(workspaceId)}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ targetWorkspaceId: cloneTargetWs }) },
+      );
+      if (!res.ok) {
+        toast.error(t('cloneFailed'));
+        return;
+      }
+      toast.success(t('cloned'));
+      setCloneTargetWs('');
+      bumpWorkspaceDataEpoch();
+    } finally {
+      setCloning(false);
+    }
+  };
+
   if (!workspaceId) {
     return <p className="text-[15px] text-muted-foreground">{t('selectWorkspaceFirst')}</p>;
   }
@@ -357,6 +379,30 @@ export function PlaylistStudioClient() {
                 <Copy className="mr-2 h-4 w-4" />
                 {duplicating ? t('duplicating') : t('duplicate')}
               </Button>
+            )}
+            {playlistId && workspaces.length > 1 && (
+              <div className="flex items-center gap-2">
+                <select
+                  className="h-10 rounded-xl border border-border bg-card px-3 text-sm"
+                  value={cloneTargetWs}
+                  onChange={(e) => setCloneTargetWs(e.target.value)}
+                >
+                  <option value="">{t('cloneToWorkspace')}</option>
+                  {workspaces.filter((w) => w.id !== workspaceId).map((w) => (
+                    <option key={w.id} value={w.id}>{w.name}</option>
+                  ))}
+                </select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-xl font-semibold"
+                  disabled={!cloneTargetWs || cloning}
+                  onClick={() => void cloneToWorkspace()}
+                >
+                  <FolderInput className="mr-2 h-4 w-4" />
+                  {cloning ? t('cloning') : t('clone')}
+                </Button>
+              </div>
             )}
             {playlistId && rows.length > 0 && (
               <Button
