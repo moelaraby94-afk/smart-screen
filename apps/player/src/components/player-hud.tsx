@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { isPrimarilyArabicScript } from '@/lib/ticker-direction';
+import { getMediaCacheSize } from '@/lib/media-cache';
 
 type Props = {
   tickerText: string | null;
@@ -16,11 +17,18 @@ function formatClock(d: Date) {
   });
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export function PlayerHud({ tickerText }: Props) {
   const [now, setNow] = useState(() => new Date());
   const [online, setOnline] = useState(
     () => typeof navigator !== 'undefined' && navigator.onLine,
   );
+  const [cacheSize, setCacheSize] = useState<number | null>(null);
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
@@ -36,6 +44,21 @@ export function PlayerHud({ tickerText }: Props) {
     return () => {
       window.removeEventListener('online', on);
       window.removeEventListener('offline', off);
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const updateCacheSize = () => {
+      void getMediaCacheSize().then((size) => {
+        if (active) setCacheSize(size);
+      });
+    };
+    updateCacheSize();
+    const interval = setInterval(updateCacheSize, 30_000);
+    return () => {
+      active = false;
+      clearInterval(interval);
     };
   }, []);
 
@@ -72,6 +95,11 @@ export function PlayerHud({ tickerText }: Props) {
         >
           {formatClock(now)}
         </time>
+        {!online && cacheSize != null && cacheSize > 0 ? (
+          <span className="text-xs tabular-nums text-amber-300/80" title="Cached media for offline playback">
+            {formatBytes(cacheSize)}
+          </span>
+        ) : null}
       </div>
 
       {displayTicker ? (

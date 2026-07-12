@@ -36,6 +36,8 @@ import {
 
 const HEARTBEAT_INTERVAL_MS = 30_000;
 const SCHEDULE_POLL_MS = 60_000;
+const OFFLINE_RETRY_BASE_MS = 5_000;
+const OFFLINE_RETRY_MAX_MS = 120_000;
 
 function getRealtimeBaseUrl(): string {
   return process.env.NEXT_PUBLIC_REALTIME_URL ?? 'http://localhost:4000';
@@ -107,6 +109,8 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
   workspaceNameRef.current = workspaceDisplayName;
   /** True while showing last cached playlist after bootstrap API failure. */
   const offlinePlaybackActiveRef = useRef(false);
+  const offlineRetryCountRef = useRef(0);
+  const offlineRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const kioskSocketRef = useRef<Socket | null>(null);
   const playlistRef = useRef<PlaylistPayload | null>(null);
 
@@ -160,6 +164,25 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
     })();
   }, []);
 
+  const scheduleOfflineRetry = useCallback(() => {
+    if (offlineRetryTimerRef.current) clearTimeout(offlineRetryTimerRef.current);
+    const attempt = offlineRetryCountRef.current;
+    const delay = Math.min(OFFLINE_RETRY_BASE_MS * 2 ** attempt, OFFLINE_RETRY_MAX_MS);
+    offlineRetryTimerRef.current = setTimeout(() => {
+      offlineRetryCountRef.current += 1;
+      const mode = bootModeRef.current;
+      if (mode === 'kiosk') {
+        void runBootstrapRef.current?.().catch(() => {
+          scheduleOfflineRetry();
+        });
+      } else if (mode === 'jwt') {
+        void runJwtBootstrapRef.current?.().catch(() => {
+          scheduleOfflineRetry();
+        });
+      }
+    }, delay);
+  }, []);
+
   const runBootstrap = useCallback(async () => {
     if (!kioskSerial || !secret) return;
     setBootstrapError(null);
@@ -208,12 +231,14 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
         setLiveCanvasLayouts({});
         setPlaylist(snap.playlist);
         offlinePlaybackActiveRef.current = true;
+        scheduleOfflineRetry();
         return;
       }
       setBootstrapError(msg);
+      scheduleOfflineRetry();
       throw e;
     }
-  }, [kioskSerial, secret]);
+  }, [kioskSerial, secret, scheduleOfflineRetry]);
 
   const runJwtBootstrap = useCallback(async () => {
     const token = getPlayerBearerToken();
@@ -261,17 +286,38 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
         setLiveCanvasLayouts({});
         setPlaylist(snap.playlist);
         offlinePlaybackActiveRef.current = true;
+        scheduleOfflineRetry();
         return;
       }
       setBootstrapError(msg);
+      scheduleOfflineRetry();
       throw e;
     }
-  }, [workspaceNameOpt]);
+  }, [workspaceNameOpt, scheduleOfflineRetry]);
 
   const runBootstrapRef = useRef(runBootstrap);
   runBootstrapRef.current = runBootstrap;
   const runJwtBootstrapRef = useRef(runJwtBootstrap);
   runJwtBootstrapRef.current = runJwtBootstrap;
+
+  /** Auto-retry bootstrap when network comes back online. */
+  useEffect(() => {
+    const handleOnline = () => {
+      offlineRetryCountRef.current = 0;
+      const mode = bootModeRef.current;
+      if (mode === 'kiosk') {
+        void runBootstrapRef.current().catch(() => {
+          scheduleOfflineRetry();
+        });
+      } else if (mode === 'jwt') {
+        void runJwtBootstrapRef.current().catch(() => {
+          scheduleOfflineRetry();
+        });
+      }
+    };
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [scheduleOfflineRetry]);
 
   useEffect(() => {
     if (!storageReady) return;
@@ -554,6 +600,7 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
       clearInterval(poll);
       clearInterval(interval);
       if (identifyTimerRef.current) clearTimeout(identifyTimerRef.current);
+      if (offlineRetryTimerRef.current) clearTimeout(offlineRetryTimerRef.current);
       socket.removeAllListeners();
       socket.disconnect();
       kioskSocketRef.current = null;

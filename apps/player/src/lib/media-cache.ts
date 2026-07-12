@@ -93,3 +93,22 @@ export async function resolvePlaybackUrl(mediaUrl: string): Promise<string> {
   urlToBlob.set(mediaUrl, blobUrl);
   return blobUrl;
 }
+
+/** Estimate total cached media size (bytes) for HUD display. */
+export async function getMediaCacheSize(): Promise<number> {
+  try {
+    const cache = await openCache();
+    const keys = await cache.keys();
+    let total = 0;
+    for (const key of keys) {
+      const res = await cache.match(key);
+      if (res) {
+        const blob = await res.blob();
+        total += blob.size;
+      }
+    }
+    return total;
+  } catch {
+    return 0;
+  }
+}
