@@ -16,6 +16,7 @@
     "schedules": "الجدولة",
     "team": "الفريق",
     "notifications": "الإشعارات",
+    "analytics": "التحليلات",
     "help": "المساعدة والدعم",
     "apiDocs": "وثائق API",
     "billing": "الفوترة",
@@ -1903,6 +1904,24 @@
       "filterAll": "الكل",
       "filterUnread": "غير مقروء"
     }
+  },
+  "analyticsPage": {
+    "kicker": "رؤى",
+    "title": "لوحة التحليلات",
+    "description": "عرض مفصل لأداء أسطول الشاشات وتوزيع المحتوى وأوقات ذروة النشاط.",
+    "empty": "لا توجد بيانات تحليلية بعد. أضف شاشات لعرض الرؤى.",
+    "uptimeTitle": "نسبة تشغيل الأسطول",
+    "peakHoursTitle": "ساعات الذروة",
+    "noPeakHours": "لم يتم اكتشاف ساعات ذروة في آخر 24 ساعة.",
+    "hourlyActivityTitle": "النشاط بالساعة (آخر 24 ساعة)",
+    "playlistDistributionTitle": "توزيع قوائم التشغيل",
+    "perScreenTitle": "تفصيل لكل شاشة",
+    "colScreen": "الشاشة",
+    "colStatus": "الحالة",
+    "colPlaylist": "قائمة التشغيل النشطة",
+    "colLocation": "الموقع",
+    "colLastSeen": "آخر ظهور",
+    "colUptime": "مدة التشغيل"
   },
   "screenAnalytics": {
     "title": "تحليلات الشاشات",

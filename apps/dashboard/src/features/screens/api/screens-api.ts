@@ -110,6 +110,29 @@ export async function sendRemoteCommand(
   );
 }
 
+export type PerScreenAnalytics = {
+  id: string;
+  name: string;
+  serialNumber: string;
+  status: 'ONLINE' | 'OFFLINE' | 'MAINTENANCE';
+  location: string | null;
+  lastSeenAt: string | null;
+  activePlaylist: string | null;
+  isOfflineCacheMode: boolean;
+  uptimeSec: number;
+};
+
+export type PlaylistDistributionItem = {
+  id: string;
+  name: string;
+  count: number;
+};
+
+export type HourlyActivityItem = {
+  hour: number;
+  count: number;
+};
+
 export type ScreenAnalytics = {
   total: number;
   byStatus: { ONLINE: number; OFFLINE: number; MAINTENANCE: number };
@@ -118,6 +141,10 @@ export type ScreenAnalytics = {
   withoutPlaylist: number;
   newestSeen: string | null;
   oldestSeen: string | null;
+  perScreen: PerScreenAnalytics[];
+  playlistDistribution: PlaylistDistributionItem[];
+  hourlyActivity: HourlyActivityItem[];
+  peakHours: HourlyActivityItem[];
 };
 
 export async function fetchScreenAnalytics(

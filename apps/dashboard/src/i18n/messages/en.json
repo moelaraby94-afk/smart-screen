@@ -16,6 +16,7 @@
     "schedules": "Schedules",
     "team": "Team",
     "notifications": "Notifications",
+    "analytics": "Analytics",
     "help": "Help & support",
     "apiDocs": "API docs",
     "billing": "Billing",
@@ -1903,6 +1904,24 @@
       "filterAll": "All",
       "filterUnread": "Unread"
     }
+  },
+  "analyticsPage": {
+    "kicker": "Insights",
+    "title": "Analytics dashboard",
+    "description": "Deep view of screen fleet performance, content distribution, and peak activity times.",
+    "empty": "No analytics data yet. Add screens to see insights.",
+    "uptimeTitle": "Fleet uptime",
+    "peakHoursTitle": "Peak hours",
+    "noPeakHours": "No peak hours detected in the last 24 hours.",
+    "hourlyActivityTitle": "Hourly activity (last 24h)",
+    "playlistDistributionTitle": "Playlist distribution",
+    "perScreenTitle": "Per-screen breakdown",
+    "colScreen": "Screen",
+    "colStatus": "Status",
+    "colPlaylist": "Active playlist",
+    "colLocation": "Location",
+    "colLastSeen": "Last seen",
+    "colUptime": "Uptime"
   },
   "screenAnalytics": {
     "title": "Screen Analytics",

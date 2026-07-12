@@ -288,30 +288,44 @@ export class ScreensService {
       where: { workspaceId },
       select: {
         id: true,
+        name: true,
+        serialNumber: true,
         status: true,
         lastSeenAt: true,
         activePlaylistId: true,
+        activePlaylist: { select: { id: true, name: true } },
+        location: true,
         createdAt: true,
+        isOfflineCacheMode: true,
       },
     });
 
     const total = screens.length;
     const byStatus = { ONLINE: 0, OFFLINE: 0, MAINTENANCE: 0 };
     let withPlaylist = 0;
-    let totalUptimeSec = 0;
     const now = Date.now();
 
-    for (const s of screens) {
+    const perScreen = screens.map((s) => {
       byStatus[s.status] = (byStatus[s.status] ?? 0) + 1;
       if (s.activePlaylistId) withPlaylist++;
 
-      if (s.status === 'ONLINE' && s.lastSeenAt) {
-        totalUptimeSec += Math.min(
-          (now - s.lastSeenAt.getTime()) / 1000,
-          86400,
-        );
-      }
-    }
+      const lastSeenMs = s.lastSeenAt ? s.lastSeenAt.getTime() : null;
+      const uptimeSec = s.status === 'ONLINE' && lastSeenMs
+        ? Math.min((now - lastSeenMs) / 1000, 86400)
+        : 0;
+
+      return {
+        id: s.id,
+        name: s.name,
+        serialNumber: s.serialNumber,
+        status: s.status,
+        location: s.location,
+        lastSeenAt: s.lastSeenAt?.toISOString() ?? null,
+        activePlaylist: s.activePlaylist?.name ?? null,
+        isOfflineCacheMode: s.isOfflineCacheMode,
+        uptimeSec,
+      };
+    });
 
     const uptimePercent = total > 0
       ? Math.round((byStatus.ONLINE / total) * 100)
@@ -325,6 +339,35 @@ export class ScreensService {
     const newestSeen = avgLastSeen[0]?.toISOString() ?? null;
     const oldestSeen = avgLastSeen[avgLastSeen.length - 1]?.toISOString() ?? null;
 
+    // Playlist distribution
+    const playlistMap = new Map<string, { name: string; count: number }>();
+    for (const s of screens) {
+      if (s.activePlaylist) {
+        const existing = playlistMap.get(s.activePlaylist.id);
+        if (existing) existing.count++;
+        else playlistMap.set(s.activePlaylist.id, { name: s.activePlaylist.name, count: 1 });
+      }
+    }
+    const playlistDistribution = Array.from(playlistMap.entries())
+      .map(([id, v]) => ({ id, ...v }))
+      .sort((a, b) => b.count - a.count);
+
+    // Hourly activity (last 24h) — based on lastSeenAt distribution
+    const hourlyActivity: { hour: number; count: number }[] = [];
+    for (let h = 0; h < 24; h++) hourlyActivity.push({ hour: h, count: 0 });
+    for (const s of screens) {
+      if (!s.lastSeenAt) continue;
+      const hour = s.lastSeenAt.getHours();
+      const ageHours = (now - s.lastSeenAt.getTime()) / 3_600_000;
+      if (ageHours < 24) hourlyActivity[hour].count++;
+    }
+
+    // Peak hours (top 3)
+    const peakHours = [...hourlyActivity]
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3)
+      .filter((h) => h.count > 0);
+
     return {
       total,
       byStatus,
@@ -333,6 +376,10 @@ export class ScreensService {
       withoutPlaylist: total - withPlaylist,
       newestSeen,
       oldestSeen,
+      perScreen,
+      playlistDistribution,
+      hourlyActivity,
+      peakHours,
     };
   }
 

@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
   Activity,
+  BarChart3,
   Bell,
   Building2,
   CalendarClock,
@@ -52,6 +53,7 @@ const CLIENT_NAV = [
   { key: 'newPlaylist', hrefKey: 'playlists' as const, icon: Clapperboard },
   { key: 'newScreen', hrefKey: 'screens' as const, icon: Monitor },
   { key: 'schedules', hrefKey: 'schedules' as const, icon: CalendarClock },
+  { key: 'analytics', hrefKey: 'analytics' as const, icon: BarChart3 },
   { key: 'team', hrefKey: 'team' as const, icon: Users },
   { key: 'notifications', hrefKey: 'notifications' as const, icon: Bell },
   { key: 'help', hrefKey: 'help' as const, icon: CircleHelp },
@@ -77,7 +79,8 @@ function hrefFor(
     | 'adminScreens'
     | 'help'
     | 'apiDocs'
-    | 'notifications',
+    | 'notifications'
+    | 'analytics',
 ): string {
   if (hrefKey === 'overview') return `/${locale}/overview`;
   if (hrefKey === 'adminHome') return `/${locale}/admin`;
@@ -91,6 +94,7 @@ function hrefFor(
   if (hrefKey === 'help') return `/${locale}/help`;
   if (hrefKey === 'apiDocs') return `/${locale}/api-docs`;
   if (hrefKey === 'notifications') return `/${locale}/notifications`;
+  if (hrefKey === 'analytics') return `/${locale}/analytics`;
   return `/${locale}/${hrefKey}`;
 }
 
@@ -118,7 +122,8 @@ function sovereignLinkActive(
     | 'adminScreens'
     | 'help'
     | 'apiDocs'
-    | 'notifications',
+    | 'notifications'
+    | 'analytics',
 ): boolean {
   if (!pathname) return false;
   if (hrefKey === 'overview') return isOverviewPath(pathname, locale);
@@ -133,6 +138,7 @@ function sovereignLinkActive(
   if (hrefKey === 'help') return pathname.startsWith(`/${locale}/help`);
   if (hrefKey === 'apiDocs') return pathname.startsWith(`/${locale}/api-docs`);
   if (hrefKey === 'notifications') return pathname.startsWith(`/${locale}/notifications`);
+  if (hrefKey === 'analytics') return pathname.startsWith(`/${locale}/analytics`);
   return false;
 }
 
