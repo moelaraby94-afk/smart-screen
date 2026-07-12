@@ -8,6 +8,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
   Check,
+  Download,
   MoreHorizontal,
   UserMinus,
   Send,
@@ -306,6 +307,41 @@ export function AdminCustomersClient() {
     await load();
   };
 
+  const exportCsv = () => {
+    const headers = [
+      'ID', 'Full Name', 'Email', 'Business Name', 'Active',
+      'Workspaces', 'Subscription Status', 'Subscription End Date',
+      'Storage Bytes', 'Created At', 'Last Login At',
+    ];
+    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const lines = [headers.join(',')];
+    for (const u of rows) {
+      lines.push([
+        escape(u.id),
+        escape(u.fullName),
+        escape(u.email),
+        escape(u.businessName ?? ''),
+        u.isActive ? 'true' : 'false',
+        String(u.totalWorkspaces),
+        escape(u.subscriptionStatus),
+        escape(u.subscriptionEndDate ?? ''),
+        String(u.storageBytes),
+        escape(u.createdAt),
+        escape(u.lastLoginAt ?? ''),
+      ].join(','));
+    }
+    const csv = lines.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `customers-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return <AdminCosmicLoader label={t('loading')} />;
   }
@@ -345,6 +381,17 @@ export function AdminCustomersClient() {
             className="rounded-xl border-border"
           />
         </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="rounded-xl"
+          onClick={exportCsv}
+          disabled={rows.length === 0}
+        >
+          <Download className="me-2 h-4 w-4" />
+          {t('exportCsv')}
+        </Button>
       </div>
 
       {selectedIds.size > 0 && (

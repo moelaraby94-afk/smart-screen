@@ -468,6 +468,7 @@
     "bulkSuspendOk": "Accounts suspended.",
     "bulkActivatePartial": "{count} account(s) could not be activated.",
     "bulkSuspendPartial": "{count} account(s) could not be suspended.",
+    "exportCsv": "Export CSV",
     "filters": {
       "all": "All customers",
       "active": "Active",
@@ -1134,6 +1135,7 @@
     "bulkSuspendOk": "Accounts suspended.",
     "bulkActivatePartial": "{count} account(s) could not be activated.",
     "bulkSuspendPartial": "{count} account(s) could not be suspended.",
+    "exportCsv": "Export CSV",
     "filters": {
       "all": "All",
       "active": "Active",

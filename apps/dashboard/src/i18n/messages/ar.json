@@ -468,6 +468,7 @@
     "bulkSuspendOk": "تم تعليق الحسابات.",
     "bulkActivatePartial": "تعذر تفعيل {count} حساب.",
     "bulkSuspendPartial": "تعذر تعليق {count} حساب.",
+    "exportCsv": "تصدير CSV",
     "filters": {
       "all": "كل العملاء",
       "active": "نشط",
@@ -1134,6 +1135,7 @@
     "bulkSuspendOk": "تم تعليق الحسابات.",
     "bulkActivatePartial": "تعذر تفعيل {count} حساب.",
     "bulkSuspendPartial": "تعذر تعليق {count} حساب.",
+    "exportCsv": "تصدير CSV",
     "filters": {
       "all": "الكل",
       "active": "نشط",
