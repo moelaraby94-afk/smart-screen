@@ -1434,6 +1434,8 @@
     "expiresOn": "Expires on {date}",
     "cancelFailed": "Could not cancel invitation.",
     "cancelOk": "Invitation cancelled.",
+    "resendOk": "Invitation resent.",
+    "resendFailed": "Could not resend invitation.",
     "roleUpdated": "Member role updated.",
     "roleUpdateFailed": "Could not update member role.",
     "memberRemoved": "Member removed from workspace.",

@@ -527,6 +527,64 @@ export class WorkspacesService {
     return { ok: true as const };
   }
 
+  /** Resend a pending invitation email with a fresh token. */
+  async resendInvitation(workspaceId: string, invitationId: string) {
+    const invitation = await this.prisma.workspaceInvitation.findFirst({
+      where: { id: invitationId, workspaceId },
+    });
+    if (!invitation) throw new NotFoundException('Invitation not found');
+    if (invitation.status !== InvitationStatus.PENDING) {
+      throw new BadRequestException(
+        'Only pending invitations can be resent.',
+      );
+    }
+
+    const token = randomBytes(32).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    await this.prisma.workspaceInvitation.update({
+      where: { id: invitationId },
+      data: { token, expiresAt },
+    });
+
+    const workspace = await this.prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { name: true },
+    });
+    const inviter = await this.prisma.user.findUnique({
+      where: { id: invitation.invitedById },
+      select: { fullName: true },
+    });
+
+    let emailSent = false;
+    if (this.email.isConfigured()) {
+      const origin =
+        this.config.get<string>('FRONTEND_ORIGIN')?.trim() ||
+        'http://localhost:3000';
+      const base = origin.replace(/\/$/, '');
+      const inviteUrl = `${base}/en/invite?token=${token}`;
+      try {
+        await this.email.sendMail({
+          to: invitation.email,
+          ...teamInviteEmail({
+            inviterName: inviter?.fullName ?? 'A team member',
+            workspaceName: workspace?.name ?? 'Workspace',
+            inviteUrl,
+            role: invitation.role,
+          }),
+        });
+        emailSent = true;
+      } catch (err) {
+        this.log.error(
+          `Failed to resend invite email to ${invitation.email}: ${err}`,
+        );
+      }
+    }
+
+    return { ok: true as const, emailSent };
+  }
+
   async getWorkspace(workspaceId: string) {
     return this.prisma.workspace.findUnique({
       where: { id: workspaceId },

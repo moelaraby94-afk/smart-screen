@@ -29,6 +29,15 @@ export async function cancelInvite(
   });
 }
 
+export async function resendInvite(
+  workspaceId: string,
+  inviteId: string,
+): Promise<Response> {
+  return apiFetch(`/workspaces/${workspaceId}/invites/${inviteId}/resend`, {
+    method: 'POST',
+  });
+}
+
 export async function updateMemberRole(
   workspaceId: string,
   membershipId: string,

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Mail, Shield, UserPlus, Users, UserCheck, X, Trash2 } from 'lucide-react';
+import { Clock, Mail, RefreshCw, Shield, UserPlus, Users, UserCheck, X, Trash2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import {
   inviteMember as apiInviteMember,
   fetchInvites as apiFetchInvites,
   cancelInvite as apiCancelInvite,
+  resendInvite as apiResendInvite,
   updateMemberRole as apiUpdateMemberRole,
   removeMember as apiRemoveMember,
 } from '@/features/team/team-api';
@@ -55,6 +56,7 @@ export function TeamClient() {
   const [role, setRole] = useState<string>('EDITOR');
   const [sending, setSending] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [resendingId, setResendingId] = useState<string | null>(null);
   const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
@@ -116,6 +118,22 @@ export function TeamClient() {
       void load();
     } finally {
       setCancellingId(null);
+    }
+  };
+
+  const handleResendInvite = async (inviteId: string) => {
+    if (!workspaceId) return;
+    setResendingId(inviteId);
+    try {
+      const res = await apiResendInvite(workspaceId, inviteId);
+      if (!res.ok) {
+        toast.error(t('resendFailed'));
+        return;
+      }
+      toast.success(t('resendOk'));
+      void load();
+    } finally {
+      setResendingId(null);
     }
   };
 
@@ -274,6 +292,15 @@ export function TeamClient() {
                         <span className="rounded-full bg-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                           {inv.role}
                         </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
+                          onClick={() => void handleResendInvite(inv.id)}
+                          disabled={resendingId === inv.id}
+                        >
+                          <RefreshCw className={cn('h-4 w-4', resendingId === inv.id && 'animate-spin')} />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"

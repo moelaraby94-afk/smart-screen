@@ -1434,6 +1434,8 @@
     "expiresOn": "تنتهي في {date}",
     "cancelFailed": "تعذر إلغاء الدعوة.",
     "cancelOk": "تم إلغاء الدعوة.",
+    "resendOk": "تمت إعادة إرسال الدعوة.",
+    "resendFailed": "تعذر إعادة إرسال الدعوة.",
     "roleUpdated": "تم تحديث دور العضو.",
     "roleUpdateFailed": "تعذر تحديث دور العضو.",
     "memberRemoved": "تمت إزالة العضو من مساحة العمل.",

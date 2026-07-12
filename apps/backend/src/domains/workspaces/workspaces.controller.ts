@@ -142,6 +142,16 @@ export class WorkspacesController {
     return this.workspaces.cancelInvitation(workspaceId, inviteId);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.OWNER, UserRole.ADMIN)
+  @Post(':workspaceId/invites/:inviteId/resend')
+  resendInvite(
+    @Param('workspaceId') workspaceId: string,
+    @Param('inviteId') inviteId: string,
+  ) {
+    return this.workspaces.resendInvitation(workspaceId, inviteId);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post('invites/accept')
   acceptInvite(
