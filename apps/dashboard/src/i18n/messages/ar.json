@@ -17,6 +17,7 @@
     "team": "الفريق",
     "notifications": "الإشعارات",
     "analytics": "التحليلات",
+    "auditLog": "سجل التدقيق",
     "help": "المساعدة والدعم",
     "apiDocs": "وثائق API",
     "billing": "الفوترة",
@@ -1904,6 +1905,12 @@
       "filterAll": "الكل",
       "filterUnread": "غير مقروء"
     }
+  },
+  "auditLogPage": {
+    "kicker": "الأمان",
+    "title": "سجل التدقيق",
+    "description": "سجل غير قابل للتعديل للعمليات الحساسة في مساحة عملك.",
+    "empty": "لم يتم تسجيل أي أحداث تدقيق بعد."
   },
   "analyticsPage": {
     "kicker": "رؤى",

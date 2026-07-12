@@ -54,6 +54,7 @@ const CLIENT_NAV = [
   { key: 'newScreen', hrefKey: 'screens' as const, icon: Monitor },
   { key: 'schedules', hrefKey: 'schedules' as const, icon: CalendarClock },
   { key: 'analytics', hrefKey: 'analytics' as const, icon: BarChart3 },
+  { key: 'auditLog', hrefKey: 'auditLog' as const, icon: ScrollText },
   { key: 'team', hrefKey: 'team' as const, icon: Users },
   { key: 'notifications', hrefKey: 'notifications' as const, icon: Bell },
   { key: 'help', hrefKey: 'help' as const, icon: CircleHelp },
@@ -80,7 +81,8 @@ function hrefFor(
     | 'help'
     | 'apiDocs'
     | 'notifications'
-    | 'analytics',
+    | 'analytics'
+    | 'auditLog',
 ): string {
   if (hrefKey === 'overview') return `/${locale}/overview`;
   if (hrefKey === 'adminHome') return `/${locale}/admin`;
@@ -95,6 +97,7 @@ function hrefFor(
   if (hrefKey === 'apiDocs') return `/${locale}/api-docs`;
   if (hrefKey === 'notifications') return `/${locale}/notifications`;
   if (hrefKey === 'analytics') return `/${locale}/analytics`;
+  if (hrefKey === 'auditLog') return `/${locale}/audit-log`;
   return `/${locale}/${hrefKey}`;
 }
 
@@ -123,7 +126,8 @@ function sovereignLinkActive(
     | 'help'
     | 'apiDocs'
     | 'notifications'
-    | 'analytics',
+    | 'analytics'
+    | 'auditLog',
 ): boolean {
   if (!pathname) return false;
   if (hrefKey === 'overview') return isOverviewPath(pathname, locale);
@@ -139,6 +143,7 @@ function sovereignLinkActive(
   if (hrefKey === 'apiDocs') return pathname.startsWith(`/${locale}/api-docs`);
   if (hrefKey === 'notifications') return pathname.startsWith(`/${locale}/notifications`);
   if (hrefKey === 'analytics') return pathname.startsWith(`/${locale}/analytics`);
+  if (hrefKey === 'auditLog') return pathname.startsWith(`/${locale}/audit-log`);
   return false;
 }
 

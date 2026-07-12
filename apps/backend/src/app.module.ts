@@ -24,6 +24,7 @@ import { WebhooksModule } from './domains/webhooks/webhooks.module';
 import { MaintenanceModule } from './domains/maintenance/maintenance.module';
 import { EmailModule } from './domains/email/email.module';
 import { NotificationsModule } from './domains/notifications/notifications.module';
+import { WorkspaceAuditLogModule } from './domains/audit-log/audit-log.module';
 import { HealthModule } from './common/health/health.module';
 import { RequestContextModule } from './common/request-context/request-context.module';
 
@@ -72,6 +73,7 @@ import { RequestContextModule } from './common/request-context/request-context.m
     WebhooksModule,
     MaintenanceModule,
     NotificationsModule,
+    WorkspaceAuditLogModule,
     HealthModule,
     RequestContextModule,
   ],

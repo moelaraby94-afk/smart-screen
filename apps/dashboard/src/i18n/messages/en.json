@@ -17,6 +17,7 @@
     "team": "Team",
     "notifications": "Notifications",
     "analytics": "Analytics",
+    "auditLog": "Audit log",
     "help": "Help & support",
     "apiDocs": "API docs",
     "billing": "Billing",
@@ -1904,6 +1905,12 @@
       "filterAll": "All",
       "filterUnread": "Unread"
     }
+  },
+  "auditLogPage": {
+    "kicker": "Security",
+    "title": "Audit log",
+    "description": "Immutable record of sensitive operations across your workspace.",
+    "empty": "No audit events recorded yet."
   },
   "analyticsPage": {
     "kicker": "Insights",

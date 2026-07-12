@@ -863,9 +863,20 @@ model AuditLog {
   /// Real client IP as seen by the API, or "n/a" when the caller had no request context.
   ipAddress      String
 
+  /// Optional workspace ID for workspace-level audit events.
+  workspaceId    String?
+
+  /// Optional user ID of the actor for workspace-level events.
+  userId         String?
+
+  /// Optional JSON metadata for additional context.
+  metadata       Json?
+
   createdAt      DateTime @default(now())
 
   @@index([createdAt])
+
+  @@index([workspaceId, createdAt])
 
 }
 
