@@ -326,6 +326,19 @@ export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject
               )}
             </div>
           )}
+          {selected.type === 'qrcode' && (
+            <div className="space-y-3 border-t border-border/60 pt-3">
+              <div className="space-y-1">
+                <Label className="text-xs">{t('qrData')}</Label>
+                <Input
+                  value={selected.qrData ?? ''}
+                  onChange={(e) => onUpdateObject(selected.id, { qrData: e.target.value })}
+                  className="h-9"
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">{t('selectObject')}</p>

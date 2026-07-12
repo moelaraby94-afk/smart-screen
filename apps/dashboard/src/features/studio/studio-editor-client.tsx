@@ -3,11 +3,14 @@
 import { motion } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ArrowRight,
   Circle as CircleIcon,
   History,
   LayoutTemplate,
   Maximize,
+  Minus,
   Plus,
+  QrCode,
   RotateCcw,
   Save,
   Shapes,
@@ -440,6 +443,69 @@ export function StudioEditorClient() {
     setSelectedId(id);
   };
 
+  const addLine = () => {
+    const id = crypto.randomUUID();
+    setLayout((prev) => ({
+      ...prev,
+      objects: [
+        ...prev.objects,
+        {
+          id,
+          type: 'line',
+          x: 200,
+          y: 300,
+          points: [0, 0, 300, 0],
+          stroke: 'hsl(var(--primary))',
+          strokeWidth: 4,
+          opacity: 1,
+        },
+      ],
+    }));
+    setSelectedId(id);
+  };
+
+  const addArrow = () => {
+    const id = crypto.randomUUID();
+    setLayout((prev) => ({
+      ...prev,
+      objects: [
+        ...prev.objects,
+        {
+          id,
+          type: 'arrow',
+          x: 200,
+          y: 300,
+          points: [0, 0, 300, 0],
+          stroke: 'hsl(var(--primary))',
+          strokeWidth: 4,
+          opacity: 1,
+        },
+      ],
+    }));
+    setSelectedId(id);
+  };
+
+  const addQrCode = () => {
+    const id = crypto.randomUUID();
+    setLayout((prev) => ({
+      ...prev,
+      objects: [
+        ...prev.objects,
+        {
+          id,
+          type: 'qrcode',
+          x: 350,
+          y: 250,
+          width: 200,
+          height: 200,
+          qrData: 'https://cloudscreen.app',
+          opacity: 1,
+        },
+      ],
+    }));
+    setSelectedId(id);
+  };
+
   const onDropMedia = (e: React.DragEvent) => {
     e.preventDefault();
     const raw = e.dataTransfer.getData('application/canvas-media');
@@ -753,6 +819,18 @@ export function StudioEditorClient() {
             <Button type="button" size="sm" variant="ghost" onClick={addEllipse}>
               <CircleIcon className="mr-1 h-4 w-4 text-primary" />
               {t('toolEllipse')}
+            </Button>
+            <Button type="button" size="sm" variant="ghost" onClick={addLine}>
+              <Minus className="mr-1 h-4 w-4 text-primary" />
+              {t('toolLine')}
+            </Button>
+            <Button type="button" size="sm" variant="ghost" onClick={addArrow}>
+              <ArrowRight className="mr-1 h-4 w-4 text-primary" />
+              {t('toolArrow')}
+            </Button>
+            <Button type="button" size="sm" variant="ghost" onClick={addQrCode}>
+              <QrCode className="mr-1 h-4 w-4 text-primary" />
+              {t('toolQrCode')}
             </Button>
           </div>
 

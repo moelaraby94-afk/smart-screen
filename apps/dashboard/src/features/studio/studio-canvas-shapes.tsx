@@ -11,7 +11,57 @@ import {
   Text,
 } from 'react-konva';
 import useImage from 'use-image';
+import { useEffect, useState } from 'react';
+import QRCode from 'qrcode';
 import type { CanvasLayoutV1, CanvasObjectJson } from '@/features/studio/canvas-layout';
+
+export function QrCodeShape({
+  obj,
+  onSelect,
+  onMove,
+}: {
+  obj: CanvasObjectJson;
+  onSelect: () => void;
+  onMove: (id: string, x: number, y: number) => void;
+}) {
+  const [dataUrl, setDataUrl] = useState<string>('');
+  const [img] = useImage(dataUrl, 'anonymous');
+
+  useEffect(() => {
+    const data = obj.qrData || 'https://cloudscreen.app';
+    QRCode.toDataURL(data, { width: 256, margin: 1 })
+      .then(setDataUrl)
+      .catch(() => {});
+  }, [obj.qrData]);
+
+  if (!img || !obj.width || !obj.height) return null;
+  return (
+    <KonvaImage
+      id={obj.id}
+      name={obj.id}
+      image={img}
+      x={obj.x}
+      y={obj.y}
+      width={obj.width}
+      height={obj.height}
+      rotation={obj.rotation ?? 0}
+      opacity={obj.opacity ?? 1}
+      draggable
+      onClick={(e) => {
+        e.cancelBubble = true;
+        onSelect();
+      }}
+      onTap={(e) => {
+        e.cancelBubble = true;
+        onSelect();
+      }}
+      onDragEnd={(e) => {
+        const n = e.target;
+        onMove(obj.id, n.x(), n.y());
+      }}
+    />
+  );
+}
 
 export function ImageShape({
   obj,
@@ -172,6 +222,47 @@ export function CanvasObjectsRenderer({ objects, onSelect, onUpdateObject }: Can
               dash={[8, 4]}
               cornerRadius={4}
               {...common}
+            />
+          );
+        }
+        if (obj.type === 'line') {
+          return (
+            <KonvaLine
+              key={obj.id}
+              x={obj.x}
+              y={obj.y}
+              points={obj.points ?? [0, 0, obj.width ?? 200, 0]}
+              stroke={obj.stroke ?? obj.fill ?? 'hsl(var(--primary))'}
+              strokeWidth={obj.strokeWidth ?? 4}
+              lineCap="round"
+              {...common}
+            />
+          );
+        }
+        if (obj.type === 'arrow') {
+          return (
+            <KonvaLine
+              key={obj.id}
+              x={obj.x}
+              y={obj.y}
+              points={obj.points ?? [0, 0, obj.width ?? 200, 0]}
+              stroke={obj.stroke ?? obj.fill ?? 'hsl(var(--primary))'}
+              strokeWidth={obj.strokeWidth ?? 4}
+              lineCap="round"
+              pointerAtEnd
+              pointerLength={12}
+              pointerWidth={12}
+              {...common}
+            />
+          );
+        }
+        if (obj.type === 'qrcode') {
+          return (
+            <QrCodeShape
+              key={obj.id}
+              obj={obj}
+              onSelect={() => onSelect(obj.id)}
+              onMove={(id, x, y) => onUpdateObject(id, { x, y })}
             />
           );
         }

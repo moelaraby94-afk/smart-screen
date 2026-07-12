@@ -1,6 +1,6 @@
 export type CanvasObjectJson = {
   id: string;
-  type: 'text' | 'image' | 'rect' | 'ellipse' | 'zone';
+  type: 'text' | 'image' | 'rect' | 'ellipse' | 'zone' | 'line' | 'arrow' | 'qrcode';
   x: number;
   y: number;
   rotation?: number;
@@ -24,6 +24,8 @@ export type CanvasObjectJson = {
   zoneName?: string;
   zonePlaylistId?: string | null;
   zoneMediaId?: string | null;
+  points?: number[];
+  qrData?: string;
 };
 
 export type ZonePreset = {

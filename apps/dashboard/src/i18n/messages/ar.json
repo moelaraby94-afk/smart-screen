@@ -310,7 +310,11 @@
     "fontFamily": "عائلة الخط",
     "fontDefault": "الخط الافتراضي",
     "textAlign": "محاذاة النص",
-    "textStyle": "نمط النص"
+    "textStyle": "نمط النص",
+    "toolLine": "خط",
+    "toolArrow": "سهم",
+    "toolQrCode": "رمز QR",
+    "qrData": "بيانات QR (رابط أو نص)"
   },
   "schedules": {
     "title": "الجدولة",

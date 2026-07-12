@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Ellipse, Group, Image as KonvaImage, Layer, Rect, Stage, Text } from 'react-konva';
+import { Ellipse, Group, Image as KonvaImage, Layer, Line as KonvaLine, Rect, Stage, Text } from 'react-konva';
 import useImage from 'use-image';
+import QRCode from 'qrcode';
 import {
   type CanvasLayoutV1,
   type CanvasObjectJson,
@@ -113,7 +114,51 @@ function ObjectNode({ obj }: { obj: CanvasObjectJson }) {
       />
     );
   }
+  if (obj.type === 'line') {
+    return (
+      <KonvaLine
+        x={obj.x}
+        y={obj.y}
+        points={obj.points ?? [0, 0, obj.width ?? 200, 0]}
+        stroke={obj.stroke ?? obj.fill ?? '#ffffff'}
+        strokeWidth={obj.strokeWidth ?? 4}
+        lineCap="round"
+        {...common}
+      />
+    );
+  }
+  if (obj.type === 'arrow') {
+    return (
+      <KonvaLine
+        x={obj.x}
+        y={obj.y}
+        points={obj.points ?? [0, 0, obj.width ?? 200, 0]}
+        stroke={obj.stroke ?? obj.fill ?? '#ffffff'}
+        strokeWidth={obj.strokeWidth ?? 4}
+        lineCap="round"
+        pointerAtEnd
+        pointerLength={12}
+        pointerWidth={12}
+        {...common}
+      />
+    );
+  }
+  if (obj.type === 'qrcode') {
+    return <CanvasQrCodeNode obj={obj} />;
+  }
   return null;
+}
+
+function CanvasQrCodeNode({ obj }: { obj: CanvasObjectJson }) {
+  const [dataUrl, setDataUrl] = useState('');
+  const [img] = useImage(dataUrl, 'anonymous');
+  useEffect(() => {
+    QRCode.toDataURL(obj.qrData || 'https://cloudscreen.app', { width: 256, margin: 1 })
+      .then(setDataUrl)
+      .catch(() => {});
+  }, [obj.qrData]);
+  if (!img || !obj.width || !obj.height) return null;
+  return <KonvaImage image={img} x={obj.x} y={obj.y} width={obj.width} height={obj.height} opacity={obj.opacity ?? 1} />;
 }
 
 export function CanvasKonvaView({ designWidth, designHeight, layoutData, liveOverride }: Props) {

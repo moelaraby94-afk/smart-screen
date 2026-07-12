@@ -310,7 +310,11 @@
     "fontFamily": "Font family",
     "fontDefault": "System default",
     "textAlign": "Text alignment",
-    "textStyle": "Text style"
+    "textStyle": "Text style",
+    "toolLine": "Line",
+    "toolArrow": "Arrow",
+    "toolQrCode": "QR Code",
+    "qrData": "QR data (URL or text)"
   },
   "schedules": {
     "title": "Schedules",
