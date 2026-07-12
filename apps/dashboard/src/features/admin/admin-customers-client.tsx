@@ -7,12 +7,14 @@ import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
+  Check,
   MoreHorizontal,
   UserMinus,
   Send,
   ArrowUpRight,
   UserRoundCog,
   Users,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -159,6 +161,8 @@ export function AdminCustomersClient() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [reminderTarget, setReminderTarget] = useState<UserRow | null>(null);
   const [sendingReminder, setSendingReminder] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   useEffect(() => {
     const id = window.setTimeout(() => setDebouncedSearch(search), 300);
@@ -247,6 +251,61 @@ export function AdminCustomersClient() {
     router.push(`/${locale}/admin/customers/${id}` as Route);
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => {
+      if (prev.size === rows.length) return new Set();
+      return new Set(rows.map((r) => r.id));
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const bulkSuspend = async () => {
+    if (selectedIds.size === 0) return;
+    setBulkBusy(true);
+    let failed = 0;
+    for (const id of selectedIds) {
+      if (id === meId) { failed++; continue; }
+      const res = await apiUpdateAdminUser(id, { isActive: false });
+      if (!res.ok) failed++;
+    }
+    setBulkBusy(false);
+    clearSelection();
+    if (failed > 0) {
+      toast.error(t('bulkSuspendPartial', { count: failed }));
+    } else {
+      toast.success(t('bulkSuspendOk'));
+    }
+    await load();
+  };
+
+  const bulkActivate = async () => {
+    if (selectedIds.size === 0) return;
+    setBulkBusy(true);
+    let failed = 0;
+    for (const id of selectedIds) {
+      const res = await apiUpdateAdminUser(id, { isActive: true });
+      if (!res.ok) failed++;
+    }
+    setBulkBusy(false);
+    clearSelection();
+    if (failed > 0) {
+      toast.error(t('bulkActivatePartial', { count: failed }));
+    } else {
+      toast.success(t('bulkActivateOk'));
+    }
+    await load();
+  };
+
   if (loading) {
     return <AdminCosmicLoader label={t('loading')} />;
   }
@@ -288,7 +347,43 @@ export function AdminCustomersClient() {
         </div>
       </div>
 
-
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+          <span className="text-sm font-semibold text-primary">
+            {selectedIds.size} {t('selected')}
+          </span>
+          <div className="flex flex-1 flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="rounded-lg"
+              disabled={bulkBusy}
+              onClick={() => void bulkActivate()}
+            >
+              {t('bulkActivate')}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="destructive"
+              className="rounded-lg"
+              disabled={bulkBusy}
+              onClick={() => void bulkSuspend()}
+            >
+              {t('bulkSuspend')}
+            </Button>
+          </div>
+          <button
+            type="button"
+            onClick={clearSelection}
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground"
+            aria-label={t('clearSelection')}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       <div className={adminGlassTable.wrap}>
 
@@ -301,6 +396,21 @@ export function AdminCustomersClient() {
 
               <TableRow className={adminGlassTable.theadRow}>
 
+                <TableHead className={cn(adminGlassTable.th, 'w-[40px]')}>
+                  <button
+                    type="button"
+                    onClick={toggleSelectAll}
+                    className={cn(
+                      'flex h-5 w-5 items-center justify-center rounded border transition',
+                      selectedIds.size > 0 && selectedIds.size === rows.length
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border text-transparent hover:border-primary',
+                    )}
+                    aria-label={t('selectAll')}
+                  >
+                    {selectedIds.size > 0 && selectedIds.size === rows.length && <Check className="h-3 w-3" />}
+                  </button>
+                </TableHead>
                 <TableHead className={cn(adminGlassTable.th, 'text-start')}>{t('table.columns.customer')}</TableHead>
 
                 <TableHead className={cn(adminGlassTable.th, 'hidden text-center sm:table-cell')}>{t('table.columns.status')}</TableHead>
@@ -336,6 +446,22 @@ export function AdminCustomersClient() {
                   onClick={() => openProfile(u.id)}
 
                 >
+
+                  <TableCell className="w-[40px]" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSelect(u.id)}
+                      className={cn(
+                        'flex h-5 w-5 items-center justify-center rounded border transition',
+                        selectedIds.has(u.id)
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border text-transparent hover:border-primary',
+                      )}
+                      aria-label={t('select')}
+                    >
+                      {selectedIds.has(u.id) && <Check className="h-3 w-3" />}
+                    </button>
+                  </TableCell>
 
                   <TableCell className="font-medium">
 
