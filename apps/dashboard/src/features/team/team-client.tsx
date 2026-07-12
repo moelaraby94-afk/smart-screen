@@ -2,13 +2,21 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Shield, UserPlus, Users } from 'lucide-react';
+import { Clock, Mail, Shield, UserPlus, Users, UserCheck, X, Trash2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { fetchMembers as apiFetchMembers, inviteMember as apiInviteMember } from '@/features/team/team-api';
+import { EmptyState } from '@/components/ui/empty-state';
+import {
+  fetchMembers as apiFetchMembers,
+  inviteMember as apiInviteMember,
+  fetchInvites as apiFetchInvites,
+  cancelInvite as apiCancelInvite,
+  updateMemberRole as apiUpdateMemberRole,
+  removeMember as apiRemoveMember,
+} from '@/features/team/team-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +33,15 @@ type Member = {
   };
 };
 
+type PendingInvite = {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  createdAt: string;
+  expiresAt: string;
+};
+
 const ROLES = ['VIEWER', 'EDITOR', 'ADMIN', 'OWNER'] as const;
 
 export function TeamClient() {
@@ -32,19 +49,31 @@ export function TeamClient() {
   const locale = useLocale();
   const { workspaceId } = useWorkspace();
   const [members, setMembers] = useState<Member[]>([]);
+  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<string>('EDITOR');
   const [sending, setSending] = useState(false);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!workspaceId) return;
     setLoading(true);
-    const res = await apiFetchMembers(workspaceId);
-    if (res.ok) {
-      setMembers((await res.json()) as Member[]);
+    const [membersRes, invitesRes] = await Promise.all([
+      apiFetchMembers(workspaceId),
+      apiFetchInvites(workspaceId),
+    ]);
+    if (membersRes.ok) {
+      setMembers((await membersRes.json()) as Member[]);
     } else {
       setMembers([]);
+    }
+    if (invitesRes.ok) {
+      setPendingInvites((await invitesRes.json()) as PendingInvite[]);
+    } else {
+      setPendingInvites([]);
     }
     setLoading(false);
   }, [workspaceId]);
@@ -63,13 +92,64 @@ export function TeamClient() {
       const res = await apiInviteMember(workspaceId, email.trim(), role);
       const data = (await res.json()) as { message?: string };
       if (!res.ok) {
-        toast.error(t('inviteFailed'));
+        toast.error(data.message ?? t('inviteFailed'));
         return;
       }
-      toast.success(data.message ?? t('inviteRecorded'));
+      toast.success(data.message ?? t('inviteSent'));
       setEmail('');
+      void load();
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleCancelInvite = async (inviteId: string) => {
+    if (!workspaceId) return;
+    setCancellingId(inviteId);
+    try {
+      const res = await apiCancelInvite(workspaceId, inviteId);
+      if (!res.ok) {
+        toast.error(t('cancelFailed'));
+        return;
+      }
+      toast.success(t('cancelOk'));
+      void load();
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
+  const handleChangeRole = async (membershipId: string, newRole: string) => {
+    if (!workspaceId) return;
+    setUpdatingRoleId(membershipId);
+    try {
+      const res = await apiUpdateMemberRole(workspaceId, membershipId, newRole);
+      if (!res.ok) {
+        const data = (await res.json()) as { message?: string };
+        toast.error(data.message ?? t('roleUpdateFailed'));
+        return;
+      }
+      toast.success(t('roleUpdated'));
+      void load();
+    } finally {
+      setUpdatingRoleId(null);
+    }
+  };
+
+  const handleRemoveMember = async (membershipId: string) => {
+    if (!workspaceId) return;
+    setRemovingId(membershipId);
+    try {
+      const res = await apiRemoveMember(workspaceId, membershipId);
+      if (!res.ok) {
+        const data = (await res.json()) as { message?: string };
+        toast.error(data.message ?? t('removeFailed'));
+        return;
+      }
+      toast.success(t('memberRemoved'));
+      void load();
+    } finally {
+      setRemovingId(null);
     }
   };
 
@@ -104,42 +184,110 @@ export function TeamClient() {
         </div>
 
         <div className="grid gap-8 p-8 lg:grid-cols-[1fr_380px]">
-          <div>
-            <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
-              <Shield className="h-4 w-4 text-primary" />
-              {t('members')}
-            </h3>
-            {loading ? (
-              <p className="text-sm text-muted-foreground">{t('loading')}</p>
-            ) : (
-              <ul className="space-y-2">
-                {members.map((m) => (
-                  <li
-                    key={m.membershipId}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/70 bg-muted/20 px-4 py-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-foreground">{m.user.fullName}</p>
-                      <p className="truncate text-sm text-muted-foreground">{m.user.email}</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={cn(
-                          'rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide',
-                          m.role === 'OWNER'
-                            ? 'bg-primary/15 text-primary'
-                            : 'bg-muted text-muted-foreground',
+          <div className="space-y-8">
+            <div>
+              <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Shield className="h-4 w-4 text-primary" />
+                {t('members')}
+              </h3>
+              {loading ? (
+                <p className="text-sm text-muted-foreground">{t('loading')}</p>
+              ) : members.length === 0 ? (
+                <EmptyState
+                  icon={UserCheck}
+                  title={t('noMembers')}
+                  description={t('noMembersDescription')}
+                />
+              ) : (
+                <ul className="space-y-2">
+                  {members.map((m) => (
+                    <li
+                      key={m.membershipId}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/70 bg-muted/20 px-4 py-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-foreground">{m.user.fullName}</p>
+                        <p className="truncate text-sm text-muted-foreground">{m.user.email}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {m.role === 'OWNER' ? (
+                          <span
+                            className={cn(
+                              'rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide',
+                              'bg-primary/15 text-primary',
+                            )}
+                          >
+                            {m.role}
+                          </span>
+                        ) : (
+                          <select
+                            className="h-8 rounded-lg border border-border bg-card px-2 text-xs font-semibold uppercase tracking-wide"
+                            value={m.role}
+                            disabled={updatingRoleId === m.membershipId}
+                            onChange={(e) => void handleChangeRole(m.membershipId, e.target.value)}
+                          >
+                            {ROLES.filter((r) => r !== 'OWNER').map((r) => (
+                              <option key={r} value={r}>{r}</option>
+                            ))}
+                          </select>
                         )}
-                      >
-                        {m.role}
-                      </span>
-                      <span className="font-mono-nums text-xs text-muted-foreground">
-                        {new Date(m.joinedAt).toLocaleDateString(locale)}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                        <span className="font-mono-nums text-xs text-muted-foreground">
+                          {new Date(m.joinedAt).toLocaleDateString(locale)}
+                        </span>
+                        {m.role !== 'OWNER' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                            disabled={removingId === m.membershipId}
+                            onClick={() => void handleRemoveMember(m.membershipId)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {!loading && pendingInvites.length > 0 && (
+              <div>
+                <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Clock className="h-4 w-4 text-primary" />
+                  {t('pendingInvites')}
+                </h3>
+                <ul className="space-y-2">
+                  {pendingInvites.map((inv) => (
+                    <li
+                      key={inv.id}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/70 bg-muted/20 px-4 py-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-foreground">{inv.email}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {t('expiresOn', { date: new Date(inv.expiresAt).toLocaleDateString(locale) })}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="rounded-full bg-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          {inv.role}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                          onClick={() => void handleCancelInvite(inv.id)}
+                          disabled={cancellingId === inv.id}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
 
@@ -185,7 +333,7 @@ export function TeamClient() {
                 {sending ? t('sending') : t('sendInvite')}
               </Button>
               <p className="text-[11px] leading-relaxed text-muted-foreground">
-                {t('demoHint')}
+                {t('inviteHint')}
               </p>
             </div>
           </div>
