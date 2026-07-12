@@ -10,6 +10,7 @@ import {
   RotateCcw,
   Save,
   Shapes,
+  SquareStack,
   Type,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -22,6 +23,7 @@ import {
   fetchCanvas as apiFetchCanvas,
   updateCanvas as apiUpdateCanvas,
   createCanvas as apiCreateCanvas,
+  fetchPlaylists as apiFetchPlaylists,
 } from '@/features/studio/studio-api';
 import { fetchMedia } from '@/features/media/api/media-api';
 import { readPageItems } from '@/features/api/page';
@@ -30,7 +32,9 @@ import type { MediaItem } from '@/features/media/media-library-client';
 import {
   type CanvasLayoutV1,
   type CanvasObjectJson,
+  type ZonePreset,
   emptyLayout,
+  makeZonePresets,
 } from '@/features/studio/canvas-layout';
 import { CanvasStageView } from '@/features/studio/studio-canvas-shapes';
 import { StudioPropertiesPanel, StudioMediaStrip } from '@/features/studio/studio-panels';
@@ -103,7 +107,9 @@ export function StudioEditorClient() {
   const [snapshots, setSnapshots] = useState<VersionSnapshot[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showZones, setShowZones] = useState(false);
   const [library, setLibrary] = useState<MediaItem[]>([]);
+  const [studioPlaylists, setStudioPlaylists] = useState<Array<{ id: string; name: string }>>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 960, h: 540 });
 
@@ -145,10 +151,20 @@ export function StudioEditorClient() {
     [workspaceId],
   );
 
+  const loadPlaylists = useCallback(async () => {
+    if (!workspaceId) return;
+    const res = await apiFetchPlaylists(workspaceId);
+    if (res.ok) {
+      const items = await readPageItems<{ id: string; name: string }>(res);
+      setStudioPlaylists(items);
+    }
+  }, [workspaceId]);
+
   useEffect(() => {
     void loadLibrary();
     void loadCanvases();
-  }, [loadLibrary, loadCanvases]);
+    void loadPlaylists();
+  }, [loadLibrary, loadCanvases, loadPlaylists]);
 
   useEffect(() => {
     if (canvasId) {
@@ -264,6 +280,30 @@ export function StudioEditorClient() {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layout, canvasId, workspaceId, name, dw, dh]);
+
+  const addZone = (preset: ZonePreset) => {
+    const newObjects: CanvasObjectJson[] = preset.zones.map((z) => ({
+      id: crypto.randomUUID(),
+      type: 'zone' as const,
+      x: z.x,
+      y: z.y,
+      width: z.width,
+      height: z.height,
+      fill: 'rgba(99, 102, 241, 0.08)',
+      stroke: 'rgba(99, 102, 241, 0.6)',
+      strokeWidth: 2,
+      opacity: 1,
+      zoneName: z.name,
+      zonePlaylistId: null,
+      zoneMediaId: null,
+    }));
+    setLayout((prev) => ({
+      ...prev,
+      objects: [...prev.objects, ...newObjects],
+    }));
+    setShowZones(false);
+    toast.success(t('zonesAdded'));
+  };
 
   const applyTemplate = async (tpl: CanvasTemplate) => {
     if (!workspaceId) return;
@@ -458,6 +498,14 @@ export function StudioEditorClient() {
             <Button
               type="button"
               variant="outline"
+              onClick={() => setShowZones((v) => !v)}
+            >
+              <SquareStack className="mr-2 h-4 w-4" />
+              {t('zones')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => setShowTemplates((v) => !v)}
             >
               <LayoutTemplate className="mr-2 h-4 w-4" />
@@ -512,6 +560,46 @@ export function StudioEditorClient() {
           {t('autoSavedAt')}{' '}
           {new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(autoSavedAt)}
         </p>
+      )}
+
+      {showZones && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="vc-card-surface rounded-2xl border border-border p-5 shadow-sm"
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold tracking-tight">{t('zonePresets')}</h3>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {makeZonePresets(dw, dh).map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => addZone(preset)}
+                className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-muted/20 p-3 text-center transition hover:border-primary/40 hover:bg-primary/5"
+              >
+                <div className="relative h-16 w-24 overflow-hidden rounded border border-border/40 bg-background">
+                  {preset.zones.map((z, i) => (
+                    <div
+                      key={i}
+                      className="absolute border border-indigo-400/50 bg-indigo-400/10"
+                      style={{
+                        left: `${(z.x / dw) * 100}%`,
+                        top: `${(z.y / dh) * 100}%`,
+                        width: `${(z.width / dw) * 100}%`,
+                        height: `${(z.height / dh) * 100}%`,
+                      }}
+                    />
+                  ))}
+                </div>
+                <span className="text-[10px] font-medium text-foreground">
+                  {locale === 'ar' ? preset.nameAr : preset.name}
+                </span>
+              </button>
+            ))}
+          </div>
+        </motion.div>
       )}
 
       {showTemplates && (
@@ -669,6 +757,7 @@ export function StudioEditorClient() {
           selected={selected}
           onUpdateObject={updateObject}
           onRemoveObject={removeObject}
+          playlists={studioPlaylists}
         />
       </div>
     </div>

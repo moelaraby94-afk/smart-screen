@@ -294,7 +294,13 @@
     "autoSavedAt": "Auto-saved at",
     "templates": "Templates",
     "templateGallery": "Template Gallery",
-    "templateApplied": "Template applied. Start editing!"
+    "templateApplied": "Template applied. Start editing!",
+    "zones": "Zones",
+    "zonePresets": "Zone Layout Presets",
+    "zonesAdded": "Zones added to canvas.",
+    "zoneName": "Zone name",
+    "zonePlaylist": "Assigned playlist",
+    "zoneNoPlaylist": "No playlist assigned"
   },
   "schedules": {
     "title": "Schedules",

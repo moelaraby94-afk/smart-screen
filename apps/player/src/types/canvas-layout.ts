@@ -1,6 +1,6 @@
 export type CanvasObjectJson = {
   id: string;
-  type: 'text' | 'image' | 'rect' | 'ellipse';
+  type: 'text' | 'image' | 'rect' | 'ellipse' | 'zone';
   x: number;
   y: number;
   rotation?: number;
@@ -21,6 +21,9 @@ export type CanvasObjectJson = {
   verticalAlign?: 'top' | 'middle' | 'bottom';
   imageUrl?: string;
   mediaId?: string;
+  zoneName?: string;
+  zonePlaylistId?: string | null;
+  zoneMediaId?: string | null;
 };
 
 export type CanvasLayoutV1 = {

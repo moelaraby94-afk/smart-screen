@@ -294,7 +294,13 @@
     "autoSavedAt": "حُفظ تلقائياً في",
     "templates": "القوالب",
     "templateGallery": "معرض القوالب",
-    "templateApplied": "تم تطبيق القالب. ابدأ التعديل!"
+    "templateApplied": "تم تطبيق القالب. ابدأ التعديل!",
+    "zones": "المناطق",
+    "zonePresets": "قوالب تقسيم الشاشة",
+    "zonesAdded": "تمت إضافة المناطق إلى اللوحة.",
+    "zoneName": "اسم المنطقة",
+    "zonePlaylist": "قائمة التشغيل المعينة",
+    "zoneNoPlaylist": "لا توجد قائمة تشغيل معينة"
   },
   "schedules": {
     "title": "الجدولة",

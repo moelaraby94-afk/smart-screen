@@ -97,6 +97,22 @@ function ObjectNode({ obj }: { obj: CanvasObjectJson }) {
   if (obj.type === 'image') {
     return <CanvasImageNode obj={obj} />;
   }
+  if (obj.type === 'zone') {
+    return (
+      <Rect
+        x={obj.x}
+        y={obj.y}
+        width={obj.width ?? 400}
+        height={obj.height ?? 300}
+        fill={obj.fill ?? 'rgba(99, 102, 241, 0.08)'}
+        stroke={obj.stroke ?? 'rgba(99, 102, 241, 0.6)'}
+        strokeWidth={obj.strokeWidth ?? 2}
+        dash={[8, 4]}
+        cornerRadius={4}
+        {...common}
+      />
+    );
+  }
   return null;
 }
 

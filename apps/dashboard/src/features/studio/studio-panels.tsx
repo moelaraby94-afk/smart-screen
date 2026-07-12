@@ -12,9 +12,10 @@ type PropertiesPanelProps = {
   selected: CanvasObjectJson | null;
   onUpdateObject: (id: string, patch: Partial<CanvasObjectJson>) => void;
   onRemoveObject: (id: string) => void;
+  playlists?: Array<{ id: string; name: string }>;
 };
 
-export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject }: PropertiesPanelProps) {
+export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject, playlists }: PropertiesPanelProps) {
   const t = useTranslations('studio');
 
   return (
@@ -96,6 +97,37 @@ export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject
           >
             {t('removeObject')}
           </Button>
+          {selected.type === 'zone' && (
+            <div className="space-y-3 border-t border-border/60 pt-3">
+              <div className="space-y-1">
+                <Label className="text-xs">{t('zoneName')}</Label>
+                <Input
+                  value={selected.zoneName ?? ''}
+                  onChange={(e) => onUpdateObject(selected.id, { zoneName: e.target.value })}
+                  className="h-9"
+                />
+              </div>
+              {playlists && playlists.length > 0 && (
+                <div className="space-y-1">
+                  <Label className="text-xs">{t('zonePlaylist')}</Label>
+                  <select
+                    className="h-9 w-full rounded-lg border border-border bg-card px-2 text-sm"
+                    value={selected.zonePlaylistId ?? ''}
+                    onChange={(e) =>
+                      onUpdateObject(selected.id, {
+                        zonePlaylistId: e.target.value || null,
+                      })
+                    }
+                  >
+                    <option value="">{t('zoneNoPlaylist')}</option>
+                    {playlists.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">{t('selectObject')}</p>

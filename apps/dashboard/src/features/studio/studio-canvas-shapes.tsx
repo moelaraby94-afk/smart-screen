@@ -5,6 +5,7 @@ import {
   Group,
   Image as KonvaImage,
   Layer,
+  Line as KonvaLine,
   Rect,
   Stage,
   Text,
@@ -151,6 +152,23 @@ export function CanvasObjectsRenderer({ objects, onSelect, onUpdateObject }: Can
               obj={obj}
               onSelect={() => onSelect(obj.id)}
               onMove={(id, x, y) => onUpdateObject(id, { x, y })}
+            />
+          );
+        }
+        if (obj.type === 'zone') {
+          return (
+            <Rect
+              key={obj.id}
+              x={obj.x}
+              y={obj.y}
+              width={obj.width ?? 400}
+              height={obj.height ?? 300}
+              fill={obj.fill ?? 'rgba(99, 102, 241, 0.08)'}
+              stroke={obj.stroke ?? 'rgba(99, 102, 241, 0.6)'}
+              strokeWidth={obj.strokeWidth ?? 2}
+              dash={[8, 4]}
+              cornerRadius={4}
+              {...common}
             />
           );
         }
