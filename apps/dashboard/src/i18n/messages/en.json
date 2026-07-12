@@ -15,6 +15,7 @@
     "playlists": "Playlists",
     "schedules": "Schedules",
     "team": "Team",
+    "help": "Help & support",
     "billing": "Billing",
     "billingAndPayments": "Billing & payments",
     "upgradePlan": "Upgrade plan",
@@ -697,6 +698,43 @@
     "timing": "Timing",
     "workspace": "Workspace",
     "saas": "SaaS"
+  },
+  "helpPage": {
+    "kicker": "Support",
+    "title": "Help & support",
+    "description": "Guides, FAQs, and contact options to help you get the most out of Cloud Signage.",
+    "guidesTitle": "Quick guides",
+    "faqTitle": "Frequently asked questions",
+    "contactTitle": "Still need help?",
+    "contactDescription": "Our support team is available to assist you with any questions or issues.",
+    "guides": {
+      "screens": "Managing screens",
+      "screensDesc": "Add, pair, and monitor your display devices.",
+      "media": "Media library",
+      "mediaDesc": "Upload, organize, and manage your images and videos.",
+      "playlists": "Creating playlists",
+      "playlistsDesc": "Combine media into playlists for your screens.",
+      "schedules": "Scheduling content",
+      "schedulesDesc": "Set when playlists should play on your screens.",
+      "team": "Team management",
+      "teamDesc": "Invite members and manage roles in your workspace.",
+      "studio": "Studio editor",
+      "studioDesc": "Design custom layouts with the visual canvas editor."
+    },
+    "faq": {
+      "q1": "How do I pair a screen?",
+      "a1": "Navigate to Screens, click 'Add screen', and follow the pairing instructions. Enter the 6-digit code displayed on your screen device.",
+      "q2": "What media formats are supported?",
+      "a2": "We support common image formats (JPG, PNG, WebP, SVG) and video formats (MP4, WebM). Files are automatically optimized for display.",
+      "q3": "How do schedules work?",
+      "a3": "Schedules let you define which playlist plays on which screen at specific times. You can set day-of-week and time ranges for each schedule.",
+      "q4": "Can I have multiple workspaces?",
+      "a4": "Yes, you can create multiple workspaces (branches) to organize your screens by location, department, or client. Switch between them using the workspace switcher in the sidebar.",
+      "q5": "How do I invite team members?",
+      "a5": "Go to the Team page, enter the email address of the person you want to invite, select their role, and click 'Send invite'. They will receive an email invitation.",
+      "q6": "What happens when my subscription expires?",
+      "a6": "Your screens will continue displaying cached content, but you won't be able to make changes until you renew. Contact support to restore your subscription."
+    }
   },
   "settingsPages": {
     "billingKicker": "Billing",

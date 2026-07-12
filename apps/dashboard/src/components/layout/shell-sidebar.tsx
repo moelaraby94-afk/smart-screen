@@ -11,6 +11,7 @@ import {
   Activity,
   Building2,
   CalendarClock,
+  CircleHelp,
   Clapperboard,
   CreditCard,
   Globe2,
@@ -50,11 +51,12 @@ const CLIENT_NAV = [
   { key: 'newScreen', hrefKey: 'screens' as const, icon: Monitor },
   { key: 'schedules', hrefKey: 'schedules' as const, icon: CalendarClock },
   { key: 'team', hrefKey: 'team' as const, icon: Users },
+  { key: 'help', hrefKey: 'help' as const, icon: CircleHelp },
 ] as const;
 
 const CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE = new Set<
   (typeof CLIENT_NAV)[number]['hrefKey']
->(['overview', 'media']);
+>(['overview', 'media', 'help']);
 
 function hrefFor(
   locale: string,
@@ -68,7 +70,8 @@ function hrefFor(
     | 'adminLogs'
     | 'adminSettings'
     | 'adminFleet'
-    | 'adminScreens',
+    | 'adminScreens'
+    | 'help',
 ): string {
   if (hrefKey === 'overview') return `/${locale}/overview`;
   if (hrefKey === 'adminHome') return `/${locale}/admin`;
@@ -79,6 +82,7 @@ function hrefFor(
   if (hrefKey === 'adminStats') return `/${locale}/admin/stats`;
   if (hrefKey === 'adminLogs') return `/${locale}/admin/logs`;
   if (hrefKey === 'adminSettings') return `/${locale}/admin/settings`;
+  if (hrefKey === 'help') return `/${locale}/help`;
   return `/${locale}/${hrefKey}`;
 }
 
@@ -103,7 +107,8 @@ function sovereignLinkActive(
     | 'adminLogs'
     | 'adminSettings'
     | 'adminFleet'
-    | 'adminScreens',
+    | 'adminScreens'
+    | 'help',
 ): boolean {
   if (!pathname) return false;
   if (hrefKey === 'overview') return isOverviewPath(pathname, locale);
@@ -115,6 +120,7 @@ function sovereignLinkActive(
   if (hrefKey === 'adminStats') return pathname.startsWith(`/${locale}/admin/stats`);
   if (hrefKey === 'adminLogs') return pathname.startsWith(`/${locale}/admin/logs`);
   if (hrefKey === 'adminSettings') return pathname.startsWith(`/${locale}/admin/settings`);
+  if (hrefKey === 'help') return pathname.startsWith(`/${locale}/help`);
   return false;
 }
 
