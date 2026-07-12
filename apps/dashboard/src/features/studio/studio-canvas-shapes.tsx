@@ -11,9 +11,81 @@ import {
   Text,
 } from 'react-konva';
 import useImage from 'use-image';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import type { CanvasLayoutV1, CanvasObjectJson } from '@/features/studio/canvas-layout';
+
+const SNAP_THRESHOLD = 6;
+
+type GuideLine = { points: number[]; orientation: 'h' | 'v' };
+
+function computeSnapGuides(
+  draggedId: string,
+  dragX: number,
+  dragY: number,
+  obj: CanvasObjectJson,
+  others: CanvasObjectJson[],
+  canvasW: number,
+  canvasH: number,
+): { snappedX: number; snappedY: number; guides: GuideLine[] } {
+  const w = obj.width ?? 120;
+  const h = obj.height ?? 80;
+  const guides: GuideLine[] = [];
+  let snappedX = dragX;
+  let snappedY = dragY;
+
+  const dragEdges = {
+    left: dragX,
+    right: dragX + w,
+    centerX: dragX + w / 2,
+    top: dragY,
+    bottom: dragY + h,
+    centerY: dragY + h / 2,
+  };
+
+  const snapTargets: Array<{ value: number; axis: 'x' | 'y'; edge: string }> = [
+    { value: 0, axis: 'x', edge: 'left' },
+    { value: canvasW / 2, axis: 'x', edge: 'centerX' },
+    { value: canvasW, axis: 'x', edge: 'right' },
+    { value: 0, axis: 'y', edge: 'top' },
+    { value: canvasH / 2, axis: 'y', edge: 'centerY' },
+    { value: canvasH, axis: 'y', edge: 'bottom' },
+  ];
+
+  for (const other of others) {
+    if (other.id === draggedId) continue;
+    const ow = other.width ?? 120;
+    const oh = other.height ?? 80;
+    snapTargets.push(
+      { value: other.x, axis: 'x', edge: 'left' },
+      { value: other.x + ow / 2, axis: 'x', edge: 'centerX' },
+      { value: other.x + ow, axis: 'x', edge: 'right' },
+      { value: other.y, axis: 'y', edge: 'top' },
+      { value: other.y + oh / 2, axis: 'y', edge: 'centerY' },
+      { value: other.y + oh, axis: 'y', edge: 'bottom' },
+    );
+  }
+
+  for (const target of snapTargets) {
+    if (target.axis === 'x') {
+      const dragVal = dragEdges[target.edge as keyof typeof dragEdges];
+      if (Math.abs(dragVal - target.value) <= SNAP_THRESHOLD) {
+        const offset = target.value - dragVal;
+        snappedX = dragX + offset;
+        guides.push({ points: [target.value, 0, target.value, canvasH], orientation: 'v' });
+      }
+    } else {
+      const dragVal = dragEdges[target.edge as keyof typeof dragEdges];
+      if (Math.abs(dragVal - target.value) <= SNAP_THRESHOLD) {
+        const offset = target.value - dragVal;
+        snappedY = dragY + offset;
+        guides.push({ points: [0, target.value, canvasW, target.value], orientation: 'h' });
+      }
+    }
+  }
+
+  return { snappedX, snappedY, guides };
+}
 
 export function QrCodeShape({
   obj,
@@ -106,9 +178,12 @@ type CanvasRendererProps = {
   objects: CanvasObjectJson[];
   onSelect: (id: string) => void;
   onUpdateObject: (id: string, patch: Partial<CanvasObjectJson>) => void;
+  canvasW: number;
+  canvasH: number;
+  onGuidesChange: (guides: GuideLine[]) => void;
 };
 
-export function CanvasObjectsRenderer({ objects, onSelect, onUpdateObject }: CanvasRendererProps) {
+export function CanvasObjectsRenderer({ objects, onSelect, onUpdateObject, canvasW, canvasH, onGuidesChange }: CanvasRendererProps) {
   return (
     <>
       {objects.map((obj) => {
@@ -122,11 +197,29 @@ export function CanvasObjectsRenderer({ objects, onSelect, onUpdateObject }: Can
             e.cancelBubble = true;
             onSelect(obj.id);
           },
+          onDragMove: (e: {
+            target: { x: (val?: number) => number; y: (val?: number) => number };
+          }) => {
+            const n = e.target;
+            const { snappedX, snappedY, guides } = computeSnapGuides(
+              obj.id,
+              n.x(),
+              n.y(),
+              obj,
+              objects,
+              canvasW,
+              canvasH,
+            );
+            if (snappedX !== n.x()) n.x(snappedX);
+            if (snappedY !== n.y()) n.y(snappedY);
+            onGuidesChange(guides);
+          },
           onDragEnd: (e: {
             target: { x: () => number; y: () => number; getLayer: () => unknown };
           }) => {
             const n = e.target;
             onUpdateObject(obj.id, { x: n.x(), y: n.y() });
+            onGuidesChange([]);
             n.getLayer();
           },
         };
@@ -290,6 +383,7 @@ type CanvasStageProps = {
 };
 
 export function CanvasStageView(props: CanvasStageProps) {
+  const [guides, setGuides] = useState<GuideLine[]>([]);
   return (
     <div
       ref={props.containerRef}
@@ -312,7 +406,20 @@ export function CanvasStageView(props: CanvasStageProps) {
               objects={props.layout.objects}
               onSelect={props.onSelect}
               onUpdateObject={props.onUpdateObject}
+              canvasW={props.dw}
+              canvasH={props.dh}
+              onGuidesChange={setGuides}
             />
+            {guides.map((g, i) => (
+              <KonvaLine
+                key={i}
+                points={g.points}
+                stroke="hsl(var(--primary))"
+                strokeWidth={1}
+                dash={[4, 4]}
+                listening={false}
+              />
+            ))}
           </Group>
         </Layer>
       </Stage>
