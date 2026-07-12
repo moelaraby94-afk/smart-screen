@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 import {
   formatHHmm,
   heightPxForSegment,
@@ -49,8 +50,6 @@ type ScheduleCalendarProps = {
   onDragStart: () => void;
 };
 
-type ViewMode = 'week' | 'month';
-
 export function ScheduleCalendar({
   schedules,
   overlapIds,
@@ -60,7 +59,8 @@ export function ScheduleCalendar({
   dragRef,
   onDragStart,
 }: ScheduleCalendarProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>('week');
+  const t = useTranslations('schedules');
+  const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
 
   return (
     <section className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6">
@@ -76,7 +76,7 @@ export function ScheduleCalendar({
                 : 'text-muted-foreground hover:text-foreground',
             )}
           >
-            Week
+            {t('calWeek')}
           </button>
           <button
             type="button"
@@ -88,7 +88,7 @@ export function ScheduleCalendar({
                 : 'text-muted-foreground hover:text-foreground',
             )}
           >
-            Month
+            {t('calMonth')}
           </button>
         </div>
       </div>
@@ -96,7 +96,7 @@ export function ScheduleCalendar({
       {loading ? (
         <div className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin" />
-          loading
+          {t('calLoading')}
         </div>
       ) : viewMode === 'week' ? (
         <WeekView
@@ -243,6 +243,7 @@ function MonthView({
   locale: string;
   dayShort: (dow: number) => string;
 }) {
+  const t = useTranslations('schedules');
   const [cursor, setCursor] = useState(() => {
     const d = new Date();
     d.setDate(1);
@@ -308,7 +309,7 @@ function MonthView({
               setCursor(d);
             }}
           >
-            Today
+            {t('calToday')}
           </Button>
           <Button
             type="button"
@@ -380,7 +381,7 @@ function MonthView({
                 ))}
                 {daySchedules.length > 3 && (
                   <span className="block text-[9px] text-muted-foreground">
-                    +{daySchedules.length - 3} more
+                    {t('calMore', { count: daySchedules.length - 3 })}
                   </span>
                 )}
               </div>

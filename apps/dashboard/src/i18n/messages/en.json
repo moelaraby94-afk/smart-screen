@@ -355,7 +355,12 @@
     "dayHint": "Tap a day to include or exclude it. Labels follow your locale.",
     "needWorkspace": "Select a workspace first.",
     "emptyTitle": "No schedules yet",
-    "emptyDescription": "Create your first schedule to control when playlists air on your screens."
+    "emptyDescription": "Create your first schedule to control when playlists air on your screens.",
+    "calWeek": "Week",
+    "calMonth": "Month",
+    "calToday": "Today",
+    "calLoading": "Loading…",
+    "calMore": "+{count} more"
   },
   "teamPage": {
     "title": "Team",
