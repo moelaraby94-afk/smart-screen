@@ -84,6 +84,16 @@ export function useShellHeaderMeta(pathname: string | null): ShellHeaderMeta {
       };
     }
 
+    if (rest[0] === 'screens' && rest[1] && rest.length === 2) {
+      return {
+        pageTitle: t('pageTitles.screens'),
+        kicker: '',
+        showBack: true,
+        backHref: `${base}/screens`,
+        backLabel: t('backToOverview'),
+      };
+    }
+
     if (
       rest[0] === 'settings' &&
       (rest[1] === 'profile' || rest[1] === 'billing') &&

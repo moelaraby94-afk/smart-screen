@@ -1,7 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Loader2, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
@@ -48,22 +49,83 @@ type ScheduleCalendarProps = {
   onDragStart: () => void;
 };
 
+type ViewMode = 'week' | 'month';
+
 export function ScheduleCalendar({
   schedules,
   overlapIds,
   loading,
+  locale,
   dayShort,
   dragRef,
   onDragStart,
 }: ScheduleCalendarProps) {
+  const [viewMode, setViewMode] = useState<ViewMode>('week');
+
   return (
     <section className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="inline-flex rounded-xl border border-border bg-muted/30 p-0.5">
+          <button
+            type="button"
+            onClick={() => setViewMode('week')}
+            className={cn(
+              'rounded-lg px-3 py-1.5 text-xs font-semibold transition',
+              viewMode === 'week'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            Week
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('month')}
+            className={cn(
+              'rounded-lg px-3 py-1.5 text-xs font-semibold transition',
+              viewMode === 'month'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            Month
+          </button>
+        </div>
+      </div>
+
       {loading ? (
         <div className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin" />
           loading
         </div>
+      ) : viewMode === 'week' ? (
+        <WeekView
+          schedules={schedules}
+          overlapIds={overlapIds}
+          dayShort={dayShort}
+          dragRef={dragRef}
+          onDragStart={onDragStart}
+        />
       ) : (
+        <MonthView
+          schedules={schedules}
+          overlapIds={overlapIds}
+          locale={locale}
+          dayShort={dayShort}
+        />
+      )}
+    </section>
+  );
+}
+
+function WeekView({
+  schedules,
+  overlapIds,
+  dayShort,
+  dragRef,
+  onDragStart,
+}: Omit<ScheduleCalendarProps, 'loading' | 'locale' | 'viewMode'>) {
+  return (
         <div className="flex gap-2 overflow-x-auto pb-2">
           <div
             className="sticky start-0 z-20 flex shrink-0 flex-col border-e border-border/60 pe-2 text-[11px] text-muted-foreground"
@@ -167,8 +229,166 @@ export function ScheduleCalendar({
             ))}
           </div>
         </div>
-      )}
-    </section>
+  );
+}
+
+function MonthView({
+  schedules,
+  overlapIds,
+  locale,
+  dayShort,
+}: {
+  schedules: ScheduleApi[];
+  overlapIds: Set<string>;
+  locale: string;
+  dayShort: (dow: number) => string;
+}) {
+  const [cursor, setCursor] = useState(() => {
+    const d = new Date();
+    d.setDate(1);
+    return d;
+  });
+
+  const grid = useMemo(() => {
+    const year = cursor.getFullYear();
+    const month = cursor.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const startDow = firstDay.getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const cells: Array<{ date: Date | null; dow: number }> = [];
+    for (let i = 0; i < startDow; i++) {
+      cells.push({ date: null, dow: i });
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(year, month, d);
+      cells.push({ date, dow: date.getDay() });
+    }
+    while (cells.length % 7 !== 0) {
+      cells.push({ date: null, dow: cells.length % 7 });
+    }
+    return cells;
+  }, [cursor]);
+
+  const monthLabel = useMemo(() => {
+    return new Intl.DateTimeFormat(locale === 'ar' ? 'ar' : 'en', {
+      month: 'long',
+      year: 'numeric',
+    }).format(cursor);
+  }, [cursor, locale]);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-sm font-semibold tracking-tight">{monthLabel}</h3>
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-lg"
+            onClick={() => {
+              const d = new Date(cursor);
+              d.setMonth(d.getMonth() - 1);
+              setCursor(d);
+            }}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 rounded-lg text-xs"
+            onClick={() => {
+              const d = new Date();
+              d.setDate(1);
+              setCursor(d);
+            }}
+          >
+            Today
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-lg"
+            onClick={() => {
+              const d = new Date(cursor);
+              d.setMonth(d.getMonth() + 1);
+              setCursor(d);
+            }}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {Array.from({ length: 7 }, (_, i) => (
+          <div
+            key={i}
+            className="pb-1 text-center text-xs font-semibold text-muted-foreground"
+          >
+            {dayShort(i)}
+          </div>
+        ))}
+        {grid.map((cell, idx) => {
+          if (!cell.date) {
+            return <div key={idx} className="min-h-[80px] rounded-lg bg-muted/10" />;
+          }
+          const isToday = cell.date.getTime() === today.getTime();
+          const daySchedules = schedules.filter((s) =>
+            s.daysOfWeek.includes(cell.dow),
+          );
+          return (
+            <div
+              key={idx}
+              className={cn(
+                'min-h-[80px] rounded-lg border p-1.5',
+                isToday
+                  ? 'border-primary/40 bg-primary/5'
+                  : 'border-border/40 bg-muted/15',
+              )}
+            >
+              <span
+                className={cn(
+                  'mb-1 block text-[10px] font-semibold',
+                  isToday ? 'text-primary' : 'text-muted-foreground',
+                )}
+              >
+                {cell.date.getDate()}
+              </span>
+              <div className="space-y-0.5">
+                {daySchedules.slice(0, 3).map((s) => (
+                  <div
+                    key={s.id}
+                    className={cn(
+                      'truncate rounded px-1 py-0.5 text-[9px] font-medium text-white',
+                      overlapIds.has(s.id) && 'ring-1 ring-primary',
+                    )}
+                    style={{
+                      background:
+                        'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.7) 100%)',
+                    }}
+                    title={`${s.playlist.name} · ${s.startTime}–${s.endTime}`}
+                  >
+                    {s.playlist.name}
+                  </div>
+                ))}
+                {daySchedules.length > 3 && (
+                  <span className="block text-[9px] text-muted-foreground">
+                    +{daySchedules.length - 3} more
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

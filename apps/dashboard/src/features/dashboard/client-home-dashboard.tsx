@@ -11,6 +11,7 @@ import {
   updateWorkspace,
   deleteWorkspace,
 } from '@/features/dashboard/dashboard-api';
+import { seedDemoContent as apiSeedDemoContent } from '@/features/workspace/workspace-api';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import {
   type InsightsBranch,
@@ -47,6 +48,7 @@ export function ClientHomeDashboard() {
   const [deleteTarget, setDeleteTarget] = useState<InsightsBranch | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [pauseBusyId, setPauseBusyId] = useState<string | null>(null);
+  const [seedDemoBusyId, setSeedDemoBusyId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -92,7 +94,7 @@ export function ClientHomeDashboard() {
   const onOpenBranch = useCallback(
     (wsId: string) => {
       setWorkspaceId(wsId);
-      router.push(`/branches/${wsId}` as Route);
+      router.push(`/branches/${wsId}` as never as Route);
     },
     [setWorkspaceId, router],
   );
@@ -148,6 +150,28 @@ export function ClientHomeDashboard() {
       }
     },
     [t, toastResponseError, bumpWorkspaceDataEpoch, load],
+  );
+
+  const onSeedDemo = useCallback(
+    async (row: InsightsBranch) => {
+      setSeedDemoBusyId(row.workspaceId);
+      try {
+        const res = await apiSeedDemoContent(row.workspaceId);
+        if (!res.ok) {
+          const data = await res.json().catch(() => null);
+          toast.error(data?.message ?? t('toastSeedDemoFailed'));
+          return;
+        }
+        toast.success(t('toastSeedDemoOk'));
+        bumpWorkspaceDataEpoch();
+        await load();
+      } catch {
+        toast.error(t('toastSeedDemoFailed'));
+      } finally {
+        setSeedDemoBusyId(null);
+      }
+    },
+    [t, bumpWorkspaceDataEpoch, load],
   );
 
   const onDelete = useCallback((row: InsightsBranch) => {
@@ -226,6 +250,8 @@ export function ClientHomeDashboard() {
         onOpenBranch={onOpenBranch}
         onRename={onRename}
         onTogglePause={onTogglePause}
+        onSeedDemo={onSeedDemo}
+        seedDemoBusyId={seedDemoBusyId}
         onDelete={onDelete}
       />
 

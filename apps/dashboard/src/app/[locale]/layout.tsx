@@ -6,6 +6,7 @@ import { AppToaster } from '@/components/app-toaster';
 import { DocumentLocaleRoot } from '@/components/document-locale-root';
 import { IntlErrorHandlingProvider } from '@/components/intl-error-handling-provider';
 import { WorkspaceProvider } from '@/features/workspace/workspace-context';
+import { NotificationProvider } from '@/features/notifications/notification-provider';
 import { routing } from '@/i18n/routing';
 
 export const metadata: Metadata = {
@@ -40,7 +41,9 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
       <DocumentLocaleRoot locale={locale} />
       <IntlErrorHandlingProvider locale={locale} messages={messages as Record<string, unknown>}>
         <WorkspaceProvider>
-          {children}
+          <NotificationProvider>
+            {children}
+          </NotificationProvider>
           <AppToaster />
         </WorkspaceProvider>
       </IntlErrorHandlingProvider>

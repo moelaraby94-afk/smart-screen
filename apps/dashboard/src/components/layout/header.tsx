@@ -9,6 +9,8 @@ import { ShellLogo } from '@/components/layout/shell-logo';
 import { Button } from '@/components/ui/button';
 import { UserMenu } from '@/components/user-menu';
 import { WorkspaceSwitcher } from '@/features/workspace/workspace-switcher';
+import { NotificationBell } from '@/features/notifications/notification-provider';
+import { GlobalSearch } from '@/features/search/global-search';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
 
@@ -118,6 +120,8 @@ export function ShellHeader({
   const desktopActions = (
     <div className="hidden shrink-0 flex-nowrap items-center justify-end gap-2.5 lg:flex">
       {showWorkspaceSwitcher ? <WorkspaceSwitcher /> : null}
+      <GlobalSearch />
+      <NotificationBell />
       <UserMenu rtl={rtl} variant={sovereign ? 'sovereign' : 'workspace'} />
     </div>
   );

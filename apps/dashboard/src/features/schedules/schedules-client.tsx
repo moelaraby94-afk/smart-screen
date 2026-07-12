@@ -8,9 +8,10 @@ import {
   useRef,
   useState,
 } from 'react';
-import { CalendarClock, Play, Plus } from 'lucide-react';
+import { CalendarClock, Play, Plus, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   Dialog,
   DialogTrigger,
@@ -166,6 +167,7 @@ export function SchedulesClient({ locale }: { locale: string }) {
 
   const [overrideScreenId, setOverrideScreenId] = useState('');
   const [overridePlaylistId, setOverridePlaylistId] = useState('');
+  const [overrideDuration, setOverrideDuration] = useState(480);
 
   const applyOverride = async () => {
     if (!workspaceId || !overrideScreenId || !overridePlaylistId) {
@@ -174,7 +176,7 @@ export function SchedulesClient({ locale }: { locale: string }) {
     }
     const res = await apiSetScreenOverride(workspaceId, overrideScreenId, {
       playlistId: overridePlaylistId,
-      durationMinutes: 480,
+      durationMinutes: overrideDuration,
     });
     if (!res.ok) {
       toast.error(t('overrideFailed'));
@@ -286,6 +288,23 @@ export function SchedulesClient({ locale }: { locale: string }) {
               ))}
             </select>
           </div>
+          <div className="grid gap-2">
+            <Label htmlFor="override-duration">{t('fieldDuration')}</Label>
+            <select
+              id="override-duration"
+              className="h-10 min-w-[160px] rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+              value={overrideDuration}
+              onChange={(e) => setOverrideDuration(Number(e.target.value))}
+            >
+              <option value={30}>{t('duration30min')}</option>
+              <option value={60}>{t('duration1h')}</option>
+              <option value={120}>{t('duration2h')}</option>
+              <option value={240}>{t('duration4h')}</option>
+              <option value={480}>{t('duration8h')}</option>
+              <option value={720}>{t('duration12h')}</option>
+              <option value={1440}>{t('duration24h')}</option>
+            </select>
+          </div>
           <Button
             type="button"
             onClick={() => void applyOverride()}
@@ -297,15 +316,25 @@ export function SchedulesClient({ locale }: { locale: string }) {
         </div>
       </section>
 
-      <ScheduleCalendar
-        schedules={schedules}
-        overlapIds={overlapIds}
-        loading={loading}
-        locale={locale}
-        dayShort={dayShort}
-        dragRef={dragRef}
-        onDragStart={() => setDragActive(true)}
-      />
+      {!loading && schedules.length === 0 ? (
+        <EmptyState
+          icon={CalendarDays}
+          title={t('emptyTitle')}
+          description={t('emptyDescription')}
+          actionLabel={t('addSchedule')}
+          onAction={() => setOpenCreate(true)}
+        />
+      ) : (
+        <ScheduleCalendar
+          schedules={schedules}
+          overlapIds={overlapIds}
+          loading={loading}
+          locale={locale}
+          dayShort={dayShort}
+          dragRef={dragRef}
+          onDragStart={() => setDragActive(true)}
+        />
+      )}
 
       {!loading && schedules.length > 0 ? (
         <ScheduleList

@@ -6,10 +6,11 @@ import {
   type DropResult,
 } from '@hello-pangea/dnd';
 import { motion } from 'framer-motion';
-import { Plus, Save } from 'lucide-react';
+import { Plus, Save, ListVideo, Eye, EyeOff, Play, Copy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -18,8 +19,10 @@ import {
   fetchPlaylistDetail as apiFetchPlaylistDetail,
   createPlaylist as apiCreatePlaylist,
   updatePlaylistItems as apiUpdatePlaylistItems,
+  updatePlaylistMeta as apiUpdatePlaylistMeta,
 } from '@/features/studio/studio-api';
 import { fetchMedia } from '@/features/media/api/media-api';
+import { apiFetch } from '@/features/auth/session';
 import { readPageItems } from '@/features/api/page';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import type { MediaItem } from '@/features/media/media-library-client';
@@ -32,10 +35,12 @@ import {
   PlaylistTimeline,
   type Row,
 } from '@/features/playlists/playlist-timeline';
+import { PlaylistPreviewOverlay } from '@/features/playlists/playlist-preview-overlay';
 
 type PlaylistSummary = {
   id: string;
   name: string;
+  isPublished: boolean;
   _count: { items: number };
 };
 
@@ -50,6 +55,9 @@ export function PlaylistStudioClient() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [togglingPublish, setTogglingPublish] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
 
   const loadLibrary = useCallback(async () => {
     if (!workspaceId) return;
@@ -208,6 +216,31 @@ export function PlaylistStudioClient() {
     });
   };
 
+  const togglePublish = async () => {
+    if (!workspaceId || !playlistId) return;
+    const current = playlists.find((p) => p.id === playlistId);
+    if (!current) return;
+    setTogglingPublish(true);
+    try {
+      const res = await apiUpdatePlaylistMeta(workspaceId, playlistId, {
+        isPublished: !current.isPublished,
+      });
+      if (!res.ok) {
+        toast.error(t('publishFailed'));
+        return;
+      }
+      setPlaylists((prev) =>
+        prev.map((p) =>
+          p.id === playlistId ? { ...p, isPublished: !p.isPublished } : p,
+        ),
+      );
+      toast.success(current.isPublished ? t('unpublished') : t('published'));
+      bumpWorkspaceDataEpoch();
+    } finally {
+      setTogglingPublish(false);
+    }
+  };
+
   const savePlaylist = async () => {
     if (!workspaceId || !playlistId) return;
     setSaving(true);
@@ -236,6 +269,26 @@ export function PlaylistStudioClient() {
       toast.error(t('saveFailed'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const duplicatePlaylist = async () => {
+    if (!workspaceId || !playlistId) return;
+    setDuplicating(true);
+    try {
+      const res = await apiFetch(
+        `/playlists/${encodeURIComponent(playlistId)}/duplicate?workspaceId=${encodeURIComponent(workspaceId)}`,
+        { method: 'POST' },
+      );
+      if (!res.ok) {
+        toast.error(t('duplicateFailed'));
+        return;
+      }
+      toast.success(t('duplicated'));
+      await loadPlaylists();
+      bumpWorkspaceDataEpoch();
+    } finally {
+      setDuplicating(false);
     }
   };
 
@@ -293,6 +346,45 @@ export function PlaylistStudioClient() {
               <Save className="mr-2 h-4 w-4" />
               {saving ? t('saving') : t('savePlaylist')}
             </Button>
+            {playlistId && (
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-xl font-semibold"
+                disabled={duplicating}
+                onClick={() => void duplicatePlaylist()}
+              >
+                <Copy className="mr-2 h-4 w-4" />
+                {duplicating ? t('duplicating') : t('duplicate')}
+              </Button>
+            )}
+            {playlistId && rows.length > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-xl font-semibold"
+                onClick={() => setPreviewOpen(true)}
+              >
+                <Play className="mr-2 h-4 w-4" />
+                {t('preview')}
+              </Button>
+            )}
+            {playlistId && (() => {
+              const selected = playlists.find((p) => p.id === playlistId);
+              if (!selected) return null;
+              return (
+                <Button
+                  type="button"
+                  variant={selected.isPublished ? 'outline' : 'default'}
+                  className="rounded-xl font-semibold"
+                  disabled={togglingPublish}
+                  onClick={() => void togglePublish()}
+                >
+                  {selected.isPublished ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
+                  {selected.isPublished ? t('unpublish') : t('publish')}
+                </Button>
+              );
+            })()}
           </div>
         </div>
       </motion.div>
@@ -301,6 +393,12 @@ export function PlaylistStudioClient() {
         <div className="flex h-64 items-center justify-center rounded-3xl border border-dashed border-border/80 bg-muted/20">
           <p className="text-[15px] text-muted-foreground">{t('loadingStudio')}</p>
         </div>
+      ) : playlists.length === 0 && library.length === 0 && canvasLibrary.length === 0 ? (
+        <EmptyState
+          icon={ListVideo}
+          title={t('emptyTitle')}
+          description={t('emptyDescription')}
+        />
       ) : (
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="grid gap-8 xl:grid-cols-2 xl:gap-10">
@@ -317,6 +415,12 @@ export function PlaylistStudioClient() {
           </div>
         </DragDropContext>
       )}
+
+      <PlaylistPreviewOverlay
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        rows={rows}
+      />
     </div>
   );
 }

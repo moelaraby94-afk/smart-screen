@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createWorkspace as apiCreateWorkspace } from '@/features/workspace/workspace-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
+import { OnboardingWizard } from '@/features/workspace/onboarding-wizard';
 
 type Props = {
   open: boolean;
@@ -44,6 +45,8 @@ export function WorkspaceCreateDialog({ open, onOpenChange, onCreated }: Props) 
   const { refreshWorkspaces, setWorkspaceId, bumpWorkspaceDataEpoch } = useWorkspace();
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [createdWs, setCreatedWs] = useState<{ id: string; name: string } | null>(null);
 
   const submit = async () => {
     const trimmed = name.trim();
@@ -66,8 +69,8 @@ export function WorkspaceCreateDialog({ open, onOpenChange, onCreated }: Props) 
 
       setName('');
       onOpenChange(false);
-      router.refresh();
-      router.push(`/${locale}/overview`);
+      setCreatedWs(created);
+      setOnboardingOpen(true);
 
       toast.success(t('workspaceReady', { name: created.name }));
 
@@ -78,6 +81,7 @@ export function WorkspaceCreateDialog({ open, onOpenChange, onCreated }: Props) 
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="rounded-3xl border-border/80 sm:max-w-md">
         <DialogHeader>
@@ -126,5 +130,15 @@ export function WorkspaceCreateDialog({ open, onOpenChange, onCreated }: Props) 
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+      {createdWs && (
+        <OnboardingWizard
+          open={onboardingOpen}
+          onOpenChange={setOnboardingOpen}
+          workspaceId={createdWs.id}
+          workspaceName={createdWs.name}
+        />
+      )}
+    </>
   );
 }

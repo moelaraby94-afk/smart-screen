@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Film, Folder, FolderPlus, ImageIcon, Pencil, Trash2 } from 'lucide-react';
+import { Download, Film, Folder, FolderPlus, ImageIcon, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { MediaPreviewImage, MediaPreviewVideo } from '@/features/media/media-preview-components';
@@ -144,17 +144,28 @@ export function MediaGrid(props: MediaGridProps) {
                   )}
                   {m.mimeType.startsWith('video/') ? t('video') : t('image')}
                 </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    props.onDelete(m);
-                  }}
-                  className="absolute end-2 top-2 flex h-9 w-9 items-center justify-center rounded-xl bg-black/55 text-white opacity-0 shadow-lg backdrop-blur transition hover:bg-red-600/90 group-hover:opacity-100"
-                  aria-label={t('delete')}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <div className="absolute end-2 top-2 flex gap-1.5 opacity-0 transition group-hover:opacity-100">
+                  <a
+                    href={m.publicUrl}
+                    download={m.originalName}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/55 text-white shadow-lg backdrop-blur transition hover:bg-primary/90"
+                    aria-label={t('download')}
+                  >
+                    <Download className="h-4 w-4" />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      props.onDelete(m);
+                    }}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/55 text-white shadow-lg backdrop-blur transition hover:bg-red-600/90"
+                    aria-label={t('delete')}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
               <div className="space-y-1 p-3">
                 {props.scope === 'branch' ? (

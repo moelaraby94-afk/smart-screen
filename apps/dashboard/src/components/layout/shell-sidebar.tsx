@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
   Activity,
+  Building2,
   CalendarClock,
   Clapperboard,
   CreditCard,
@@ -402,6 +403,12 @@ export function ShellSidebar({
                 label={t('profileSettings')}
                 active={Boolean(pathname?.startsWith(`/${navLocale}/settings/profile`))}
                 icon={Settings}
+              />
+              <NavItem
+                href={`/${navLocale}/settings/workspace` as Route}
+                label={t('workspaceSettings')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/settings/workspace`))}
+                icon={Building2}
               />
               <NavItem
                 href={`/${navLocale}/settings/billing` as Route}

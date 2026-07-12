@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
-import { Upload } from 'lucide-react';
+import { Upload, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -19,6 +19,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { UsageIndicator } from '@/components/usage-indicator';
 import { isApiError, readApiError } from '@/features/api/api-error';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import {
@@ -66,6 +68,8 @@ export function MediaLibraryClient() {
   const [selectedFolderId, setSelectedFolderId] = useState<string>('all');
   const [newFolderName, setNewFolderName] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; workspaceId: string } | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const autoSeedAttemptedRef = useRef(false);
 
@@ -285,11 +289,19 @@ export function MediaLibraryClient() {
   };
 
   const filteredItems = useMemo(
-    () =>
-      selectedFolderId === 'all'
-        ? items
-        : items.filter((m) => (m.folderId ?? null) === selectedFolderId),
-    [items, selectedFolderId],
+    () => {
+      const q = searchQuery.trim().toLowerCase();
+      return items.filter((m) => {
+        if (selectedFolderId !== 'all' && (m.folderId ?? null) !== selectedFolderId) return false;
+        if (typeFilter === 'image' && !m.mimeType.startsWith('image/')) return false;
+        if (typeFilter === 'video' && !m.mimeType.startsWith('video/')) return false;
+        if (q) {
+          return m.originalName.toLowerCase().includes(q);
+        }
+        return true;
+      });
+    },
+    [items, selectedFolderId, searchQuery, typeFilter],
   );
 
   if (scope === 'branch' && !workspaceId) {
@@ -383,6 +395,32 @@ export function MediaLibraryClient() {
           onDeleteFolder={(fid) => void deleteFolder(fid)}
         />
       ) : null}
+
+      {items.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3">
+          {scope === 'branch' && (
+            <UsageIndicator storageUsedBytes={items.reduce((sum, m) => sum + m.sizeBytes, 0)} />
+          )}
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={t('searchPlaceholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="rounded-xl ps-9"
+            />
+          </div>
+          <select
+            className="h-10 rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+          >
+            <option value="all">{t('filterAll')}</option>
+            <option value="image">{t('filterImages')}</option>
+            <option value="video">{t('filterVideos')}</option>
+          </select>
+        </div>
+      )}
 
       <div
         {...getRootProps()}

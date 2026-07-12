@@ -15,6 +15,7 @@ import {
   MoreVertical,
   Network,
   Trash2,
+  Wand2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -272,6 +273,8 @@ type BranchCardsSectionProps = {
   onRename: (row: InsightsBranch) => void;
   onTogglePause: (row: InsightsBranch) => void;
   onDelete: (row: InsightsBranch) => void;
+  onSeedDemo: (row: InsightsBranch) => void;
+  seedDemoBusyId: string | null;
 };
 
 export function BranchCardsSection(props: BranchCardsSectionProps) {
@@ -363,6 +366,21 @@ export function BranchCardsSection(props: BranchCardsSectionProps) {
                       ) : (
                         t('pauseBranch')
                       )}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="gap-2 font-semibold"
+                      disabled={props.seedDemoBusyId === row.workspaceId}
+                      onSelect={(e) => {
+                        e.preventDefault();
+                        void props.onSeedDemo(row);
+                      }}
+                    >
+                      {props.seedDemoBusyId === row.workspaceId ? (
+                        <Loader2 className="h-4 w-4 animate-spin" strokeWidth={ICON_STROKE} />
+                      ) : (
+                        <Wand2 className="h-4 w-4" strokeWidth={ICON_STROKE} />
+                      )}
+                      {t('seedDemo')}
                     </DropdownMenuItem>
                     {canDeleteBranch(row.role, props.isSuperAdmin) ? (
                       <>

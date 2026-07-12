@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { Breadcrumbs } from '@/components/layout/breadcrumbs';
 import { ShellHeader } from '@/components/layout/header';
 import { ShellHeaderInsetSetterContext } from '@/components/layout/shell-header-inset-context';
 import { ShellSidebar } from '@/components/layout/shell-sidebar';
@@ -143,6 +144,7 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
           showWorkspaceSwitcher={!sovereign}
           headerInset={headerInset}
         />
+        <Breadcrumbs pathname={pathname} locale={navLocale} rtl={rtl} />
         <ShellHeaderInsetSetterContext.Provider value={setHeaderInsetStable}>
           <main id="main-content" className="vc-scrollbar relative z-[1] mx-auto min-h-0 w-full max-w-[1600px] flex-1 overflow-y-auto overscroll-y-contain px-4 py-5 sm:px-6 sm:py-8 lg:px-10 lg:py-12">
             <PageTransition>

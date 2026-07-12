@@ -1,17 +1,25 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Building2, Sparkles } from 'lucide-react';
+import { Building2, Loader2, Sparkles, Wand2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { consumePendingWorkspaceCreate } from '@/features/auth/session';
 import { WorkspaceCreateDialog } from '@/features/workspace/workspace-create-dialog';
+import { bootstrapDemoWorkspace } from '@/features/workspace/workspace-api';
+import { useWorkspace } from '@/features/workspace/workspace-context';
 
 export function WorkspaceWelcome() {
   const t = useTranslations('workspaceWelcome');
+  const locale = useLocale();
+  const router = useRouter();
+  const { refreshWorkspaces, setWorkspaceId, bumpWorkspaceDataEpoch } = useWorkspace();
   const [createOpen, setCreateOpen] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
 
   useEffect(() => {
     if (consumePendingWorkspaceCreate()) {
@@ -19,6 +27,29 @@ export function WorkspaceWelcome() {
       toast.info(t('sessionRestored'));
     }
   }, [t]);
+
+  const handleBootstrapDemo = async () => {
+    setDemoLoading(true);
+    try {
+      const res = await bootstrapDemoWorkspace();
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.message ?? t('demoFailed'));
+        return;
+      }
+      const data = (await res.json()) as { workspace: { id: string; name: string } };
+      await refreshWorkspaces(data.workspace.id);
+      setWorkspaceId(data.workspace.id);
+      bumpWorkspaceDataEpoch();
+      toast.success(t('demoLoaded'));
+      router.push(`/${locale}/overview`);
+      router.refresh();
+    } catch {
+      toast.error(t('demoFailed'));
+    } finally {
+      setDemoLoading(false);
+    }
+  };
 
   return (
     <>
@@ -52,6 +83,21 @@ export function WorkspaceWelcome() {
             >
               <Building2 className="me-2 h-5 w-5" />
               {t('createFirstWorkspace')}
+            </Button>
+            <Button
+              type="button"
+              size="lg"
+              variant="outline"
+              className="h-12 rounded-xl px-8 text-base font-semibold"
+              disabled={demoLoading}
+              onClick={() => void handleBootstrapDemo()}
+            >
+              {demoLoading ? (
+                <Loader2 className="me-2 h-5 w-5 animate-spin" />
+              ) : (
+                <Wand2 className="me-2 h-5 w-5" />
+              )}
+              {t('createWithDemo')}
             </Button>
           </div>
         </motion.div>
