@@ -302,7 +302,11 @@
     "zonePlaylist": "Assigned playlist",
     "zoneNoPlaylist": "No playlist assigned",
     "layers": "Layers",
-    "noLayers": "No layers yet. Add objects to the canvas."
+    "noLayers": "No layers yet. Add objects to the canvas.",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "zoomFit": "Fit to screen",
+    "zoomReset": "Reset zoom"
   },
   "schedules": {
     "title": "Schedules",

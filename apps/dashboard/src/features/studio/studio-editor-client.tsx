@@ -6,12 +6,15 @@ import {
   Circle as CircleIcon,
   History,
   LayoutTemplate,
+  Maximize,
   Plus,
   RotateCcw,
   Save,
   Shapes,
   SquareStack,
   Type,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslations, useLocale } from 'next-intl';
@@ -110,6 +113,10 @@ export function StudioEditorClient() {
   const [showZones, setShowZones] = useState(false);
   const [library, setLibrary] = useState<MediaItem[]>([]);
   const [studioPlaylists, setStudioPlaylists] = useState<Array<{ id: string; name: string }>>([]);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const panStartRef = useRef({ x: 0, y: 0, ox: 0, oy: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 960, h: 540 });
 
@@ -178,9 +185,21 @@ export function StudioEditorClient() {
     if (canvasId) void loadCanvas(canvasId);
   }, [canvasId, loadCanvas]);
 
-  const scale = useMemo(() => Math.min(size.w / dw, size.h / dh, 2), [size, dw, dh]);
-  const ox = (size.w - dw * scale) / 2;
-  const oy = (size.h - dh * scale) / 2;
+  const fitScale = useMemo(() => Math.min(size.w / dw, size.h / dh, 2), [size, dw, dh]);
+  const scale = useMemo(() => fitScale * zoomLevel, [fitScale, zoomLevel]);
+  const ox = (size.w - dw * scale) / 2 + panOffset.x;
+  const oy = (size.h - dh * scale) / 2 + panOffset.y;
+
+  const zoomIn = () => setZoomLevel((z) => Math.min(z * 1.25, 5));
+  const zoomOut = () => setZoomLevel((z) => Math.max(z / 1.25, 0.2));
+  const zoomReset = () => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+  const zoomFit = () => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
 
   const selected = useMemo(
     () => layout.objects.find((o) => o.id === selectedId) ?? null,
@@ -740,7 +759,31 @@ export function StudioEditorClient() {
           <motion.div
             layout
             className="relative overflow-hidden rounded-3xl border border-cyan-500/15 bg-gradient-to-b from-zinc-950/90 to-black shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-            style={{ minHeight: 420 }}
+            style={{ minHeight: 420, cursor: isPanning ? 'grabbing' : 'default' }}
+            onMouseDown={(e) => {
+              if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
+                e.preventDefault();
+                setIsPanning(true);
+                panStartRef.current = { x: e.clientX, y: e.clientY, ox: panOffset.x, oy: panOffset.y };
+              }
+            }}
+            onMouseMove={(e) => {
+              if (isPanning) {
+                setPanOffset({
+                  x: panStartRef.current.ox + (e.clientX - panStartRef.current.x),
+                  y: panStartRef.current.oy + (e.clientY - panStartRef.current.y),
+                });
+              }
+            }}
+            onMouseUp={() => setIsPanning(false)}
+            onMouseLeave={() => setIsPanning(false)}
+            onWheel={(e) => {
+              if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                setZoomLevel((z) => Math.max(0.2, Math.min(z * delta, 5)));
+              }
+            }}
           >
             <CanvasStageView
               size={size}
@@ -761,6 +804,43 @@ export function StudioEditorClient() {
             <p className="pointer-events-none absolute bottom-3 start-4 text-[11px] font-medium uppercase tracking-[0.2em] text-white/35">
               {t('dropHint')}
             </p>
+            <div className="absolute end-3 top-3 flex flex-col gap-1 rounded-xl border border-white/10 bg-black/60 p-1 backdrop-blur-sm">
+              <button
+                type="button"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white"
+                onClick={zoomIn}
+                title={t('zoomIn')}
+              >
+                <ZoomIn className="h-4 w-4" />
+              </button>
+              <span className="text-center text-[10px] font-medium text-white/50">
+                {Math.round(zoomLevel * 100)}%
+              </span>
+              <button
+                type="button"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white"
+                onClick={zoomOut}
+                title={t('zoomOut')}
+              >
+                <ZoomOut className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white"
+                onClick={zoomFit}
+                title={t('zoomFit')}
+              >
+                <Maximize className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white"
+                onClick={zoomReset}
+                title={t('zoomReset')}
+              >
+                <RotateCcw className="h-4 w-4" />
+              </button>
+            </div>
           </motion.div>
 
           <StudioMediaStrip library={library} />
