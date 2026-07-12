@@ -25,6 +25,7 @@ import {
   Server,
   Settings,
   Sun,
+  Terminal,
   UserCog,
   Users,
 } from 'lucide-react';
@@ -52,11 +53,12 @@ const CLIENT_NAV = [
   { key: 'schedules', hrefKey: 'schedules' as const, icon: CalendarClock },
   { key: 'team', hrefKey: 'team' as const, icon: Users },
   { key: 'help', hrefKey: 'help' as const, icon: CircleHelp },
+  { key: 'apiDocs', hrefKey: 'apiDocs' as const, icon: Terminal },
 ] as const;
 
 const CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE = new Set<
   (typeof CLIENT_NAV)[number]['hrefKey']
->(['overview', 'media', 'help']);
+>(['overview', 'media', 'help', 'apiDocs']);
 
 function hrefFor(
   locale: string,
@@ -71,7 +73,8 @@ function hrefFor(
     | 'adminSettings'
     | 'adminFleet'
     | 'adminScreens'
-    | 'help',
+    | 'help'
+    | 'apiDocs',
 ): string {
   if (hrefKey === 'overview') return `/${locale}/overview`;
   if (hrefKey === 'adminHome') return `/${locale}/admin`;
@@ -83,6 +86,7 @@ function hrefFor(
   if (hrefKey === 'adminLogs') return `/${locale}/admin/logs`;
   if (hrefKey === 'adminSettings') return `/${locale}/admin/settings`;
   if (hrefKey === 'help') return `/${locale}/help`;
+  if (hrefKey === 'apiDocs') return `/${locale}/api-docs`;
   return `/${locale}/${hrefKey}`;
 }
 
@@ -108,7 +112,8 @@ function sovereignLinkActive(
     | 'adminSettings'
     | 'adminFleet'
     | 'adminScreens'
-    | 'help',
+    | 'help'
+    | 'apiDocs',
 ): boolean {
   if (!pathname) return false;
   if (hrefKey === 'overview') return isOverviewPath(pathname, locale);
@@ -121,6 +126,7 @@ function sovereignLinkActive(
   if (hrefKey === 'adminLogs') return pathname.startsWith(`/${locale}/admin/logs`);
   if (hrefKey === 'adminSettings') return pathname.startsWith(`/${locale}/admin/settings`);
   if (hrefKey === 'help') return pathname.startsWith(`/${locale}/help`);
+  if (hrefKey === 'apiDocs') return pathname.startsWith(`/${locale}/api-docs`);
   return false;
 }
 
