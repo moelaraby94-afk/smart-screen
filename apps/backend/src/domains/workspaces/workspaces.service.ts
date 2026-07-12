@@ -779,4 +779,128 @@ export class WorkspacesService {
     });
     return { ok: true as const };
   }
+
+  /** Get recent activity for a workspace (screens, media, playlists, schedules, invites). */
+  async recentActivity(workspaceId: string, limit = 20) {
+    const take = Math.min(Math.max(limit, 1), 50);
+
+    const [screens, mediaItems, playlists, schedules, invites] =
+      await Promise.all([
+        this.prisma.screen.findMany({
+          where: { workspaceId },
+          select: {
+            id: true,
+            name: true,
+            status: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+          take,
+        }),
+        this.prisma.media.findMany({
+          where: { workspaceId },
+          select: {
+            id: true,
+            originalName: true,
+            mimeType: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+          take,
+        }),
+        this.prisma.playlist.findMany({
+          where: { workspaceId },
+          select: {
+            id: true,
+            name: true,
+            isPublished: true,
+            updatedAt: true,
+          },
+          orderBy: { updatedAt: 'desc' },
+          take,
+        }),
+        this.prisma.schedule.findMany({
+          where: { workspaceId },
+          select: {
+            id: true,
+            startTime: true,
+            endTime: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+          take,
+        }),
+        this.prisma.workspaceInvitation.findMany({
+          where: { workspaceId, status: InvitationStatus.PENDING },
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+          take,
+        }),
+      ]);
+
+    type ActivityItem = {
+      type: string;
+      id: string;
+      title: string;
+      subtitle: string;
+      timestamp: string;
+    };
+
+    const items: ActivityItem[] = [];
+
+    for (const s of screens) {
+      items.push({
+        type: 'screen',
+        id: s.id,
+        title: s.name,
+        subtitle: s.status,
+        timestamp: s.createdAt.toISOString(),
+      });
+    }
+    for (const m of mediaItems) {
+      items.push({
+        type: 'media',
+        id: m.id,
+        title: m.originalName,
+        subtitle: m.mimeType,
+        timestamp: m.createdAt.toISOString(),
+      });
+    }
+    for (const p of playlists) {
+      items.push({
+        type: 'playlist',
+        id: p.id,
+        title: p.name,
+        subtitle: p.isPublished ? 'published' : 'draft',
+        timestamp: p.updatedAt.toISOString(),
+      });
+    }
+    for (const s of schedules) {
+      items.push({
+        type: 'schedule',
+        id: s.id,
+        title: `${s.startTime} - ${s.endTime}`,
+        subtitle: 'schedule',
+        timestamp: s.createdAt.toISOString(),
+      });
+    }
+    for (const inv of invites) {
+      items.push({
+        type: 'invite',
+        id: inv.id,
+        title: inv.email,
+        subtitle: inv.role,
+        timestamp: inv.createdAt.toISOString(),
+      });
+    }
+
+    items.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+
+    return items.slice(0, take);
+  }
 }

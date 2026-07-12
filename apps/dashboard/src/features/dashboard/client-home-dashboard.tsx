@@ -22,6 +22,7 @@ import {
   TotalsSection,
   BranchCardsSection,
 } from '@/features/dashboard/home-dashboard-sections';
+import { RecentActivityFeed } from '@/features/dashboard/recent-activity-feed';
 import {
   RenameBranchDialog,
   DeleteBranchDialog,
@@ -237,6 +238,8 @@ export function ClientHomeDashboard() {
         loading={loading}
         daysRemaining={daysRemaining}
       />
+
+      <RecentActivityFeed />
 
       <BranchCardsSection
         branches={insights.branches}

@@ -31,3 +31,7 @@ export async function fetchScreenCount(workspaceId: string): Promise<number> {
   if (!res.ok) return 0;
   return (await readPage(res)).total;
 }
+
+export async function fetchRecentActivity(workspaceId: string): Promise<Response> {
+  return apiFetch(`/workspaces/${encodeURIComponent(workspaceId)}/activity`);
+}

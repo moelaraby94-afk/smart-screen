@@ -184,4 +184,14 @@ export class WorkspacesController {
   ): Promise<void> {
     await this.workspaces.notifyPairingStarted(user.sub, workspaceId);
   }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
+  @Get(':workspaceId/activity')
+  recentActivity(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: JwtUser,
+  ) {
+    return this.workspaces.recentActivity(workspaceId);
+  }
 }

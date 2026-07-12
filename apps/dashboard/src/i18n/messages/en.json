@@ -793,6 +793,18 @@
       "storageBarAria": "Storage usage for this workspace"
     }
   },
+  "activityFeed": {
+    "title": "Recent activity",
+    "subtitle": "Latest changes in this workspace",
+    "empty": "No recent activity yet.",
+    "type": {
+      "screen": "Screen",
+      "media": "Media",
+      "playlist": "Playlist",
+      "schedule": "Schedule",
+      "invite": "Invite"
+    }
+  },
   "branchDetail": {
     "kicker": "Branch operations",
     "description": "Full screen telemetry for this branch. Playlists organize screens: open a playlist to manage the devices assigned to it.",
