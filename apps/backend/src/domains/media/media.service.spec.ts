@@ -13,12 +13,16 @@ import { ErrorCode } from '../../common/errors/error-codes';
 import { ConfigService } from '@nestjs/config';
 import { MediaService } from './media.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
+
+const mockHeartbeat = {} as unknown as ScreenHeartbeatService;
 
 describe('MediaService.buildPublicUrl', () => {
   it('points at the actual uploadRoot (uploads/media), not just uploads/', () => {
     const service = new MediaService(
       {} as PrismaService,
       { get: (_key: string, def?: unknown) => def } as unknown as ConfigService,
+      mockHeartbeat,
     );
 
     const url = service.buildPublicUrl('ws_1/file.png');
@@ -38,6 +42,7 @@ describe('MediaService.buildPublicUrl', () => {
             ? join(process.cwd(), 'uploads', 'custom')
             : def,
       } as unknown as ConfigService,
+      mockHeartbeat,
     );
 
     const url = service.buildPublicUrl('ws_1/file.png');
@@ -116,7 +121,7 @@ describe('MediaService storage quota + write ordering', () => {
     const service = new MediaService(prisma, {
       get: (key: string, def?: unknown) =>
         key === 'MEDIA_UPLOAD_DIR' ? uploadRoot : def,
-    } as unknown as ConfigService);
+    } as unknown as ConfigService, mockHeartbeat);
 
     return { service, prisma, tx, mediaCreate, mediaDelete };
   }
@@ -297,7 +302,7 @@ describe('MediaService storage quota + write ordering', () => {
       const service = new MediaService(prisma, {
         get: (key: string, def?: unknown) =>
           key === 'MEDIA_UPLOAD_DIR' ? uploadRoot : def,
-      } as unknown as ConfigService);
+      } as unknown as ConfigService, mockHeartbeat);
 
       return { service, mediaCreate };
     }

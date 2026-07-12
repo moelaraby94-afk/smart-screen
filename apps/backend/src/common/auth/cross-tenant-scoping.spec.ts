@@ -3,7 +3,10 @@ import { CanvasesService } from '../../domains/canvases/canvases.service';
 import { MediaService } from '../../domains/media/media.service';
 import { SchedulesService } from '../../domains/schedules/schedules.service';
 import { ScreensService } from '../../domains/screens/screens.service';
+import { ScreenHeartbeatService } from '../../domains/realtime/screen-heartbeat.service';
 import { PrismaService } from '../prisma/prisma.service';
+
+const mockHeartbeat = {} as unknown as ScreenHeartbeatService;
 
 /**
  * The second tenant boundary. RolesGuard proves the caller belongs to the
@@ -102,7 +105,7 @@ describe('cross-tenant scoping of by-id getters', () => {
       build: (prisma) => {
         const svc = new MediaService(prisma, {
           get: (_k: string, d?: unknown) => d,
-        } as never);
+        } as never, mockHeartbeat);
         return { get: (ws, id) => svc.getById(ws, id) };
       },
     },

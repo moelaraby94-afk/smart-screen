@@ -9,6 +9,8 @@ import { SchedulingService } from '../schedules/scheduling.service';
 import { MediaService } from './media.service';
 import type { Prisma } from '@prisma/client';
 
+const mockHeartbeat = {} as unknown as ScreenHeartbeatService;
+
 /**
  * In-memory stand-in for PrismaService covering only the delegates the
  * subscription-limit enforcement paths exercise. No Postgres needed.
@@ -166,6 +168,7 @@ describe('Subscription limit enforcement (P1-T4)', () => {
       return new MediaService(
         fake as unknown as PrismaService,
         createMockConfigService(),
+        mockHeartbeat,
       );
     }
 

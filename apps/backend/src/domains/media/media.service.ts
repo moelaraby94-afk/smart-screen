@@ -11,6 +11,7 @@ import { skipFor } from '../../common/pagination/pagination-query.dto';
 import { ListMediaDto } from './dto/list-media.dto';
 import { ErrorCode } from '../../common/errors/error-codes';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
 import { existsSync, mkdirSync, unlinkSync } from 'fs';
 import { copyFile, rename, unlink, writeFile } from 'fs/promises';
 import { join, relative } from 'path';
@@ -35,6 +36,7 @@ export class MediaService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly heartbeat: ScreenHeartbeatService,
   ) {
     this.uploadRoot = this.config.get<string>(
       'MEDIA_UPLOAD_DIR',
@@ -238,6 +240,10 @@ export class MediaService {
       await this.discardTempFile(tempPath);
       throw err;
     }
+
+    this.heartbeat.emitUploadComplete(params.workspaceId, {
+      fileName: params.originalName,
+    });
 
     return created;
   }

@@ -40,6 +40,23 @@ export function emailChangeOtpEmail(params: {
   return { subject, html, text };
 }
 
+export function teamInviteEmail(params: {
+  inviterName: string;
+  workspaceName: string;
+  inviteUrl: string;
+  role: string;
+  brandName?: string;
+}): { subject: string; html: string; text: string } {
+  const brand = params.brandName ?? 'Cloud Signage';
+  const subject = `${brand}: ${params.inviterName} invited you to "${params.workspaceName}"`;
+  const url = esc(params.inviteUrl);
+  const name = esc(params.inviterName);
+  const ws = esc(params.workspaceName);
+  const html = `<p>Hi,</p><p><strong>${name}</strong> has invited you to join <strong>${ws}</strong> on ${brand} as <strong>${esc(params.role)}</strong>.</p><p><a href="${url}" style="display:inline-block;padding:12px 28px;background:#6366f1;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Accept invitation</a></p><p style="word-break:break-all;color:#666">${url}</p><p>This invitation expires in 7 days. If you don't have an account yet, you'll be asked to create one.</p>`;
+  const text = `Hi,\n\n${params.inviterName} has invited you to join "${params.workspaceName}" on ${brand} as ${params.role}.\n\nAccept invitation: ${params.inviteUrl}\n\nThis invitation expires in 7 days. If you don't have an account yet, you'll be asked to create one.`;
+  return { subject, html, text };
+}
+
 export function subscriptionReminderEmail(params: {
   fullName: string;
   brandName?: string;
