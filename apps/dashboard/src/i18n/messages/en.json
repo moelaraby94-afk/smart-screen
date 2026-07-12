@@ -658,7 +658,16 @@
     "folderDeleted": "Folder deleted.",
     "folderDeleteFailed": "Could not delete folder.",
     "moveFolderFailed": "Could not move media to selected folder.",
-    "noFolder": "No folder"
+    "noFolder": "No folder",
+    "selectAll": "Select all",
+    "selected": "selected",
+    "deleteSelected": "Delete selected",
+    "clearSelection": "Clear selection",
+    "bulkDeleteTitle": "Delete selected files?",
+    "bulkDeleteDescription": "This will permanently delete {count} file(s). This action cannot be undone.",
+    "bulkDeleteSuccess": "Selected files deleted.",
+    "bulkDeletePartial": "{count} file(s) could not be deleted.",
+    "deleting": "Deleting…"
   },
   "common": {
     "system": "System",

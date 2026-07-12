@@ -658,7 +658,16 @@
     "folderDeleted": "تم حذف المجلد.",
     "folderDeleteFailed": "تعذر حذف المجلد.",
     "moveFolderFailed": "تعذر نقل الوسائط إلى المجلد المحدد.",
-    "noFolder": "بدون مجلد"
+    "noFolder": "بدون مجلد",
+    "selectAll": "تحديد الكل",
+    "selected": "محدد",
+    "deleteSelected": "حذف المحدد",
+    "clearSelection": "إلغاء التحديد",
+    "bulkDeleteTitle": "حذف الملفات المحددة؟",
+    "bulkDeleteDescription": "سيتم حذف {count} ملف نهائيا. لا يمكن التراجع عن هذا الإجراء.",
+    "bulkDeleteSuccess": "تم حذف الملفات المحددة.",
+    "bulkDeletePartial": "تعذر حذف {count} ملف.",
+    "deleting": "جارٍ الحذف…"
   },
   "common": {
     "system": "النظام",

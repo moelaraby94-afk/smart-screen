@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
-import { Upload, Search } from 'lucide-react';
+import { Check, Trash2, Upload, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -68,6 +68,9 @@ export function MediaLibraryClient() {
   const [selectedFolderId, setSelectedFolderId] = useState<string>('all');
   const [newFolderName, setNewFolderName] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; workspaceId: string } | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -228,6 +231,48 @@ export function MediaLibraryClient() {
       return;
     }
     toast.success(t('deleted'));
+    await load();
+    await loadFolders();
+    bumpWorkspaceDataEpoch();
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => {
+      if (prev.size === filteredItems.length) return new Set();
+      return new Set(filteredItems.map((m) => m.id));
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const confirmBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setBulkDeleting(true);
+    let failed = 0;
+    for (const m of items) {
+      if (!selectedIds.has(m.id)) continue;
+      const ws = m.workspaceId ?? workspaceId;
+      if (!ws) { failed++; continue; }
+      const res = await deleteMedia(ws, m.id);
+      if (!res.ok) failed++;
+    }
+    setBulkDeleting(false);
+    setBulkDeleteOpen(false);
+    setSelectedIds(new Set());
+    if (failed > 0) {
+      toast.error(t('bulkDeletePartial', { count: failed }));
+    } else {
+      toast.success(t('bulkDeleteSuccess'));
+    }
     await load();
     await loadFolders();
     bumpWorkspaceDataEpoch();
@@ -469,6 +514,11 @@ export function MediaLibraryClient() {
             workspaceId={workspaceId}
             folders={folders}
             isDragActive={isDragActive}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelect}
+            onToggleSelectAll={toggleSelectAll}
+            onBulkDelete={() => setBulkDeleteOpen(true)}
+            onClearSelection={clearSelection}
             onDelete={(m) => {
               const wid = m.workspaceId ?? workspaceId;
               if (!wid) return;
@@ -494,6 +544,27 @@ export function MediaLibraryClient() {
               className="rounded-xl bg-red-600 hover:bg-red-600"
             >
               {t('delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent className="rounded-2xl border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('bulkDeleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('bulkDeleteDescription', { count: selectedIds.size })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void confirmBulkDelete()}
+              disabled={bulkDeleting}
+              className="rounded-xl bg-red-600 hover:bg-red-600"
+            >
+              {bulkDeleting ? t('deleting') : t('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Download, Film, Folder, FolderPlus, ImageIcon, Pencil, Trash2 } from 'lucide-react';
+import { Check, Download, Film, Folder, FolderPlus, ImageIcon, Pencil, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { MediaPreviewImage, MediaPreviewVideo } from '@/features/media/media-preview-components';
@@ -101,22 +101,71 @@ type MediaGridProps = {
   workspaceId: string | null;
   folders: MediaFolder[];
   isDragActive: boolean;
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string) => void;
+  onToggleSelectAll: () => void;
+  onBulkDelete: () => void;
+  onClearSelection: () => void;
   onDelete: (item: MediaItem) => void;
   onMoveMedia: (mediaId: string, folderId: string) => void;
 };
 
 export function MediaGrid(props: MediaGridProps) {
   const t = useTranslations('mediaClient');
+  const allSelected = props.selectedIds.size > 0 && props.selectedIds.size === props.filteredItems.length;
 
   return (
     <div className="p-4 sm:p-6">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
-          <span className="font-mono-nums text-foreground">{new Intl.NumberFormat(props.locale).format(props.items.length)}</span> {t('files')}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {props.isDragActive ? t('releaseToAdd') : t('dropMore')}
-        </p>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={props.onToggleSelectAll}
+            className={cn(
+              'flex h-7 w-7 items-center justify-center rounded-lg border transition',
+              allSelected
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border text-muted-foreground hover:text-foreground',
+            )}
+            aria-label={t('selectAll')}
+          >
+            {allSelected && <Check className="h-4 w-4" />}
+          </button>
+          <p className="text-sm text-muted-foreground">
+            <span className="font-mono-nums text-foreground">{new Intl.NumberFormat(props.locale).format(props.items.length)}</span> {t('files')}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {props.selectedIds.size > 0 ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-primary">
+                {props.selectedIds.size} {t('selected')}
+              </span>
+              <Button
+                type="button"
+                size="sm"
+                variant="destructive"
+                className="rounded-lg"
+                onClick={props.onBulkDelete}
+              >
+                <Trash2 className="me-1 h-3.5 w-3.5" />
+                {t('deleteSelected')}
+              </Button>
+              <button
+                type="button"
+                onClick={props.onClearSelection}
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground"
+                aria-label={t('clearSelection')}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              {props.isDragActive ? t('releaseToAdd') : t('dropMore')}
+            </p>
+          )}
+        </div>
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <AnimatePresence mode="popLayout">
@@ -131,6 +180,22 @@ export function MediaGrid(props: MediaGridProps) {
               className="ngl-media-tile group relative overflow-hidden rounded-2xl"
             >
               <div className="relative aspect-[4/3] bg-black/80">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    props.onToggleSelect(m.id);
+                  }}
+                  className={cn(
+                    'absolute start-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-md border-2 transition',
+                    props.selectedIds.has(m.id)
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-white/70 bg-black/40 text-transparent hover:border-white',
+                  )}
+                  aria-label={t('select')}
+                >
+                  <Check className="h-3.5 w-3.5" />
+                </button>
                 {m.mimeType.startsWith('image/') ? (
                   <MediaPreviewImage src={m.publicUrl} alt="" />
                 ) : (
