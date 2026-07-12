@@ -1654,7 +1654,14 @@
     "screenLimit": "Screen limit",
     "manageBilling": "Manage billing (Stripe portal)",
     "openingPortal": "Opening portal…",
-    "portalFailed": "Could not open the billing portal. Ensure Stripe is configured and checkout completed once."
+    "portalFailed": "Could not open the billing portal. Ensure Stripe is configured and checkout completed once.",
+    "perScreenBilling": "Per-screen billing",
+    "activeScreens": "Active screens",
+    "includedScreens": "Included screens",
+    "perScreenPrice": "Per extra screen",
+    "included": "Included",
+    "estimatedMonthly": "Est. monthly total",
+    "overageWarning": "{count} screen(s) over included limit — +{price}/mo"
   },
   "workspaceWelcome": {
     "sessionRestored": "Session restored — finish creating your workspace.",

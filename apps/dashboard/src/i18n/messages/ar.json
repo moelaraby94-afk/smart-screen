@@ -1654,7 +1654,14 @@
     "screenLimit": "حد الشاشات",
     "manageBilling": "إدارة الفوترة (بوابة Stripe)",
     "openingPortal": "جاري فتح البوابة…",
-    "portalFailed": "تعذر فتح بوابة الفوترة. تأكد من ضبط Stripe وإكمال الدفع مرة واحدة على الأقل."
+    "portalFailed": "تعذر فتح بوابة الفوترة. تأكد من ضبط Stripe وإكمال الدفع مرة واحدة على الأقل.",
+    "perScreenBilling": "الفوترة لكل شاشة",
+    "activeScreens": "الشاشات النشطة",
+    "includedScreens": "الشاشات المشمولة",
+    "perScreenPrice": "لكل شاشة إضافية",
+    "included": "مشمولة",
+    "estimatedMonthly": "الإجمالي الشهري المقدر",
+    "overageWarning": "{count} شاشة فوق الحد المشمول — +{price}/شهر"
   },
   "workspaceWelcome": {
     "sessionRestored": "تمت استعادة الجلسة — أكمل إنشاء مساحة عملك.",

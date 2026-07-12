@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, CreditCard, Sparkles, Zap } from 'lucide-react';
+import { Check, CreditCard, Monitor, Sparkles, Zap } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,14 @@ type SubPayload = {
   currentPeriodEnd: string | null;
   startedAt: string;
   billingPortalAvailable?: boolean;
+  activeScreenCount?: number;
+  perScreenPricing?: {
+    basePrice: number;
+    includedScreens: number;
+    perScreenPrice: number;
+    currency: string;
+  };
+  estimatedMonthlyTotal?: number;
 };
 
 export function BillingClient() {
@@ -389,6 +397,84 @@ export function BillingClient() {
             </div>
           </div>
         </div>
+
+        {sub?.perScreenPricing && (
+          <div className="mt-6 rounded-2xl border border-border bg-card p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <Monitor className="h-5 w-5 text-primary" />
+              <h3 className="text-sm font-semibold tracking-tight">{t('perScreenBilling')}</h3>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-xl bg-muted/30 p-4">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  {t('activeScreens')}
+                </p>
+                <p className="mt-1 text-2xl font-bold text-foreground">
+                  {sub.activeScreenCount ?? 0}
+                </p>
+              </div>
+              <div className="rounded-xl bg-muted/30 p-4">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  {t('includedScreens')}
+                </p>
+                <p className="mt-1 text-2xl font-bold text-foreground">
+                  {sub.perScreenPricing.includedScreens}
+                </p>
+              </div>
+              <div className="rounded-xl bg-muted/30 p-4">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  {t('perScreenPrice')}
+                </p>
+                <p className="mt-1 text-2xl font-bold text-foreground">
+                  {sub.perScreenPricing.perScreenPrice > 0
+                    ? `$${(sub.perScreenPricing.perScreenPrice / 100).toFixed(2)}`
+                    : t('included')}
+                </p>
+              </div>
+              <div className="rounded-xl bg-primary/10 p-4 ring-1 ring-primary/20">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  {t('estimatedMonthly')}
+                </p>
+                <p className="mt-1 text-2xl font-bold text-primary">
+                  {sub.estimatedMonthlyTotal != null
+                    ? `$${(sub.estimatedMonthlyTotal / 100).toFixed(2)}`
+                    : '—'}
+                </p>
+              </div>
+            </div>
+
+            {sub.perScreenPricing.perScreenPrice > 0 && (
+              <div className="mt-4 flex items-center gap-3">
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={cn(
+                      'h-full rounded-full transition-all',
+                      (sub.activeScreenCount ?? 0) > sub.perScreenPricing.includedScreens
+                        ? 'bg-amber-500'
+                        : 'bg-emerald-500',
+                    )}
+                    style={{
+                      width: `${Math.min(100, ((sub.activeScreenCount ?? 0) / sub.screenLimit) * 100)}%`,
+                    }}
+                  />
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {sub.activeScreenCount ?? 0} / {sub.screenLimit}
+                </span>
+              </div>
+            )}
+
+            {sub.perScreenPricing.perScreenPrice > 0 &&
+              (sub.activeScreenCount ?? 0) > sub.perScreenPricing.includedScreens && (
+                <p className="mt-3 text-xs text-amber-600">
+                  {t('overageWarning', {
+                    count: (sub.activeScreenCount ?? 0) - sub.perScreenPricing.includedScreens,
+                    price: `$${((sub.perScreenPricing.perScreenPrice / 100) * ((sub.activeScreenCount ?? 0) - sub.perScreenPricing.includedScreens)).toFixed(2)}`,
+                  })}
+                </p>
+              )}
+          </div>
+        )}
       </motion.section>
     </div>
   );
