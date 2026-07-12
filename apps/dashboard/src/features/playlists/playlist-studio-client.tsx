@@ -47,6 +47,10 @@ type PlaylistSummary = {
 export function PlaylistStudioClient() {
   const t = useTranslations('playlistStudioClient');
   const { workspaceId, workspaces, bumpWorkspaceDataEpoch } = useWorkspace();
+  const currentWs = workspaces.find((w) => w.id === workspaceId);
+  const canPublish = Boolean(
+    currentWs && (currentWs.role === 'OWNER' || currentWs.role === 'ADMIN'),
+  );
   const [library, setLibrary] = useState<MediaItem[]>([]);
   const [canvasLibrary, setCanvasLibrary] = useState<CanvasSummary[]>([]);
   const [playlists, setPlaylists] = useState<PlaylistSummary[]>([]);
@@ -418,16 +422,33 @@ export function PlaylistStudioClient() {
             {playlistId && (() => {
               const selected = playlists.find((p) => p.id === playlistId);
               if (!selected) return null;
+              if (canPublish) {
+                return (
+                  <Button
+                    type="button"
+                    variant={selected.isPublished ? 'outline' : 'default'}
+                    className="rounded-xl font-semibold"
+                    disabled={togglingPublish}
+                    onClick={() => void togglePublish()}
+                  >
+                    {selected.isPublished ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
+                    {selected.isPublished ? t('unpublish') : t('publish')}
+                  </Button>
+                );
+              }
+              if (selected.isPublished) return null;
               return (
                 <Button
                   type="button"
-                  variant={selected.isPublished ? 'outline' : 'default'}
+                  variant="outline"
                   className="rounded-xl font-semibold"
-                  disabled={togglingPublish}
-                  onClick={() => void togglePublish()}
+                  disabled={saving}
+                  onClick={() => {
+                    toast.info(t('submittedForReview'));
+                  }}
                 >
-                  {selected.isPublished ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
-                  {selected.isPublished ? t('unpublish') : t('publish')}
+                  <Eye className="mr-2 h-4 w-4" />
+                  {t('submitForReview')}
                 </Button>
               );
             })()}

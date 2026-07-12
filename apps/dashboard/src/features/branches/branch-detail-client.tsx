@@ -28,6 +28,7 @@ import {
   BranchScreensSection,
   BranchMediaSection,
 } from '@/features/branches/branch-tab-sections';
+import { BranchReviewSection } from '@/features/branches/branch-review-section';
 
 type Props = {
   locale: string;
@@ -210,6 +211,14 @@ export function BranchDetailClient({ locale }: Props) {
       />
 
       <BranchStatsSection stats={stats} loading={loading} />
+
+      {activeTab === 'playlists' && canDeletePlaylist ? (
+        <BranchReviewSection
+          playlists={branchPlaylists.playlists}
+          workspaceId={workspaceIdParam}
+          onReviewed={() => void branchPlaylists.reload()}
+        />
+      ) : null}
 
       {activeTab === 'playlists' ? (
         <BranchPlaylistsSection

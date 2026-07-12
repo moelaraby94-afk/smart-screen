@@ -932,7 +932,15 @@
     "playlistMoveTargetLabel": "الفرع المستهدف",
     "playlistMoveConfirm": "نسخ وحذف من هنا",
     "playlistMoveCopyOnly": "نسخ فقط",
-    "playlistMoveChooseBranch": "اختر فرعًا"
+    "playlistMoveChooseBranch": "اختر فرعًا",
+    "reviewTitle": "بانتظار الموافقة",
+    "reviewDescription": "قوائم تشغيل غير منشورة بانتظار المراجعة. وافق للنشر أو ارفض للإرجاع.",
+    "reviewItems": "{count} عناصر",
+    "reviewApprove": "موافقة",
+    "reviewReject": "رفض",
+    "reviewApproved": "تمت الموافقة على القائمة ونشرها.",
+    "reviewRejected": "تمت إعادة القائمة للمراجعة.",
+    "reviewApproveFailed": "تعذر الموافقة على القائمة."
   },
   "branchToolbar": {
     "branchLabel": "الفرع",
@@ -1683,7 +1691,9 @@
     "previewMode": "وضع المعاينة",
     "exitPreview": "خروج",
     "previewEmpty": "لا توجد عناصر للمعاينة.",
-    "canvasPreviewPlaceholder": "معاينة تصميم الكانفس غير متاحة"
+    "canvasPreviewPlaceholder": "معاينة تصميم الكانفس غير متاحة",
+    "submitForReview": "إرسال للمراجعة",
+    "submittedForReview": "تم إرسال قائمة التشغيل للمراجعة. سيوافق عليها المسؤول قريبًا."
   },
   "errors": {
     "UNKNOWN_ERROR": "حدث خطأ ما. برجاء المحاولة مرة أخرى.",

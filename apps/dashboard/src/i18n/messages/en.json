@@ -932,7 +932,15 @@
     "playlistMoveTargetLabel": "Target branch",
     "playlistMoveConfirm": "Copy and remove here",
     "playlistMoveCopyOnly": "Copy only",
-    "playlistMoveChooseBranch": "Select a branch"
+    "playlistMoveChooseBranch": "Select a branch",
+    "reviewTitle": "Pending approval",
+    "reviewDescription": "Unpublished playlists awaiting review. Approve to publish or reject to send back.",
+    "reviewItems": "{count} items",
+    "reviewApprove": "Approve",
+    "reviewReject": "Reject",
+    "reviewApproved": "Playlist approved and published.",
+    "reviewRejected": "Playlist sent back for revision.",
+    "reviewApproveFailed": "Could not approve playlist."
   },
   "branchToolbar": {
     "branchLabel": "Branch",
@@ -1683,7 +1691,9 @@
     "previewMode": "Preview mode",
     "exitPreview": "Exit",
     "previewEmpty": "No items to preview.",
-    "canvasPreviewPlaceholder": "Canvas design preview not available"
+    "canvasPreviewPlaceholder": "Canvas design preview not available",
+    "submitForReview": "Submit for review",
+    "submittedForReview": "Playlist submitted for review. An admin will approve it shortly."
   },
   "errors": {
     "UNKNOWN_ERROR": "Something went wrong. Please try again.",
