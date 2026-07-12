@@ -1431,12 +1431,19 @@
     "dash": "—",
     "current": "الحالية",
     "free": "مجانية",
+    "starter": "المبتدئ",
     "pro": "احترافية",
+    "enterprise": "المؤسسات",
     "perMonth": "/شهر",
     "freeFeatures": {
       "seat": "مقعد شاشة واحد",
       "scheduling": "جدولة أساسية",
       "support": "دعم المجتمع"
+    },
+    "starterFeatures": {
+      "seats": "15 مقعد فريق",
+      "screens": "100 شاشة",
+      "scheduling": "جدولة متقدمة"
     },
     "proFeatures": {
       "unlimited": "شاشات غير محدودة (استخدام عادل)",
@@ -1444,6 +1451,14 @@
       "prioritySync": "مزامنة لحظية ذات أولوية",
       "portal": "بوابة عميل Stripe"
     },
+    "enterpriseFeatures": {
+      "seats": "100 مقعد فريق",
+      "screens": "2000 شاشة",
+      "support": "دعم مخصص",
+      "sso": "تسجيل دخول موحد وسجلات تدقيق"
+    },
+    "chooseStarter": "اختر المبتدئ",
+    "chooseEnterprise": "اختر المؤسسات",
     "stripeSoon": "الدفع عبر Stripe (قريبًا)",
     "subscribeWithCard": "الاشتراك بالبطاقة (Stripe)",
     "redirectingToStripe": "جاري التحويل إلى Stripe…",

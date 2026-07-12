@@ -32,7 +32,7 @@ export function BillingClient() {
   const { workspaceId, workspaceDataEpoch } = useWorkspace();
   const [sub, setSub] = useState<SubPayload | null>(null);
   const [loading, setLoading] = useState(true);
-  const [savingPlan, setSavingPlan] = useState(false);
+  const [savingPlan, setSavingPlan] = useState<string | boolean>(false);
   const allowMockBilling =
     process.env.NEXT_PUBLIC_ALLOW_MOCK_BILLING === 'true';
 
@@ -55,7 +55,7 @@ export function BillingClient() {
   const applyMockPlan = useCallback(
     async (next: 'FREE' | 'PRO') => {
       if (!workspaceId) return;
-      setSavingPlan(true);
+      setSavingPlan(next);
       const res = await apiSetMockPlan(workspaceId, next);
       if (!res.ok) {
         toast.error(t('mockPlanSaveFailed'));
@@ -73,7 +73,7 @@ export function BillingClient() {
 
   const openBillingPortal = useCallback(async () => {
     if (!workspaceId) return;
-    setSavingPlan(true);
+    setSavingPlan('portal');
     try {
       const res = await apiCreateStripePortal(workspaceId, locale);
       if (!res.ok) {
@@ -91,11 +91,11 @@ export function BillingClient() {
     }
   }, [workspaceId, locale, t]);
 
-  const startStripeCheckout = useCallback(async () => {
+  const startStripeCheckout = useCallback(async (planName: string) => {
     if (!workspaceId) return;
-    setSavingPlan(true);
+    setSavingPlan(planName);
     try {
-      const res = await apiCreateStripeCheckout(workspaceId, 'PRO');
+      const res = await apiCreateStripeCheckout(workspaceId, planName);
       if (!res.ok) {
         toast.error(t('stripeCheckoutFailed'));
         return;
@@ -152,19 +152,19 @@ export function BillingClient() {
                 type="button"
                 variant="outline"
                 className="h-11 shrink-0 rounded-2xl border-border/80"
-                disabled={savingPlan}
+                disabled={!!savingPlan}
                 onClick={() => void openBillingPortal()}
               >
-                {savingPlan ? t('openingPortal') : t('manageBilling')}
+                {savingPlan === 'portal' ? t('openingPortal') : t('manageBilling')}
               </Button>
             ) : null}
           </div>
         </div>
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-2">
+        <div className="mt-10 grid gap-6 lg:grid-cols-4">
           <div
             className={cn(
-              'relative overflow-hidden rounded-3xl border p-8',
+              'relative overflow-hidden rounded-3xl border p-6',
               !isPro
                 ? 'border-primary/40 bg-gradient-to-br from-primary/10 to-transparent shadow-md'
                 : 'border-border bg-card',
@@ -204,7 +204,7 @@ export function BillingClient() {
                 type="button"
                 variant="outline"
                 className="mt-8 w-full rounded-xl border-border"
-                disabled={savingPlan}
+                disabled={!!savingPlan}
                 onClick={() => void applyMockPlan('FREE')}
               >
                 {t('switchToFree')}
@@ -218,7 +218,51 @@ export function BillingClient() {
 
           <div
             className={cn(
-              'relative overflow-hidden rounded-3xl border p-8',
+              'relative overflow-hidden rounded-3xl border p-6',
+              plan === 'STARTER'
+                ? 'border-primary/40 bg-gradient-to-br from-primary/10 to-transparent shadow-md'
+                : 'border-border bg-card',
+            )}
+          >
+            {plan === 'STARTER' ? (
+              <span className="absolute end-4 top-4 rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+                {t('current')}
+              </span>
+            ) : null}
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted">
+                <Zap className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">{t('starter')}</h3>
+                <p className="font-mono-nums text-2xl font-bold text-foreground">
+                  $19
+                  <span className="text-sm font-normal text-muted-foreground">{t('perMonth')}</span>
+                </p>
+              </div>
+            </div>
+            <ul className="space-y-3 text-sm text-muted-foreground">
+              {[t('starterFeatures.seats'), t('starterFeatures.screens'), t('starterFeatures.scheduling')].map((feature) => (
+                <li key={feature} className="flex items-center gap-2">
+                  <Check className="h-4 w-4 shrink-0 text-primary" />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-8 w-full rounded-xl font-semibold"
+              disabled={!!savingPlan || plan === 'STARTER'}
+              onClick={() => void startStripeCheckout('STARTER')}
+            >
+              {savingPlan === 'STARTER' ? t('redirectingToStripe') : t('chooseStarter')}
+            </Button>
+          </div>
+
+          <div
+            className={cn(
+              'relative overflow-hidden rounded-3xl border p-6',
               isPro
                 ? 'border-primary/45 bg-gradient-to-br from-primary/15 to-accent/10 shadow-lg'
                 : 'border-border bg-gradient-to-br from-muted/40 to-card',
@@ -258,23 +302,67 @@ export function BillingClient() {
               <Button
                 type="button"
                 className="w-full rounded-xl font-semibold" variant="cta"
-                disabled={savingPlan || isPro}
-                onClick={() => void startStripeCheckout()}
+                disabled={!!savingPlan || isPro}
+                onClick={() => void startStripeCheckout('PRO')}
               >
-                {savingPlan ? t('redirectingToStripe') : t('subscribeWithCard')}
+                {savingPlan === 'PRO' ? t('redirectingToStripe') : t('subscribeWithCard')}
               </Button>
               {allowMockBilling ? (
                 <Button
                   type="button"
                   variant="outline"
                   className="w-full rounded-xl border-dashed border-primary/40"
-                  disabled={savingPlan || isPro}
+                  disabled={!!savingPlan || isPro}
                   onClick={() => void applyMockPlan('PRO')}
                 >
                   {t('demoUpgradePro')}
                 </Button>
               ) : null}
             </div>
+          </div>
+
+          <div
+            className={cn(
+              'relative overflow-hidden rounded-3xl border p-6',
+              plan === 'ENTERPRISE'
+                ? 'border-primary/45 bg-gradient-to-br from-primary/15 to-accent/10 shadow-lg'
+                : 'border-border bg-gradient-to-br from-muted/40 to-card',
+            )}
+          >
+            {plan === 'ENTERPRISE' ? (
+              <span className="absolute end-4 top-4 rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+                {t('current')}
+              </span>
+            ) : null}
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+                <Sparkles className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">{t('enterprise')}</h3>
+                <p className="font-mono-nums text-2xl font-bold text-foreground">
+                  $199
+                  <span className="text-sm font-normal text-muted-foreground">{t('perMonth')}</span>
+                </p>
+              </div>
+            </div>
+            <ul className="space-y-3 text-sm text-muted-foreground">
+              {[t('enterpriseFeatures.seats'), t('enterpriseFeatures.screens'), t('enterpriseFeatures.support'), t('enterpriseFeatures.sso')].map((feature) => (
+                <li key={feature} className="flex items-center gap-2">
+                  <Check className="h-4 w-4 shrink-0 text-primary" />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-8 w-full rounded-xl font-semibold"
+              disabled={!!savingPlan || plan === 'ENTERPRISE'}
+              onClick={() => void startStripeCheckout('ENTERPRISE')}
+            >
+              {savingPlan === 'ENTERPRISE' ? t('redirectingToStripe') : t('chooseEnterprise')}
+            </Button>
           </div>
         </div>
 

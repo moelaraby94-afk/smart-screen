@@ -1431,12 +1431,19 @@
     "dash": "—",
     "current": "Current",
     "free": "Free",
+    "starter": "Starter",
     "pro": "Pro",
+    "enterprise": "Enterprise",
     "perMonth": "/mo",
     "freeFeatures": {
       "seat": "1 screen seat",
       "scheduling": "Basic scheduling",
       "support": "Community support"
+    },
+    "starterFeatures": {
+      "seats": "15 team seats",
+      "screens": "100 screens",
+      "scheduling": "Advanced scheduling"
     },
     "proFeatures": {
       "unlimited": "Unlimited screens (fair use)",
@@ -1444,6 +1451,14 @@
       "prioritySync": "Priority realtime sync",
       "portal": "Stripe Customer Portal"
     },
+    "enterpriseFeatures": {
+      "seats": "100 team seats",
+      "screens": "2000 screens",
+      "support": "Dedicated support",
+      "sso": "SSO & audit logs"
+    },
+    "chooseStarter": "Choose Starter",
+    "chooseEnterprise": "Choose Enterprise",
     "stripeSoon": "Stripe checkout (soon)",
     "subscribeWithCard": "Subscribe with card (Stripe)",
     "redirectingToStripe": "Redirecting to Stripe…",
