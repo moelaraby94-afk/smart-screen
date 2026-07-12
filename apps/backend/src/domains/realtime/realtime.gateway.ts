@@ -13,7 +13,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import * as bcrypt from 'bcryptjs';
-import cookie from 'cookie';
+import { parse as cookieParse } from 'cookie';
 import type { Server } from 'socket.io';
 import type { Socket } from 'socket.io';
 import { PrismaService } from '../../common/prisma/prisma.service';
@@ -392,7 +392,7 @@ export class RealtimeGateway
 
     const raw = client.handshake.headers.cookie;
     if (!raw) return null;
-    const token = cookie.parse(raw).cs_access_token;
+    const token = cookieParse(raw).cs_access_token;
     return token ? verifyAccessToken(token) : null;
   }
 }
