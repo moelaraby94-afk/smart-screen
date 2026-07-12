@@ -4,9 +4,23 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { io, type Socket } from 'socket.io-client';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import { Monitor, Upload, AlertTriangle, Bell } from 'lucide-react';
+import {
+  Monitor,
+  Upload,
+  AlertTriangle,
+  Bell,
+  CalendarClock,
+  CreditCard,
+  UserPlus,
+  CheckCircle,
+} from 'lucide-react';
 import { getStoredAccessToken } from '@/features/auth/session';
 import { useWorkspace } from '@/features/workspace/workspace-context';
+import {
+  fetchNotifications,
+  markAllNotificationsRead,
+  type NotificationRow,
+} from './notifications-api';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,10 +45,11 @@ type ScreenStatusPayload = {
 
 export type NotificationItem = {
   id: string;
-  type: 'screen_offline' | 'screen_online' | 'upload_complete';
+  type: string;
   message: string;
   timestamp: number;
   read: boolean;
+  link?: string | null;
 };
 
 type NotificationContextValue = {
@@ -51,7 +66,18 @@ export function useNotifications() {
   return ctx;
 }
 
-const MAX_NOTIFICATIONS = 30;
+const MAX_NOTIFICATIONS = 50;
+
+function showBrowserNotification(title: string, body: string) {
+  if (typeof window === 'undefined' || !('Notification' in window)) return;
+  if (Notification.permission === 'granted') {
+    try {
+      new Notification(title, { body });
+    } catch {
+      // ignore
+    }
+  }
+}
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const t = useTranslations('notifications');
@@ -60,17 +86,43 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const prevStatusRef = useRef<Map<string, string>>(new Map());
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
-  const addNotification = useCallback((item: Omit<NotificationItem, 'id' | 'timestamp' | 'read'>) => {
-    setNotifications((prev) => {
-      const next: NotificationItem = {
-        ...item,
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        timestamp: Date.now(),
-        read: false,
-      };
-      return [next, ...prev].slice(0, MAX_NOTIFICATIONS);
-    });
-  }, []);
+  const addNotification = useCallback(
+    (item: { type: string; message: string; link?: string | null }, browserTitle?: string) => {
+      setNotifications((prev) => {
+        const next: NotificationItem = {
+          ...item,
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          timestamp: Date.now(),
+          read: false,
+        };
+        return [next, ...prev].slice(0, MAX_NOTIFICATIONS);
+      });
+      if (browserTitle) {
+        showBrowserNotification(browserTitle, item.message);
+      }
+    },
+    [],
+  );
+
+  // Load persisted notifications on mount / workspace change
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    void (async () => {
+      const data = await fetchNotifications();
+      if (data.items.length > 0) {
+        setNotifications(
+          data.items.map((r: NotificationRow) => ({
+            id: r.id,
+            type: r.type,
+            message: r.message,
+            timestamp: new Date(r.createdAt).getTime(),
+            read: r.read,
+            link: r.link,
+          })),
+        );
+      }
+    })();
+  }, [isAuthenticated, workspaceId]);
 
   useEffect(() => {
     if (!isAuthenticated || !workspaceId) return;
@@ -100,18 +152,18 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           toast.warning(t('screenOffline', { serial: payload.serialNumber }), {
             icon: <AlertTriangle className="h-4 w-4" />,
           });
-          addNotification({
-            type: 'screen_offline',
-            message: t('screenOffline', { serial: payload.serialNumber }),
-          });
+          addNotification(
+            { type: 'screen_offline', message: t('screenOffline', { serial: payload.serialNumber }) },
+            t('browserScreenOffline'),
+          );
         } else if (payload.status === 'ONLINE') {
           toast.success(t('screenOnline', { serial: payload.serialNumber }), {
             icon: <Monitor className="h-4 w-4" />,
           });
-          addNotification({
-            type: 'screen_online',
-            message: t('screenOnline', { serial: payload.serialNumber }),
-          });
+          addNotification(
+            { type: 'screen_online', message: t('screenOnline', { serial: payload.serialNumber }) },
+            t('browserScreenOnline'),
+          );
         }
       }
       prevStatusRef.current.set(payload.screenId, payload.status);
@@ -121,10 +173,38 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       toast.success(t('uploadComplete', { name: payload.fileName ?? '' }), {
         icon: <Upload className="h-4 w-4" />,
       });
-      addNotification({
-        type: 'upload_complete',
-        message: t('uploadComplete', { name: payload.fileName ?? '' }),
+      addNotification(
+        { type: 'upload_complete', message: t('uploadComplete', { name: payload.fileName ?? '' }) },
+        t('browserUpload'),
+      );
+    });
+
+    socket.on('workspace:subscription', (payload: { plan?: string; status?: string }) => {
+      toast.info(t('subscriptionUpdated', { plan: payload.plan ?? '' }), {
+        icon: <CreditCard className="h-4 w-4" />,
       });
+      addNotification(
+        {
+          type: 'subscription_updated',
+          message: t('subscriptionUpdated', { plan: payload.plan ?? '' }),
+          link: '/settings/billing',
+        },
+        t('browserSubscription'),
+      );
+    });
+
+    socket.on('schedule:changed', () => {
+      toast.info(t('scheduleChanged'), {
+        icon: <CalendarClock className="h-4 w-4" />,
+      });
+      addNotification(
+        { type: 'schedule_changed', message: t('scheduleChanged'), link: '/schedules' },
+        t('browserSchedule'),
+      );
+    });
+
+    socket.on('pairing:started', () => {
+      addNotification({ type: 'pairing_started', message: t('pairingStarted'), link: '/screens' });
     });
 
     socket.on('disconnect', (reason) => {
@@ -142,6 +222,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const markAllRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    void markAllNotificationsRead();
   }, []);
 
   return (
@@ -150,6 +231,25 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     </NotificationContext.Provider>
   );
 }
+
+const iconForType = (type: string) => {
+  switch (type) {
+    case 'screen_offline':
+      return { icon: AlertTriangle, class: 'bg-amber-500/15 text-amber-600' };
+    case 'screen_online':
+      return { icon: Monitor, class: 'bg-emerald-500/15 text-emerald-600' };
+    case 'upload_complete':
+      return { icon: Upload, class: 'bg-blue-500/15 text-blue-600' };
+    case 'subscription_updated':
+      return { icon: CreditCard, class: 'bg-purple-500/15 text-purple-600' };
+    case 'schedule_changed':
+      return { icon: CalendarClock, class: 'bg-indigo-500/15 text-indigo-600' };
+    case 'pairing_started':
+      return { icon: UserPlus, class: 'bg-cyan-500/15 text-cyan-600' };
+    default:
+      return { icon: CheckCircle, class: 'bg-muted text-muted-foreground' };
+  }
+};
 
 export function NotificationBell() {
   const t = useTranslations('notifications');
@@ -198,32 +298,31 @@ export function NotificationBell() {
             {t('empty')}
           </div>
         ) : (
-          notifications.map((n) => (
-            <DropdownMenuItem
-              key={n.id}
-              className="flex items-start gap-2 py-2.5"
-            >
-              <span
-                className={cn(
-                  'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg',
-                  n.type === 'screen_offline' && 'bg-amber-500/15 text-amber-600',
-                  n.type === 'screen_online' && 'bg-emerald-500/15 text-emerald-600',
-                  n.type === 'upload_complete' && 'bg-blue-500/15 text-blue-600',
-                )}
+          notifications.map((n) => {
+            const { icon: Icon, class: iconClass } = iconForType(n.type);
+            return (
+              <DropdownMenuItem
+                key={n.id}
+                className="flex items-start gap-2 py-2.5"
               >
-                {n.type === 'screen_offline' && <AlertTriangle className="h-3.5 w-3.5" />}
-                {n.type === 'screen_online' && <Monitor className="h-3.5 w-3.5" />}
-                {n.type === 'upload_complete' && <Upload className="h-3.5 w-3.5" />}
-              </span>
-              <div className="min-w-0 flex-1 space-y-0.5">
-                <p className="text-[13px] leading-tight text-foreground">{n.message}</p>
-                <p className="text-[10px] text-muted-foreground">{formatTime(n.timestamp)}</p>
-              </div>
-              {!n.read && (
-                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
-              )}
-            </DropdownMenuItem>
-          ))
+                <span
+                  className={cn(
+                    'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg',
+                    iconClass,
+                  )}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                </span>
+                <div className="min-w-0 flex-1 space-y-0.5">
+                  <p className="text-[13px] leading-tight text-foreground">{n.message}</p>
+                  <p className="text-[10px] text-muted-foreground">{formatTime(n.timestamp)}</p>
+                </div>
+                {!n.read && (
+                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                )}
+              </DropdownMenuItem>
+            );
+          })
         )}
       </DropdownMenuContent>
     </DropdownMenu>

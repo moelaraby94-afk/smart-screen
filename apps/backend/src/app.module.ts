@@ -23,6 +23,7 @@ import { AccountModule } from './domains/account/account.module';
 import { WebhooksModule } from './domains/webhooks/webhooks.module';
 import { MaintenanceModule } from './domains/maintenance/maintenance.module';
 import { EmailModule } from './domains/email/email.module';
+import { NotificationsModule } from './domains/notifications/notifications.module';
 import { HealthModule } from './common/health/health.module';
 import { RequestContextModule } from './common/request-context/request-context.module';
 
@@ -70,6 +71,7 @@ import { RequestContextModule } from './common/request-context/request-context.m
     AccountModule,
     WebhooksModule,
     MaintenanceModule,
+    NotificationsModule,
     HealthModule,
     RequestContextModule,
   ],
