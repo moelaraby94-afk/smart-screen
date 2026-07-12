@@ -2,10 +2,14 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { randomBytes } from 'crypto';
 import type { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import {
+  InvitationStatus,
   ScreenStatus,
   SubscriptionPlan,
   SubscriptionStatus,
@@ -14,6 +18,8 @@ import {
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { MediaService } from '../media/media.service';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
+import { EmailService } from '../email/email.service';
+import { teamInviteEmail } from '../email/email-templates';
 
 /** Minimal valid 1×1 PNG (transparent). */
 const DEMO_PNG = Buffer.from(
@@ -23,10 +29,14 @@ const DEMO_PNG = Buffer.from(
 
 @Injectable()
 export class WorkspacesService {
+  private readonly log = new Logger(WorkspacesService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly media: MediaService,
     private readonly heartbeat: ScreenHeartbeatService,
+    private readonly email: EmailService,
+    private readonly config: ConfigService,
   ) {}
 
   /**
@@ -242,28 +252,294 @@ export class WorkspacesService {
     }));
   }
 
-  /** Placeholder until email + invite tokens are wired (Stripe / Resend). */
-  inviteDemo(
+  /**
+   * Invite a user to a workspace.
+   * - If the user already has an account, they are added as a member immediately.
+   * - If not, a WorkspaceInvitation record is created and an email is sent (when email is configured).
+   */
+  async inviteMember(
     workspaceId: string,
+    invitedById: string,
     email: string,
     role: string,
-  ): {
-    ok: true;
-    demo: true;
-    message: string;
-    workspaceId: string;
-    email: string;
-    role: string;
-  } {
+  ) {
+    const normalizedEmail = email.trim().toLowerCase();
+    const validRoles: string[] = [UserRole.VIEWER, UserRole.EDITOR, UserRole.ADMIN];
+    if (!validRoles.includes(role)) {
+      throw new BadRequestException(
+        'Invalid role. Must be VIEWER, EDITOR, or ADMIN.',
+      );
+    }
+
+    const existingMember = await this.prisma.workspaceMember.findFirst({
+      where: { workspaceId, user: { email: normalizedEmail } },
+    });
+    if (existingMember) {
+      throw new BadRequestException(
+        'This email is already a member of the workspace.',
+      );
+    }
+
+    const existingInvite = await this.prisma.workspaceInvitation.findFirst({
+      where: {
+        workspaceId,
+        email: normalizedEmail,
+        status: InvitationStatus.PENDING,
+      },
+    });
+    if (existingInvite) {
+      throw new BadRequestException(
+        'An invitation has already been sent to this email.',
+      );
+    }
+
+    const workspace = await this.prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { id: true, name: true },
+    });
+    if (!workspace) throw new NotFoundException('Workspace not found');
+
+    const inviter = await this.prisma.user.findUnique({
+      where: { id: invitedById },
+      select: { fullName: true },
+    });
+
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      select: { id: true, fullName: true, isActive: true },
+    });
+
+    if (existingUser) {
+      await this.prisma.workspaceMember.create({
+        data: {
+          workspaceId,
+          userId: existingUser.id,
+          role: role as UserRole,
+        },
+      });
+
+      if (this.email.isConfigured()) {
+        const origin =
+          this.config.get<string>('FRONTEND_ORIGIN')?.trim() ||
+          'http://localhost:3000';
+        const base = origin.replace(/\/$/, '');
+        try {
+          await this.email.sendMail({
+            to: normalizedEmail,
+            ...teamInviteEmail({
+              inviterName: inviter?.fullName ?? 'A team member',
+              workspaceName: workspace.name,
+              inviteUrl: `${base}/en/team`,
+              role,
+            }),
+          });
+        } catch (err) {
+          this.log.error(
+            `Failed to send invite notification to ${normalizedEmail}: ${err}`,
+          );
+        }
+      }
+
+      return {
+        ok: true as const,
+        addedDirectly: true as const,
+        message: `${normalizedEmail} has been added to the workspace.`,
+        workspaceId,
+        email: normalizedEmail,
+        role,
+      };
+    }
+
+    const token = randomBytes(32).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    await this.prisma.workspaceInvitation.create({
+      data: {
+        workspaceId,
+        email: normalizedEmail,
+        role: role as UserRole,
+        token,
+        status: InvitationStatus.PENDING,
+        invitedById,
+        expiresAt,
+      },
+    });
+
+    let emailSent = false;
+    if (this.email.isConfigured()) {
+      const origin =
+        this.config.get<string>('FRONTEND_ORIGIN')?.trim() ||
+        'http://localhost:3000';
+      const base = origin.replace(/\/$/, '');
+      const inviteUrl = `${base}/en/invite?token=${token}`;
+      try {
+        await this.email.sendMail({
+          to: normalizedEmail,
+          ...teamInviteEmail({
+            inviterName: inviter?.fullName ?? 'A team member',
+            workspaceName: workspace.name,
+            inviteUrl,
+            role,
+          }),
+        });
+        emailSent = true;
+      } catch (err) {
+        this.log.error(
+          `Failed to send invite email to ${normalizedEmail}: ${err}`,
+        );
+      }
+    }
+
     return {
-      ok: true,
-      demo: true,
-      message:
-        'Invite pipeline is not connected yet. This demo records your intent only.',
+      ok: true as const,
+      addedDirectly: false as const,
+      emailSent,
+      message: emailSent
+        ? `Invitation sent to ${normalizedEmail}.`
+        : `Invitation created for ${normalizedEmail}, but email could not be sent. Share the invite link manually.`,
       workspaceId,
-      email: email.trim().toLowerCase(),
+      email: normalizedEmail,
       role,
     };
+  }
+
+  /** Accept a pending invitation by token. */
+  async acceptInvitation(token: string, userId: string) {
+    const invitation = await this.prisma.workspaceInvitation.findUnique({
+      where: { token },
+      include: { workspace: { select: { id: true, name: true } } },
+    });
+
+    if (!invitation) {
+      throw new NotFoundException('Invitation not found.');
+    }
+
+    if (invitation.status === InvitationStatus.ACCEPTED) {
+      throw new BadRequestException(
+        'This invitation has already been accepted.',
+      );
+    }
+
+    if (invitation.status === InvitationStatus.CANCELLED) {
+      throw new BadRequestException('This invitation has been cancelled.');
+    }
+
+    if (invitation.expiresAt < new Date()) {
+      await this.prisma.workspaceInvitation.update({
+        where: { id: invitation.id },
+        data: { status: InvitationStatus.EXPIRED },
+      });
+      throw new BadRequestException('This invitation has expired.');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    if (user.email.toLowerCase() !== invitation.email.toLowerCase()) {
+      throw new ForbiddenException(
+        'This invitation was sent to a different email address.',
+      );
+    }
+
+    const existingMember = await this.prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: { workspaceId: invitation.workspaceId, userId },
+      },
+    });
+    if (existingMember) {
+      await this.prisma.workspaceInvitation.update({
+        where: { id: invitation.id },
+        data: { status: InvitationStatus.ACCEPTED, acceptedAt: new Date() },
+      });
+      return {
+        ok: true as const,
+        alreadyMember: true as const,
+        workspaceId: invitation.workspaceId,
+        workspaceName: invitation.workspace.name,
+        message: 'You are already a member of this workspace.',
+      };
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.workspaceMember.create({
+        data: {
+          workspaceId: invitation.workspaceId,
+          userId,
+          role: invitation.role,
+        },
+      });
+      await tx.workspaceInvitation.update({
+        where: { id: invitation.id },
+        data: { status: InvitationStatus.ACCEPTED, acceptedAt: new Date() },
+      });
+    });
+
+    return {
+      ok: true as const,
+      alreadyMember: false as const,
+      workspaceId: invitation.workspaceId,
+      workspaceName: invitation.workspace.name,
+      role: invitation.role,
+      message: `You have joined "${invitation.workspace.name}" as ${invitation.role}.`,
+    };
+  }
+
+  /** List pending invitations for a workspace. */
+  async listInvitations(workspaceId: string) {
+    const invitations = await this.prisma.workspaceInvitation.findMany({
+      where: { workspaceId, status: InvitationStatus.PENDING },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        status: true,
+        createdAt: true,
+        expiresAt: true,
+      },
+    });
+    return invitations.map((inv) => ({
+      ...inv,
+      createdAt: inv.createdAt.toISOString(),
+      expiresAt: inv.expiresAt.toISOString(),
+    }));
+  }
+
+  /** Cancel a pending invitation. */
+  async cancelInvitation(workspaceId: string, invitationId: string) {
+    const invitation = await this.prisma.workspaceInvitation.findFirst({
+      where: { id: invitationId, workspaceId },
+    });
+    if (!invitation) throw new NotFoundException('Invitation not found');
+    if (invitation.status !== InvitationStatus.PENDING) {
+      throw new BadRequestException(
+        'Only pending invitations can be cancelled.',
+      );
+    }
+    await this.prisma.workspaceInvitation.update({
+      where: { id: invitationId },
+      data: { status: InvitationStatus.CANCELLED },
+    });
+    return { ok: true as const };
+  }
+
+  async getWorkspace(workspaceId: string) {
+    return this.prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        defaultLocale: true,
+        timezone: true,
+        isPaused: true,
+        createdAt: true,
+      },
+    });
   }
 
   async updateWorkspace(
@@ -272,10 +548,10 @@ export class WorkspacesService {
     dto: UpdateWorkspaceDto,
   ) {
     await this.assertWorkspaceAccess(workspaceId, userId, true);
-    if (dto.name === undefined && dto.isPaused === undefined) {
+    if (dto.name === undefined && dto.isPaused === undefined && dto.timezone === undefined && dto.defaultLocale === undefined) {
       throw new BadRequestException('No fields to update.');
     }
-    const data: { name?: string; slug?: string; isPaused?: boolean } = {};
+    const data: { name?: string; slug?: string; isPaused?: boolean; timezone?: string; defaultLocale?: string } = {};
     if (dto.name !== undefined) {
       const trimmed = dto.name.trim();
       if (trimmed.length < 2) {
@@ -287,10 +563,16 @@ export class WorkspacesService {
     if (dto.isPaused !== undefined) {
       data.isPaused = dto.isPaused;
     }
+    if (dto.timezone !== undefined) {
+      data.timezone = dto.timezone;
+    }
+    if (dto.defaultLocale !== undefined) {
+      data.defaultLocale = dto.defaultLocale;
+    }
     return this.prisma.workspace.update({
       where: { id: workspaceId },
       data,
-      select: { id: true, name: true, slug: true, isPaused: true },
+      select: { id: true, name: true, slug: true, isPaused: true, timezone: true, defaultLocale: true },
     });
   }
 
@@ -312,6 +594,65 @@ export class WorkspacesService {
       }
     }
     await this.prisma.workspace.delete({ where: { id: workspaceId } });
+  }
+
+  async updateMemberRole(
+    workspaceId: string,
+    requesterId: string,
+    membershipId: string,
+    newRole: string,
+  ) {
+    const validRoles: string[] = [UserRole.VIEWER, UserRole.EDITOR, UserRole.ADMIN];
+    if (!validRoles.includes(newRole)) {
+      throw new BadRequestException('Invalid role. Must be VIEWER, EDITOR, or ADMIN.');
+    }
+    await this.assertWorkspaceAccess(workspaceId, requesterId, true);
+
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: { id: membershipId },
+      select: { id: true, role: true, workspaceId: true },
+    });
+    if (!membership || membership.workspaceId !== workspaceId) {
+      throw new NotFoundException('Member not found in this workspace.');
+    }
+    if (membership.role === UserRole.OWNER) {
+      throw new BadRequestException('Cannot change the role of an owner.');
+    }
+
+    const updated = await this.prisma.workspaceMember.update({
+      where: { id: membershipId },
+      data: { role: newRole as UserRole },
+      select: {
+        id: true,
+        role: true,
+        user: { select: { id: true, email: true, fullName: true } },
+      },
+    });
+    return updated;
+  }
+
+  async removeMember(
+    workspaceId: string,
+    requesterId: string,
+    membershipId: string,
+  ) {
+    await this.assertWorkspaceAccess(workspaceId, requesterId, true);
+
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: { id: membershipId },
+      select: { id: true, role: true, workspaceId: true },
+    });
+    if (!membership || membership.workspaceId !== workspaceId) {
+      throw new NotFoundException('Member not found in this workspace.');
+    }
+    if (membership.role === UserRole.OWNER) {
+      throw new BadRequestException('Cannot remove an owner from the workspace.');
+    }
+
+    await this.prisma.workspaceMember.delete({
+      where: { id: membershipId },
+    });
+    return { ok: true };
   }
 
   private async assertWorkspaceAccess(

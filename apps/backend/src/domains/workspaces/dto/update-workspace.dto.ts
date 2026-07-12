@@ -1,5 +1,6 @@
 import {
   IsBoolean,
+  IsIn,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -16,4 +17,13 @@ export class UpdateWorkspaceDto {
   @ValidateIf((_, v) => v !== undefined)
   @IsBoolean()
   isPaused?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  timezone?: string;
+
+  @IsOptional()
+  @IsIn(['en', 'ar'])
+  defaultLocale?: string;
 }

@@ -22,6 +22,7 @@ import { ClaimPairingSessionDto } from '../pairing/dto/claim-pairing-session.dto
 import { PairingService } from '../pairing/pairing.service';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
+import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { WorkspacesService } from './workspaces.service';
 import type { Request } from 'express';
@@ -57,6 +58,13 @@ export class WorkspacesController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
+  @Get(':workspaceId')
+  getWorkspace(@Param('workspaceId') workspaceId: string) {
+    return this.workspaces.getWorkspace(workspaceId);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get(':workspaceId/members')
   members(@Param('workspaceId') workspaceId: string) {
     return this.workspaces.listMembers(workspaceId);
@@ -85,12 +93,62 @@ export class WorkspacesController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.OWNER, UserRole.ADMIN)
+  @Patch(':workspaceId/members/:membershipId/role')
+  updateMemberRole(
+    @Param('workspaceId') workspaceId: string,
+    @Param('membershipId') membershipId: string,
+    @CurrentUser() user: JwtUser,
+    @Body() dto: UpdateMemberRoleDto,
+  ) {
+    return this.workspaces.updateMemberRole(workspaceId, user.sub, membershipId, dto.role);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.OWNER, UserRole.ADMIN)
+  @Delete(':workspaceId/members/:membershipId')
+  removeMember(
+    @Param('workspaceId') workspaceId: string,
+    @Param('membershipId') membershipId: string,
+    @CurrentUser() user: JwtUser,
+  ) {
+    return this.workspaces.removeMember(workspaceId, user.sub, membershipId);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.OWNER, UserRole.ADMIN)
   @Post(':workspaceId/invites')
   invite(
     @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: JwtUser,
     @Body() dto: InviteMemberDto,
   ) {
-    return this.workspaces.inviteDemo(workspaceId, dto.email, dto.role);
+    return this.workspaces.inviteMember(workspaceId, user.sub, dto.email, dto.role);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
+  @Get(':workspaceId/invites')
+  listInvites(@Param('workspaceId') workspaceId: string) {
+    return this.workspaces.listInvitations(workspaceId);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.OWNER, UserRole.ADMIN)
+  @Delete(':workspaceId/invites/:inviteId')
+  cancelInvite(
+    @Param('workspaceId') workspaceId: string,
+    @Param('inviteId') inviteId: string,
+  ) {
+    return this.workspaces.cancelInvitation(workspaceId, inviteId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('invites/accept')
+  acceptInvite(
+    @CurrentUser() user: JwtUser,
+    @Body() body: { token: string },
+  ) {
+    return this.workspaces.acceptInvitation(body.token, user.sub);
   }
 
   @UseGuards(JwtAuthGuard, UserThrottlerGuard, RolesGuard)
