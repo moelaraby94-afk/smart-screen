@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   Loader2,
+  MapPin,
   MoreHorizontal,
   PenLine,
   Power,
@@ -44,6 +45,8 @@ export function ScreenVisualCard({
   canAssignPlayback,
   assignPlaylistBusy,
   onAssignPlaybackPlaylist,
+  selected,
+  onToggleSelect,
 }: {
   screen: ScreenRow;
   locale: string;
@@ -57,6 +60,8 @@ export function ScreenVisualCard({
   canAssignPlayback: boolean;
   assignPlaylistBusy: boolean;
   onAssignPlaybackPlaylist: (screenId: string, playlistId: string | null) => Promise<void>;
+  selected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }) {
   const t = useTranslations('screensClient');
   const { previewUrl, loading, previewRev } = useScreenActivePreview(
@@ -77,8 +82,20 @@ export function ScreenVisualCard({
         'border border-border bg-card shadow-sm',
         'transition-colors duration-200 hover:border-primary/30 hover:shadow-md',
         reach === 'online' && 'ngl-screen-card-live',
+        selected && 'ring-2 ring-primary/40',
       )}
     >
+      {onToggleSelect && (
+        <div className="absolute end-2 top-2 z-10">
+          <input
+            type="checkbox"
+            checked={selected ?? false}
+            onChange={(e) => { e.stopPropagation(); onToggleSelect(screen.id); }}
+            className="h-5 w-5 rounded border-border bg-background/80 accent-primary"
+            aria-label={t('selectScreen')}
+          />
+        </div>
+      )}
       <button
         type="button"
         onClick={() => onCardClick(screen)}
@@ -113,6 +130,22 @@ export function ScreenVisualCard({
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent p-4 pt-10">
             <p className="truncate text-base font-semibold text-white drop-shadow-md">{screen.name}</p>
             <p className="font-mono text-[11px] text-white/70">{screen.serialNumber}</p>
+            {(screen.location || (screen.resolutionWidth && screen.resolutionHeight)) && (
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-white/60">
+                {screen.location && (
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="h-3 w-3" strokeWidth={1.5} />
+                    {screen.location}
+                  </span>
+                )}
+                {screen.resolutionWidth && screen.resolutionHeight && (
+                  <span className="inline-flex items-center gap-1">
+                    <Monitor className="h-3 w-3" strokeWidth={1.5} />
+                    {screen.resolutionWidth}×{screen.resolutionHeight}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </button>

@@ -10,6 +10,8 @@ export type ScreenRow = {
   name: string;
   serialNumber: string;
   location?: string | null;
+  resolutionWidth?: number;
+  resolutionHeight?: number;
   status: ScreenStatus;
   /** Last player heartbeat: running from offline cache / no API reachability. */
   isOfflineCacheMode?: boolean;
@@ -18,6 +20,8 @@ export type ScreenRow = {
   playlistGroup?: { id: string; name: string } | null;
   activePlaylistId: string | null;
   activePlaylist: { id: string; name: string } | null;
+  playerTicker?: string | null;
+  orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
   updatedAt: string;
 };
 

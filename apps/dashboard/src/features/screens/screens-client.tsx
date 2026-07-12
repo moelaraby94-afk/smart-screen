@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Monitor, Plus } from 'lucide-react';
+import { Monitor, Plus, Search, Trash2, CheckSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScreenActions } from '@/features/screens/hooks/use-screen-actions';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { UsageIndicator } from '@/components/usage-indicator';
 import {
   Dialog,
   DialogTrigger,
@@ -14,6 +16,7 @@ import {
 import {
   fetchPlaylistOptions,
   updateScreen as apiUpdateScreen,
+  deleteScreen as apiDeleteScreen,
   type PlaylistOption as ApiPlaylistOption,
 } from '@/features/screens/api/screens-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
@@ -21,6 +24,7 @@ import { ScreenQuickEditPanel } from '@/features/screens/screen-quick-edit-panel
 import { useApiScreens, type ScreenRow } from './useApiScreens';
 import { useScreenRealtime } from './useScreenRealtime';
 import { ScreenVisualCard } from '@/features/screens/screen-visual-card';
+import { ScreenAnalyticsPanel } from '@/features/screens/screen-analytics-panel';
 import {
   CreateScreenDialogContent,
   EditScreenDialogContent,
@@ -114,6 +118,95 @@ export function ScreensClient({ locale }: Props) {
   const [openEdit, setOpenEdit] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
   const [quickScreen, setQuickScreen] = useState<ScreenRow | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkPlaylistId, setBulkPlaylistId] = useState<string>('');
+
+  const filteredScreens = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return screens.filter((s) => {
+      if (statusFilter !== 'all' && s.status !== statusFilter) return false;
+      if (q) {
+        return (
+          s.name.toLowerCase().includes(q) ||
+          (s.location?.toLowerCase().includes(q) ?? false) ||
+          s.serialNumber.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [screens, searchQuery, statusFilter]);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const selectAll = useCallback(() => {
+    setSelectedIds(new Set(filteredScreens.map((s) => s.id)));
+  }, [filteredScreens]);
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const bulkDelete = async () => {
+    if (!workspaceId || selectedIds.size === 0) return;
+    setBulkBusy(true);
+    try {
+      const ids = Array.from(selectedIds);
+      const results = await Promise.all(
+        ids.map((id) => apiDeleteScreen(workspaceId, id)),
+      );
+      const failed = results.filter((r) => !r.ok).length;
+      if (failed > 0) {
+        toast.error(t('bulkDeletePartial', { failed }));
+      } else {
+        toast.success(t('bulkDeleteOk', { count: ids.length }));
+      }
+      setSelectedIds(new Set());
+      await reload();
+      bumpWorkspaceDataEpoch();
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
+  const bulkAssignPlaylist = async () => {
+    if (!workspaceId || selectedIds.size === 0 || !bulkPlaylistId) return;
+    setBulkBusy(true);
+    try {
+      const ids = Array.from(selectedIds);
+      const playlistName = playlists.find((p) => p.id === bulkPlaylistId)?.name ?? null;
+      const results = await Promise.all(
+        ids.map((id) => apiUpdateScreen(workspaceId, id, { activePlaylistId: bulkPlaylistId })),
+      );
+      const failed = results.filter((r) => !r.ok).length;
+      if (failed > 0) {
+        toast.error(t('bulkAssignPartial', { failed }));
+      } else {
+        toast.success(t('bulkAssignOk', { count: ids.length, name: playlistName ?? '' }));
+      }
+      setScreens((prev) =>
+        prev.map((s) =>
+          selectedIds.has(s.id)
+            ? { ...s, activePlaylistId: bulkPlaylistId, activePlaylist: playlistName ? { id: bulkPlaylistId, name: playlistName } : null }
+            : s,
+        ),
+      );
+      setSelectedIds(new Set());
+      setBulkPlaylistId('');
+      bumpWorkspaceDataEpoch();
+    } finally {
+      setBulkBusy(false);
+    }
+  };
 
   const openQuick = (s: ScreenRow) => {
     setQuickScreen(s);
@@ -166,6 +259,92 @@ export function ScreensClient({ locale }: Props) {
         </div>
       </motion.div>
 
+      {screens.length > 0 && <ScreenAnalyticsPanel />}
+
+      {screens.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3">
+          <UsageIndicator screenCount={screens.length} />
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={t('searchPlaceholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="rounded-xl ps-9"
+            />
+          </div>
+          <select
+            className="h-10 rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="all">{t('filterAll')}</option>
+            <option value="ONLINE">{t('filterOnline')}</option>
+            <option value="OFFLINE">{t('filterOffline')}</option>
+            <option value="MAINTENANCE">{t('filterMaintenance')}</option>
+          </select>
+          {canAssignPlayback && (
+            <Button
+              variant="outline"
+              className="rounded-xl"
+              onClick={selectAll}
+              disabled={filteredScreens.length === 0}
+            >
+              <CheckSquare className="me-2 h-4 w-4" />
+              {t('selectAll')}
+            </Button>
+          )}
+        </div>
+      )}
+
+      {selectedIds.size > 0 && (
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4">
+          <span className="text-sm font-semibold text-foreground">
+            {t('selectedCount', { count: selectedIds.size })}
+          </span>
+          {canAssignPlayback && (
+            <select
+              className="h-9 rounded-lg border border-border bg-card px-3 text-sm"
+              value={bulkPlaylistId}
+              onChange={(e) => setBulkPlaylistId(e.target.value)}
+              disabled={bulkBusy}
+            >
+              <option value="">{t('bulkAssignPlaceholder')}</option>
+              {playlists.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          )}
+          {canAssignPlayback && bulkPlaylistId && (
+            <Button
+              variant="cta"
+              className="rounded-xl text-sm"
+              disabled={bulkBusy}
+              onClick={() => void bulkAssignPlaylist()}
+            >
+              {t('bulkAssign')}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            className="rounded-xl text-sm hover:text-destructive"
+            disabled={bulkBusy}
+            onClick={() => void bulkDelete()}
+          >
+            <Trash2 className="me-2 h-4 w-4" />
+            {t('bulkDelete')}
+          </Button>
+          <Button
+            variant="ghost"
+            className="rounded-xl text-sm"
+            disabled={bulkBusy}
+            onClick={clearSelection}
+          >
+            {t('clearSelection')}
+          </Button>
+        </div>
+      )}
+
       {isLoading ? (
         <p className="text-sm text-muted-foreground">{t('loading')}</p>
       ) : screens.length === 0 ? (
@@ -183,9 +362,17 @@ export function ScreensClient({ locale }: Props) {
             {t('addScreen')}
           </Button>
         </div>
+      ) : filteredScreens.length === 0 ? (
+        <div className="vc-card-surface flex flex-col items-center gap-4 rounded-2xl py-16">
+          <Monitor className="h-12 w-12 text-muted-foreground/40" />
+          <p className="font-medium text-foreground">{t('noResults')}</p>
+          <p className="max-w-md text-center text-sm text-muted-foreground">
+            {t('noResultsDesc')}
+          </p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {screens.map((screen, i) => (
+          {filteredScreens.map((screen, i) => (
             <ScreenVisualCard
               key={screen.id}
               screen={screen}
@@ -203,6 +390,8 @@ export function ScreensClient({ locale }: Props) {
               canAssignPlayback={canAssignPlayback}
               assignPlaylistBusy={assignPlaylistScreenId === screen.id}
               onAssignPlaybackPlaylist={assignPlaybackPlaylist}
+              selected={selectedIds.has(screen.id)}
+              onToggleSelect={canAssignPlayback ? toggleSelect : undefined}
             />
           ))}
         </div>

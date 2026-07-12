@@ -4,10 +4,11 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CalendarClock, FolderKanban, ListMusic, X } from 'lucide-react';
+import { CalendarClock, FolderKanban, ListMusic, Megaphone, MonitorSmartphone, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { fetchPlaylistOptions, updateScreen as apiUpdateScreen } from '@/features/screens/api/screens-api';
 import { fetchSchedules, updateSchedule as apiUpdateSchedule } from '@/features/schedules/api/schedules-api';
@@ -47,6 +48,8 @@ export function ScreenQuickEditPanel({
   const [playlistId, setPlaylistId] = useState<string>('');
   const [scheduleId, setScheduleId] = useState<string>('');
   const [playlistGroupId, setPlaylistGroupId] = useState<string>('');
+  const [tickerText, setTickerText] = useState<string>('');
+  const [orientation, setOrientation] = useState<'AUTO' | 'LANDSCAPE' | 'PORTRAIT'>('AUTO');
   const [busy, setBusy] = useState(false);
 
   const loadOptions = useCallback(async () => {
@@ -62,6 +65,8 @@ export function ScreenQuickEditPanel({
     if (!open || !screen) return;
     setPlaylistId(screen.activePlaylistId ?? '');
     setPlaylistGroupId(screen.playlistGroupId ?? '');
+    setTickerText(screen.playerTicker ?? '');
+    setOrientation(screen.orientation ?? 'AUTO');
     void loadOptions();
   }, [open, screen, loadOptions]);
 
@@ -109,6 +114,24 @@ export function ScreenQuickEditPanel({
     }
   };
 
+  const applyTicker = async () => {
+    if (!screen) return;
+    setBusy(true);
+    try {
+      const res = await apiUpdateScreen(workspaceId, screen.id, {
+        playerTicker: tickerText.trim() || null,
+      });
+      if (!res.ok) {
+        toast.error(t('tickerFailed'));
+        return;
+      }
+      toast.success(t('tickerSent'));
+      await onSaved();
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const applyScheduleTarget = async (schId: string) => {
     if (!screen) return;
     setBusy(true);
@@ -138,6 +161,23 @@ export function ScreenQuickEditPanel({
       setScheduleId(schId);
       await onSaved();
       await loadOptions();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const applyOrientation = async (next: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT') => {
+    if (!screen) return;
+    setBusy(true);
+    try {
+      const res = await apiUpdateScreen(workspaceId, screen.id, { orientation: next });
+      if (!res.ok) {
+        toast.error(t('orientationFailed'));
+        return;
+      }
+      toast.success(t('orientationSaved'));
+      setOrientation(next);
+      await onSaved();
     } finally {
       setBusy(false);
     }
@@ -267,6 +307,66 @@ export function ScreenQuickEditPanel({
                 <p className="text-[12px] text-muted-foreground">
                   {t('scheduleFocusHint')}
                 </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-sm font-semibold">
+                  <Megaphone className="h-4 w-4 text-primary" />
+                  {t('tickerLabel')}
+                </Label>
+                <Input
+                  value={tickerText}
+                  onChange={(e) => setTickerText(e.target.value)}
+                  placeholder={t('tickerPlaceholder')}
+                  maxLength={200}
+                  disabled={busy}
+                  className="rounded-xl"
+                />
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="cta"
+                    className="rounded-xl text-sm"
+                    disabled={busy || !tickerText.trim()}
+                    onClick={() => void applyTicker()}
+                  >
+                    {t('tickerSend')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-xl text-sm"
+                    disabled={busy || !tickerText}
+                    onClick={() => {
+                      setTickerText('');
+                      void applyTicker();
+                    }}
+                  >
+                    {t('tickerClear')}
+                  </Button>
+                </div>
+                <p className="text-[12px] text-muted-foreground">{t('tickerHint')}</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-sm font-semibold">
+                  <MonitorSmartphone className="h-4 w-4 text-primary" />
+                  {t('orientationLabel')}
+                </Label>
+                <select
+                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none ring-0 focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
+                  value={orientation}
+                  disabled={busy}
+                  onChange={(e) => {
+                    const v = e.target.value as 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
+                    void applyOrientation(v);
+                  }}
+                >
+                  <option value="AUTO">{t('orientationAuto')}</option>
+                  <option value="LANDSCAPE">{t('orientationLandscape')}</option>
+                  <option value="PORTRAIT">{t('orientationPortrait')}</option>
+                </select>
+                <p className="text-[12px] text-muted-foreground">{t('orientationHint')}</p>
               </div>
 
               <div className="flex flex-col gap-2 border-t border-white/10 pt-6">

@@ -1,0 +1,120 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { Activity, Wifi, WifiOff, Wrench, MonitorPlay, Clock } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { fetchScreenAnalytics, type ScreenAnalytics } from '@/features/screens/api/screens-api';
+import { useWorkspace } from '@/features/workspace/workspace-context';
+
+function formatRelative(iso: string | null): string {
+  if (!iso) return '—';
+  const diff = Date.now() - new Date(iso).getTime();
+  const sec = Math.floor(diff / 1000);
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const days = Math.floor(hr / 24);
+  return `${days}d ago`;
+}
+
+export function ScreenAnalyticsPanel() {
+  const t = useTranslations('screenAnalytics');
+  const { workspaceId, workspaceDataEpoch } = useWorkspace();
+  const [data, setData] = useState<ScreenAnalytics | null>(null);
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    void (async () => {
+      const result = await fetchScreenAnalytics(workspaceId);
+      setData(result);
+    })();
+  }, [workspaceId, workspaceDataEpoch]);
+
+  if (!data || data.total === 0) return null;
+
+  const stats = [
+    {
+      icon: Wifi,
+      label: t('online'),
+      value: data.byStatus.ONLINE,
+      color: 'text-emerald-500',
+      bg: 'bg-emerald-500/10',
+    },
+    {
+      icon: WifiOff,
+      label: t('offline'),
+      value: data.byStatus.OFFLINE,
+      color: 'text-red-500',
+      bg: 'bg-red-500/10',
+    },
+    {
+      icon: Wrench,
+      label: t('maintenance'),
+      value: data.byStatus.MAINTENANCE,
+      color: 'text-amber-500',
+      bg: 'bg-amber-500/10',
+    },
+    {
+      icon: MonitorPlay,
+      label: t('withPlaylist'),
+      value: data.withPlaylist,
+      color: 'text-blue-500',
+      bg: 'bg-blue-500/10',
+    },
+  ];
+
+  return (
+    <div className="vc-glass vc-card-surface rounded-2xl p-5 sm:p-6">
+      <div className="mb-4 flex items-center gap-2">
+        <Activity className="h-5 w-5 text-primary" />
+        <h3 className="text-sm font-semibold tracking-tight text-foreground">
+          {t('title')}
+        </h3>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {stats.map((s) => (
+          <div
+            key={s.label}
+            className={`rounded-xl ${s.bg} p-3 sm:p-4`}
+          >
+            <div className="flex items-center gap-2">
+              <s.icon className={`h-4 w-4 ${s.color}`} />
+              <span className="text-xs font-medium text-muted-foreground">
+                {s.label}
+              </span>
+            </div>
+            <p className={`mt-2 text-2xl font-bold ${s.color}`}>
+              {s.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border/50 pt-4">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">{t('uptime')}</span>
+          <div className="h-2 w-24 overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-emerald-500 transition-all"
+              style={{ width: `${data.uptimePercent}%` }}
+            />
+          </div>
+          <span className="text-xs font-semibold text-foreground">
+            {data.uptimePercent}%
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Clock className="h-3.5 w-3.5" />
+          <span>{t('newestSeen')}: {formatRelative(data.newestSeen)}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Clock className="h-3.5 w-3.5" />
+          <span>{t('oldestSeen')}: {formatRelative(data.oldestSeen)}</span>
+        </div>
+      </div>
+    </div>
+  );
+}

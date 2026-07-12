@@ -18,9 +18,19 @@ export type ScreenUpdateInput = {
   playerPlatform?: string;
   resolutionWidth?: number;
   resolutionHeight?: number;
+  orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
 };
 
 export type RemoteCommand = 'identify' | 'refresh_content' | 'restart';
+
+export async function fetchScreenById(
+  workspaceId: string,
+  screenId: string,
+): Promise<Response> {
+  return apiFetch(
+    `/screens/${encodeURIComponent(screenId)}?workspaceId=${encodeURIComponent(workspaceId)}`,
+  );
+}
 
 export async function fetchScreens(
   workspaceId: string,
@@ -98,4 +108,24 @@ export async function sendRemoteCommand(
       body: JSON.stringify({ command }),
     },
   );
+}
+
+export type ScreenAnalytics = {
+  total: number;
+  byStatus: { ONLINE: number; OFFLINE: number; MAINTENANCE: number };
+  uptimePercent: number;
+  withPlaylist: number;
+  withoutPlaylist: number;
+  newestSeen: string | null;
+  oldestSeen: string | null;
+};
+
+export async function fetchScreenAnalytics(
+  workspaceId: string,
+): Promise<ScreenAnalytics | null> {
+  const res = await apiFetch(
+    `/screens/analytics?workspaceId=${encodeURIComponent(workspaceId)}`,
+  );
+  if (!res.ok) return null;
+  return (await res.json()) as ScreenAnalytics;
 }

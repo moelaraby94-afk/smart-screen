@@ -18,6 +18,7 @@ export type WorkspaceBootstrapResponse = {
   workspaceId: string;
   workspaceName?: string | null;
   ticker: string | null;
+  orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
   playlist: BootstrapResponse['playlist'];
 };
 

@@ -46,5 +46,6 @@ export type BootstrapResponse = {
   /** Display name for idle / placeholder UI when no playlist is assigned. */
   workspaceName?: string | null;
   ticker: string | null;
+  orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
   playlist: PlaylistPayload;
 };

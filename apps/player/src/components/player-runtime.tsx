@@ -84,6 +84,7 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
   const [bootMode, setBootMode] = useState<BootMode>('pending');
   const [playlist, setPlaylist] = useState<PlaylistPayload | null>(null);
   const [ticker, setTicker] = useState<string | null>(null);
+  const [orientation, setOrientation] = useState<'AUTO' | 'LANDSCAPE' | 'PORTRAIT'>('AUTO');
   const [displaySerial, setDisplaySerial] = useState<string>('');
   const [identifyOpen, setIdentifyOpen] = useState(false);
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
@@ -167,6 +168,7 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
       const data = await fetchPlayerBootstrap(kioskSerial, secret);
       setDisplaySerial(data.serialNumber);
       setTicker(data.ticker);
+      setOrientation(data.orientation ?? 'AUTO');
       setWorkspaceDisplayName(data.workspaceName ?? null);
       setLiveCanvasLayouts({});
       const urls = collectMediaUrls(data.playlist);
@@ -224,6 +226,7 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
       });
       setDisplaySerial(data.serialNumber);
       setTicker(data.ticker);
+      setOrientation(data.orientation ?? 'AUTO');
       setWorkspaceDisplayName(data.workspaceName ?? null);
       setLiveCanvasLayouts({});
       const urls = collectMediaUrls(data.playlist);
@@ -618,6 +621,20 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
   const showBootstrapSplash =
     (bootMode === 'jwt' || bootMode === 'kiosk') && !playlist && !bootstrapError;
 
+  const orientationStyle: React.CSSProperties =
+    orientation === 'PORTRAIT'
+      ? {
+          transform: 'rotate(90deg)',
+          transformOrigin: 'center center',
+          width: '100vh',
+          height: '100vw',
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          translate: '-50% -50%',
+        }
+      : {};
+
   return (
     <div className="relative h-screen min-h-[100dvh] w-screen overflow-hidden bg-black">
       {bootstrapError ? (
@@ -637,7 +654,7 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
         <LoadingOverlay embedded label="Loading workspace…" />
       ) : null}
 
-      <div className="relative h-full w-full pt-0">
+      <div className="relative h-full w-full pt-0" style={orientationStyle}>
         <AnimatePresence mode="wait">
           {playlist?.items?.length ? (
             <motion.div

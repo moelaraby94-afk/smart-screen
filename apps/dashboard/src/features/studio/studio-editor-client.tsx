@@ -4,13 +4,15 @@ import { motion } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Circle as CircleIcon,
+  History,
   Plus,
+  RotateCcw,
   Save,
   Shapes,
   Type,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +34,39 @@ import {
 import { CanvasStageView } from '@/features/studio/studio-canvas-shapes';
 import { StudioPropertiesPanel, StudioMediaStrip } from '@/features/studio/studio-panels';
 
+type VersionSnapshot = {
+  id: string;
+  timestamp: number;
+  name: string;
+  layout: CanvasLayoutV1;
+  dw: number;
+  dh: number;
+};
+
+const MAX_SNAPSHOTS = 20;
+const AUTOSAVE_DELAY = 3000;
+
+function loadSnapshots(canvasId: string): VersionSnapshot[] {
+  try {
+    const raw = localStorage.getItem(`canvas-versions:${canvasId}`);
+    if (!raw) return [];
+    return JSON.parse(raw) as VersionSnapshot[];
+  } catch {
+    return [];
+  }
+}
+
+function saveSnapshots(canvasId: string, snapshots: VersionSnapshot[]): void {
+  try {
+    localStorage.setItem(
+      `canvas-versions:${canvasId}`,
+      JSON.stringify(snapshots.slice(0, MAX_SNAPSHOTS)),
+    );
+  } catch {
+    /* quota exceeded — silently drop */
+  }
+}
+
 type CanvasDto = {
   id: string;
   name: string;
@@ -52,6 +87,7 @@ function parseLayout(raw: unknown): CanvasLayoutV1 {
 
 export function StudioEditorClient() {
   const t = useTranslations('studio');
+  const locale = useLocale();
   const { workspaceId } = useWorkspace();
   const [canvases, setCanvases] = useState<CanvasDto[]>([]);
   const [canvasId, setCanvasId] = useState('');
@@ -61,6 +97,9 @@ export function StudioEditorClient() {
   const [layout, setLayout] = useState<CanvasLayoutV1>(emptyLayout());
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [autoSavedAt, setAutoSavedAt] = useState<number | null>(null);
+  const [snapshots, setSnapshots] = useState<VersionSnapshot[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   const [library, setLibrary] = useState<MediaItem[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 960, h: 540 });
@@ -109,6 +148,14 @@ export function StudioEditorClient() {
   }, [loadLibrary, loadCanvases]);
 
   useEffect(() => {
+    if (canvasId) {
+      setSnapshots(loadSnapshots(canvasId));
+    } else {
+      setSnapshots([]);
+    }
+  }, [canvasId]);
+
+  useEffect(() => {
     if (canvasId) void loadCanvas(canvasId);
   }, [canvasId, loadCanvas]);
 
@@ -136,9 +183,9 @@ export function StudioEditorClient() {
     setSelectedId(null);
   };
 
-  const save = async () => {
+  const save = async (silent = false) => {
     if (!workspaceId || !canvasId) {
-      toast.error(t('saveNeedCanvas'));
+      if (!silent) toast.error(t('saveNeedCanvas'));
       return;
     }
     setSaving(true);
@@ -151,14 +198,69 @@ export function StudioEditorClient() {
         durationSec: 15,
       });
       if (!res.ok) throw new Error('fail');
-      toast.success(t('saved'));
+      if (!silent) toast.success(t('saved'));
+      setAutoSavedAt(Date.now());
       await loadCanvases();
     } catch {
-      toast.error(t('saveFailed'));
+      if (!silent) toast.error(t('saveFailed'));
     } finally {
       setSaving(false);
     }
   };
+
+  const takeSnapshot = useCallback(() => {
+    if (!canvasId) return;
+    const snap: VersionSnapshot = {
+      id: crypto.randomUUID(),
+      timestamp: Date.now(),
+      name: name.trim() || 'Untitled',
+      layout: JSON.parse(JSON.stringify(layout)),
+      dw,
+      dh,
+    };
+    setSnapshots((prev) => {
+      const next = [snap, ...prev].slice(0, MAX_SNAPSHOTS);
+      saveSnapshots(canvasId, next);
+      return next;
+    });
+  }, [canvasId, name, layout, dw, dh]);
+
+  const restoreSnapshot = (snap: VersionSnapshot) => {
+    setLayout(JSON.parse(JSON.stringify(snap.layout)));
+    setDw(snap.dw);
+    setDh(snap.dh);
+    setName(snap.name);
+    setSelectedId(null);
+    setShowHistory(false);
+    toast.success(t('restored'));
+  };
+
+  const deleteSnapshot = (id: string) => {
+    if (!canvasId) return;
+    setSnapshots((prev) => {
+      const next = prev.filter((s) => s.id !== id);
+      saveSnapshots(canvasId, next);
+      return next;
+    });
+  };
+
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSavedLayout = useRef<string>('');
+
+  useEffect(() => {
+    if (!canvasId || !workspaceId) return;
+    const layoutJson = JSON.stringify(layout);
+    if (layoutJson === lastSavedLayout.current) return;
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      lastSavedLayout.current = layoutJson;
+      void save(true);
+    }, AUTOSAVE_DELAY);
+    return () => {
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layout, canvasId, workspaceId, name, dw, dh]);
 
   const createCanvas = async () => {
     if (!workspaceId) return;
@@ -278,6 +380,26 @@ export function StudioEditorClient() {
     e.dataTransfer.dropEffect = 'copy';
   };
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        void save();
+        takeSnapshot();
+      } else if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
+        e.preventDefault();
+        removeObject(selectedId);
+      } else if (e.key === 'Escape') {
+        setSelectedId(null);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId, canvasId, layout, name, dw, dh]);
+
   if (!workspaceId) {
     return <p className="text-muted-foreground">{t('needWorkspace')}</p>;
   }
@@ -311,7 +433,16 @@ export function StudioEditorClient() {
               <Plus className="mr-2 h-4 w-4" />
               {t('newCanvas')}
             </Button>
-            <Button type="button" variant="cta" disabled={!canvasId || saving} onClick={() => void save()}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!canvasId || snapshots.length === 0}
+              onClick={() => setShowHistory((v) => !v)}
+            >
+              <History className="mr-2 h-4 w-4" />
+              {t('history')}
+            </Button>
+            <Button type="button" variant="cta" disabled={!canvasId || saving} onClick={() => { void save(); takeSnapshot(); }}>
               <Save className="mr-2 h-4 w-4" />
               {saving ? t('saving') : t('save')}
             </Button>
@@ -345,6 +476,79 @@ export function StudioEditorClient() {
           </div>
         </div>
       </motion.div>
+
+      {autoSavedAt && (
+        <p className="text-xs text-muted-foreground">
+          {t('autoSavedAt')}{' '}
+          {new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(autoSavedAt)}
+        </p>
+      )}
+
+      {showHistory && canvasId && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="vc-card-surface rounded-2xl border border-border p-5 shadow-sm"
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold tracking-tight">{t('versionHistory')}</h3>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-xs"
+              onClick={() => { void save(); takeSnapshot(); }}
+            >
+              {t('saveSnapshot')}
+            </Button>
+          </div>
+          {snapshots.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t('noSnapshots')}</p>
+          ) : (
+            <ul className="space-y-2">
+              {snapshots.map((snap) => (
+                <li
+                  key={snap.id}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 px-4 py-2.5 text-sm"
+                >
+                  <div>
+                    <p className="font-medium">{snap.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Intl.DateTimeFormat(locale, {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                      }).format(snap.timestamp)}
+                      {' · '}
+                      {snap.layout.objects.length} {t('objects')}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => restoreSnapshot(snap)}
+                    >
+                      <RotateCcw className="mr-1 h-3.5 w-3.5" />
+                      {t('restore')}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-destructive hover:text-destructive"
+                      onClick={() => deleteSnapshot(snap.id)}
+                    >
+                      {t('delete')}
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </motion.div>
+      )}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
         <div className="flex flex-col gap-4">

@@ -75,3 +75,18 @@ export async function updatePlaylistItems(
     },
   );
 }
+
+export async function updatePlaylistMeta(
+  workspaceId: string,
+  playlistId: string,
+  data: { name?: string; isPublished?: boolean },
+): Promise<Response> {
+  return apiFetch(
+    `/playlists/${playlistId}?workspaceId=${encodeURIComponent(workspaceId)}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    },
+  );
+}
