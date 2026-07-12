@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -109,9 +110,51 @@ export function SettingsBillingClient() {
   if (!data) return null;
 
   const cp = data.currentPlan;
+  const isCancelled = cp.userSubscriptionStatus === 'CANCELED';
+  const isPastDue = cp.userSubscriptionStatus === 'PAST_DUE';
+  const isSuspended = cp.workspaceStatus === 'SUSPENDED';
+  const showRetention = isCancelled || isPastDue || isSuspended;
 
   return (
     <div className="space-y-8">
+      {showRetention && (
+        <div className={`rounded-2xl border p-6 shadow-sm ${isCancelled ? 'border-destructive/30 bg-destructive/5' : 'border-amber-500/30 bg-amber-500/5'}`}>
+          <div className="flex items-start gap-3">
+            <AlertTriangle className={`mt-0.5 h-5 w-5 ${isCancelled ? 'text-destructive' : 'text-amber-600'}`} />
+            <div className="flex-1">
+              <h3 className="font-semibold text-foreground">
+                {isCancelled ? t('retentionCancelledTitle') : t('retentionPastDueTitle')}
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {isCancelled ? t('retentionCancelledBody') : t('retentionPastDueBody')}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {portalAvailable ? (
+                  <Button
+                    type="button"
+                    variant="cta"
+                    className="rounded-xl font-semibold"
+                    disabled={portalBusy}
+                    onClick={() => void openBillingPortal()}
+                  >
+                    <RefreshCw className="me-2 h-4 w-4" />
+                    {t('retentionReactivate')}
+                  </Button>
+                ) : null}
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={() => window.location.href = '/en/billing'}
+                >
+                  {t('retentionUpgrade')}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="vc-card-surface rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
         <h2 className="text-lg font-semibold tracking-tight">{t('currentPlan')}</h2>
         <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">

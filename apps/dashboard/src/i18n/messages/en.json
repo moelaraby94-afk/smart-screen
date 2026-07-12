@@ -291,7 +291,10 @@
     "delete": "Delete",
     "restored": "Version restored.",
     "objects": "objects",
-    "autoSavedAt": "Auto-saved at"
+    "autoSavedAt": "Auto-saved at",
+    "templates": "Templates",
+    "templateGallery": "Template Gallery",
+    "templateApplied": "Template applied. Start editing!"
   },
   "schedules": {
     "title": "Schedules",
@@ -1248,6 +1251,12 @@
     "openingPortal": "Opening portal…",
     "portalFailed": "Could not open the billing portal.",
     "selectWorkspace": "Select a workspace to manage Stripe billing.",
+    "retentionCancelledTitle": "Your subscription has been cancelled",
+    "retentionCancelledBody": "Your screens may stop playing soon. Reactivate your subscription to keep your content live, or explore our plans to find one that fits.",
+    "retentionPastDueTitle": "Payment issue — action needed",
+    "retentionPastDueBody": "Your last payment failed or is past due. Please update your payment method to avoid service interruption.",
+    "retentionReactivate": "Reactivate subscription",
+    "retentionUpgrade": "View plans",
     "table": {
       "date": "Date",
       "description": "Description",

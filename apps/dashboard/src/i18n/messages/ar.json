@@ -291,7 +291,10 @@
     "delete": "حذف",
     "restored": "تمت استعادة الإصدار.",
     "objects": "عناصر",
-    "autoSavedAt": "حُفظ تلقائياً في"
+    "autoSavedAt": "حُفظ تلقائياً في",
+    "templates": "القوالب",
+    "templateGallery": "معرض القوالب",
+    "templateApplied": "تم تطبيق القالب. ابدأ التعديل!"
   },
   "schedules": {
     "title": "الجدولة",
@@ -1248,6 +1251,12 @@
     "openingPortal": "جاري فتح البوابة…",
     "portalFailed": "تعذر فتح بوابة الفوترة.",
     "selectWorkspace": "اختر مساحة عمل لإدارة فوترة Stripe.",
+    "retentionCancelledTitle": "تم إلغاء اشتراكك",
+    "retentionCancelledBody": "قد تتوقف شاشاتك قريباً. أعد تفعيل اشتراكك لإبقاء محتواك معروضاً، أو استكشف خططنا لإيجاد ما يناسبك.",
+    "retentionPastDueTitle": "مشكلة في الدفع — إجراء مطلوب",
+    "retentionPastDueBody": "فشل آخر دفعة أو متأخرة. يرجى تحديث طريقة الدفع لتجنب انقطاع الخدمة.",
+    "retentionReactivate": "إعادة تفعيل الاشتراك",
+    "retentionUpgrade": "عرض الخطط",
     "table": {
       "date": "التاريخ",
       "description": "الوصف",

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Circle as CircleIcon,
   History,
+  LayoutTemplate,
   Plus,
   RotateCcw,
   Save,
@@ -33,6 +34,7 @@ import {
 } from '@/features/studio/canvas-layout';
 import { CanvasStageView } from '@/features/studio/studio-canvas-shapes';
 import { StudioPropertiesPanel, StudioMediaStrip } from '@/features/studio/studio-panels';
+import { CANVAS_TEMPLATES, type CanvasTemplate } from '@/features/studio/canvas-templates';
 
 type VersionSnapshot = {
   id: string;
@@ -100,6 +102,7 @@ export function StudioEditorClient() {
   const [autoSavedAt, setAutoSavedAt] = useState<number | null>(null);
   const [snapshots, setSnapshots] = useState<VersionSnapshot[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   const [library, setLibrary] = useState<MediaItem[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 960, h: 540 });
@@ -261,6 +264,25 @@ export function StudioEditorClient() {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layout, canvasId, workspaceId, name, dw, dh]);
+
+  const applyTemplate = async (tpl: CanvasTemplate) => {
+    if (!workspaceId) return;
+    const res = await apiCreateCanvas(workspaceId, {
+      name: tpl.name,
+      width: tpl.width,
+      height: tpl.height,
+      layoutData: tpl.layout,
+    });
+    if (!res.ok) {
+      toast.error(t('createFailed'));
+      return;
+    }
+    const created = (await res.json()) as { id: string };
+    toast.success(t('templateApplied'));
+    await loadCanvases();
+    setCanvasId(created.id);
+    setShowTemplates(false);
+  };
 
   const createCanvas = async () => {
     if (!workspaceId) return;
@@ -436,6 +458,14 @@ export function StudioEditorClient() {
             <Button
               type="button"
               variant="outline"
+              onClick={() => setShowTemplates((v) => !v)}
+            >
+              <LayoutTemplate className="mr-2 h-4 w-4" />
+              {t('templates')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
               disabled={!canvasId || snapshots.length === 0}
               onClick={() => setShowHistory((v) => !v)}
             >
@@ -482,6 +512,45 @@ export function StudioEditorClient() {
           {t('autoSavedAt')}{' '}
           {new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(autoSavedAt)}
         </p>
+      )}
+
+      {showTemplates && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="vc-card-surface rounded-2xl border border-border p-5 shadow-sm"
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold tracking-tight">{t('templateGallery')}</h3>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {CANVAS_TEMPLATES.map((tpl) => (
+              <button
+                key={tpl.id}
+                type="button"
+                onClick={() => void applyTemplate(tpl)}
+                className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-muted/20 p-4 text-center transition hover:border-primary/40 hover:bg-primary/5"
+              >
+                <div
+                  className="flex items-center justify-center rounded-lg border border-border/40 bg-background"
+                  style={{
+                    aspectRatio: `${tpl.width} / ${tpl.height}`,
+                    width: '100%',
+                    maxHeight: 100,
+                  }}
+                >
+                  <LayoutTemplate className="h-8 w-8 text-muted-foreground/40 group-hover:text-primary/60" />
+                </div>
+                <span className="text-xs font-medium text-foreground">
+                  {locale === 'ar' ? tpl.nameAr : tpl.name}
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  {tpl.width}×{tpl.height}
+                </span>
+              </button>
+            ))}
+          </div>
+        </motion.div>
       )}
 
       {showHistory && canvasId && (
