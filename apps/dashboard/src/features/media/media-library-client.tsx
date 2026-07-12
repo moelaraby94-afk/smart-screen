@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
-import { Check, Trash2, Upload, Search, X } from 'lucide-react';
+import { Check, Trash2, Upload, Search, X, Info as InfoIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -18,6 +18,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { UsageIndicator } from '@/components/usage-indicator';
@@ -71,6 +77,7 @@ export function MediaLibraryClient() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [infoTarget, setInfoTarget] = useState<MediaItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -525,6 +532,7 @@ export function MediaLibraryClient() {
               setDeleteTarget({ id: m.id, workspaceId: wid });
             }}
             onMoveMedia={moveMedia}
+            onInfo={(m) => setInfoTarget(m)}
           />
         )}
       </div>
@@ -569,6 +577,60 @@ export function MediaLibraryClient() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={infoTarget !== null} onOpenChange={() => setInfoTarget(null)}>
+        <DialogContent className="rounded-2xl border-border sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <InfoIcon className="h-5 w-5 text-primary" />
+              {t('infoTitle')}
+            </DialogTitle>
+          </DialogHeader>
+          {infoTarget && (
+            <div className="space-y-3 py-2">
+              {infoTarget.mimeType.startsWith('image/') ? (
+                <img src={infoTarget.publicUrl} alt={infoTarget.originalName} className="max-h-48 w-full rounded-xl object-contain bg-black/10" />
+              ) : (
+                <video src={infoTarget.publicUrl} className="max-h-48 w-full rounded-xl bg-black" controls />
+              )}
+              <dl className="space-y-2 text-sm">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">{t('infoName')}</dt>
+                  <dd className="truncate font-medium text-end">{infoTarget.originalName}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">{t('infoType')}</dt>
+                  <dd className="font-mono text-xs">{infoTarget.mimeType}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">{t('infoSize')}</dt>
+                  <dd className="font-mono-nums">{new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(infoTarget.sizeBytes / 1024 / 1024)} MB</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">{t('infoUploaded')}</dt>
+                  <dd>{new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(infoTarget.createdAt))}</dd>
+                </div>
+                {infoTarget.workspaceName && (
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">{t('infoWorkspace')}</dt>
+                    <dd className="font-medium">{infoTarget.workspaceName}</dd>
+                  </div>
+                )}
+                {infoTarget.folderName && (
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-muted-foreground">{t('infoFolder')}</dt>
+                    <dd className="font-medium">{infoTarget.folderName}</dd>
+                  </div>
+                )}
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">{t('infoUrl')}</dt>
+                  <dd className="max-w-[200px] truncate font-mono text-xs text-primary">{infoTarget.publicUrl}</dd>
+                </div>
+              </dl>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

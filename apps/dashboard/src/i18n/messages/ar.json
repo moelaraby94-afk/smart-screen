@@ -667,7 +667,16 @@
     "bulkDeleteDescription": "سيتم حذف {count} ملف نهائيا. لا يمكن التراجع عن هذا الإجراء.",
     "bulkDeleteSuccess": "تم حذف الملفات المحددة.",
     "bulkDeletePartial": "تعذر حذف {count} ملف.",
-    "deleting": "جارٍ الحذف…"
+    "deleting": "جارٍ الحذف…",
+    "info": "معلومات",
+    "infoTitle": "تفاصيل الوسائط",
+    "infoName": "اسم الملف",
+    "infoType": "النوع",
+    "infoSize": "الحجم",
+    "infoUploaded": "تاريخ الرفع",
+    "infoWorkspace": "مساحة العمل",
+    "infoFolder": "المجلد",
+    "infoUrl": "الرابط"
   },
   "common": {
     "system": "النظام",

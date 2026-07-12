@@ -667,7 +667,16 @@
     "bulkDeleteDescription": "This will permanently delete {count} file(s). This action cannot be undone.",
     "bulkDeleteSuccess": "Selected files deleted.",
     "bulkDeletePartial": "{count} file(s) could not be deleted.",
-    "deleting": "Deleting…"
+    "deleting": "Deleting…",
+    "info": "Info",
+    "infoTitle": "Media details",
+    "infoName": "File name",
+    "infoType": "Type",
+    "infoSize": "Size",
+    "infoUploaded": "Uploaded",
+    "infoWorkspace": "Workspace",
+    "infoFolder": "Folder",
+    "infoUrl": "URL"
   },
   "common": {
     "system": "System",
