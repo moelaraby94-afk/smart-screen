@@ -12,7 +12,6 @@ import {
   fetchWorkspaceDetails,
   updateWorkspace as apiUpdateWorkspace,
 } from '@/features/workspace/workspace-api';
-import { TwoFactorSettings } from '@/features/settings/two-factor-settings';
 
 type WorkspaceDetails = {
   id: string;
@@ -186,7 +185,6 @@ export function WorkspaceSettingsClient() {
         </div>
       </div>
 
-      <TwoFactorSettings />
     </div>
   );
 }

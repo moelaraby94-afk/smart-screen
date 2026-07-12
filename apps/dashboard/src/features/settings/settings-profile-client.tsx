@@ -20,6 +20,7 @@ import {
   verifyEmailChange as apiVerifyEmailChange,
 } from '@/features/billing/billing-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
+import { TwoFactorSettings } from '@/features/settings/two-factor-settings';
 
 type Me = {
   id: string;
@@ -182,6 +183,8 @@ export function SettingsProfileClient() {
           )}
         </DialogContent>
       </Dialog>
+
+      <TwoFactorSettings />
     </div>
   );
 }
