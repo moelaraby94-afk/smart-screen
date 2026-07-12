@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Monitor, Plus, Search, Trash2, CheckSquare } from 'lucide-react';
+import { Monitor, Plus, Search, Trash2, CheckSquare, Radio } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScreenActions } from '@/features/screens/hooks/use-screen-actions';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,8 @@ import {
   type PlaylistOption as ApiPlaylistOption,
 } from '@/features/screens/api/screens-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
+import { usePlayerPairing } from '@/features/branches/use-player-pairing';
+import { BranchPairingDialog } from '@/features/branches/branch-pairing-dialog';
 import { ScreenQuickEditPanel } from '@/features/screens/screen-quick-edit-panel';
 import { useApiScreens, type ScreenRow } from './useApiScreens';
 import { useScreenRealtime } from './useScreenRealtime';
@@ -38,7 +40,7 @@ type PlaylistOption = ApiPlaylistOption;
 
 export function ScreensClient({ locale }: Props) {
   const t = useTranslations('screensClient');
-  const { workspaceId, workspaces, workspaceDataEpoch, bumpWorkspaceDataEpoch } =
+  const { workspaceId, workspaces, workspaceDataEpoch, bumpWorkspaceDataEpoch, pairingActivityEpoch } =
     useWorkspace();
   const { screens, setScreens, isLoading, reload } = useApiScreens(workspaceId);
   useScreenRealtime(workspaceId, setScreens);
@@ -46,6 +48,11 @@ export function ScreensClient({ locale }: Props) {
   const canAssignPlayback = useMemo(() => {
     const r = workspaces.find((w) => w.id === workspaceId)?.role;
     return r === 'OWNER' || r === 'ADMIN' || r === 'EDITOR';
+  }, [workspaces, workspaceId]);
+
+  const canClaimPairing = useMemo(() => {
+    const r = workspaces.find((w) => w.id === workspaceId)?.role;
+    return r === 'OWNER' || r === 'ADMIN';
   }, [workspaces, workspaceId]);
 
   const [playlists, setPlaylists] = useState<PlaylistOption[]>([]);
@@ -70,6 +77,12 @@ export function ScreensClient({ locale }: Props) {
     await reload();
     bumpWorkspaceDataEpoch();
   }, [reload, bumpWorkspaceDataEpoch]);
+
+  const pairing = usePlayerPairing(workspaceId ?? '', {
+    canClaim: canClaimPairing,
+    pairingActivityEpoch,
+    onClaimed: reloadScreensAndBump,
+  });
 
   const { onDelete, sendRemoteCommand } = useScreenActions({
     workspaceId,
@@ -240,6 +253,16 @@ export function ScreensClient({ locale }: Props) {
           <Button variant="outline" className="rounded-xl" onClick={() => void reload()}>
             {t('refresh')}
           </Button>
+          {canClaimPairing && (
+            <Button
+              variant="outline"
+              className="rounded-xl font-semibold"
+              onClick={pairing.open}
+            >
+              <Radio className="me-2 h-4 w-4" />
+              {t('pairScreen')}
+            </Button>
+          )}
           <Dialog open={openAdd} onOpenChange={setOpenAdd}>
             <DialogTrigger asChild>
               <Button className="rounded-xl font-semibold" variant="cta">
@@ -410,6 +433,12 @@ export function ScreensClient({ locale }: Props) {
             setOpenEdit(true);
           }
         }}
+      />
+
+      <BranchPairingDialog
+               pairing={pairing}
+               branchName={workspaces.find((w) => w.id === workspaceId)?.name ?? ''}
+               canClaim={canClaimPairing}
       />
 
       <Dialog open={openEdit} onOpenChange={setOpenEdit}>

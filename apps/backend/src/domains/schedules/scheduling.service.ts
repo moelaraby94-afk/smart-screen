@@ -108,6 +108,7 @@ export class SchedulingService {
       where: {
         workspaceId: screen.workspaceId,
         enabled: true,
+        playlist: { isPublished: true },
         OR: [{ screenId: null }, { screenId: screen.id }],
       },
     });

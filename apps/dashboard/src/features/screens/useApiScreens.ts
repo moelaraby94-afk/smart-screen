@@ -20,6 +20,8 @@ export type ScreenRow = {
   playlistGroup?: { id: string; name: string } | null;
   activePlaylistId: string | null;
   activePlaylist: { id: string; name: string } | null;
+  overridePlaylistId?: string | null;
+  overrideExpiresAt?: string | null;
   playerTicker?: string | null;
   orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
   updatedAt: string;

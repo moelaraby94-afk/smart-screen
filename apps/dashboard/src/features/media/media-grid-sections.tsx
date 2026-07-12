@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, Download, Film, Folder, FolderPlus, ImageIcon, Info, Pencil, Trash2, X } from 'lucide-react';
+import { Check, Download, Film, Folder, FolderPlus, ImageIcon, Info, ListPlus, Pencil, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { MediaPreviewImage, MediaPreviewVideo } from '@/features/media/media-preview-components';
@@ -109,6 +109,7 @@ type MediaGridProps = {
   onDelete: (item: MediaItem) => void;
   onMoveMedia: (mediaId: string, folderId: string) => void;
   onInfo: (item: MediaItem) => void;
+  onAddToPlaylist: (item: MediaItem) => void;
 };
 
 export function MediaGrid(props: MediaGridProps) {
@@ -220,6 +221,17 @@ export function MediaGrid(props: MediaGridProps) {
                   >
                     <Download className="h-4 w-4" />
                   </a>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      props.onAddToPlaylist(m);
+                    }}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/55 text-white shadow-lg backdrop-blur transition hover:bg-primary/90"
+                    aria-label={t('addToPlaylist')}
+                  >
+                    <ListPlus className="h-4 w-4" />
+                  </button>
                   <button
                     type="button"
                     onClick={(e) => {

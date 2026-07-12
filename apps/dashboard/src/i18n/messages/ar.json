@@ -532,6 +532,7 @@
     "screensCount": "شاشة",
     "refresh": "تحديث",
     "addScreen": "إضافة شاشة",
+    "pairScreen": "ربط شاشة",
     "loading": "جاري تحميل الأسطول…",
     "selectWorkspace": "اختر مساحة عمل أولاً ثم افتح الشاشات.",
     "emptyTitle": "لا توجد شاشات بعد",
@@ -694,7 +695,16 @@
     "infoUploaded": "تاريخ الرفع",
     "infoWorkspace": "مساحة العمل",
     "infoFolder": "المجلد",
-    "infoUrl": "الرابط"
+    "infoUrl": "الرابط",
+    "addToPlaylist": "إضافة لقائمة التشغيل",
+    "selectPlaylist": "— اختر قائمة التشغيل —",
+    "addToPlaylistDescription": "إضافة \"{name}\" إلى نهاية قائمة التشغيل.",
+    "addToPlaylistButton": "إضافة لقائمة التشغيل",
+    "adding": "جارٍ الإضافة…",
+    "addedToPlaylist": "تمت إضافة الوسائط لقائمة التشغيل.",
+    "addToPlaylistFailed": "تعذرت إضافة الوسائط لقائمة التشغيل.",
+    "loadMore": "تحميل المزيد",
+    "showingCount": "عرض {shown} من {total}"
   },
   "common": {
     "system": "النظام",
@@ -1708,7 +1718,24 @@
     "orientationPortrait": "عمودي",
     "orientationHint": "يفرض اتجاهًا معينًا على المشغل. الوضع التلقائي يتبع نسبة أبعاد الشاشة الطبيعية.",
     "orientationSaved": "تم تحديث الاتجاه.",
-    "orientationFailed": "تعذر تحديث الاتجاه."
+    "orientationFailed": "تعذر تحديث الاتجاه.",
+    "locationLabel": "الموقع",
+    "locationPlaceholder": "مثال: بهو، الطابق الثاني",
+    "locationSave": "حفظ الموقع",
+    "locationSaved": "تم تحديث الموقع.",
+    "locationFailed": "تعذر تحديث الموقع.",
+    "overrideLabel": "تجاوز سريع",
+    "overrideNone": "— بدون تجاوز —",
+    "overrideHint": "فرض قائمة تشغيل فوراً لمدة محددة، متجاوزاً الجداول. اضغط مسح للعودة للجدولة العادية.",
+    "override30min": "30 دقيقة",
+    "override1h": "ساعة واحدة",
+    "override4h": "4 ساعات",
+    "override8h": "8 ساعات",
+    "override24h": "24 ساعة",
+    "overrideClear": "مسح التجاوز",
+    "overrideSet": "التجاوز نشط. سي переключ المشغل فوراً.",
+    "overrideCleared": "تم مسح التجاوز. عادت الجدولة العادية.",
+    "overrideFailed": "تعذر تفعيل التجاوز."
   },
   "playlistStudioClient": {
     "couldNotCreatePlaylist": "تعذر إنشاء قائمة التشغيل.",
@@ -1760,7 +1787,11 @@
     "previewEmpty": "لا توجد عناصر للمعاينة.",
     "canvasPreviewPlaceholder": "معاينة تصميم الكانفس غير متاحة",
     "submitForReview": "إرسال للمراجعة",
-    "submittedForReview": "تم إرسال قائمة التشغيل للمراجعة. سيوافق عليها المسؤول قريبًا."
+    "submittedForReview": "تم إرسال قائمة التشغيل للمراجعة. سيوافق عليها المسؤول قريبًا.",
+    "undo": "تراجع",
+    "redo": "إعادة",
+    "searchMedia": "بحث في الوسائط…",
+    "duplicateItem": "تكرار العنصر"
   },
   "errors": {
     "UNKNOWN_ERROR": "حدث خطأ ما. برجاء المحاولة مرة أخرى.",

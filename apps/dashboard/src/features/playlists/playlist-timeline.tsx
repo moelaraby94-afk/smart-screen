@@ -11,6 +11,7 @@ import {
   Layers,
   PenLine,
   Trash2,
+  CopyPlus,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,7 @@ type PlaylistTimelineProps = {
   onUpdateDuration: (clientId: string, value: number) => void;
   onRemoveRow: (clientId: string) => void;
   onMoveRow: (index: number, delta: -1 | 1) => void;
+  onDuplicateRow: (clientId: string) => void;
 };
 
 export function PlaylistTimeline({
@@ -47,6 +49,7 @@ export function PlaylistTimeline({
   onUpdateDuration,
   onRemoveRow,
   onMoveRow,
+  onDuplicateRow,
 }: PlaylistTimelineProps) {
   const t = useTranslations('playlistStudioClient');
 
@@ -157,6 +160,16 @@ export function PlaylistTimeline({
                               onClick={() => onMoveRow(index, 1)}
                             >
                               <ChevronDown className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-muted-foreground hover:bg-muted/40"
+                              title={t('duplicateItem')}
+                              onClick={() => onDuplicateRow(row.clientId)}
+                            >
+                              <CopyPlus className="mr-1 h-4 w-4" />
                             </Button>
                             <Button
                               type="button"

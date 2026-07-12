@@ -1,12 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   DragDropContext,
   type DropResult,
 } from '@hello-pangea/dnd';
 import { motion } from 'framer-motion';
-import { Plus, Save, ListVideo, Eye, EyeOff, Play, Copy, FolderInput } from 'lucide-react';
+import { Plus, Save, ListVideo, Eye, EyeOff, Play, Copy, FolderInput, Undo2, Redo2, Search, CopyPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -64,6 +64,10 @@ export function PlaylistStudioClient() {
   const [duplicating, setDuplicating] = useState(false);
   const [cloning, setCloning] = useState(false);
   const [cloneTargetWs, setCloneTargetWs] = useState('');
+  const [mediaSearch, setMediaSearch] = useState('');
+  const [undoStack, setUndoStack] = useState<Row[][]>([]);
+  const [redoStack, setRedoStack] = useState<Row[][]>([]);
+  const skipHistoryRef = useRef(false);
 
   const loadLibrary = useCallback(async () => {
     if (!workspaceId) return;
@@ -117,6 +121,9 @@ export function PlaylistStudioClient() {
         }
         return null;
       });
+      skipHistoryRef.current = true;
+      setUndoStack([]);
+      setRedoStack([]);
       setRows(mapped.filter((r): r is Row => r !== null));
     },
     [workspaceId],
@@ -153,6 +160,53 @@ export function PlaylistStudioClient() {
     setPlaylistId(created.id);
   };
 
+  const pushHistory = useCallback((prev: Row[]) => {
+    if (skipHistoryRef.current) {
+      skipHistoryRef.current = false;
+      return;
+    }
+    setUndoStack((s) => [...s.slice(-49), prev]);
+    setRedoStack([]);
+  }, []);
+
+  const undo = useCallback(() => {
+    setUndoStack((prevStack) => {
+      if (prevStack.length === 0) return prevStack;
+      const prev = prevStack[prevStack.length - 1];
+      setRows((current) => {
+        setRedoStack((r) => [...r, current]);
+        return prev;
+      });
+      return prevStack.slice(0, -1);
+    });
+  }, []);
+
+  const redo = useCallback(() => {
+    setRedoStack((prevStack) => {
+      if (prevStack.length === 0) return prevStack;
+      const next = prevStack[prevStack.length - 1];
+      setRows((current) => {
+        setUndoStack((u) => [...u, current]);
+        return next;
+      });
+      return prevStack.slice(0, -1);
+    });
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [undo, redo]);
+
   const onDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result;
     if (!destination) return;
@@ -169,6 +223,7 @@ export function PlaylistStudioClient() {
         durationSec: 10,
         media,
       });
+      pushHistory(rows);
       setRows(next);
       return;
     }
@@ -185,6 +240,7 @@ export function PlaylistStudioClient() {
         durationSec: 15,
         canvas: { id: canvas.id, name: canvas.name },
       });
+      pushHistory(rows);
       setRows(next);
       return;
     }
@@ -194,20 +250,25 @@ export function PlaylistStudioClient() {
       const [removed] = next.splice(source.index, 1);
       if (!removed) return;
       next.splice(destination.index, 0, removed);
+      pushHistory(rows);
       setRows(next);
     }
   };
 
   const updateDuration = (clientId: string, value: number) => {
-    setRows((prev) =>
-      prev.map((r) =>
+    setRows((prev) => {
+      pushHistory(prev);
+      return prev.map((r) =>
         r.clientId === clientId ? { ...r, durationSec: Math.max(1, value) } : r,
-      ),
-    );
+      );
+    });
   };
 
   const removeRow = (clientId: string) => {
-    setRows((prev) => prev.filter((r) => r.clientId !== clientId));
+    setRows((prev) => {
+      pushHistory(prev);
+      return prev.filter((r) => r.clientId !== clientId);
+    });
   };
 
   const moveRow = (index: number, delta: -1 | 1) => {
@@ -218,6 +279,23 @@ export function PlaylistStudioClient() {
       const tmp = next[index];
       next[index] = next[j]!;
       next[j] = tmp!;
+      pushHistory(prev);
+      return next;
+    });
+  };
+
+  const duplicateRow = (clientId: string) => {
+    setRows((prev) => {
+      const idx = prev.findIndex((r) => r.clientId === clientId);
+      if (idx === -1) return prev;
+      const orig = prev[idx]!;
+      const clone: Row = {
+        ...orig,
+        clientId: crypto.randomUUID(),
+      };
+      pushHistory(prev);
+      const next = [...prev];
+      next.splice(idx + 1, 0, clone);
       return next;
     });
   };
@@ -373,6 +451,32 @@ export function PlaylistStudioClient() {
               {saving ? t('saving') : t('savePlaylist')}
             </Button>
             {playlistId && (
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 rounded-xl"
+                  disabled={undoStack.length === 0}
+                  onClick={undo}
+                  title={t('undo')}
+                >
+                  <Undo2 className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 rounded-xl"
+                  disabled={redoStack.length === 0}
+                  onClick={redo}
+                  title={t('redo')}
+                >
+                  <Redo2 className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+            {playlistId && (
               <Button
                 type="button"
                 variant="outline"
@@ -470,15 +574,27 @@ export function PlaylistStudioClient() {
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="grid gap-8 xl:grid-cols-2 xl:gap-10">
             <div className="space-y-8">
-              <MediaLibraryPanel library={library} />
-              <CanvasLibraryPanel canvasLibrary={canvasLibrary} />
+            <div className="space-y-2">
+              <div className="relative">
+                <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder={t('searchMedia')}
+                  value={mediaSearch}
+                  onChange={(e) => setMediaSearch(e.target.value)}
+                  className="rounded-xl ps-9"
+                />
+              </div>
+              <MediaLibraryPanel library={mediaSearch.trim() ? library.filter((m) => m.originalName.toLowerCase().includes(mediaSearch.trim().toLowerCase())) : library} />
             </div>
-            <PlaylistTimeline
-              rows={rows}
-              onUpdateDuration={updateDuration}
-              onRemoveRow={removeRow}
-              onMoveRow={moveRow}
-            />
+            <CanvasLibraryPanel canvasLibrary={canvasLibrary} />
+          </div>
+          <PlaylistTimeline
+            rows={rows}
+            onUpdateDuration={updateDuration}
+            onRemoveRow={removeRow}
+            onMoveRow={moveRow}
+            onDuplicateRow={duplicateRow}
+          />
           </div>
         </DragDropContext>
       )}

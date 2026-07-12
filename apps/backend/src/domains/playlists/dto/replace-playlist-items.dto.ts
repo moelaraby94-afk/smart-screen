@@ -22,9 +22,11 @@ export class PlaylistItemInputDto {
   @Min(1)
   durationSec!: number;
 
+  @IsOptional()
   @IsInt()
   @Min(0)
-  orderIndex!: number;
+  @Type(() => Number)
+  orderIndex?: number;
 }
 
 export class ReplacePlaylistItemsDto {

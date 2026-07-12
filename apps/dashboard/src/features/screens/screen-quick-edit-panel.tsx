@@ -4,13 +4,13 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CalendarClock, FolderKanban, ListMusic, Megaphone, MonitorSmartphone, X } from 'lucide-react';
+import { CalendarClock, FolderKanban, ListMusic, Megaphone, MonitorSmartphone, MapPin, Monitor, Zap, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { fetchPlaylistOptions, updateScreen as apiUpdateScreen } from '@/features/screens/api/screens-api';
+import { fetchPlaylistOptions, setScreenOverride, updateScreen as apiUpdateScreen } from '@/features/screens/api/screens-api';
 import { fetchSchedules, updateSchedule as apiUpdateSchedule } from '@/features/schedules/api/schedules-api';
 import { readPageItems } from '@/features/api/page';
 import { cn } from '@/lib/utils';
@@ -50,6 +50,9 @@ export function ScreenQuickEditPanel({
   const [playlistGroupId, setPlaylistGroupId] = useState<string>('');
   const [tickerText, setTickerText] = useState<string>('');
   const [orientation, setOrientation] = useState<'AUTO' | 'LANDSCAPE' | 'PORTRAIT'>('AUTO');
+  const [overridePlId, setOverridePlId] = useState<string>('');
+  const [overrideDuration, setOverrideDuration] = useState<number>(480);
+  const [location, setLocation] = useState<string>('');
   const [busy, setBusy] = useState(false);
 
   const loadOptions = useCallback(async () => {
@@ -67,6 +70,8 @@ export function ScreenQuickEditPanel({
     setPlaylistGroupId(screen.playlistGroupId ?? '');
     setTickerText(screen.playerTicker ?? '');
     setOrientation(screen.orientation ?? 'AUTO');
+    setOverridePlId(screen.overridePlaylistId ?? '');
+    setLocation(screen.location ?? '');
     void loadOptions();
   }, [open, screen, loadOptions]);
 
@@ -166,6 +171,26 @@ export function ScreenQuickEditPanel({
     }
   };
 
+  const applyOverride = async (plId: string, durationMin: number) => {
+    if (!screen) return;
+    setBusy(true);
+    try {
+      const res = await setScreenOverride(workspaceId, screen.id, {
+        playlistId: plId || null,
+        durationMinutes: plId ? durationMin : undefined,
+      });
+      if (!res.ok) {
+        toast.error(t('overrideFailed'));
+        return;
+      }
+      toast.success(plId ? t('overrideSet') : t('overrideCleared'));
+      setOverridePlId(plId);
+      await onSaved();
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const applyOrientation = async (next: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT') => {
     if (!screen) return;
     setBusy(true);
@@ -177,6 +202,24 @@ export function ScreenQuickEditPanel({
       }
       toast.success(t('orientationSaved'));
       setOrientation(next);
+      await onSaved();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const applyLocation = async () => {
+    if (!screen) return;
+    setBusy(true);
+    try {
+      const res = await apiUpdateScreen(workspaceId, screen.id, {
+        location: location.trim() || null,
+      });
+      if (!res.ok) {
+        toast.error(t('locationFailed'));
+        return;
+      }
+      toast.success(t('locationSaved'));
       await onSaved();
     } finally {
       setBusy(false);
@@ -215,6 +258,12 @@ export function ScreenQuickEditPanel({
                 </p>
                 <h2 className="mt-1 truncate text-lg font-semibold tracking-tight">{screen.name}</h2>
                 <p className="mt-0.5 font-mono text-xs text-muted-foreground">{screen.serialNumber}</p>
+                {screen.resolutionWidth && screen.resolutionHeight ? (
+                  <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                    <Monitor className="h-3 w-3" />
+                    {screen.resolutionWidth}×{screen.resolutionHeight}
+                  </p>
+                ) : null}
               </div>
               <Button
                 type="button"
@@ -311,6 +360,64 @@ export function ScreenQuickEditPanel({
 
               <div className="space-y-2">
                 <Label className="flex items-center gap-2 text-sm font-semibold">
+                  <Zap className="h-4 w-4 text-primary" />
+                  {t('overrideLabel')}
+                </Label>
+                <select
+                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none ring-0 focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
+                  value={overridePlId}
+                  disabled={busy}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setOverridePlId(v);
+                    if (v) void applyOverride(v, overrideDuration);
+                    else void applyOverride('', 0);
+                  }}
+                >
+                  <option value="">{t('overrideNone')}</option>
+                  {playlists.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+                {overridePlId ? (
+                  <>
+                    <select
+                      className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none ring-0 focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
+                      value={String(overrideDuration)}
+                      disabled={busy}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value, 10);
+                        setOverrideDuration(v);
+                        void applyOverride(overridePlId, v);
+                      }}
+                    >
+                      <option value="30">{t('override30min')}</option>
+                      <option value="60">{t('override1h')}</option>
+                      <option value="240">{t('override4h')}</option>
+                      <option value="480">{t('override8h')}</option>
+                      <option value="1440">{t('override24h')}</option>
+                    </select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-xl text-sm"
+                      disabled={busy}
+                      onClick={() => {
+                        setOverridePlId('');
+                        void applyOverride('', 0);
+                      }}
+                    >
+                      {t('overrideClear')}
+                    </Button>
+                  </>
+                ) : null}
+                <p className="text-[12px] text-muted-foreground">{t('overrideHint')}</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-sm font-semibold">
                   <Megaphone className="h-4 w-4 text-primary" />
                   {t('tickerLabel')}
                 </Label>
@@ -346,6 +453,29 @@ export function ScreenQuickEditPanel({
                   </Button>
                 </div>
                 <p className="text-[12px] text-muted-foreground">{t('tickerHint')}</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-sm font-semibold">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  {t('locationLabel')}
+                </Label>
+                <Input
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder={t('locationPlaceholder')}
+                  disabled={busy}
+                  className="rounded-xl"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-xl text-sm"
+                  disabled={busy}
+                  onClick={() => void applyLocation()}
+                >
+                  {t('locationSave')}
+                </Button>
               </div>
 
               <div className="space-y-2">

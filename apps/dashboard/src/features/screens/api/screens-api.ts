@@ -156,3 +156,18 @@ export async function fetchScreenAnalytics(
   if (!res.ok) return null;
   return (await res.json()) as ScreenAnalytics;
 }
+
+export async function setScreenOverride(
+  workspaceId: string,
+  screenId: string,
+  data: { playlistId: string | null; durationMinutes?: number },
+): Promise<Response> {
+  return apiFetch(
+    `/screens/${encodeURIComponent(screenId)}/override?workspaceId=${encodeURIComponent(workspaceId)}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    },
+  );
+}

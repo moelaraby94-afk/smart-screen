@@ -88,10 +88,16 @@ export class PlaylistsService {
     const data: { name?: string; isPublished?: boolean } = {};
     if (dto.name !== undefined) data.name = dto.name.trim();
     if (dto.isPublished !== undefined) data.isPublished = dto.isPublished;
-    return this.prisma.playlist.update({
+    const updated = await this.prisma.playlist.update({
       where: { id },
       data,
     });
+
+    if (dto.isPublished !== undefined) {
+      await this.emitForPlaylist(id);
+    }
+
+    return updated;
   }
 
   async replaceItems(
@@ -153,25 +159,19 @@ export class PlaylistsService {
       }
     }
 
-    const orderIndices = dto.items.map((i) => i.orderIndex);
-
-    if (new Set(orderIndices).size !== orderIndices.length) {
-      throw new BadRequestException('Duplicate orderIndex values.');
-    }
-
     await this.prisma.$transaction(async (tx) => {
       await tx.playlistItem.deleteMany({ where: { playlistId } });
 
       if (dto.items.length > 0) {
         await tx.playlistItem.createMany({
-          data: dto.items.map((item) => ({
+          data: dto.items.map((item, index) => ({
             playlistId,
 
             mediaId: item.mediaId?.trim() || null,
 
             canvasId: item.canvasId?.trim() || null,
 
-            orderIndex: item.orderIndex,
+            orderIndex: index,
 
             durationSec: item.durationSec,
           })),
@@ -630,6 +630,8 @@ export class PlaylistsService {
       playlistId: playlist.id,
 
       name: playlist.name,
+
+      isPublished: playlist.isPublished,
 
       activeSource,
 

@@ -1,5 +1,5 @@
 import { apiFetch } from '@/features/auth/session';
-import { readPageItems } from '@/features/api/page';
+import { readPage, readPageItems } from '@/features/api/page';
 
 export type MediaItem = {
   id: string;
@@ -25,6 +25,19 @@ export async function fetchMedia(workspaceId: string): Promise<MediaItem[]> {
   const res = await apiFetch(`/media?workspaceId=${encodeURIComponent(workspaceId)}`);
   if (!res.ok) return [];
   return readPageItems<MediaItem>(res);
+}
+
+export async function fetchMediaPage(
+  workspaceId: string,
+  page: number,
+  limit = 24,
+): Promise<{ items: MediaItem[]; total: number; totalPages: number }> {
+  const res = await apiFetch(
+    `/media?workspaceId=${encodeURIComponent(workspaceId)}&page=${page}&limit=${limit}`,
+  );
+  if (!res.ok) return { items: [], total: 0, totalPages: 0 };
+  const data = await readPage<MediaItem>(res);
+  return { items: data.items, total: data.total, totalPages: data.totalPages };
 }
 
 export async function fetchMediaFolders(workspaceId: string): Promise<MediaFolder[]> {

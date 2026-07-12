@@ -532,6 +532,7 @@
     "screensCount": "screens",
     "refresh": "Refresh",
     "addScreen": "Add screen",
+    "pairScreen": "Pair screen",
     "loading": "Loading fleet…",
     "selectWorkspace": "Select a workspace first, then open Screens.",
     "emptyTitle": "No screens yet",
@@ -694,7 +695,16 @@
     "infoUploaded": "Uploaded",
     "infoWorkspace": "Workspace",
     "infoFolder": "Folder",
-    "infoUrl": "URL"
+    "infoUrl": "URL",
+    "addToPlaylist": "Add to playlist",
+    "selectPlaylist": "— Select playlist —",
+    "addToPlaylistDescription": "Add \"{name}\" to the end of a playlist.",
+    "addToPlaylistButton": "Add to playlist",
+    "adding": "Adding…",
+    "addedToPlaylist": "Media added to playlist.",
+    "addToPlaylistFailed": "Could not add media to playlist.",
+    "loadMore": "Load more",
+    "showingCount": "Showing {shown} of {total}"
   },
   "common": {
     "system": "System",
@@ -1708,7 +1718,24 @@
     "orientationPortrait": "Portrait (vertical)",
     "orientationHint": "Force the player into a specific orientation. Auto follows the display's natural aspect ratio.",
     "orientationSaved": "Orientation updated.",
-    "orientationFailed": "Could not update orientation."
+    "orientationFailed": "Could not update orientation.",
+    "locationLabel": "Location",
+    "locationPlaceholder": "e.g. Lobby, 2nd floor",
+    "locationSave": "Save location",
+    "locationSaved": "Location updated.",
+    "locationFailed": "Could not update location.",
+    "overrideLabel": "Quick override",
+    "overrideNone": "— No override —",
+    "overrideHint": "Force a playlist to play immediately for a set duration, bypassing schedules. Clear to return to normal scheduling.",
+    "override30min": "30 minutes",
+    "override1h": "1 hour",
+    "override4h": "4 hours",
+    "override8h": "8 hours",
+    "override24h": "24 hours",
+    "overrideClear": "Clear override",
+    "overrideSet": "Override active. Player will switch immediately.",
+    "overrideCleared": "Override cleared. Normal scheduling resumed.",
+    "overrideFailed": "Could not set override."
   },
   "playlistStudioClient": {
     "couldNotCreatePlaylist": "Could not create playlist.",
@@ -1760,7 +1787,11 @@
     "previewEmpty": "No items to preview.",
     "canvasPreviewPlaceholder": "Canvas design preview not available",
     "submitForReview": "Submit for review",
-    "submittedForReview": "Playlist submitted for review. An admin will approve it shortly."
+    "submittedForReview": "Playlist submitted for review. An admin will approve it shortly.",
+    "undo": "Undo",
+    "redo": "Redo",
+    "searchMedia": "Search media…",
+    "duplicateItem": "Duplicate item"
   },
   "errors": {
     "UNKNOWN_ERROR": "Something went wrong. Please try again.",

@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
-import { Check, Trash2, Upload, Search, X, Info as InfoIcon } from 'lucide-react';
+import { Check, Trash2, Upload, Search, X, Info as InfoIcon, ListPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -31,6 +31,7 @@ import { isApiError, readApiError } from '@/features/api/api-error';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import {
   fetchMedia,
+  fetchMediaPage,
   fetchMediaFolders,
   uploadMedia,
   deleteMedia,
@@ -44,6 +45,8 @@ import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
 import { EmptyMediaIllustration } from '@/features/media/media-preview-components';
 import { FolderSection, MediaGrid, type MediaFolder } from '@/features/media/media-grid-sections';
+import { fetchPlaylists as apiFetchPlaylists, fetchPlaylistDetail as apiFetchPlaylistDetail, updatePlaylistItems as apiUpdatePlaylistItems } from '@/features/studio/studio-api';
+import { readPageItems } from '@/features/api/page';
 
 export type MediaItem = {
   id: string;
@@ -78,8 +81,16 @@ export function MediaLibraryClient() {
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [infoTarget, setInfoTarget] = useState<MediaItem | null>(null);
+  const [addToPlaylistTarget, setAddToPlaylistTarget] = useState<MediaItem | null>(null);
+  const [playlistOptions, setPlaylistOptions] = useState<{ id: string; name: string; _count: { items: number } }[]>([]);
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>('');
+  const [addingToPlaylist, setAddingToPlaylist] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [mediaPage, setMediaPage] = useState(1);
+  const [mediaTotalPages, setMediaTotalPages] = useState(1);
+  const [mediaTotal, setMediaTotal] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const autoSeedAttemptedRef = useRef(false);
 
@@ -96,6 +107,7 @@ export function MediaLibraryClient() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setMediaPage(1);
     if (scope === 'all') {
       if (workspaces.length === 0) {
         setItems([]);
@@ -121,9 +133,28 @@ export function MediaLibraryClient() {
       setLoading(false);
       return;
     }
-    setItems(await fetchMedia(workspaceId));
+    const data = await fetchMediaPage(workspaceId, 1);
+    setItems(data.items);
+    setMediaTotalPages(data.totalPages);
+    setMediaTotal(data.total);
     setLoading(false);
   }, [workspaceId, scope, workspaces]);
+
+  const loadMore = useCallback(async () => {
+    if (!workspaceId || scope === 'all') return;
+    const nextPage = mediaPage + 1;
+    if (nextPage > mediaTotalPages) return;
+    setLoadingMore(true);
+    try {
+      const data = await fetchMediaPage(workspaceId, nextPage);
+      setItems((prev) => [...prev, ...data.items]);
+      setMediaPage(nextPage);
+      setMediaTotalPages(data.totalPages);
+      setMediaTotal(data.total);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [workspaceId, scope, mediaPage, mediaTotalPages]);
 
   const loadFolders = useCallback(async () => {
     if (!workspaceId || scope === 'all') {
@@ -356,6 +387,49 @@ export function MediaLibraryClient() {
     [items, selectedFolderId, searchQuery, typeFilter],
   );
 
+  const openAddToPlaylist = async (item: MediaItem) => {
+    setAddToPlaylistTarget(item);
+    setSelectedPlaylistId('');
+    const ws = item.workspaceId ?? workspaceId;
+    if (!ws) return;
+    const res = await apiFetchPlaylists(ws);
+    if (res.ok) setPlaylistOptions(await readPageItems(res));
+  };
+
+  const confirmAddToPlaylist = async () => {
+    if (!addToPlaylistTarget || !selectedPlaylistId) return;
+    const ws = addToPlaylistTarget.workspaceId ?? workspaceId;
+    if (!ws) return;
+    setAddingToPlaylist(true);
+    try {
+      const detailRes = await apiFetchPlaylistDetail(ws, selectedPlaylistId);
+      if (!detailRes.ok) {
+        toast.error(t('addToPlaylistFailed'));
+        return;
+      }
+      const data = (await detailRes.json()) as {
+        items: Array<{ kind?: string; durationSec: number; media?: { id: string }; canvas?: { id: string } }>;
+      };
+      const existingItems = data.items.map((it) => {
+        if (it.kind === 'canvas' && it.canvas) {
+          return { canvasId: it.canvas.id, durationSec: it.durationSec };
+        }
+        return { mediaId: it.media?.id ?? '', durationSec: it.durationSec };
+      }).filter((it) => 'mediaId' in it ? it.mediaId : it.canvasId);
+      const newItems = [...existingItems, { mediaId: addToPlaylistTarget.id, durationSec: 10 }];
+      const saveRes = await apiUpdatePlaylistItems(ws, selectedPlaylistId, { items: newItems });
+      if (!saveRes.ok) {
+        toast.error(t('addToPlaylistFailed'));
+        return;
+      }
+      toast.success(t('addedToPlaylist'));
+      setAddToPlaylistTarget(null);
+      bumpWorkspaceDataEpoch();
+    } finally {
+      setAddingToPlaylist(false);
+    }
+  };
+
   if (scope === 'branch' && !workspaceId) {
     return <p className="text-[15px] text-muted-foreground">{t('selectWorkspace')}</p>;
   }
@@ -533,7 +607,24 @@ export function MediaLibraryClient() {
             }}
             onMoveMedia={moveMedia}
             onInfo={(m) => setInfoTarget(m)}
+            onAddToPlaylist={(m: MediaItem) => void openAddToPlaylist(m)}
           />
+        )}
+        {scope === 'branch' && mediaPage < mediaTotalPages && (
+          <div className="flex items-center justify-center gap-3 py-6">
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-xl font-semibold"
+              disabled={loadingMore}
+              onClick={() => void loadMore()}
+            >
+              {loadingMore ? t('loading') : t('loadMore')}
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              {t('showingCount', { shown: items.length, total: mediaTotal })}
+            </span>
+          </div>
         )}
       </div>
 
@@ -627,6 +718,45 @@ export function MediaLibraryClient() {
                   <dd className="max-w-[200px] truncate font-mono text-xs text-primary">{infoTarget.publicUrl}</dd>
                 </div>
               </dl>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={addToPlaylistTarget !== null} onOpenChange={() => setAddToPlaylistTarget(null)}>
+        <DialogContent className="rounded-2xl border-border sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ListPlus className="h-5 w-5 text-primary" />
+              {t('addToPlaylist')}
+            </DialogTitle>
+          </DialogHeader>
+          {addToPlaylistTarget && (
+            <div className="space-y-4 py-2">
+              <p className="text-sm text-muted-foreground">
+                {t('addToPlaylistDescription', { name: addToPlaylistTarget.originalName })}
+              </p>
+              <select
+                className="h-11 w-full rounded-xl border border-border bg-card px-4 text-[15px] text-foreground outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
+                value={selectedPlaylistId}
+                onChange={(e) => setSelectedPlaylistId(e.target.value)}
+              >
+                <option value="">{t('selectPlaylist')}</option>
+                {playlistOptions.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} ({p._count.items})
+                  </option>
+                ))}
+              </select>
+              <Button
+                type="button"
+                variant="cta"
+                className="w-full rounded-xl font-semibold"
+                disabled={!selectedPlaylistId || addingToPlaylist}
+                onClick={() => void confirmAddToPlaylist()}
+              >
+                {addingToPlaylist ? t('adding') : t('addToPlaylistButton')}
+              </Button>
             </div>
           )}
         </DialogContent>
