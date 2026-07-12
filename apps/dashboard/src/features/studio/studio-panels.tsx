@@ -2,9 +2,14 @@
 
 import { motion } from 'framer-motion';
 import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
+  Bold,
   Eye,
   EyeOff,
   Image as ImageIcon,
+  Italic,
   Layers,
   Minus,
   Circle as CircleIcon,
@@ -183,18 +188,104 @@ export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject
             />
           </div>
           {selected.type === 'text' ? (
-            <div className="space-y-1">
-              <Label className="text-xs">{t('fontSize')}</Label>
-              <Input
-                type="number"
-                min={8}
-                max={400}
-                value={selected.fontSize ?? 48}
-                onChange={(e) =>
-                  onUpdateObject(selected.id, { fontSize: Number(e.target.value) || 48 })
-                }
-              />
-            </div>
+            <>
+              <div className="space-y-1">
+                <Label className="text-xs">{t('fontSize')}</Label>
+                <Input
+                  type="number"
+                  min={8}
+                  max={400}
+                  value={selected.fontSize ?? 48}
+                  onChange={(e) =>
+                    onUpdateObject(selected.id, { fontSize: Number(e.target.value) || 48 })
+                  }
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">{t('fontFamily')}</Label>
+                <select
+                  className="h-10 w-full rounded-xl border border-border bg-card px-3 text-sm"
+                  value={selected.fontFamily ?? ''}
+                  onChange={(e) => onUpdateObject(selected.id, { fontFamily: e.target.value })}
+                >
+                  <option value="">{t('fontDefault')}</option>
+                  <option value='Arial, sans-serif'>Arial</option>
+                  <option value='Georgia, serif'>Georgia</option>
+                  <option value='"Times New Roman", serif'>Times New Roman</option>
+                  <option value='"Courier New", monospace'>Courier New</option>
+                  <option value='Helvetica, sans-serif'>Helvetica</option>
+                  <option value='"Trebuchet MS", sans-serif'>Trebuchet MS</option>
+                  <option value='Verdana, sans-serif'>Verdana</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">{t('textAlign')}</Label>
+                <div className="flex gap-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={(selected.align ?? 'left') === 'left' ? 'default' : 'outline'}
+                    className="h-9 w-9 p-0"
+                    onClick={() => onUpdateObject(selected.id, { align: 'left' })}
+                  >
+                    <AlignLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={selected.align === 'center' ? 'default' : 'outline'}
+                    className="h-9 w-9 p-0"
+                    onClick={() => onUpdateObject(selected.id, { align: 'center' })}
+                  >
+                    <AlignCenter className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={selected.align === 'right' ? 'default' : 'outline'}
+                    className="h-9 w-9 p-0"
+                    onClick={() => onUpdateObject(selected.id, { align: 'right' })}
+                  >
+                    <AlignRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">{t('textStyle')}</Label>
+                <div className="flex gap-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={selected.fontStyle?.includes('bold') ? 'default' : 'outline'}
+                    className="h-9 w-9 p-0"
+                    onClick={() => {
+                      const current = selected.fontStyle ?? 'normal';
+                      const hasBold = current.includes('bold');
+                      const hasItalic = current.includes('italic');
+                      const next = `${hasBold ? '' : 'bold '}${hasItalic ? 'italic' : ''}`.trim() || 'normal';
+                      onUpdateObject(selected.id, { fontStyle: next });
+                    }}
+                  >
+                    <Bold className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={selected.fontStyle?.includes('italic') ? 'default' : 'outline'}
+                    className="h-9 w-9 p-0"
+                    onClick={() => {
+                      const current = selected.fontStyle ?? 'normal';
+                      const hasBold = current.includes('bold');
+                      const hasItalic = current.includes('italic');
+                      const next = `${hasBold ? 'bold ' : ''}${hasItalic ? '' : 'italic'}`.trim() || 'normal';
+                      onUpdateObject(selected.id, { fontStyle: next });
+                    }}
+                  >
+                    <Italic className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </>
           ) : null}
           <Button
             type="button"

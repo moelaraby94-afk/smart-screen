@@ -306,7 +306,11 @@
     "zoomIn": "تكبير",
     "zoomOut": "تصغير",
     "zoomFit": "ملاءمة الشاشة",
-    "zoomReset": "إعادة التكبير"
+    "zoomReset": "إعادة التكبير",
+    "fontFamily": "عائلة الخط",
+    "fontDefault": "الخط الافتراضي",
+    "textAlign": "محاذاة النص",
+    "textStyle": "نمط النص"
   },
   "schedules": {
     "title": "الجدولة",

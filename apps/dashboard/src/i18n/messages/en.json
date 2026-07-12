@@ -306,7 +306,11 @@
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
     "zoomFit": "Fit to screen",
-    "zoomReset": "Reset zoom"
+    "zoomReset": "Reset zoom",
+    "fontFamily": "Font family",
+    "fontDefault": "System default",
+    "textAlign": "Text alignment",
+    "textStyle": "Text style"
   },
   "schedules": {
     "title": "Schedules",

@@ -138,6 +138,9 @@ export function CanvasObjectsRenderer({ objects, onSelect, onUpdateObject }: Can
                 obj.fontFamily ??
                 '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
               }
+              fontStyle={obj.fontStyle ?? 'normal'}
+              align={obj.align ?? 'left'}
+              verticalAlign={obj.verticalAlign ?? 'top'}
               fill={obj.fill ?? 'hsl(var(--primary))'}
               width={obj.width}
               height={obj.height}
