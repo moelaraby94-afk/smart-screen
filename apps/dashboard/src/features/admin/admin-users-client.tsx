@@ -226,14 +226,14 @@ export function AdminUsersClient() {
             <TableHeader>
               <TableRow className="border-border/60 bg-muted/30 hover:bg-muted/30">
                 <TableHead className="font-semibold">{t('columns.name')}</TableHead>
-                <TableHead className="font-semibold">{t('columns.email')}</TableHead>
+                <TableHead className="hidden font-semibold sm:table-cell">{t('columns.email')}</TableHead>
                 <TableHead className="font-semibold">{t('columns.role')}</TableHead>
-                <TableHead className="text-end font-semibold tabular-nums">
+                <TableHead className="hidden text-end font-semibold tabular-nums sm:table-cell">
                   {t('columns.workspaces')}
                 </TableHead>
-                <TableHead className="font-semibold">{t('columns.lastLogin')}</TableHead>
-                <TableHead className="text-end font-semibold">{t('columns.storage')}</TableHead>
-                <TableHead className="font-semibold">{t('columns.joined')}</TableHead>
+                <TableHead className="hidden font-semibold md:table-cell">{t('columns.lastLogin')}</TableHead>
+                <TableHead className="hidden text-end font-semibold md:table-cell">{t('columns.storage')}</TableHead>
+                <TableHead className="hidden font-semibold lg:table-cell">{t('columns.joined')}</TableHead>
                 <TableHead className="w-[72px] text-end font-semibold">{t('columns.actions')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -247,22 +247,22 @@ export function AdminUsersClient() {
                   )}
                 >
                   <TableCell className="font-medium">{u.fullName}</TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
+                  <TableCell className="hidden font-mono text-xs text-muted-foreground sm:table-cell">
                     {u.email}
                   </TableCell>
                   <TableCell>{roleBadge(u.platformRole, t)}</TableCell>
-                  <TableCell className="text-end font-mono-nums text-sm tabular-nums">
+                  <TableCell className="hidden text-end font-mono-nums text-sm tabular-nums sm:table-cell">
                     {u.totalWorkspaces}
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
+                  <TableCell className="hidden font-mono text-xs text-muted-foreground md:table-cell">
                     {u.lastLoginAt
                       ? new Date(u.lastLoginAt).toLocaleString(dateLocale)
                       : t('never')}
                   </TableCell>
-                  <TableCell className="text-end font-mono text-xs tabular-nums text-muted-foreground">
+                  <TableCell className="hidden text-end font-mono text-xs tabular-nums text-muted-foreground md:table-cell">
                     {formatBytes(u.storageBytes)}
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
+                  <TableCell className="hidden font-mono text-xs text-muted-foreground lg:table-cell">
                     {new Date(u.createdAt).toLocaleString(dateLocale)}
                   </TableCell>
                   <TableCell className="text-end">

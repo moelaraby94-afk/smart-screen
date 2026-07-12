@@ -98,11 +98,11 @@ export function AdminWorkspacesClient() {
             <TableHeader>
               <TableRow className={adminGlassTable.theadRow}>
                 <TableHead className={cn(adminGlassTable.th, 'text-start')}>{t('workspace')}</TableHead>
-                <TableHead className={cn(adminGlassTable.th, 'text-start')}>{t('owner')}</TableHead>
+                <TableHead className={cn(adminGlassTable.th, 'hidden text-start sm:table-cell')}>{t('owner')}</TableHead>
                 <TableHead className={cn(adminGlassTable.th, 'text-end tabular-nums')}>{t('screens')}</TableHead>
-                <TableHead className={cn(adminGlassTable.th, 'text-end tabular-nums')}>{t('media')}</TableHead>
-                <TableHead className={cn(adminGlassTable.th, 'text-end')}>{t('storage')}</TableHead>
-                <TableHead className={cn(adminGlassTable.th, 'text-start')}>{t('subscription')}</TableHead>
+                <TableHead className={cn(adminGlassTable.th, 'hidden text-end tabular-nums sm:table-cell')}>{t('media')}</TableHead>
+                <TableHead className={cn(adminGlassTable.th, 'hidden text-end md:table-cell')}>{t('storage')}</TableHead>
+                <TableHead className={cn(adminGlassTable.th, 'hidden text-start lg:table-cell')}>{t('subscription')}</TableHead>
                 <TableHead className={cn(adminGlassTable.th, 'text-end whitespace-nowrap')}>
                   {t('mockActions')}
                 </TableHead>
@@ -122,7 +122,7 @@ export function AdminWorkspacesClient() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     {w.ownerCustomerProfileId ? (
                       <Link
                         href={`/${locale}/admin/customers/${w.ownerCustomerProfileId}` as Route}
@@ -143,13 +143,13 @@ export function AdminWorkspacesClient() {
                   <TableCell className="text-end font-mono-nums text-sm tabular-nums">
                     {w.screenCount}
                   </TableCell>
-                  <TableCell className="text-end font-mono-nums text-sm tabular-nums">
+                  <TableCell className="text-end font-mono-nums text-sm tabular-nums hidden sm:table-cell">
                     {w.mediaCount}
                   </TableCell>
-                  <TableCell className="text-end font-mono text-sm tabular-nums text-muted-foreground">
+                  <TableCell className="text-end font-mono text-sm tabular-nums text-muted-foreground hidden md:table-cell">
                     {formatBytes(w.storageBytes, locale)}
                   </TableCell>
-                  <TableCell className="text-sm">
+                  <TableCell className="text-sm hidden lg:table-cell">
                     <p className="font-medium">
                       {w.subscriptionPlan ?? t('na')}
                       {w.subscriptionScreenLimit != null ? (

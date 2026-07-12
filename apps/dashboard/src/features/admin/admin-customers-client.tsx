@@ -303,13 +303,13 @@ export function AdminCustomersClient() {
 
                 <TableHead className={cn(adminGlassTable.th, 'text-start')}>{t('table.columns.customer')}</TableHead>
 
-                <TableHead className={cn(adminGlassTable.th, 'text-center')}>{t('table.columns.status')}</TableHead>
+                <TableHead className={cn(adminGlassTable.th, 'hidden text-center sm:table-cell')}>{t('table.columns.status')}</TableHead>
 
-                <TableHead className={cn(adminGlassTable.th, 'text-end')}>{t('table.columns.workspaces')}</TableHead>
+                <TableHead className={cn(adminGlassTable.th, 'hidden text-end sm:table-cell')}>{t('table.columns.workspaces')}</TableHead>
 
-                <TableHead className={cn(adminGlassTable.th, 'text-center')}>{t('table.columns.planType')}</TableHead>
+                <TableHead className={cn(adminGlassTable.th, 'hidden text-center md:table-cell')}>{t('table.columns.planType')}</TableHead>
 
-                <TableHead className={cn(adminGlassTable.th, 'text-start')}>{t('table.columns.expiryDate')}</TableHead>
+                <TableHead className={cn(adminGlassTable.th, 'hidden text-start lg:table-cell')}>{t('table.columns.expiryDate')}</TableHead>
 
                 <TableHead className={cn(adminGlassTable.th, 'w-[72px] text-end')}>{t('table.columns.actions')}</TableHead>
 
@@ -360,17 +360,17 @@ export function AdminCustomersClient() {
 
                   </TableCell>
 
-                  <TableCell className={cn(adminGlassTable.statusCell, 'align-middle')}>
+                  <TableCell className={cn(adminGlassTable.statusCell, 'hidden align-middle sm:table-cell')}>
                     <div className={cn(adminGlassTable.statusInner, 'justify-center')}>
                       {statusPill(u.customerLifecycle, t, locale)}
                     </div>
                   </TableCell>
 
-                  <TableCell className="text-end font-mono-nums text-sm tabular-nums">
+                  <TableCell className="hidden text-end font-mono-nums text-sm tabular-nums sm:table-cell">
                     {u.totalWorkspaces}
                   </TableCell>
 
-                  <TableCell className="align-middle text-xs">
+                  <TableCell className="hidden align-middle text-xs md:table-cell">
                     <div className="flex justify-center">
                       <span className="inline-flex items-center justify-center rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] font-semibold text-foreground">
                         {formatSubscriptionStatus(u.subscriptionStatus, t)}
@@ -378,7 +378,7 @@ export function AdminCustomersClient() {
                     </div>
                   </TableCell>
 
-                  <TableCell className="text-xs text-muted-foreground">
+                  <TableCell className="hidden text-xs text-muted-foreground lg:table-cell">
                     {u.subscriptionEndDate
                       ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(u.subscriptionEndDate))
                       : t('table.noExpiry')}
