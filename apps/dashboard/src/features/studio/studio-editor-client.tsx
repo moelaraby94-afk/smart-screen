@@ -37,7 +37,7 @@ import {
   makeZonePresets,
 } from '@/features/studio/canvas-layout';
 import { CanvasStageView } from '@/features/studio/studio-canvas-shapes';
-import { StudioPropertiesPanel, StudioMediaStrip } from '@/features/studio/studio-panels';
+import { StudioPropertiesPanel, StudioMediaStrip, StudioLayersPanel } from '@/features/studio/studio-panels';
 import { CANVAS_TEMPLATES, type CanvasTemplate } from '@/features/studio/canvas-templates';
 
 type VersionSnapshot = {
@@ -200,6 +200,19 @@ export function StudioEditorClient() {
       objects: prev.objects.filter((o) => o.id !== id),
     }));
     setSelectedId(null);
+  };
+
+  const reorderObject = (fromIndex: number, toIndex: number) => {
+    setLayout((prev) => {
+      const objs = [...prev.objects];
+      const [moved] = objs.splice(fromIndex, 1);
+      objs.splice(toIndex, 0, moved);
+      return { ...prev, objects: objs };
+    });
+  };
+
+  const toggleVisibility = (id: string, visible: boolean) => {
+    updateObject(id, { opacity: visible ? 1 : 0 });
   };
 
   const save = async (silent = false) => {
@@ -753,12 +766,21 @@ export function StudioEditorClient() {
           <StudioMediaStrip library={library} />
         </div>
 
-        <StudioPropertiesPanel
-          selected={selected}
-          onUpdateObject={updateObject}
-          onRemoveObject={removeObject}
-          playlists={studioPlaylists}
-        />
+        <div className="flex flex-col gap-4">
+          <StudioLayersPanel
+            objects={layout.objects}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            onReorder={reorderObject}
+            onToggleVisibility={toggleVisibility}
+          />
+          <StudioPropertiesPanel
+            selected={selected}
+            onUpdateObject={updateObject}
+            onRemoveObject={removeObject}
+            playlists={studioPlaylists}
+          />
+        </div>
       </div>
     </div>
   );

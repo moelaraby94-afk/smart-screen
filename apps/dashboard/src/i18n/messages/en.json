@@ -300,7 +300,9 @@
     "zonesAdded": "Zones added to canvas.",
     "zoneName": "Zone name",
     "zonePlaylist": "Assigned playlist",
-    "zoneNoPlaylist": "No playlist assigned"
+    "zoneNoPlaylist": "No playlist assigned",
+    "layers": "Layers",
+    "noLayers": "No layers yet. Add objects to the canvas."
   },
   "schedules": {
     "title": "Schedules",

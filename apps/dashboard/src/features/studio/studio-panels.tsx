@@ -1,7 +1,17 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Layers } from 'lucide-react';
+import {
+  Eye,
+  EyeOff,
+  Image as ImageIcon,
+  Layers,
+  Minus,
+  Circle as CircleIcon,
+  Square,
+  SquareStack,
+  Type as TypeIcon,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +24,103 @@ type PropertiesPanelProps = {
   onRemoveObject: (id: string) => void;
   playlists?: Array<{ id: string; name: string }>;
 };
+
+type LayersPanelProps = {
+  objects: CanvasObjectJson[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  onReorder: (fromIndex: number, toIndex: number) => void;
+  onToggleVisibility: (id: string, visible: boolean) => void;
+};
+
+function objectIcon(type: CanvasObjectJson['type']) {
+  switch (type) {
+    case 'text': return TypeIcon;
+    case 'image': return ImageIcon;
+    case 'rect': return Square;
+    case 'ellipse': return CircleIcon;
+    case 'zone': return SquareStack;
+    default: return Minus;
+  }
+}
+
+function objectLabel(obj: CanvasObjectJson): string {
+  if (obj.type === 'text') return obj.text?.slice(0, 20) || 'Text';
+  if (obj.type === 'image') return 'Image';
+  if (obj.type === 'rect') return 'Rectangle';
+  if (obj.type === 'ellipse') return 'Ellipse';
+  if (obj.type === 'zone') return obj.zoneName || 'Zone';
+  return 'Object';
+}
+
+export function StudioLayersPanel({ objects, selectedId, onSelect, onReorder, onToggleVisibility }: LayersPanelProps) {
+  const t = useTranslations('studio');
+  const reversed = [...objects].reverse();
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    e.dataTransfer.setData('text/plain', String(index));
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    const fromIndex = Number(e.dataTransfer.getData('text/plain'));
+    if (fromIndex === index) return;
+    const actualFrom = objects.length - 1 - fromIndex;
+    const actualTo = objects.length - 1 - index;
+    onReorder(actualFrom, actualTo);
+  };
+
+  return (
+    <motion.aside
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="vc-card-surface h-fit rounded-2xl border border-border p-5"
+    >
+      <p className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+        <Layers className="h-4 w-4 text-primary" />
+        {t('layers')}
+      </p>
+      {objects.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{t('noLayers')}</p>
+      ) : (
+        <ul className="space-y-1">
+          {reversed.map((obj, i) => {
+            const Icon = objectIcon(obj.type);
+            const isSelected = obj.id === selectedId;
+            const visible = obj.opacity !== 0;
+            return (
+              <li
+                key={obj.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, i)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => handleDrop(e, i)}
+                className={`flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition ${
+                  isSelected ? 'bg-primary/10 text-foreground' : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
+                }`}
+                onClick={() => onSelect(obj.id)}
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                <span className="flex-1 truncate">{objectLabel(obj)}</span>
+                <button
+                  type="button"
+                  className="shrink-0 rounded p-0.5 text-muted-foreground/60 hover:text-foreground"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleVisibility(obj.id, !visible);
+                  }}
+                >
+                  {visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </motion.aside>
+  );
+}
 
 export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject, playlists }: PropertiesPanelProps) {
   const t = useTranslations('studio');
