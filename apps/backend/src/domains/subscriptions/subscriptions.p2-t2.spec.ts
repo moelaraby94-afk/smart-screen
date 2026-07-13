@@ -112,6 +112,7 @@ describe('SubscriptionsService P2-T2 (state transitions)', () => {
       fake as unknown as PrismaService,
       createMockHeartbeat(),
       createMockConfigService(),
+      null as never, // configHelper — not used in these paths
     );
   }
 

@@ -1,4 +1,4 @@
-import { randomBytes, randomInt } from 'crypto';
+import { randomBytes } from 'crypto';
 import {
   BadRequestException,
   ForbiddenException,
@@ -14,6 +14,8 @@ import { JwtService } from '@nestjs/jwt';
 import { DomainException } from '../../common/errors/domain.exception';
 import { ErrorCode } from '../../common/errors/error-codes';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { ConfigHelper } from '../../common/config/config.helper';
+import { OtpHelper } from '../../common/auth/otp.helper';
 import { WorkspacesService } from '../workspaces/workspaces.service';
 import { AuditLogService } from '../../common/audit/audit-log.service';
 import { LoginLockoutService } from './login-lockout.service';
@@ -95,6 +97,8 @@ export class AuthService {
     private readonly auditLog: AuditLogService,
     private readonly loginLockout: LoginLockoutService,
     private readonly twoFactor: TwoFactorService,
+    private readonly configHelper: ConfigHelper,
+    private readonly otpHelper: OtpHelper,
   ) {
     this.accessExpiresIn = this.parseDurationToSeconds(
       this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m'),
@@ -120,9 +124,11 @@ export class AuthService {
       );
     }
     const passwordHash = await bcrypt.hash(dto.password, 12);
-    const code = String(randomInt(100000, 999999));
-    const otpHash = await bcrypt.hash(code, 10);
-    const expires = new Date(Date.now() + 15 * 60 * 1000);
+    const {
+      code,
+      hash: otpHash,
+      expiresAt: expires,
+    } = await this.otpHelper.generateOtp();
     await this.prisma.user.create({
       data: {
         email,
@@ -169,9 +175,11 @@ export class AuthService {
         message: 'If an account needs verification, a new code was sent.',
       };
     }
-    const code = String(randomInt(100000, 999999));
-    const otpHash = await bcrypt.hash(code, 10);
-    const expires = new Date(Date.now() + 15 * 60 * 1000);
+    const {
+      code,
+      hash: otpHash,
+      expiresAt: expires,
+    } = await this.otpHelper.generateOtp();
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
@@ -308,11 +316,9 @@ export class AuthService {
         },
       });
       const prod = process.env.NODE_ENV === 'production';
-      const origin =
-        this.configService.get<string>('FRONTEND_ORIGIN')?.trim() ||
-        'http://localhost:3000';
+      const base = this.configHelper.getFrontendBaseUrl();
       const locale = (user.locale || 'en').split('-')[0] || 'en';
-      const resetUrl = `${origin.replace(/\/$/, '')}/${locale}/forgot-password?${new URLSearchParams({ email, token: raw }).toString()}`;
+      const resetUrl = `${base}/${locale}/forgot-password?${new URLSearchParams({ email, token: raw }).toString()}`;
       if (prod && !this.email.isConfigured()) {
         this.logger.error(
           `[Password reset] Email not configured; cannot send reset to ${email}`,

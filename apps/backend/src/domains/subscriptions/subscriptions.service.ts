@@ -16,6 +16,7 @@ import Stripe from 'stripe';
 import { DomainException } from '../../common/errors/domain.exception';
 import { ErrorCode } from '../../common/errors/error-codes';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { ConfigHelper } from '../../common/config/config.helper';
 import type { MockPlan } from './dto/set-mock-plan.dto';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
 import { assertMockBillingAllowed } from '../../common/product/mock-billing';
@@ -33,6 +34,7 @@ export class SubscriptionsService {
     private readonly prisma: PrismaService,
     private readonly heartbeat: ScreenHeartbeatService,
     private readonly config: ConfigService,
+    private readonly configHelper: ConfigHelper,
   ) {}
 
   private defaultsForPlan(plan: SubscriptionPlan): {
@@ -233,10 +235,7 @@ export class SubscriptionsService {
     workspaceId: string,
     locale?: string,
   ): Promise<{ url: string }> {
-    const secret = this.config.get<string>('STRIPE_SECRET_KEY')?.trim();
-    if (!secret) {
-      throw new ServiceUnavailableException('Stripe is not configured');
-    }
+    const secret = this.configHelper.requireStripeSecretKey();
     const membership = await this.prisma.workspaceMember.findUnique({
       where: {
         workspaceId_userId: { workspaceId, userId },
@@ -256,10 +255,7 @@ export class SubscriptionsService {
         'No Stripe customer on file. Complete a paid checkout first.',
       );
     }
-    const origin =
-      this.config.get<string>('FRONTEND_ORIGIN')?.trim() ||
-      'http://localhost:3000';
-    const base = origin.replace(/\/$/, '');
+    const base = this.configHelper.getFrontendBaseUrl();
     const lang = (locale ?? 'en').split('-')[0] || 'en';
     const returnUrl =
       this.config.get<string>('STRIPE_PORTAL_RETURN_URL')?.trim() ??
@@ -284,10 +280,7 @@ export class SubscriptionsService {
     if (plan === SubscriptionPlan.FREE) {
       throw new BadRequestException('Use workspace billing to stay on Free');
     }
-    const secret = this.config.get<string>('STRIPE_SECRET_KEY')?.trim();
-    if (!secret) {
-      throw new ServiceUnavailableException('Stripe is not configured');
-    }
+    const secret = this.configHelper.requireStripeSecretKey();
     const membership = await this.prisma.workspaceMember.findUnique({
       where: {
         workspaceId_userId: { workspaceId, userId },
@@ -305,10 +298,7 @@ export class SubscriptionsService {
         `Stripe price ID not configured for plan ${plan}`,
       );
     }
-    const origin =
-      this.config.get<string>('FRONTEND_ORIGIN')?.trim() ||
-      'http://localhost:3000';
-    const base = origin.replace(/\/$/, '');
+    const base = this.configHelper.getFrontendBaseUrl();
     const successUrl =
       this.config.get<string>('STRIPE_CHECKOUT_SUCCESS_URL')?.trim() ??
       `${base}/en/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`;

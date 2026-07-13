@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { WorkspacesService } from './workspaces.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { WorkspaceAuthHelper } from '../../common/auth/workspace-auth.helper';
+import { ConfigHelper } from '../../common/config/config.helper';
 import { MediaService } from '../media/media.service';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
 import { EmailService } from '../email/email.service';
@@ -247,12 +249,19 @@ const USER_ID = 'user-1';
 
 describe('WorkspacesService (P1-T6)', () => {
   function makeService(fake: ReturnType<typeof createFakePrisma>) {
+    const workspaceAuth = new WorkspaceAuthHelper(
+      fake as unknown as PrismaService,
+    );
+    const configHelper = new ConfigHelper(
+      createMockConfigService() as unknown as import('@nestjs/config').ConfigService,
+    );
     return new WorkspacesService(
       fake as unknown as PrismaService,
+      workspaceAuth,
       createMockMediaService(),
       createMockHeartbeat(),
       createMockEmailService(),
-      createMockConfigService(),
+      configHelper,
     );
   }
 

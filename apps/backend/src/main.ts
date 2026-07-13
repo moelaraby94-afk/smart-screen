@@ -7,6 +7,7 @@ import express from 'express';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { AppLogger } from './common/request-context/app-logger';
+import { createCorsOriginChecker } from './common/config/cors-config';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { assertProductionSecretsAreSet } from './common/config/assert-production-secrets';
@@ -25,11 +26,14 @@ async function bootstrap() {
   /**
    * Production CORS must be an explicit allow-list, never origin-reflection.
    * Fail fast at boot rather than silently falling back to an open policy.
+   * The actual logic lives in cors-config.ts (shared with the WS gateway).
    */
-  const productionAllowedOrigins = process.env.ALLOWED_ORIGINS?.split(',')
-    .map((o) => o.trim())
-    .filter(Boolean);
-  if (isProduction && !productionAllowedOrigins?.length) {
+  if (
+    isProduction &&
+    !process.env.ALLOWED_ORIGINS?.split(',')
+      .map((o) => o.trim())
+      .filter(Boolean).length
+  ) {
     throw new Error(
       'ALLOWED_ORIGINS is required when NODE_ENV=production: a comma-separated ' +
         'list of allowed browser origins, e.g. ' +
@@ -112,51 +116,8 @@ async function bootstrap() {
     exclude: ['health', 'ready'],
   });
 
-  let corsOrigin:
-    | boolean
-    | string[]
-    | ((
-        origin: string | undefined,
-        callback: (err: Error | null, allow?: boolean) => void,
-      ) => void);
-  if (isProduction) {
-    /** Exact allow-list only — no reflection, no dev fallback origins. */
-    const allowed = productionAllowedOrigins!;
-    corsOrigin = (origin, callback) => {
-      // No Origin header (server-to-server, curl, same-origin) — not a browser CORS request.
-      if (!origin || allowed.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`Origin "${origin}" is not allowed by CORS.`));
-      }
-    };
-  } else {
-    const fromList =
-      process.env.FRONTEND_ORIGINS?.split(',').map((o) => o.trim()) ?? [];
-    const single = process.env.FRONTEND_ORIGIN?.trim();
-    /** Local dev: `localhost` and `127.0.0.1` are different Origins — allow both so fetch + cookies work. */
-    const defaultDevOrigins = [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://127.0.0.1:3000',
-      'http://127.0.0.1:3001',
-    ];
-    const allowedOrigins = [
-      ...new Set([
-        ...fromList,
-        ...(single ? [single] : []),
-        ...defaultDevOrigins,
-      ]),
-    ].filter(Boolean);
-    /** When true, reflect the request `Origin` (dev convenience only — never used in production, see above). */
-    const trustDynamicCors =
-      process.env.TRUST_DYNAMIC_CORS === 'true' ||
-      process.env.TRUST_DYNAMIC_CORS === '1';
-    corsOrigin = trustDynamicCors ? true : allowedOrigins;
-  }
-
   app.enableCors({
-    origin: corsOrigin,
+    origin: createCorsOriginChecker(),
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: [

@@ -3,11 +3,11 @@ import {
   ConflictException,
   ForbiddenException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { AccountService } from './account.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { OtpHelper } from '../../common/auth/otp.helper';
 
 type FakeUser = {
   id: string;
@@ -154,12 +154,6 @@ function createMockEmailService(configured = true) {
   } as unknown as EmailService;
 }
 
-function createMockConfigService() {
-  return {
-    get: jest.fn((key: string, fallback?: string) => fallback),
-  } as unknown as ConfigService;
-}
-
 const USER_ID = 'user-1';
 
 function makeUser(overrides: Partial<FakeUser> = {}): FakeUser {
@@ -185,7 +179,8 @@ describe('AccountService (P1-T6)', () => {
     return new AccountService(
       fake as unknown as PrismaService,
       createMockEmailService(),
-      createMockConfigService(),
+      null as never, // configHelper — not used in these paths
+      new OtpHelper(),
     );
   }
 

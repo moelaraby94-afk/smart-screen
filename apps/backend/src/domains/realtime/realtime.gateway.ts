@@ -17,6 +17,7 @@ import { parse as cookieParse } from 'cookie';
 import type { Server } from 'socket.io';
 import type { Socket } from 'socket.io';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { createCorsOriginChecker } from '../../common/config/cors-config';
 import { ScreenHeartbeatService } from './screen-heartbeat.service';
 
 type ScreenRegisterPayload = {
@@ -43,19 +44,7 @@ type JwtAccessPayload = {
 @WebSocketGateway({
   namespace: '/realtime',
   cors: {
-    origin: (
-      origin: string | undefined,
-      callback: (err: Error | null, allow?: boolean) => void,
-    ) => {
-      const allowed = process.env.FRONTEND_ORIGINS?.split(',').map((s) =>
-        s.trim(),
-      ) ?? ['http://localhost:3000', 'http://localhost:3001'];
-      if (!origin || allowed.includes(origin)) {
-        callback(null, true);
-        return;
-      }
-      callback(null, false);
-    },
+    origin: createCorsOriginChecker(),
     credentials: true,
   },
 })
@@ -63,6 +52,13 @@ export class RealtimeGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   private readonly log = new Logger(RealtimeGateway.name);
+
+  /** Per-IP connection count for rate-limiting. */
+  private readonly ipConnectionCounts = new Map<string, number>();
+  /** Sockets that have passed authentication via any handler. */
+  private readonly authedSockets = new Set<string>();
+  /** Idle timeout handles for sockets that haven't authenticated yet. */
+  private readonly unauthTimers = new Map<string, NodeJS.Timeout>();
 
   @WebSocketServer()
   server!: Server;
@@ -79,10 +75,55 @@ export class RealtimeGateway
   }
 
   handleConnection(client: Socket): void {
+    const ip = this.getClientIp(client);
+    const max = Number(
+      this.configService.get<string>('WS_MAX_CONNECTIONS_PER_IP', '20'),
+    );
+    const current = this.ipConnectionCounts.get(ip) ?? 0;
+    if (current >= max) {
+      this.log.warn(
+        `WS connection from ${ip} rejected: per-IP limit (${current}/${max}) reached`,
+      );
+      client.emit('connected', { message: 'Too many connections' });
+      client.disconnect(true);
+      return;
+    }
+    this.ipConnectionCounts.set(ip, current + 1);
+
+    const timeoutMs = Number(
+      this.configService.get<string>('WS_UNAUTH_TIMEOUT_MS', '30000'),
+    );
+    const timer = setTimeout(() => {
+      if (!this.authedSockets.has(client.id) && client.connected) {
+        this.log.warn(
+          `WS socket ${client.id} from ${ip} disconnected: unauthenticated timeout`,
+        );
+        client.disconnect(true);
+      }
+    }, timeoutMs);
+    this.unauthTimers.set(client.id, timer);
+
     client.emit('connected', { message: 'Realtime channel connected' });
   }
 
   async handleDisconnect(client: Socket): Promise<void> {
+    const timer = this.unauthTimers.get(client.id);
+    if (timer) {
+      clearTimeout(timer);
+      this.unauthTimers.delete(client.id);
+    }
+    this.authedSockets.delete(client.id);
+
+    const ip = this.getClientIp(client);
+    const count = this.ipConnectionCounts.get(ip);
+    if (count !== undefined) {
+      if (count <= 1) {
+        this.ipConnectionCounts.delete(ip);
+      } else {
+        this.ipConnectionCounts.set(ip, count - 1);
+      }
+    }
+
     const binding = this.heartbeat.getBinding(client.id);
     this.heartbeat.unbindSocket(client.id);
 
@@ -149,6 +190,7 @@ export class RealtimeGateway
       client.emit('screen:error', { code: 'FORBIDDEN_BIND' });
       return;
     }
+    this.markAuthed(client);
     await client.join(`screen:${screen.id}`);
     client.emit('player:bound', { screenId: screen.id });
   }
@@ -217,6 +259,8 @@ export class RealtimeGateway
       client.disconnect(true);
       return;
     }
+
+    this.markAuthed(client);
 
     this.heartbeat.bindPlayerSocket(client, {
       screenId: screen.id,
@@ -325,6 +369,7 @@ export class RealtimeGateway
       client.emit('pairing:error', { code: 'NOT_FOUND_OR_EXPIRED' });
       return;
     }
+    this.markAuthed(client);
     await client.join(`pairing:${row.id}`);
     client.emit('pairing:watching', { sessionId: row.id });
   }
@@ -365,8 +410,26 @@ export class RealtimeGateway
       }
     }
 
+    this.markAuthed(client);
     await client.join(`workspace:${payload.workspaceId}`);
     client.emit('dashboard:subscribed', { workspaceId: payload.workspaceId });
+  }
+
+  private getClientIp(client: Socket): string {
+    const xff = client.handshake.headers['x-forwarded-for'];
+    if (typeof xff === 'string' && xff.length > 0) {
+      return xff.split(',')[0].trim();
+    }
+    return client.handshake.address || 'unknown';
+  }
+
+  private markAuthed(client: Socket): void {
+    this.authedSockets.add(client.id);
+    const timer = this.unauthTimers.get(client.id);
+    if (timer) {
+      clearTimeout(timer);
+      this.unauthTimers.delete(client.id);
+    }
   }
 
   private parseUserFromSocket(client: Socket): JwtAccessPayload | null {

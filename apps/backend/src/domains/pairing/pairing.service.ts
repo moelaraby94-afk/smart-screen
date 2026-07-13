@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -12,11 +11,11 @@ import {
   Prisma,
   ScreenPairingSessionStatus,
   ScreenStatus,
-  UserRole,
 } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { randomBytes, randomInt } from 'crypto';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { WorkspaceAuthHelper } from '../../common/auth/workspace-auth.helper';
 import { DomainException } from '../../common/errors/domain.exception';
 import { ErrorCode } from '../../common/errors/error-codes';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
@@ -36,6 +35,7 @@ export class PairingService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly workspaceAuth: WorkspaceAuthHelper,
     private readonly config: ConfigService,
     private readonly heartbeat: ScreenHeartbeatService,
   ) {}
@@ -50,24 +50,12 @@ export class PairingService {
     workspaceId: string,
     userId: string,
   ): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { isSuperAdmin: true },
+    await this.workspaceAuth.assertAccess({
+      workspaceId,
+      userId,
+      requireAdmin: true,
+      forbiddenMessage: 'Only owners and admins can claim a pairing code',
     });
-    if (user?.isSuperAdmin) return;
-    const membership = await this.prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId, userId } },
-      select: { role: true },
-    });
-    if (!membership) throw new NotFoundException('Workspace not found');
-    if (
-      membership.role !== UserRole.OWNER &&
-      membership.role !== UserRole.ADMIN
-    ) {
-      throw new ForbiddenException(
-        'Only owners and admins can claim a pairing code',
-      );
-    }
   }
 
   /**

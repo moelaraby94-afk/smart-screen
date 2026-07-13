@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ConfigHelper } from '../../common/config/config.helper';
 import { EmailService } from './email.service';
 import { subscriptionReminderEmail } from './email-templates';
 
@@ -9,14 +9,12 @@ export class SubscriptionEmailService {
 
   constructor(
     private readonly email: EmailService,
-    private readonly config: ConfigService,
+    private readonly configHelper: ConfigHelper,
   ) {}
 
   async sendRenewalReminder(toEmail: string, fullName: string): Promise<void> {
-    const origin = this.config.get<string>('FRONTEND_ORIGIN')?.trim();
-    const dashboardUrl = origin
-      ? `${origin.replace(/\/$/, '')}/en/overview`
-      : undefined;
+    const base = this.configHelper.getFrontendBaseUrl();
+    const dashboardUrl = `${base}/en/overview`;
     const { subject, html, text } = subscriptionReminderEmail({
       fullName,
       dashboardUrl,

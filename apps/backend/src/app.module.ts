@@ -30,6 +30,8 @@ import { NotificationsModule } from './domains/notifications/notifications.modul
 import { WorkspaceAuditLogModule } from './domains/audit-log/audit-log.module';
 import { HealthModule } from './common/health/health.module';
 import { RequestContextModule } from './common/request-context/request-context.module';
+import { WorkspaceAuthModule } from './common/auth/workspace-auth.module';
+import { ConfigHelperModule } from './common/config/config-helper.module';
 
 @Module({
   imports: [
@@ -82,6 +84,8 @@ import { RequestContextModule } from './common/request-context/request-context.m
     WorkspaceAuditLogModule,
     HealthModule,
     RequestContextModule,
+    WorkspaceAuthModule,
+    ConfigHelperModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

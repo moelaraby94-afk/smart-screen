@@ -70,6 +70,7 @@ describe('StripeWebhookService T3.4 (PaymentRecord creation)', () => {
           metadata: { workspace_id: 'ws_1', plan: 'PRO' },
           customer: 'cus_abc',
           subscription: 'sub_456',
+          invoice: 'in_test_123',
           amount_total: 4900,
           currency: 'usd',
           ...overrides,
@@ -100,7 +101,34 @@ describe('StripeWebhookService T3.4 (PaymentRecord creation)', () => {
       status: 'paid',
       provider: 'stripe',
       externalId: 'cs_test_123',
+      invoiceRef: 'in_test_123',
     });
+  });
+
+  it('stores invoiceRef when session.invoice is an expanded object', async () => {
+    workspaceMemberFindFirst.mockResolvedValue({ userId: 'user_owner' });
+    makeCheckoutEvent({ invoice: { id: 'in_expanded_456' } });
+
+    await service.handleRawPayload(Buffer.from('{}'), 'sig');
+
+    expect(paymentRecordCreate).toHaveBeenCalledTimes(1);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const callArg = paymentRecordCreate.mock.calls[0][0];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    expect(callArg.data.invoiceRef).toBe('in_expanded_456');
+  });
+
+  it('stores undefined invoiceRef when session.invoice is absent', async () => {
+    workspaceMemberFindFirst.mockResolvedValue({ userId: 'user_owner' });
+    makeCheckoutEvent({ invoice: undefined });
+
+    await service.handleRawPayload(Buffer.from('{}'), 'sig');
+
+    expect(paymentRecordCreate).toHaveBeenCalledTimes(1);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const callArg = paymentRecordCreate.mock.calls[0][0];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    expect(callArg.data.invoiceRef).toBeUndefined();
   });
 
   it('does not create PaymentRecord when workspace owner is not found', async () => {

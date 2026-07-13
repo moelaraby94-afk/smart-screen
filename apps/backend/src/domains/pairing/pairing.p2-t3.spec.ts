@@ -2,6 +2,7 @@ import { NotFoundException } from '@nestjs/common';
 import { ScreenPairingSessionStatus } from '@prisma/client';
 import { PairingService } from './pairing.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { WorkspaceAuthHelper } from '../../common/auth/workspace-auth.helper';
 import { ConfigService } from '@nestjs/config';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
 
@@ -346,8 +347,12 @@ function makeSession(
 
 describe('PairingService P2-T3 (lifecycle + secret rotation)', () => {
   function makeService(fake: ReturnType<typeof createFakePrisma>) {
+    const workspaceAuth = new WorkspaceAuthHelper(
+      fake as unknown as PrismaService,
+    );
     return new PairingService(
       fake as unknown as PrismaService,
+      workspaceAuth,
       createMockConfigService(),
       createMockHeartbeat(),
     );

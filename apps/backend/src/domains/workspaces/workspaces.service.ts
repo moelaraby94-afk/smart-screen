@@ -5,7 +5,6 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'crypto';
 import type { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import {
@@ -16,6 +15,8 @@ import {
   UserRole,
 } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { WorkspaceAuthHelper } from '../../common/auth/workspace-auth.helper';
+import { ConfigHelper } from '../../common/config/config.helper';
 import { MediaService } from '../media/media.service';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
 import { EmailService } from '../email/email.service';
@@ -33,10 +34,11 @@ export class WorkspacesService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly workspaceAuth: WorkspaceAuthHelper,
     private readonly media: MediaService,
     private readonly heartbeat: ScreenHeartbeatService,
     private readonly email: EmailService,
-    private readonly config: ConfigService,
+    private readonly configHelper: ConfigHelper,
   ) {}
 
   /**
@@ -205,23 +207,12 @@ export class WorkspacesService {
   }
 
   async seedDemoForMember(workspaceId: string, userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { isSuperAdmin: true },
+    await this.workspaceAuth.assertAccess({
+      workspaceId,
+      userId,
+      requireAdmin: true,
+      forbiddenMessage: 'Only owners and admins can seed demo content.',
     });
-    if (user?.isSuperAdmin) {
-      return this.seedDemoContent(workspaceId);
-    }
-    const m = await this.prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId, userId } },
-      select: { role: true },
-    });
-    if (!m) throw new NotFoundException('Workspace not found');
-    if (m.role !== 'OWNER' && m.role !== 'ADMIN') {
-      throw new ForbiddenException(
-        'Only owners and admins can seed demo content.',
-      );
-    }
     return this.seedDemoContent(workspaceId);
   }
 
@@ -323,10 +314,7 @@ export class WorkspacesService {
       });
 
       if (this.email.isConfigured()) {
-        const origin =
-          this.config.get<string>('FRONTEND_ORIGIN')?.trim() ||
-          'http://localhost:3000';
-        const base = origin.replace(/\/$/, '');
+        const base = this.configHelper.getFrontendBaseUrl();
         try {
           await this.email.sendMail({
             to: normalizedEmail,
@@ -354,9 +342,7 @@ export class WorkspacesService {
       };
     }
 
-    const token = randomBytes(32).toString('hex');
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
+    const { token, expiresAt } = this.makeInvitationToken();
 
     await this.prisma.workspaceInvitation.create({
       data: {
@@ -372,10 +358,7 @@ export class WorkspacesService {
 
     let emailSent = false;
     if (this.email.isConfigured()) {
-      const origin =
-        this.config.get<string>('FRONTEND_ORIGIN')?.trim() ||
-        'http://localhost:3000';
-      const base = origin.replace(/\/$/, '');
+      const base = this.configHelper.getFrontendBaseUrl();
       const inviteUrl = `${base}/en/invite?token=${token}`;
       try {
         await this.email.sendMail({
@@ -541,9 +524,7 @@ export class WorkspacesService {
       throw new BadRequestException('Only pending invitations can be resent.');
     }
 
-    const token = randomBytes(32).toString('hex');
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
+    const { token, expiresAt } = this.makeInvitationToken();
 
     await this.prisma.workspaceInvitation.update({
       where: { id: invitationId },
@@ -561,10 +542,7 @@ export class WorkspacesService {
 
     let emailSent = false;
     if (this.email.isConfigured()) {
-      const origin =
-        this.config.get<string>('FRONTEND_ORIGIN')?.trim() ||
-        'http://localhost:3000';
-      const base = origin.replace(/\/$/, '');
+      const base = this.configHelper.getFrontendBaseUrl();
       const inviteUrl = `${base}/en/invite?token=${token}`;
       try {
         await this.email.sendMail({
@@ -655,22 +633,13 @@ export class WorkspacesService {
   }
 
   async deleteWorkspace(userId: string, workspaceId: string): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { isSuperAdmin: true },
+    await this.workspaceAuth.assertAccess({
+      workspaceId,
+      userId,
+      requireAdmin: true,
+      forbiddenMessage:
+        'Only workspace owners and admins can delete this branch.',
     });
-    if (!user?.isSuperAdmin) {
-      const membership = await this.prisma.workspaceMember.findUnique({
-        where: { workspaceId_userId: { workspaceId, userId } },
-        select: { role: true },
-      });
-      if (!membership) throw new NotFoundException('Workspace not found');
-      if (membership.role !== 'OWNER' && membership.role !== 'ADMIN') {
-        throw new ForbiddenException(
-          'Only workspace owners and admins can delete this branch.',
-        );
-      }
-    }
     await this.prisma.workspace.delete({ where: { id: workspaceId } });
   }
 
@@ -746,25 +715,11 @@ export class WorkspacesService {
     userId: string,
     requireAdmin: boolean,
   ) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { isSuperAdmin: true },
+    await this.workspaceAuth.assertAccess({
+      workspaceId,
+      userId,
+      requireAdmin,
     });
-    if (user?.isSuperAdmin) return;
-    const membership = await this.prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId, userId } },
-      select: { role: true },
-    });
-    if (!membership) throw new NotFoundException('Workspace not found');
-    if (
-      requireAdmin &&
-      membership.role !== 'OWNER' &&
-      membership.role !== 'ADMIN'
-    ) {
-      throw new ForbiddenException(
-        'Only owners and admins can update this workspace.',
-      );
-    }
   }
 
   private makeSlug(name: string): string {
@@ -777,6 +732,13 @@ export class WorkspacesService {
     return `${base || 'workspace'}-${suffix}`;
   }
 
+  private makeInvitationToken(): { token: string; expiresAt: Date } {
+    const token = randomBytes(32).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+    return { token, expiresAt };
+  }
+
   /**
    * Emits `pairing:started` on `workspace:{id}` so dashboards in the Add Screen flow
    * can show live feedback (also call when the pairing modal opens).
@@ -785,22 +747,12 @@ export class WorkspacesService {
     userId: string,
     workspaceId: string,
   ): Promise<{ ok: true }> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { isSuperAdmin: true },
+    await this.workspaceAuth.assertAccess({
+      workspaceId,
+      userId,
+      requireAdmin: true,
+      forbiddenMessage: 'Only owners and admins can signal pairing activity.',
     });
-    if (!user?.isSuperAdmin) {
-      const m = await this.prisma.workspaceMember.findUnique({
-        where: { workspaceId_userId: { workspaceId, userId } },
-        select: { role: true },
-      });
-      if (!m) throw new NotFoundException('Workspace not found');
-      if (m.role !== UserRole.OWNER && m.role !== UserRole.ADMIN) {
-        throw new ForbiddenException(
-          'Only owners and admins can signal pairing activity.',
-        );
-      }
-    }
     this.heartbeat.emitPairingStarted(workspaceId, {
       source: 'dashboard',
       at: new Date().toISOString(),

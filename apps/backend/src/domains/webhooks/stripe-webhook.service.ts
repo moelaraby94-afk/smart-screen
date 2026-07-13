@@ -94,6 +94,13 @@ export class StripeWebhookService {
                   ? (session.subscription as { id?: string }).id
                   : undefined;
 
+            const invoiceId =
+              typeof session.invoice === 'string'
+                ? session.invoice
+                : session.invoice && typeof session.invoice === 'object'
+                  ? (session.invoice as { id?: string }).id
+                  : undefined;
+
             await this.subscriptions.applyTrustedCheckoutUsingClient(tx, {
               workspaceId,
               plan,
@@ -120,6 +127,7 @@ export class StripeWebhookService {
                   status: 'paid',
                   provider: 'stripe',
                   externalId: session.id,
+                  invoiceRef: invoiceId ?? undefined,
                   paidAt: new Date(),
                   metadata: {
                     workspaceId,

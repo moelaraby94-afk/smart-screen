@@ -12,6 +12,7 @@ import {
 } from '@prisma/client';
 import request from 'supertest';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { WorkspaceAuthHelper } from '../../common/auth/workspace-auth.helper';
 import { CanvasesService } from '../canvases/canvases.service';
 import { PlaylistsService } from '../playlists/playlists.service';
 import { PrayerTimesService } from '../islamic/prayer-times.service';
@@ -339,6 +340,7 @@ describe('pairing → player bootstrap (per-screen secret handoff)', () => {
         PairingService,
         PlayerService,
         RealtimeGateway,
+        WorkspaceAuthHelper,
         { provide: PrismaService, useValue: fakePrisma },
         {
           provide: ScreenHeartbeatService,

@@ -6,10 +6,10 @@ import {
   Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { randomInt } from 'crypto';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { ConfigHelper } from '../../common/config/config.helper';
+import { OtpHelper } from '../../common/auth/otp.helper';
 import { fromStorageLimitBytes } from '../../common/product/storage-limit';
 import { computeWorkspaceCapabilities } from '../../common/product/workspace-capabilities';
 import { EmailService } from '../email/email.service';
@@ -23,7 +23,8 @@ export class AccountService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly email: EmailService,
-    private readonly config: ConfigService,
+    private readonly configHelper: ConfigHelper,
+    private readonly otpHelper: OtpHelper,
   ) {}
 
   async updateProfile(
@@ -62,9 +63,11 @@ export class AccountService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new ForbiddenException();
     if (user.email === newEmail) throw new BadRequestException('Same email');
-    const code = String(randomInt(100000, 999999));
-    const otpHash = await bcrypt.hash(code, 10);
-    const expires = new Date(Date.now() + 15 * 60 * 1000);
+    const {
+      code,
+      hash: otpHash,
+      expiresAt: expires,
+    } = await this.otpHelper.generateOtp();
     await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -315,10 +318,7 @@ export class AccountService {
       throw new ForbiddenException('Invoice not found');
     }
 
-    const secret = this.config.get<string>('STRIPE_SECRET_KEY')?.trim();
-    if (!secret) {
-      throw new ServiceUnavailableException('Stripe is not configured');
-    }
+    const secret = this.configHelper.requireStripeSecretKey();
 
     const stripe = new Stripe(secret);
     const invoice = await stripe.invoices.retrieve(invoiceRef);

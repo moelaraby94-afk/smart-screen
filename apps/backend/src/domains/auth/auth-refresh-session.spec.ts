@@ -194,6 +194,8 @@ describe('AuthService — multi-session refresh tokens (P1-T1)', () => {
       null as never, // auditLog — not used
       createMockLoginLockoutService(),
       null as never, // twoFactor — not used in these paths
+      null as never, // configHelper — not used in these paths
+      null as never, // otpHelper — not used in these paths
     );
   });
 

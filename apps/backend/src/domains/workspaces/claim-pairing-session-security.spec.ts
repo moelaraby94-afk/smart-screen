@@ -8,6 +8,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { UserRole } from '@prisma/client';
 import request from 'supertest';
 import { RolesGuard } from '../../common/auth/roles.guard';
+import { WorkspaceAuthHelper } from '../../common/auth/workspace-auth.helper';
 import { DomainException } from '../../common/errors/domain.exception';
 import { ErrorCode } from '../../common/errors/error-codes';
 import { PrismaService } from '../../common/prisma/prisma.service';
@@ -159,6 +160,7 @@ describe('POST /workspaces/:workspaceId/pairing-sessions/claim — brute-force d
         RolesGuard,
         UserThrottlerGuard,
         PairingService,
+        WorkspaceAuthHelper,
         { provide: WorkspacesService, useValue: {} },
         { provide: PrismaService, useValue: fakePrisma },
         {
