@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
+import useSWR from 'swr';
 import { apiFetch } from '@/features/auth/session';
 
 export type ScreenStatus = 'ONLINE' | 'OFFLINE' | 'MAINTENANCE';
@@ -37,42 +38,61 @@ type ScreensOptions = {
   playlistGroupId?: string;
 };
 
+async function screensFetcher(key: string): Promise<ScreenRow[]> {
+  const response = await apiFetch(key, { method: 'GET' });
+  if (!response.ok) return [];
+  const payload = (await response.json()) as ListResponse | ScreenRow[];
+  const items = Array.isArray(payload) ? payload : payload.items;
+  return Array.isArray(items) ? items : [];
+}
+
+/**
+ * Data-fetching hook for the screens list.
+ *
+ * Uses SWR for caching, deduplication, and revalidation. The return signature
+ * `{ screens, setScreens, isLoading, reload }` is preserved for backward
+ * compatibility with all consumers (screens-client, displays-client,
+ * emergency-client, playlist-screens-client, useScreenRealtime,
+ * useScreenActions).
+ *
+ * `setScreens` wraps SWR's `mutate(fn, false)` — it updates the local cache
+ * synchronously without triggering a revalidation, matching the semantics of
+ * the previous `useState` setter. `reload` calls `mutate()` to revalidate.
+ */
 export function useApiScreens(workspaceId: string | null, options?: ScreensOptions) {
   const playlistGroupId = options?.playlistGroupId;
-  const [screens, setScreens] = useState<ScreenRow[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  const params = new URLSearchParams();
+  if (workspaceId) {
+    params.set('workspaceId', workspaceId);
+    params.set('limit', '500');
+    params.set('page', '1');
+  }
+  if (playlistGroupId) params.set('playlistGroupId', playlistGroupId);
+
+  const key = workspaceId ? `/screens?${params.toString()}` : null;
+
+  const { data, isLoading, mutate } = useSWR(key, screensFetcher, {
+    fallbackData: [] as ScreenRow[],
+  });
+
+  const screens = data ?? [];
+
+  const setScreens = useCallback(
+    (updater: ScreenRow[] | ((prev: ScreenRow[]) => ScreenRow[])) => {
+      void mutate(
+        typeof updater === 'function'
+          ? (current: ScreenRow[] | undefined) => updater(current ?? [])
+          : updater,
+        false,
+      );
+    },
+    [mutate],
+  );
 
   const reload = useCallback(async () => {
-    if (!workspaceId) {
-      setScreens([]);
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    const params = new URLSearchParams({
-      workspaceId,
-      limit: '500',
-      page: '1',
-    });
-    if (playlistGroupId) params.set('playlistGroupId', playlistGroupId);
-    const response = await apiFetch(`/screens?${params.toString()}`, {
-      method: 'GET',
-    });
-
-    if (response.ok) {
-      const payload = (await response.json()) as ListResponse | ScreenRow[];
-      const items = Array.isArray(payload) ? payload : payload.items;
-      setScreens(Array.isArray(items) ? items : []);
-    } else {
-      setScreens([]);
-    }
-    setIsLoading(false);
-  }, [workspaceId, playlistGroupId]);
-
-  useEffect(() => {
-    void reload();
-  }, [reload]);
+    await mutate();
+  }, [mutate]);
 
   return { screens, setScreens, isLoading, reload };
 }
