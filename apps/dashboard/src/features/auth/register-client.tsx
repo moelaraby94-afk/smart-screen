@@ -94,7 +94,7 @@ export function RegisterClient() {
       const ws = payload.workspaces?.[0]?.id ?? null;
       await refreshWorkspaces(ws);
       toast.success(t('welcome'));
-      router.push(`/${locale}/media` as Route);
+      router.push(`/${locale}/overview` as Route);
       router.refresh();
     } finally {
       setPending(false);
@@ -117,20 +117,33 @@ export function RegisterClient() {
   };
 
   return (
-    <div className="relative flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-12">
-      <section className="w-full max-w-lg">
-        <div className="rounded-2xl border border-border bg-card p-8 shadow-sm sm:p-10">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
-            {t('brand')}
-          </p>
-          <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            {step === 'form' ? t('createWorkspaceTitle') : t('verifyEmailTitle')}
-          </h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            {step === 'form'
-              ? t('formDescription')
-              : t('otpDescription', { email })}
-          </p>
+    <div className="w-full">
+      {/* Mobile brand header */}
+      <div className="mb-8 lg:hidden">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
+          {t('brand')}
+        </p>
+        <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground">
+          {step === 'form' ? t('createWorkspaceTitle') : t('verifyEmailTitle')}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {step === 'form'
+            ? t('formDescription')
+            : t('otpDescription', { email })}
+        </p>
+      </div>
+
+      {/* Desktop heading */}
+      <div className="mb-8 hidden lg:block">
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">
+          {step === 'form' ? t('createWorkspaceTitle') : t('verifyEmailTitle')}
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {step === 'form'
+            ? t('formDescription')
+            : t('otpDescription', { email })}
+        </p>
+      </div>
 
           {step === 'form' ? (
             <form className="mt-8 space-y-4" onSubmit={(e) => void submitForm(e)}>
@@ -285,8 +298,6 @@ export function RegisterClient() {
               {t('backToSignIn')}
             </Link>
           </p>
-        </div>
-      </section>
     </div>
   );
 }

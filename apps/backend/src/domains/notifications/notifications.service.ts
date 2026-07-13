@@ -99,4 +99,21 @@ export class NotificationsService {
       })),
     });
   }
+
+  async getPreferences(userId: string): Promise<Record<string, boolean>> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { notificationPreferences: true },
+    });
+    if (!user) return {};
+    const prefs = user.notificationPreferences as Record<string, boolean> | null;
+    return prefs ?? {};
+  }
+
+  async updatePreferences(userId: string, preferences: Record<string, boolean>): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { notificationPreferences: preferences },
+    });
+  }
 }

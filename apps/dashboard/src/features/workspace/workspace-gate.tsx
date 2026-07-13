@@ -17,6 +17,19 @@ const CLIENT_ROUTE_SEGMENTS = new Set([
   'team',
   'billing',
   'branches',
+  'displays',
+  'content',
+  'templates',
+  'proof-of-play',
+  'campaigns',
+  'ai',
+  'emergency',
+  'analytics',
+  'audit-log',
+  'notifications',
+  'api-docs',
+  'help',
+  'settings',
 ]);
 
 export function WorkspaceGate({ children }: { children: React.ReactNode }) {

@@ -37,6 +37,18 @@ function buildCrumbs(
     settings: t('settings'),
     admin: t('adminHome'),
     branches: t('branches'),
+    displays: t('displays'),
+    content: t('content'),
+    templates: t('templates'),
+    'proof-of-play': t('proofOfPlay'),
+    campaigns: t('campaigns'),
+    ai: t('ai'),
+    emergency: t('emergency'),
+    analytics: t('analytics'),
+    'audit-log': t('auditLog'),
+    notifications: t('notifications'),
+    'api-docs': t('apiDocs'),
+    help: t('help'),
   };
 
   const subLabels: Record<string, string> = {
@@ -50,6 +62,9 @@ function buildCrumbs(
     fleet: t('adminFleet'),
     screens: t('adminScreens'),
     playlists: t('playlists'),
+    groups: t('displayGroups'),
+    workspaces: t('adminWorkspaces'),
+    users: t('adminCustomers'),
   };
 
   if (rest[0] === 'admin') {

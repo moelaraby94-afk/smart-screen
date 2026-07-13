@@ -60,20 +60,33 @@ export function ForgotPasswordClient() {
   };
 
   return (
-    <div className="relative flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-12">
-      <section className="w-full max-w-md">
-        <div className="rounded-2xl border border-border bg-card p-8 shadow-sm sm:p-10">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
-            {t('brand')}
-          </p>
-          <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground">
-            {token ? t('setNewPasswordTitle') : t('forgotPasswordTitle')}
-          </h1>
-          <p className="mt-3 text-sm text-muted-foreground">
-            {token
-              ? t('setNewPasswordDescription')
-              : t('forgotPasswordDescription')}
-          </p>
+    <div className="w-full">
+      {/* Mobile brand header */}
+      <div className="mb-8 lg:hidden">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
+          {t('brand')}
+        </p>
+        <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground">
+          {token ? t('setNewPasswordTitle') : t('forgotPasswordTitle')}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {token
+            ? t('setNewPasswordDescription')
+            : t('forgotPasswordDescription')}
+        </p>
+      </div>
+
+      {/* Desktop heading */}
+      <div className="mb-8 hidden lg:block">
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">
+          {token ? t('setNewPasswordTitle') : t('forgotPasswordTitle')}
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {token
+            ? t('setNewPasswordDescription')
+            : t('forgotPasswordDescription')}
+        </p>
+      </div>
 
           {!token ? (
             <form className="mt-8 space-y-4" onSubmit={(e) => void requestReset(e)}>
@@ -135,8 +148,6 @@ export function ForgotPasswordClient() {
               {t('backToSignIn')}
             </Link>
           </p>
-        </div>
-      </section>
     </div>
   );
 }

@@ -1,58 +1,58 @@
 @import 'tailwindcss';
 
 /* ═══════════════════════════════════════════════════════════
-   NIMBUS DESIGN SYSTEM
-   Violet · Pink · Warm Stone Neutrals
-   High contrast, clean surfaces, no glassmorphism
+   ORCA DESIGN SYSTEM
+   Blue-600 primary · Gray neutrals · Clean surfaces
+   Matches ORCA customer-dashboard UI exactly
    ═══════════════════════════════════════════════════════════ */
 
 :root {
-  /* Brand */
-  --vc-navy: 262 83% 58%;        /* Violet-600 */
-  --vc-navy-mid: 262 83% 64%;    /* Violet-500 */
-  --vc-navy-soft: 270 95% 96%;   /* Violet-50 */
-  --vc-orange: 330 81% 60%;      /* Pink-500 */
-  --vc-orange-deep: 330 81% 52%; /* Pink-600 */
-  --vc-orange-soft: 330 81% 96%; /* Pink-50 */
+  /* Brand — Blue-600 matching ORCA */
+  --vc-navy: 221 83% 53%;        /* Blue-600 */
+  --vc-navy-mid: 221 83% 58%;    /* Blue-500 */
+  --vc-navy-soft: 221 83% 96%;   /* Blue-50 */
+  --vc-orange: 221 83% 53%;      /* Same blue — no pink accent in ORCA */
+  --vc-orange-deep: 221 83% 48%; /* Blue-700 */
+  --vc-orange-soft: 221 83% 96%; /* Blue-50 */
 
-  /* Surfaces — warm stone neutrals */
-  --background: 30 20% 99%;      /* Stone-50  — warm off-white */
-  --foreground: 24 10% 10%;      /* Stone-900 — near-black warm */
+  /* Surfaces — gray neutrals matching ORCA */
+  --background: 220 14% 96%;     /* Gray-50 */
+  --foreground: 220 26% 14%;     /* Gray-900 */
   --card: 0 0% 100%;             /* Pure white cards */
-  --card-foreground: 24 10% 10%;
-  --muted: 60 6% 95%;            /* Stone-100 */
-  --muted-foreground: 25 5% 45%; /* Stone-600 — readable secondary */
-  --border: 28 6% 90%;           /* Stone-200 */
-  --ring: 262 83% 58%;           /* Violet focus ring */
-  --primary: 262 83% 58%;        /* Violet-600 */
+  --card-foreground: 220 26% 14%;
+  --muted: 220 14% 96%;          /* Gray-100 */
+  --muted-foreground: 220 9% 46%;/* Gray-500 */
+  --border: 220 13% 91%;         /* Gray-200 */
+  --ring: 221 83% 53%;           /* Blue focus ring */
+  --primary: 221 83% 53%;        /* Blue-600 */
   --primary-foreground: 0 0% 100%;
-  --accent: 330 81% 60%;         /* Pink-500 */
+  --accent: 221 83% 53%;         /* Blue-600 */
   --accent-foreground: 0 0% 100%;
   --destructive: 0 84% 60%;      /* Red-500 */
   --destructive-foreground: 0 0% 100%;
-  --vc-shadow: 24 10% 10%;
+  --vc-shadow: 220 26% 14%;
 }
 
 .dark {
-  --vc-navy: 263 70% 65%;        /* Violet-400 — brighter in dark */
-  --vc-navy-mid: 263 70% 72%;    /* Violet-300 */
-  --vc-navy-soft: 263 30% 14%;   /* Violet-950 */
-  --vc-orange: 330 81% 67%;      /* Pink-400 */
-  --vc-orange-deep: 330 81% 60%; /* Pink-500 */
-  --vc-orange-soft: 330 40% 14%; /* Pink-950 */
+  --vc-navy: 221 83% 60%;        /* Blue-500 brighter in dark */
+  --vc-navy-mid: 221 83% 65%;    /* Blue-400 */
+  --vc-navy-soft: 221 30% 14%;   /* Blue-950 */
+  --vc-orange: 221 83% 60%;
+  --vc-orange-deep: 221 83% 55%;
+  --vc-orange-soft: 221 30% 14%;
 
-  --background: 24 10% 7%;       /* Stone-950 — warm deep dark */
-  --foreground: 60 6% 96%;       /* Stone-100 — high contrast text */
-  --card: 24 8% 10%;             /* Stone-900 — slightly lighter than bg */
-  --card-foreground: 60 6% 96%;
-  --muted: 24 6% 15%;            /* Stone-800 */
-  --muted-foreground: 28 5% 65%; /* Stone-400 — readable secondary */
-  --border: 24 6% 18%;           /* Stone-700 */
-  --ring: 263 70% 65%;
-  --primary: 263 70% 65%;
-  --primary-foreground: 24 10% 7%;
-  --accent: 330 81% 67%;
-  --accent-foreground: 24 10% 7%;
+  --background: 220 26% 7%;      /* Gray-950 */
+  --foreground: 220 14% 96%;     /* Gray-100 */
+  --card: 220 26% 10%;           /* Gray-900 */
+  --card-foreground: 220 14% 96%;
+  --muted: 220 14% 15%;          /* Gray-800 */
+  --muted-foreground: 220 9% 65%;/* Gray-400 */
+  --border: 220 14% 18%;         /* Gray-700 */
+  --ring: 221 83% 60%;
+  --primary: 221 83% 60%;
+  --primary-foreground: 220 26% 7%;
+  --accent: 221 83% 60%;
+  --accent-foreground: 220 26% 7%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
   --vc-shadow: 0 0% 0%;
@@ -72,11 +72,10 @@
   --color-vc-purple: hsl(var(--vc-navy));
   --color-vc-purple-mid: hsl(var(--vc-navy-mid));
   --color-vc-accent: hsl(var(--vc-orange));
-  /* Nimbus brand tokens */
-  --color-brand-primary: #7c3aed;
-  --color-brand-surface: #1c1917;
-  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display',
-    'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+  /* ORCA brand tokens */
+  --color-brand-primary: #2563eb;
+  --color-brand-surface: #f9fafb;
+  --font-sans: var(--font-cairo), var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
@@ -95,30 +94,24 @@ body {
   line-height: 1.5;
 }
 
-/* Light — warm canvas with subtle violet/pink tint */
+/* Light — clean gray background matching ORCA */
 html:not(.dark) body {
-  background:
-    radial-gradient(ellipse 60% 40% at 100% 0%, hsl(262 83% 58% / 0.04), transparent 55%),
-    radial-gradient(ellipse 50% 35% at 0% 100%, hsl(330 81% 60% / 0.03), transparent 55%),
-    hsl(var(--background));
-  background-attachment: fixed;
+  background: hsl(var(--background));
 }
 
-/* Dark — deep warm stone */
+/* Dark — clean dark gray */
 html.dark body {
   background-color: hsl(var(--background));
-  background-image: radial-gradient(ellipse 100% 60% at 50% -10%, hsl(263 70% 65% / 0.05), transparent 50%);
-  background-attachment: fixed;
 }
 
 /* ── Scrollbars ── */
 * {
   scrollbar-width: thin;
-  scrollbar-color: hsl(262 83% 58% / 0.25) transparent;
+  scrollbar-color: hsl(221 83% 53% / 0.25) transparent;
 }
 
 html:not(.dark) * {
-  scrollbar-color: hsl(24 10% 10% / 0.12) transparent;
+  scrollbar-color: hsl(220 26% 14% / 0.12) transparent;
 }
 
 .vc-scrollbar {
@@ -131,12 +124,12 @@ html:not(.dark) * {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(262 83% 58% / 0.3);
+  background: hsl(221 83% 53% / 0.3);
   border-radius: 999px;
 }
 
 html:not(.dark) ::-webkit-scrollbar-thumb {
-  background: hsl(24 10% 10% / 0.15);
+  background: hsl(220 26% 14% / 0.15);
   border-radius: 999px;
 }
 
@@ -152,7 +145,7 @@ html:not(.dark) ::-webkit-scrollbar-thumb {
 }
 
 .font-ar, [lang='ar'] {
-  font-family: var(--font-sans-ar), 'Segoe UI', Tahoma, sans-serif;
+  font-family: var(--font-cairo), 'Segoe UI', Tahoma, sans-serif;
   letter-spacing: 0;
   line-height: 1.65;
 }
@@ -193,8 +186,8 @@ html:not(.dark) ::-webkit-scrollbar-thumb {
 }
 
 .vc-card-surface:hover {
-  border-color: hsl(262 83% 58% / 0.2);
-  box-shadow: 0 4px 12px hsl(24 10% 10% / 0.06);
+  border-color: hsl(221 83% 53% / 0.2);
+  box-shadow: 0 4px 12px hsl(220 26% 14% / 0.06);
 }
 
 .dark .vc-card-surface {
@@ -203,12 +196,12 @@ html:not(.dark) ::-webkit-scrollbar-thumb {
 }
 
 .dark .vc-card-surface:hover {
-  border-color: hsl(263 70% 65% / 0.25);
+  border-color: hsl(221 83% 60% / 0.25);
   box-shadow: 0 4px 12px hsl(0 0% 0% / 0.3);
 }
 
 .vc-surface-elevated {
-  box-shadow: 0 4px 16px hsl(24 10% 10% / 0.06);
+  box-shadow: 0 4px 16px hsl(220 26% 14% / 0.06);
 }
 
 .dark .vc-surface-elevated {
@@ -225,7 +218,7 @@ html:not(.dark) ::-webkit-scrollbar-thumb {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(ellipse 70% 50% at 100% 0%, hsl(262 83% 58% / 0.06), transparent 60%);
+  background: radial-gradient(ellipse 70% 50% at 100% 0%, hsl(221 83% 53% / 0.06), transparent 60%);
   pointer-events: none;
 }
 
@@ -240,44 +233,44 @@ html:not(.dark) ::-webkit-scrollbar-thumb {
   align-items: center;
   justify-content: center;
   border-radius: 0.625rem;
-  background: hsl(262 83% 58% / 0.08);
-  border: 1px solid hsl(262 83% 58% / 0.12);
+  background: hsl(221 83% 53% / 0.08);
+  border: 1px solid hsl(221 83% 53% / 0.12);
 }
 
 html:not(.dark) .vc-icon-glass-circle {
-  background: hsl(262 83% 58% / 0.06);
-  border: 1px solid hsl(262 83% 58% / 0.12);
+  background: hsl(221 83% 53% / 0.06);
+  border: 1px solid hsl(221 83% 53% / 0.12);
 }
 
 /* ── Buttons ── */
 .vc-btn-primary {
   border: none;
-  background: hsl(262 83% 58%);
+  background: hsl(221 83% 53%);
   color: #fff;
-  box-shadow: 0 1px 3px hsl(262 83% 58% / 0.3);
+  box-shadow: 0 1px 3px hsl(221 83% 53% / 0.3);
   transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
 }
 
 .vc-btn-primary:hover {
-  background: hsl(262 83% 52%);
-  box-shadow: 0 4px 12px hsl(262 83% 58% / 0.3);
+  background: hsl(221 83% 48%);
+  box-shadow: 0 4px 12px hsl(221 83% 53% / 0.3);
 }
 
 .vc-btn-primary:active {
-  background: hsl(262 83% 48%);
+  background: hsl(221 83% 44%);
 }
 
 .vc-btn-cta, .vc-btn-accent {
   border: none;
-  background: hsl(330 81% 60%);
+  background: hsl(221 83% 53%);
   color: #fff;
-  box-shadow: 0 1px 3px hsl(330 81% 60% / 0.3);
+  box-shadow: 0 1px 3px hsl(221 83% 53% / 0.3);
   transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
 }
 
 .vc-btn-cta:hover, .vc-btn-accent:hover {
-  background: hsl(330 81% 54%);
-  box-shadow: 0 4px 12px hsl(330 81% 60% / 0.3);
+  background: hsl(221 83% 48%);
+  box-shadow: 0 4px 12px hsl(221 83% 53% / 0.3);
 }
 
 /* ── Table rows ── */
@@ -325,7 +318,7 @@ html:not(.dark) .vc-table-head-surface {
   width: min(600px, 90vw);
   height: min(600px, 90vw);
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, hsl(262 83% 58% / 0.12) 0%, transparent 60%);
+  background: radial-gradient(circle at 50% 50%, hsl(221 83% 53% / 0.12) 0%, transparent 60%);
   filter: blur(400px);
   opacity: 1;
   will-change: transform;
@@ -341,7 +334,7 @@ html:not(.dark) .vc-table-head-surface {
   height: min(500px, 85vw);
   bottom: -25%;
   inset-inline-end: -12%;
-  background: radial-gradient(circle at 50% 50%, hsl(330 81% 60% / 0.08) 0%, transparent 60%);
+  background: radial-gradient(circle at 50% 50%, hsl(221 83% 53% / 0.08) 0%, transparent 60%);
 }
 
 .vc-aurora-orb-c {
@@ -368,11 +361,11 @@ html:not(.dark) .vc-aurora-orb {
 }
 
 html:not(.dark) .vc-aurora-orb-a {
-  background: radial-gradient(circle at 50% 50%, hsl(262 83% 58% / 0.06) 0%, transparent 60%);
+  background: radial-gradient(circle at 50% 50%, hsl(221 83% 53% / 0.06) 0%, transparent 60%);
 }
 
 html:not(.dark) .vc-aurora-orb-b {
-  background: radial-gradient(circle at 50% 50%, hsl(330 81% 60% / 0.04) 0%, transparent 60%);
+  background: radial-gradient(circle at 50% 50%, hsl(221 83% 53% / 0.04) 0%, transparent 60%);
 }
 
 /* ── Logo ── */
@@ -384,8 +377,8 @@ html:not(.dark) .vc-aurora-orb-b {
 /* ── Screen cards ── */
 .ngl-screen-card-live {
   box-shadow:
-    0 0 0 1px hsl(262 83% 58% / 0.15),
-    0 4px 16px hsl(262 83% 58% / 0.06);
+    0 0 0 1px hsl(221 83% 53% / 0.15),
+    0 4px 16px hsl(221 83% 53% / 0.06);
 }
 
 /* ── Media tiles ── */
@@ -394,7 +387,7 @@ html:not(.dark) .vc-aurora-orb-b {
   background: hsl(var(--card));
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  box-shadow: 0 1px 3px hsl(24 10% 10% / 0.04);
+  box-shadow: 0 1px 3px hsl(220 26% 14% / 0.04);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -405,10 +398,10 @@ html:not(.dark) .vc-aurora-orb-b {
 }
 
 .ngl-media-tile:hover {
-  border-color: hsl(262 83% 58% / 0.25);
-  box-shadow: 0 4px 12px hsl(262 83% 58% / 0.08);
+  border-color: hsl(221 83% 53% / 0.25);
+  box-shadow: 0 4px 12px hsl(221 83% 53% / 0.08);
 }
 
 .ngl-media-icon-accent {
-  color: hsl(262 83% 58%);
+  color: hsl(221 83% 53%);
 }

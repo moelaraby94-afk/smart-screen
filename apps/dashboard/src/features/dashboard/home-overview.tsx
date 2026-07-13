@@ -32,7 +32,7 @@ export function HomeOverview({ appTitle, headline, description }: Props) {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
               <Sparkles className="h-4 w-4 text-primary" strokeWidth={1.5} />
             </div>
-            <p className="vc-page-kicker">{t('kicker')}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">{t('kicker')}</p>
           </div>
 
           <h1 className="mt-4 max-w-3xl text-2xl font-bold tracking-tight text-foreground sm:text-3xl">

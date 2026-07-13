@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { UsageIndicator } from '@/components/usage-indicator';
 import { isApiError, readApiError } from '@/features/api/api-error';
+import { apiFetch } from '@/features/auth/session';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import {
   fetchMedia,
@@ -59,6 +60,7 @@ export type MediaItem = {
   workspaceName?: string;
   folderId?: string | null;
   folderName?: string | null;
+  expiresAt?: string | null;
 };
 
 export function MediaLibraryClient() {
@@ -85,6 +87,8 @@ export function MediaLibraryClient() {
   const [playlistOptions, setPlaylistOptions] = useState<{ id: string; name: string; _count: { items: number } }[]>([]);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>('');
   const [addingToPlaylist, setAddingToPlaylist] = useState(false);
+  const [expiryDate, setExpiryDate] = useState<string>('');
+  const [savingExpiry, setSavingExpiry] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [mediaPage, setMediaPage] = useState(1);
@@ -430,6 +434,39 @@ export function MediaLibraryClient() {
     }
   };
 
+  const handleSaveExpiry = async () => {
+    if (!infoTarget) return;
+    const ws = infoTarget.workspaceId ?? workspaceId;
+    if (!ws) return;
+    setSavingExpiry(true);
+    try {
+      const res = await apiFetch(`/media/${infoTarget.id}/expiry?workspaceId=${encodeURIComponent(ws)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expiresAt: expiryDate || null }),
+      });
+      if (!res.ok) {
+        toast.error(t('expirySaveFailed'));
+        return;
+      }
+      toast.success(t('expirySaved'));
+      setInfoTarget(null);
+      await load();
+    } catch {
+      toast.error(t('expirySaveFailed'));
+    } finally {
+      setSavingExpiry(false);
+    }
+  };
+
+  useEffect(() => {
+    if (infoTarget?.expiresAt) {
+      setExpiryDate(infoTarget.expiresAt.split('T')[0]);
+    } else {
+      setExpiryDate('');
+    }
+  }, [infoTarget]);
+
   if (scope === 'branch' && !workspaceId) {
     return <p className="text-[15px] text-muted-foreground">{t('selectWorkspace')}</p>;
   }
@@ -443,12 +480,9 @@ export function MediaLibraryClient() {
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="vc-card-surface flex flex-col gap-6 rounded-2xl border border-border p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8"
+        className="flex flex-col gap-4 rounded-2xl border border-border p-6 sm:flex-row sm:items-center sm:justify-between"
       >
         <div className="min-w-0 flex-1">
-          <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-            {scope === 'all' ? t('descriptionAllBranches') : t('description')}
-          </p>
           {workspaces.length > 1 ? (
             <div className="mt-4 inline-flex flex-wrap gap-1 rounded-xl border border-border bg-muted/50 p-1">
               <button
@@ -718,6 +752,33 @@ export function MediaLibraryClient() {
                   <dd className="max-w-[200px] truncate font-mono text-xs text-primary">{infoTarget.publicUrl}</dd>
                 </div>
               </dl>
+              <div className="space-y-2 border-t border-border pt-3">
+                <label className="text-sm font-medium text-foreground">{t('expiryLabel')}</label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="date"
+                    value={expiryDate}
+                    onChange={(e) => setExpiryDate(e.target.value)}
+                    className="rounded-xl"
+                  />
+                  <Button
+                    type="button"
+                    variant="cta"
+                    size="sm"
+                    className="rounded-xl shrink-0"
+                    disabled={savingExpiry}
+                    onClick={() => void handleSaveExpiry()}
+                  >
+                    {t('expirySave')}
+                  </Button>
+                </div>
+                {infoTarget.expiresAt && (
+                  <p className="text-xs text-amber-600">
+                    {t('expiryCurrent', { date: new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(infoTarget.expiresAt)) })}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">{t('expiryHint')}</p>
+              </div>
             </div>
           )}
         </DialogContent>

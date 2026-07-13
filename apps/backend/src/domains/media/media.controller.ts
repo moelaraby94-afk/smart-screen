@@ -137,4 +137,16 @@ export class MediaController {
       dto.folderId ?? null,
     );
   }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
+  @Patch(':id/expiry')
+  async setExpiry(
+    @Param('id') id: string,
+    @Query('workspaceId') workspaceId: string,
+    @Body() body: { expiresAt: string | null },
+  ) {
+    if (!workspaceId) throw new BadRequestException('workspaceId is required');
+    const updated = await this.mediaService.setExpiry(workspaceId, id, body.expiresAt);
+    return this.mediaService.toResponse(updated);
+  }
 }

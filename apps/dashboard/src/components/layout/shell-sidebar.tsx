@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
   Activity,
+  AlertTriangle,
   BarChart3,
   Bell,
   Building2,
@@ -16,16 +17,21 @@ import {
   CircleHelp,
   Clapperboard,
   CreditCard,
+  FolderOpen,
   Globe2,
+  Group,
   Image as ImageIcon,
   LayoutDashboard,
   LayoutGrid,
+  LayoutTemplate,
   LogOut,
+  Megaphone,
   Monitor,
   Moon,
   ScrollText,
   Server,
   Settings,
+  Sparkles,
   Sun,
   Terminal,
   UserCog,
@@ -48,27 +54,44 @@ import { cn } from '@/lib/utils';
 const STROKE = 1.6;
 
 const CLIENT_NAV = [
-  { key: 'home', hrefKey: 'overview' as const, icon: LayoutDashboard },
-  { key: 'media', hrefKey: 'media' as const, icon: ImageIcon },
-  { key: 'newPlaylist', hrefKey: 'playlists' as const, icon: Clapperboard },
-  { key: 'newScreen', hrefKey: 'screens' as const, icon: Monitor },
-  { key: 'schedules', hrefKey: 'schedules' as const, icon: CalendarClock },
-  { key: 'analytics', hrefKey: 'analytics' as const, icon: BarChart3 },
-  { key: 'auditLog', hrefKey: 'auditLog' as const, icon: ScrollText },
+  { key: 'overview', hrefKey: 'overview' as const, icon: LayoutDashboard },
+  { key: 'screens', hrefKey: 'screens' as const, icon: Monitor },
+  { key: 'displays', hrefKey: 'displays' as const, icon: Monitor },
+  { key: 'media', hrefKey: 'media' as const, icon: FolderOpen },
+  { key: 'content', hrefKey: 'content' as const, icon: ImageIcon },
+  { key: 'studio', hrefKey: 'studio' as const, icon: Clapperboard },
+] as const;
+
+const MANAGEMENT_NAV = [
+  { key: 'displayGroups', hrefKey: 'displayGroups' as const, icon: Group },
+  { key: 'templates', hrefKey: 'templates' as const, icon: LayoutTemplate },
   { key: 'team', hrefKey: 'team' as const, icon: Users },
-  { key: 'notifications', hrefKey: 'notifications' as const, icon: Bell },
-  { key: 'help', hrefKey: 'help' as const, icon: CircleHelp },
-  { key: 'apiDocs', hrefKey: 'apiDocs' as const, icon: Terminal },
+] as const;
+
+const SCHEDULING_NAV = [
+  { key: 'playlists', hrefKey: 'playlists' as const, icon: Clapperboard },
+  { key: 'campaigns', hrefKey: 'campaigns' as const, icon: Megaphone },
+  { key: 'schedules', hrefKey: 'schedules' as const, icon: CalendarClock },
+] as const;
+
+const TOOLS_NAV = [
+  { key: 'proofOfPlay', hrefKey: 'proofOfPlay' as const, icon: BarChart3 },
+  { key: 'analytics', hrefKey: 'analytics' as const, icon: Activity },
+  { key: 'ai', hrefKey: 'ai' as const, icon: Sparkles },
+  { key: 'emergency', hrefKey: 'emergency' as const, icon: AlertTriangle },
 ] as const;
 
 const CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE = new Set<
-  (typeof CLIENT_NAV)[number]['hrefKey']
->(['overview', 'media', 'help', 'apiDocs']);
+  string
+>(['overview', 'screens', 'displays', 'media', 'content', 'studio', 'displayGroups', 'templates', 'team', 'proofOfPlay', 'playlists', 'campaigns', 'schedules', 'ai', 'analytics', 'emergency', 'help', 'apiDocs', 'notifications', 'auditLog']);
 
 function hrefFor(
   locale: string,
   hrefKey:
     | (typeof CLIENT_NAV)[number]['hrefKey']
+    | (typeof MANAGEMENT_NAV)[number]['hrefKey']
+    | (typeof SCHEDULING_NAV)[number]['hrefKey']
+    | (typeof TOOLS_NAV)[number]['hrefKey']
     | 'overview'
     | 'adminHome'
     | 'adminCustomers'
@@ -76,17 +99,31 @@ function hrefFor(
     | 'adminStats'
     | 'adminLogs'
     | 'adminSettings'
+    | 'adminWorkspaces'
     | 'adminFleet'
     | 'adminScreens'
     | 'help'
     | 'apiDocs'
     | 'notifications'
     | 'analytics'
-    | 'auditLog',
+    | 'auditLog'
+    | 'media'
+    | 'team'
+    | 'screens'
+    | 'studio'
+    | 'displays'
+    | 'displayGroups'
+    | 'content'
+    | 'templates'
+    | 'proofOfPlay'
+    | 'campaigns'
+    | 'ai'
+    | 'emergency',
 ): string {
   if (hrefKey === 'overview') return `/${locale}/overview`;
   if (hrefKey === 'adminHome') return `/${locale}/admin`;
   if (hrefKey === 'adminCustomers') return `/${locale}/admin/customers`;
+  if (hrefKey === 'adminWorkspaces') return `/${locale}/admin/workspaces`;
   if (hrefKey === 'adminFleet') return `/${locale}/admin/fleet`;
   if (hrefKey === 'adminScreens') return `/${locale}/admin/screens`;
   if (hrefKey === 'adminStaff') return `/${locale}/admin/staff`;
@@ -98,6 +135,18 @@ function hrefFor(
   if (hrefKey === 'notifications') return `/${locale}/notifications`;
   if (hrefKey === 'analytics') return `/${locale}/analytics`;
   if (hrefKey === 'auditLog') return `/${locale}/audit-log`;
+  if (hrefKey === 'media') return `/${locale}/media`;
+  if (hrefKey === 'team') return `/${locale}/team`;
+  if (hrefKey === 'screens') return `/${locale}/screens`;
+  if (hrefKey === 'studio') return `/${locale}/studio`;
+  if (hrefKey === 'displays') return `/${locale}/displays`;
+  if (hrefKey === 'displayGroups') return `/${locale}/displays/groups`;
+  if (hrefKey === 'content') return `/${locale}/content`;
+  if (hrefKey === 'templates') return `/${locale}/templates`;
+  if (hrefKey === 'proofOfPlay') return `/${locale}/proof-of-play`;
+  if (hrefKey === 'campaigns') return `/${locale}/campaigns`;
+  if (hrefKey === 'ai') return `/${locale}/ai`;
+  if (hrefKey === 'emergency') return `/${locale}/emergency`;
   return `/${locale}/${hrefKey}`;
 }
 
@@ -147,16 +196,6 @@ function sovereignLinkActive(
   return false;
 }
 
-function navCountFor(
-  key: string,
-  counts: { media: number; screens: number; playlists: number },
-): number | null {
-  if (key === 'media') return counts.media;
-  if (key === 'screens') return counts.screens;
-  if (key === 'playlists') return counts.playlists;
-  return null;
-}
-
 /* ── Nav Item ── */
 function NavItem({
   href,
@@ -180,7 +219,7 @@ function NavItem({
       aria-current={active ? 'page' : undefined}
       className={cn(
         'group relative flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 text-[13px]',
-        'transition-colors duration-200',
+        'transition-all duration-200 ease-out',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30',
         active
           ? 'bg-primary/8 text-foreground'
@@ -189,23 +228,23 @@ function NavItem({
 >
       {/* Active indicator bar */}
       {active ? (
-        <span className="absolute inset-inline-start-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
+        <span className="absolute inset-inline-start-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary transition-all duration-200" />
       ) : null}
 
       <Icon
         className={cn(
-          'h-5 w-5 shrink-0 transition-colors',
-          active ? 'text-primary' : 'text-muted-foreground/70 group-hover:text-foreground',
+          'h-5 w-5 shrink-0 transition-all duration-200',
+          active ? 'text-primary' : 'text-muted-foreground/70 group-hover:text-foreground group-hover:scale-105',
         )}
         strokeWidth={STROKE}
       />
-      <span className={cn('min-w-0 flex-1 truncate', active ? 'font-semibold' : 'font-medium')}>
+      <span className={cn('min-w-0 flex-1 truncate transition-all duration-200', active ? 'font-semibold' : 'font-medium')}>
         {label}
       </span>
       {count !== null && count !== undefined && count > 0 ? (
         <span
           className={cn(
-            'text-[10px] font-bold tabular-nums transition-colors',
+            'text-[10px] font-bold tabular-nums transition-colors duration-200',
             active ? 'text-primary' : 'text-muted-foreground/50',
           )}
         >
@@ -348,6 +387,12 @@ export function ShellSidebar({
                 icon={Users}
               />
               <NavItem
+                href={hrefFor(navLocale, 'adminWorkspaces') as Route}
+                label={t('adminWorkspaces')}
+                active={pathname?.startsWith(`/${navLocale}/admin/workspaces`) ?? false}
+                icon={Building2}
+              />
+              <NavItem
                 href={hrefFor(navLocale, 'adminFleet') as Route}
                 label={t('adminFleet')}
                 active={sovereignLinkActive(pathname, navLocale, 'adminFleet')}
@@ -385,6 +430,32 @@ export function ShellSidebar({
                 active={sovereignLinkActive(pathname, navLocale, 'adminSettings')}
                 icon={Settings}
               />
+
+              <SectionLabel>{t('resourcesSection')}</SectionLabel>
+              <NavItem
+                href={hrefFor(navLocale, 'notifications') as Route}
+                label={t('notifications')}
+                active={sovereignLinkActive(pathname, navLocale, 'notifications')}
+                icon={Bell}
+              />
+              <NavItem
+                href={hrefFor(navLocale, 'auditLog') as Route}
+                label={t('auditLog')}
+                active={sovereignLinkActive(pathname, navLocale, 'auditLog')}
+                icon={ScrollText}
+              />
+              <NavItem
+                href={hrefFor(navLocale, 'apiDocs') as Route}
+                label={t('apiDocs')}
+                active={sovereignLinkActive(pathname, navLocale, 'apiDocs')}
+                icon={Terminal}
+              />
+              <NavItem
+                href={hrefFor(navLocale, 'help') as Route}
+                label={t('help')}
+                active={sovereignLinkActive(pathname, navLocale, 'help')}
+                icon={CircleHelp}
+              />
             </>
           ) : (
             <>
@@ -394,12 +465,6 @@ export function ShellSidebar({
                   item.hrefKey === 'overview'
                     ? isOverviewPath(pathname, navLocale)
                     : Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
-                const count =
-                  item.key === 'newPlaylist'
-                    ? workspaceId ? counts.playlists : null
-                    : item.key === 'newScreen'
-                      ? workspaceId ? counts.screens : null
-                      : workspaceId ? navCountFor(item.key, counts) : null;
                 return (
                   <NavItem
                     key={item.key}
@@ -407,7 +472,101 @@ export function ShellSidebar({
                     label={t(item.key)}
                     active={active}
                     icon={item.icon}
-                    count={count}
+                    onClick={(e) => {
+                      if (isLoading) {
+                        e.preventDefault();
+                        return;
+                      }
+                      if (
+                        isAuthenticated &&
+                        !workspaceId &&
+                        !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has(item.hrefKey)
+                      ) {
+                        e.preventDefault();
+                        toast.error(t('selectWorkspaceToast'));
+                      }
+                    }}
+                  />
+                );
+              })}
+
+              <SectionLabel>{t('managementSection')}</SectionLabel>
+              {MANAGEMENT_NAV.map((item) => {
+                const href = hrefFor(navLocale, item.hrefKey);
+                const active =
+                  item.hrefKey === 'displayGroups'
+                    ? Boolean(pathname?.startsWith(`/${navLocale}/displays/groups`))
+                    : Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
+                return (
+                  <NavItem
+                    key={item.key}
+                    href={href as Route}
+                    label={t(item.key)}
+                    active={active}
+                    icon={item.icon}
+                    onClick={(e) => {
+                      if (isLoading) {
+                        e.preventDefault();
+                        return;
+                      }
+                      if (
+                        isAuthenticated &&
+                        !workspaceId &&
+                        !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has(item.hrefKey)
+                      ) {
+                        e.preventDefault();
+                        toast.error(t('selectWorkspaceToast'));
+                      }
+                    }}
+                  />
+                );
+              })}
+
+              <SectionLabel>{t('schedulingSection')}</SectionLabel>
+              {SCHEDULING_NAV.map((item) => {
+                const href = hrefFor(navLocale, item.hrefKey);
+                const active = Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
+                return (
+                  <NavItem
+                    key={item.key}
+                    href={href as Route}
+                    label={t(item.key)}
+                    active={active}
+                    icon={item.icon}
+                    onClick={(e) => {
+                      if (isLoading) {
+                        e.preventDefault();
+                        return;
+                      }
+                      if (
+                        isAuthenticated &&
+                        !workspaceId &&
+                        !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has(item.hrefKey)
+                      ) {
+                        e.preventDefault();
+                        toast.error(t('selectWorkspaceToast'));
+                      }
+                    }}
+                  />
+                );
+              })}
+
+              <SectionLabel>{t('toolsSection')}</SectionLabel>
+              {TOOLS_NAV.map((item) => {
+                const href = hrefFor(navLocale, item.hrefKey);
+                const active =
+                  item.hrefKey === 'proofOfPlay'
+                    ? Boolean(pathname?.startsWith(`/${navLocale}/proof-of-play`))
+                    : item.hrefKey === 'analytics'
+                      ? Boolean(pathname?.startsWith(`/${navLocale}/analytics`))
+                      : Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
+                return (
+                  <NavItem
+                    key={item.key}
+                    href={href as Route}
+                    label={t(item.key)}
+                    active={active}
+                    icon={item.icon}
                     onClick={(e) => {
                       if (isLoading) {
                         e.preventDefault();
@@ -428,22 +587,42 @@ export function ShellSidebar({
 
               <SectionLabel>{t('accountSection')}</SectionLabel>
               <NavItem
+                href={`/${navLocale}/settings/billing` as Route}
+                label={t('billing')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/settings/billing`))}
+                icon={CreditCard}
+              />
+              <NavItem
                 href={`/${navLocale}/settings/profile` as Route}
-                label={t('profileSettings')}
+                label={t('settings')}
                 active={Boolean(pathname?.startsWith(`/${navLocale}/settings/profile`))}
                 icon={Settings}
               />
+
+              <SectionLabel>{t('resourcesSection')}</SectionLabel>
               <NavItem
-                href={`/${navLocale}/settings/workspace` as Route}
-                label={t('workspaceSettings')}
-                active={Boolean(pathname?.startsWith(`/${navLocale}/settings/workspace`))}
-                icon={Building2}
+                href={hrefFor(navLocale, 'notifications') as Route}
+                label={t('notifications')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/notifications`))}
+                icon={Bell}
               />
               <NavItem
-                href={`/${navLocale}/settings/billing` as Route}
-                label={t('billingAndPayments')}
-                active={Boolean(pathname?.startsWith(`/${navLocale}/settings/billing`))}
-                icon={CreditCard}
+                href={hrefFor(navLocale, 'auditLog') as Route}
+                label={t('auditLog')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/audit-log`))}
+                icon={ScrollText}
+              />
+              <NavItem
+                href={hrefFor(navLocale, 'apiDocs') as Route}
+                label={t('apiDocs')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/api-docs`))}
+                icon={Terminal}
+              />
+              <NavItem
+                href={hrefFor(navLocale, 'help') as Route}
+                label={t('help')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/help`))}
+                icon={CircleHelp}
               />
             </>
           )}

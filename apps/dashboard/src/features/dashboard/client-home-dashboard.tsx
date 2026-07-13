@@ -95,7 +95,8 @@ export function ClientHomeDashboard() {
   const onOpenBranch = useCallback(
     (wsId: string) => {
       setWorkspaceId(wsId);
-      router.push(`/branches/${wsId}` as never as Route);
+      const locale = typeof window !== 'undefined' ? document.documentElement.lang || 'en' : 'en';
+      router.push(`/${locale}/branches/${wsId}` as never as Route);
     },
     [setWorkspaceId, router],
   );

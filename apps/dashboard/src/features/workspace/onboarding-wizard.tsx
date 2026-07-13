@@ -149,7 +149,7 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
                   type="button"
                   onClick={() => void handleSeedDemo()}
                   disabled={seeding}
-                  className="flex w-full items-center gap-4 rounded-2xl border border-border bg-muted/20 p-4 text-start transition hover:border-primary/40 hover:bg-primary/5 disabled:opacity-60"
+                  className="vc-card-surface flex w-full items-center gap-4 rounded-2xl border border-border p-4 text-start transition hover:border-primary/40 hover:bg-primary/5 disabled:opacity-60"
                 >
                   <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
                     {seeding ? <Loader2 className="h-6 w-6 animate-spin text-primary" /> : <Wand2 className="h-6 w-6 text-primary" />}
@@ -164,7 +164,7 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
                   type="button"
                   onClick={handleSkip}
                   disabled={seeding}
-                  className="flex w-full items-center gap-4 rounded-2xl border border-border bg-muted/20 p-4 text-start transition hover:border-primary/40 hover:bg-primary/5 disabled:opacity-60"
+                  className="vc-card-surface flex w-full items-center gap-4 rounded-2xl border border-border p-4 text-start transition hover:border-primary/40 hover:bg-primary/5 disabled:opacity-60"
                 >
                   <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted">
                     <Rocket className="h-6 w-6 text-muted-foreground" />
@@ -208,7 +208,7 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
                       router.push(link.href as never as Route);
                       router.refresh();
                     }}
-                    className="flex w-full items-center gap-4 rounded-2xl border border-border bg-muted/20 p-4 text-start transition hover:border-primary/40 hover:bg-primary/5"
+                    className="vc-card-surface flex w-full items-center gap-4 rounded-2xl border border-border p-4 text-start transition hover:border-primary/40 hover:bg-primary/5"
                   >
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
                       <link.icon className="h-5 w-5 text-primary" />

@@ -237,15 +237,8 @@ export function ScreensClient({ locale }: Props) {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="vc-card-surface flex flex-col gap-4 rounded-2xl border border-border p-6 sm:flex-row sm:items-center sm:justify-between"
+        className="flex flex-col gap-4 rounded-2xl border border-border p-6 sm:flex-row sm:items-center sm:justify-between"
       >
-        <div>
-          <p className="vc-page-kicker">{t('fleet')}</p>
-          <h2 className="mt-1 text-xl font-semibold tracking-tight">{t('title')}</h2>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            {t('description')}
-          </p>
-        </div>
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-mono-nums text-xs text-muted-foreground">
             <span className="text-foreground">{new Intl.NumberFormat(locale).format(screens.length)}</span> {t('screensCount')}
@@ -272,6 +265,7 @@ export function ScreensClient({ locale }: Props) {
             </DialogTrigger>
             <CreateScreenDialogContent
               workspaceId={workspaceId}
+              onCancel={() => setOpenAdd(false)}
               onSuccess={async () => {
                 setOpenAdd(false);
                 await reload();
@@ -446,6 +440,10 @@ export function ScreensClient({ locale }: Props) {
           <EditScreenDialogContent
             screen={selected}
             workspaceId={workspaceId}
+            onCancel={() => {
+              setOpenEdit(false);
+              setSelected(null);
+            }}
             onSuccess={async () => {
               setOpenEdit(false);
               setSelected(null);

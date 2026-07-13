@@ -1,11 +1,6 @@
 /**
- * Auth routes — Nimbus clean background (light-first, dark adapts).
- * No glassmorphism, no Aurora orbs. Solid surfaces with subtle violet tint.
+ * Auth routes — clean centered card design matching ORCA.
  */
 export default function AuthGroupLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="relative min-h-screen bg-background text-foreground">
-      <div className="relative z-[1] min-h-screen">{children}</div>
-    </div>
-  );
+  return <div className="min-h-screen bg-muted/30 text-foreground">{children}</div>;
 }

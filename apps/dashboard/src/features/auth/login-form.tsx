@@ -16,13 +16,6 @@ import { readApiError } from '@/features/api/api-error';
 import { useApiErrorMessage } from '@/features/api/use-api-error-message';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 
-type LoginFormProps = {
-  /** Kept for API compatibility — no longer used. */
-  variant?: 'default' | 'dark';
-  /** Kept for API compatibility — no longer used. */
-  layout?: 'card' | 'split';
-};
-
 type AuthSuccessPayload = {
   user?: { isSuperAdmin?: boolean };
   workspaces?: Array<{ id: string; name: string; role: string }>;
@@ -36,10 +29,7 @@ const showDevTools =
 const nimbusInput =
   'h-11 rounded-xl border border-border bg-card text-[15px] text-foreground placeholder:text-muted-foreground/50 focus-visible:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20';
 
-export function LoginForm({
-  variant = 'default',
-  layout = 'card',
-}: LoginFormProps) {
+export function LoginForm() {
   const t = useTranslations('authForm');
   const errorMessage = useApiErrorMessage();
   const activeLocale = useLocale();
@@ -147,9 +137,6 @@ export function LoginForm({
       setPending(false);
     }
   };
-
-  const dark = false;
-  const split = false;
 
   return (
     <div className="space-y-6">

@@ -1,16 +1,16 @@
 import type { Metadata } from 'next';
 import { cookies, headers } from 'next/headers';
-import { IBM_Plex_Sans_Arabic } from 'next/font/google';
+import { Cairo } from 'next/font/google';
 import { GeistMono } from 'geist/font/mono';
 import { GeistSans } from 'geist/font/sans';
 import { ThemeProvider } from '@/components/theme-provider';
 import { routing } from '@/i18n/routing';
 import './globals.css';
 
-const ibmPlexArabic = IBM_Plex_Sans_Arabic({
-  subsets: ['arabic'],
+const cairo = Cairo({
+  subsets: ['arabic', 'latin'],
   weight: ['400', '500', '600', '700'],
-  variable: '--font-sans-ar',
+  variable: '--font-cairo',
   display: 'swap',
 });
 
@@ -44,7 +44,7 @@ export default async function RootLayout({
     <html
       lang={htmlLang}
       suppressHydrationWarning
-      className={`${GeistSans.variable} ${GeistMono.variable} ${ibmPlexArabic.variable}`}
+      className={`${GeistSans.variable} ${GeistMono.variable} ${cairo.variable}`}
     >
       <body
         className={`${GeistSans.className} min-h-screen antialiased bg-background text-foreground`}
@@ -53,10 +53,10 @@ export default async function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "!function(){try{var r=document.documentElement;var k='theme';var t=localStorage.getItem(k);if(t==='light'){r.classList.remove('dark');}else{r.classList.add('dark');}}catch(e){document.documentElement.classList.add('dark');}}();",
+              "!function(){try{var r=document.documentElement;var k='theme';var t=localStorage.getItem(k);if(t==='dark'){r.classList.add('dark');}else{r.classList.remove('dark');}}catch(e){document.documentElement.classList.remove('dark');}}();",
           }}
         />
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} storageKey="theme">
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="theme">
           {children}
         </ThemeProvider>
       </body>

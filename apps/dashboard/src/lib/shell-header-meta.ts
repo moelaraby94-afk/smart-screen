@@ -117,6 +117,32 @@ export function useShellHeaderMeta(pathname: string | null): ShellHeaderMeta {
       pageTitle = t('pageTitles.overview');
     } else if (rest[0] === 'screens') {
       pageTitle = t('pageTitles.screens');
+    } else if (rest[0] === 'displays' && rest[1] === 'groups') {
+      pageTitle = t('pageTitles.displayGroups');
+    } else if (rest[0] === 'displays') {
+      pageTitle = t('pageTitles.displays');
+    } else if (rest[0] === 'content') {
+      pageTitle = t('pageTitles.content');
+    } else if (rest[0] === 'templates') {
+      pageTitle = t('pageTitles.templates');
+    } else if (rest[0] === 'proof-of-play') {
+      pageTitle = t('pageTitles.proofOfPlay');
+    } else if (rest[0] === 'campaigns') {
+      pageTitle = t('pageTitles.campaigns');
+    } else if (rest[0] === 'ai') {
+      pageTitle = t('pageTitles.ai');
+    } else if (rest[0] === 'emergency') {
+      pageTitle = t('pageTitles.emergency');
+    } else if (rest[0] === 'analytics') {
+      pageTitle = t('pageTitles.analytics');
+    } else if (rest[0] === 'audit-log') {
+      pageTitle = t('pageTitles.auditLog');
+    } else if (rest[0] === 'notifications') {
+      pageTitle = t('pageTitles.notifications');
+    } else if (rest[0] === 'api-docs') {
+      pageTitle = t('pageTitles.apiDocs');
+    } else if (rest[0] === 'help') {
+      pageTitle = t('pageTitles.help');
     } else if (rest[0] === 'media') {
       pageTitle = t('pageTitles.media');
     } else if (rest[0] === 'studio') {
@@ -133,6 +159,8 @@ export function useShellHeaderMeta(pathname: string | null): ShellHeaderMeta {
       pageTitle = t('pageTitles.settingsProfile');
     } else if (rest[0] === 'settings' && rest[1] === 'billing') {
       pageTitle = t('pageTitles.settingsBilling');
+    } else if (rest[0] === 'settings' && rest[1] === 'workspace') {
+      pageTitle = t('pageTitles.settingsWorkspace');
     } else if (rest[0] === 'admin' && rest[1] === 'customers') {
       pageTitle = t('pageTitles.adminCustomers');
     } else if (rest[0] === 'admin' && rest[1] === 'users') {
@@ -167,6 +195,18 @@ export function useShellHeaderMeta(pathname: string | null): ShellHeaderMeta {
       'schedules',
       'team',
       'billing',
+      'displays',
+      'content',
+      'templates',
+      'proof-of-play',
+      'campaigns',
+      'ai',
+      'emergency',
+      'analytics',
+      'audit-log',
+      'notifications',
+      'api-docs',
+      'help',
     ]);
     if (rest.length === 1 && clientMainWithBack.has(rest[0])) {
       return {

@@ -21,6 +21,7 @@ import {
 } from '@/features/billing/billing-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { TwoFactorSettings } from '@/features/settings/two-factor-settings';
+import { NotificationPreferences } from '@/features/settings/notification-preferences';
 
 type Me = {
   id: string;
@@ -185,6 +186,8 @@ export function SettingsProfileClient() {
       </Dialog>
 
       <TwoFactorSettings />
+
+      <NotificationPreferences />
     </div>
   );
 }

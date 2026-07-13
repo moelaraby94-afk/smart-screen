@@ -5,12 +5,10 @@ import Link from 'next/link';
 import type { Route } from 'next';
 import { ArrowLeft, Menu, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { ShellLogo } from '@/components/layout/shell-logo';
 import { Button } from '@/components/ui/button';
 import { UserMenu } from '@/components/user-menu';
 import { WorkspaceSwitcher } from '@/features/workspace/workspace-switcher';
 import { NotificationBell } from '@/features/notifications/notification-provider';
-import { GlobalSearch } from '@/features/search/global-search';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
 
@@ -111,16 +109,16 @@ export function ShellHeader({
     </Button>
   );
 
-  const mobileLogo = (
-    <div className="flex h-9 items-center rounded-lg border border-border bg-card px-3 lg:hidden">
-      <ShellLogo locale={navLocale} className="max-h-[28px] max-w-[120px]" />
-    </div>
-  );
-
   const desktopActions = (
     <div className="hidden shrink-0 flex-nowrap items-center justify-end gap-2.5 lg:flex">
       {showWorkspaceSwitcher ? <WorkspaceSwitcher /> : null}
-      <GlobalSearch />
+      <NotificationBell />
+      <UserMenu rtl={rtl} variant={sovereign ? 'sovereign' : 'workspace'} />
+    </div>
+  );
+
+  const mobileActions = (
+    <div className="flex shrink-0 items-center gap-1.5 lg:hidden">
       <NotificationBell />
       <UserMenu rtl={rtl} variant={sovereign ? 'sovereign' : 'workspace'} />
     </div>
@@ -166,10 +164,8 @@ export function ShellHeader({
           ) : null}
         </div>
 
-        {/* Mobile logo — hidden on desktop, hidden when nav is open on mobile */}
-        <div className={cn('hidden', 'lg:hidden')}>
-          {mobileLogo}
-        </div>
+        {/* Mobile actions: notification bell + user menu */}
+        {mobileActions}
 
         {desktopActions}
       </div>

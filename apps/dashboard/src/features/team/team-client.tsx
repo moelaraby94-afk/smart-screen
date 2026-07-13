@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Mail, RefreshCw, Shield, UserPlus, Users, UserCheck, X, Trash2 } from 'lucide-react';
+import { Clock, Mail, RefreshCw, Shield, UserPlus, UserCheck, X, Trash2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -156,6 +156,7 @@ export function TeamClient() {
 
   const handleRemoveMember = async (membershipId: string) => {
     if (!workspaceId) return;
+    if (!confirm(t('confirmRemove'))) return;
     setRemovingId(membershipId);
     try {
       const res = await apiRemoveMember(workspaceId, membershipId);
@@ -178,29 +179,12 @@ export function TeamClient() {
   }
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <motion.section
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         className="vc-card-surface overflow-hidden rounded-2xl border border-border"
       >
-        <div className="border-b border-border bg-muted/30 px-8 py-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
-                <Users className="h-7 w-7 text-primary" strokeWidth={1.75} />
-              </div>
-              <div>
-                <p className="vc-page-kicker">{t('kicker')}</p>
-                <h2 className="mt-1 text-2xl font-semibold tracking-tight">{t('title')}</h2>
-                <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-                  {t('description')}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className="grid gap-8 p-8 lg:grid-cols-[1fr_380px]">
           <div className="space-y-8">
             <div>

@@ -1,11 +1,12 @@
 'use client';
 
-import { CheckCircle2, Loader2 } from 'lucide-react';
+import { CheckCircle2, Loader2, RotateCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -25,6 +26,7 @@ type PairingState = {
   setName: (v: string) => void;
   claim: () => Promise<void>;
   close: () => void;
+  open: () => void;
 };
 
 type Props = {
@@ -44,12 +46,12 @@ export function BranchPairingDialog({ pairing, branchName, canClaim }: Props) {
         if (!open) pairing.close();
       }}
     >
-      <DialogContent className="max-h-[min(90vh,560px)] overflow-y-auto sm:max-w-md">
+      <DialogContent className="max-h-[min(90vh,560px)] overflow-y-auto rounded-2xl border-border sm:max-w-md">
         <DialogHeader className="space-y-1 text-center sm:text-center">
           <DialogTitle className="text-xl font-semibold">{t('pairingModalTitle')}</DialogTitle>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <DialogDescription className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             {tToolbar('branchLabel')} · {branchName}
-          </p>
+          </DialogDescription>
         </DialogHeader>
         {pairing.showProgressBanner ? (
           <p
@@ -61,7 +63,7 @@ export function BranchPairingDialog({ pairing, branchName, canClaim }: Props) {
         ) : null}
         <div className="space-y-5 py-2">
           {pairing.success ? (
-            <div className="flex flex-col items-center gap-3 py-6 text-center">
+            <div className="flex flex-col items-center gap-4 py-6 text-center">
               <CheckCircle2
                 className="h-14 w-14 text-emerald-500"
                 strokeWidth={ICON_STROKE}
@@ -70,6 +72,28 @@ export function BranchPairingDialog({ pairing, branchName, canClaim }: Props) {
               <p className="text-base font-semibold text-foreground dark:text-white">
                 {t('pairingSuccessMessage')}
               </p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={() => pairing.close()}
+                >
+                  {t('pairingDone')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="cta"
+                  className="rounded-xl font-semibold"
+                  onClick={() => {
+                    pairing.close();
+                    setTimeout(() => pairing.open(), 100);
+                  }}
+                >
+                  <RotateCw className="me-2 h-4 w-4" />
+                  {t('pairAnother')}
+                </Button>
+              </div>
             </div>
           ) : !canClaim ? (
             <p className="text-center text-sm text-muted-foreground">{t('pairingViewOnly')}</p>
@@ -132,6 +156,15 @@ export function BranchPairingDialog({ pairing, branchName, canClaim }: Props) {
                 ) : (
                   t('pairingCompleteButton')
                 )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 w-full rounded-xl"
+                disabled={pairing.busy}
+                onClick={() => pairing.close()}
+              >
+                {t('pairingCancel')}
               </Button>
             </>
           )}

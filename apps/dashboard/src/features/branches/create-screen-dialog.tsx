@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -133,9 +134,10 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[min(90vh,720px)] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[min(90vh,720px)] overflow-y-auto rounded-2xl border-border sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t('title')}</DialogTitle>
+          <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-2">
@@ -169,32 +171,32 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
             />
           </div>
 
-          <div className="space-y-3 rounded-2xl border border-border/60 bg-muted/30 p-4 dark:border-white/10">
+          <div className="space-y-3 rounded-2xl border border-border bg-muted/20 p-4">
             <p className="text-sm font-semibold text-foreground">{t('playlistSection')}</p>
             <div className="flex flex-col gap-2">
-              <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <label className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm transition hover:bg-primary/5">
                 <input
                   type="radio"
                   name="pmode"
                   checked={playlistMode === 'none'}
                   onChange={() => setPlaylistMode('none')}
-                  className="accent-primary"
+                  className="h-4 w-4 accent-primary"
                 />
                 {t('playlistNone')}
               </label>
-              <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <label className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm transition hover:bg-primary/5">
                 <input
                   type="radio"
                   name="pmode"
                   checked={playlistMode === 'existing'}
                   onChange={() => setPlaylistMode('existing')}
-                  className="accent-primary"
+                  className="h-4 w-4 accent-primary"
                 />
                 {t('playlistExisting')}
               </label>
               {playlistMode === 'existing' ? (
                 <select
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm"
+                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
                   value={existingPlaylistId}
                   onChange={(e) => setExistingPlaylistId(e.target.value)}
                   disabled={loadingPlaylists}
@@ -207,13 +209,13 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
                   ))}
                 </select>
               ) : null}
-              <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <label className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm transition hover:bg-primary/5">
                 <input
                   type="radio"
                   name="pmode"
                   checked={playlistMode === 'new'}
                   onChange={() => setPlaylistMode('new')}
-                  className="accent-primary"
+                  className="h-4 w-4 accent-primary"
                 />
                 {t('playlistNew')}
               </label>
@@ -229,7 +231,7 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
           </div>
         </div>
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button type="button" variant="outline" className="rounded-xl" onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="outline" className="rounded-xl" disabled={submitting} onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
           <Button
@@ -239,7 +241,8 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
             disabled={submitting}
             onClick={() => void submit()}
           >
-            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('submit')}
+            {submitting ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : null}
+            {t('submit')}
           </Button>
         </DialogFooter>
       </DialogContent>

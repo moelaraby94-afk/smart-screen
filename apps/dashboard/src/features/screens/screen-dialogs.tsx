@@ -1,6 +1,7 @@
 'use client';
 
 import { useId } from 'react';
+import { Loader2 } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -60,9 +61,11 @@ function FieldInput({
 export function CreateScreenDialogContent({
   workspaceId,
   onSuccess,
+  onCancel,
 }: {
   workspaceId: string;
   onSuccess: () => Promise<void>;
+  onCancel?: () => void;
 }) {
   const t = useTranslations('screensClient.dialogs');
   const { toastResponseError } = useApiErrorToast();
@@ -94,17 +97,27 @@ export function CreateScreenDialogContent({
       </DialogHeader>
       <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
         <FieldInput label={t('screenName')} error={form.formState.errors.name?.message}>
-          <Input {...form.register('name')} className="rounded-xl" />
+          <Input {...form.register('name')} className="rounded-xl" placeholder={t('screenName')} />
         </FieldInput>
         <FieldInput label={t('serialNumber')} error={form.formState.errors.serialNumber?.message}>
-          <Input {...form.register('serialNumber')} className="font-mono-nums rounded-xl" />
+          <Input {...form.register('serialNumber')} className="font-mono-nums rounded-xl" placeholder={t('serialNumber')} />
         </FieldInput>
         <FieldInput label={t('location')} error={form.formState.errors.location?.message}>
-          <Input {...form.register('location')} className="rounded-xl" />
+          <Input {...form.register('location')} className="rounded-xl" placeholder={t('location')} />
         </FieldInput>
-        <DialogFooter>
-          <Button type="submit" variant="cta" className="rounded-xl">
-            {t('create')}
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button type="button" variant="outline" className="rounded-xl" disabled={form.formState.isSubmitting} onClick={onCancel}>
+            {t('cancel')}
+          </Button>
+          <Button type="submit" variant="cta" className="rounded-xl font-semibold" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? (
+              <>
+                <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                {t('creating')}
+              </>
+            ) : (
+              t('create')
+            )}
           </Button>
         </DialogFooter>
       </form>
@@ -116,10 +129,12 @@ export function EditScreenDialogContent({
   screen,
   workspaceId,
   onSuccess,
+  onCancel,
 }: {
   screen: ScreenRow;
   workspaceId: string;
   onSuccess: () => Promise<void>;
+  onCancel?: () => void;
 }) {
   const t = useTranslations('screensClient.dialogs');
   const form = useForm<z.infer<typeof editSchema>>({
@@ -172,9 +187,19 @@ export function EditScreenDialogContent({
             <option value="MAINTENANCE">{t('maintenance')}</option>
           </select>
         </FieldInput>
-        <DialogFooter>
-          <Button type="submit" variant="cta" className="rounded-xl">
-            {t('save')}
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button type="button" variant="outline" className="rounded-xl" disabled={form.formState.isSubmitting} onClick={onCancel}>
+            {t('cancel')}
+          </Button>
+          <Button type="submit" variant="cta" className="rounded-xl font-semibold" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? (
+              <>
+                <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                {t('saving')}
+              </>
+            ) : (
+              t('save')
+            )}
           </Button>
         </DialogFooter>
       </form>

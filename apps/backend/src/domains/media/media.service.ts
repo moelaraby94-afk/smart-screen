@@ -507,6 +507,21 @@ export class MediaService {
     return this.toResponse(updated);
   }
 
+  async setExpiry(workspaceId: string, mediaId: string, expiresAt: string | null) {
+    const media = await this.prisma.media.findFirst({
+      where: { id: mediaId, workspaceId },
+      select: { id: true },
+    });
+    if (!media) throw new NotFoundException('Media not found');
+    const expiry = expiresAt ? new Date(expiresAt) : null;
+    const updated = await this.prisma.media.update({
+      where: { id: mediaId },
+      data: { expiresAt: expiry },
+      include: { folder: true },
+    });
+    return updated;
+  }
+
   toResponse(media: {
     id: string;
     workspaceId: string;
@@ -519,6 +534,7 @@ export class MediaService {
     folder?: { id: string; name: string } | null;
     createdAt: Date;
     updatedAt: Date;
+    expiresAt?: Date | null;
   }) {
     return {
       id: media.id,
@@ -533,6 +549,7 @@ export class MediaService {
       publicUrl: this.buildPublicUrl(media.relativePath),
       createdAt: media.createdAt.toISOString(),
       updatedAt: media.updatedAt.toISOString(),
+      expiresAt: media.expiresAt ? media.expiresAt.toISOString() : null,
     };
   }
 

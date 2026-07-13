@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Post, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { CurrentUser, type JwtUser } from '../../common/auth/current-user.decorator';
 import { NotificationsService, type NotificationRow } from './notifications.service';
@@ -26,6 +26,21 @@ export class NotificationsController {
   @Post('mark-all-read')
   async markAllRead(@CurrentUser() user: JwtUser): Promise<{ ok: true }> {
     await this.service.markAllRead(user.sub);
+    return { ok: true as const };
+  }
+
+  @Get('preferences')
+  async getPreferences(@CurrentUser() user: JwtUser): Promise<{ preferences: Record<string, boolean> }> {
+    const preferences = await this.service.getPreferences(user.sub);
+    return { preferences };
+  }
+
+  @Patch('preferences')
+  async updatePreferences(
+    @CurrentUser() user: JwtUser,
+    @Body() body: { preferences: Record<string, boolean> },
+  ): Promise<{ ok: true }> {
+    await this.service.updatePreferences(user.sub, body.preferences);
     return { ok: true as const };
   }
 }
