@@ -41,6 +41,12 @@ const WORKSPACE_AUDIT_PAGE_SIZE = 200;
  * concurrent events silently dropped one of them — and the file sat outside
  * every database backup. It is now an ordinary Postgres table: appends are
  * atomic, and it is captured by `pg_dump` like everything else.
+ *
+ * Source of truth: The Postgres `AuditLog` table is the sole authoritative
+ * store. The `.data/admin-runtime.json` file no longer contains audit logs;
+ * any stale `logs` key from pre-migration files is ignored on read and dropped
+ * on the next write. Retention is enforced by `MaintenanceService.purgeOldAuditLogs`,
+ * which deletes entries older than `AUDIT_LOG_RETENTION_DAYS` (default: 90 days).
  */
 @Injectable()
 export class AuditLogService {
