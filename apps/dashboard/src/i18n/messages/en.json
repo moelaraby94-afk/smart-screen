@@ -2406,5 +2406,44 @@
       "proof_of_play": { "label": "Proof of Play", "enabled": "Proof of Play enabled", "disabled": "Proof of Play disabled" },
       "templates": { "label": "Templates", "enabled": "Templates enabled", "disabled": "Templates disabled" }
     }
+  },
+  "prayerTimes": {
+    "title": "Prayer Times",
+    "hijri": "Hijri",
+    "nextPrayer": "Next prayer:",
+    "prayers": {
+      "fajr": "Fajr",
+      "sunrise": "Sunrise",
+      "dhuhr": "Dhuhr",
+      "asr": "Asr",
+      "maghrib": "Maghrib",
+      "isha": "Isha"
+    }
+  },
+  "ramadanSettings": {
+    "title": "Ramadan Mode",
+    "description": "Special mode for Ramadan with Iftar/Suhoor content awareness",
+    "enableRamadan": "Enable Ramadan Mode",
+    "enableHint": "Automatically switch content during Iftar and Suhoor times",
+    "startDate": "Ramadan Start Date",
+    "startDateHint": "Auto-activates Ramadan mode on this date",
+    "endDate": "Ramadan End Date",
+    "endDateHint": "Auto-deactivates Ramadan mode after this date",
+    "iftarPlaylist": "Iftar Playlist",
+    "iftarHint": "Content to display around Maghrib (Iftar time)",
+    "suhoorPlaylist": "Suhoor Playlist",
+    "suhoorHint": "Content to display around Fajr (Suhoor time)",
+    "noPlaylist": "None",
+    "iftarBuffer": "Iftar Buffer (minutes)",
+    "suhoorBuffer": "Suhoor Buffer (minutes)",
+    "bufferHint": "Minutes before the prayer time to switch content",
+    "showHijriDate": "Show Hijri Date on Screens",
+    "showHijriHint": "Display the Hijri date on player screens",
+    "showPrayerTimes": "Show Prayer Times on Screens",
+    "showPrayerHint": "Display prayer times on player screens",
+    "save": "Save Ramadan Settings",
+    "saved": "Ramadan settings saved successfully",
+    "saveFailed": "Failed to save Ramadan settings",
+    "loading": "Loading Ramadan settings…"
   }
 }

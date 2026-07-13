@@ -337,6 +337,10 @@ model Workspace {
 
   featureFlags  FeatureFlag[]
 
+  prayerConfig  PrayerConfig?
+
+  ramadanConfig RamadanConfig?
+
 }
 
 
@@ -1066,5 +1070,105 @@ model FeatureFlag {
   @@unique([workspaceId, module])
 
   @@index([workspaceId, enabled])
+
+}
+
+model PrayerConfig {
+
+  id              String   @id @default(cuid())
+
+  workspaceId     String   @unique
+
+  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  /// Calculation method: "MWL","Egypt","Makkah","Karachi","ISNA","Tehran","Jafari"
+
+  method          Int      @default(3)
+
+  /// Asr juristic method: 0 = Shafii (standard), 1 = Hanafi
+
+  asrJuristic     Int      @default(0)
+
+  /// Latitude for prayer calculations
+
+  latitude        Float?
+
+  /// Longitude for prayer calculations
+
+  longitude       Float?
+
+  /// City name for display
+
+  city            String?
+
+  /// Minutes to pause content before each prayer
+
+  bufferBefore    Int      @default(5)
+
+  /// Minutes to pause content after each prayer
+
+  bufferAfter     Int      @default(15)
+
+  /// Which prayers to auto-pause for (JSON array: ["Fajr","Dhuhr","Asr","Maghrib","Isha"])
+
+  enabledPrayers  String   @default("[\"Fajr\",\"Dhuhr\",\"Asr\",\"Maghrib\",\"Isha\"]")
+
+  /// Whether prayer-based auto-pause is active
+
+  autoPauseEnabled Boolean @default(false)
+
+  createdAt       DateTime @default(now())
+
+  updatedAt       DateTime @updatedAt
+
+}
+
+model RamadanConfig {
+
+  id              String   @id @default(cuid())
+
+  workspaceId     String   @unique
+
+  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  /// Whether Ramadan mode is currently active
+
+  enabled         Boolean  @default(false)
+
+  /// Playlist to show during Iftar time
+
+  iftarPlaylistId String?
+
+  /// Playlist to show during Suhoor time
+
+  suhoorPlaylistId String?
+
+  /// Minutes before Iftar to switch content
+
+  iftarBuffer     Int      @default(10)
+
+  /// Minutes before Suhoor to switch content
+
+  suhoorBuffer    Int      @default(10)
+
+  /// Show Hijri date on player screens
+
+  showHijriDate   Boolean  @default(true)
+
+  /// Show prayer times on player screens
+
+  showPrayerTimes Boolean  @default(true)
+
+  /// Ramadan start date (auto-activate)
+
+  startDate       DateTime?
+
+  /// Ramadan end date (auto-deactivate)
+
+  endDate         DateTime?
+
+  createdAt       DateTime @default(now())
+
+  updatedAt       DateTime @updatedAt
 
 }

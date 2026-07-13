@@ -12,6 +12,8 @@ import {
   fetchWorkspaceDetails,
   updateWorkspace as apiUpdateWorkspace,
 } from '@/features/workspace/workspace-api';
+import { fetchPlaylistOptions, type PlaylistOption as ApiPlaylistOption } from '@/features/screens/api/screens-api';
+import { RamadanSettingsPanel } from '@/features/islamic/ramadan-settings-panel';
 
 type WorkspaceDetails = {
   id: string;
@@ -48,6 +50,7 @@ export function WorkspaceSettingsClient() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [togglingPause, setTogglingPause] = useState(false);
+  const [playlists, setPlaylists] = useState<ApiPlaylistOption[]>([]);
 
   const load = useCallback(async () => {
     if (!workspaceId) return;
@@ -68,6 +71,14 @@ export function WorkspaceSettingsClient() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    void (async () => {
+      const items = await fetchPlaylistOptions(workspaceId);
+      setPlaylists(items);
+    })();
+  }, [workspaceId]);
 
   const saveGeneral = async () => {
     if (!workspaceId) return;
@@ -184,6 +195,8 @@ export function WorkspaceSettingsClient() {
           </span>
         </div>
       </div>
+
+      <RamadanSettingsPanel playlists={playlists} />
 
     </div>
   );
