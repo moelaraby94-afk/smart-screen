@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 import { useTranslations } from 'next-intl';
 import { devError } from '@/lib/dev-log';
 
@@ -11,12 +12,14 @@ type Props = {
 
 /**
  * Locale segment error boundary — avoids blank Internal Server Error with no recovery.
+ * Reports to Sentry so client exceptions are captured.
  */
 export default function LocaleError({ error, reset }: Props) {
   const t = useTranslations('errorPage');
 
   useEffect(() => {
     devError('[locale route error]', error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (

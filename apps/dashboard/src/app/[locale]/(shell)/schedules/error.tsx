@@ -11,11 +11,16 @@ type Props = {
   reset: () => void;
 };
 
-export default function ShellError({ error, reset }: Props) {
+/**
+ * Route-level error boundary for the schedules segment.
+ * Isolates errors to this route while keeping the shell layout intact.
+ * Reports to Sentry so client exceptions are captured.
+ */
+export default function SchedulesRouteError({ error, reset }: Props) {
   const t = useTranslations('errorPage');
 
   useEffect(() => {
-    devError('[shell route error]', error);
+    devError('[schedules route error]', error);
     Sentry.captureException(error);
   }, [error]);
 
