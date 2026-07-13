@@ -335,6 +335,15 @@ unclear. DoD: no user-facing implication of real AI unless it is real.
 **T4.4 — Invoice PDF / payment history UI.** Depends on T3.4. Surface `PaymentRecord`
 history and optional PDF. DoD: user can view billing history that reflects real records.
 
+> **Implementation note (T4.4):** Already fully implemented. The backend
+> `GET /account/billing` returns `PaymentRecord[]` ordered by date, and
+> `GET /account/billing/invoice/:invoiceRef/pdf` retrieves the Stripe invoice PDF URL.
+> `PaymentRecord` rows are created by the Stripe webhook handler (T3.4). The dashboard
+> `SettingsBillingClient` renders a payment history table with date, description, invoice
+> ref, amount, status, and a download button that opens the Stripe PDF. i18n keys exist in
+> both `en.json` and `ar.json`. Backend tests in `account.service.spec.ts` cover
+> `getBilling` and `getInvoicePdfUrl`. No additional work needed.
+
 ---
 
 ### Phase 5 — Frontend hardening (Medium)
