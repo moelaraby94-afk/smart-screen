@@ -600,3 +600,75 @@ finding you haven't reconfirmed in the live code.
 **Rollback status:** The branch can be safely reverted to `f93a626` (origin/fix/security-audit-v2) if needed. All Phase 0/1 commits are on top of that point.
 
 **Next phase:** Phase 3 (cheap correctness wins) — awaiting explicit approval to begin.
+
+---
+
+### Phase 2 — Horizontal-scaling blockers
+
+**T2.4 — Auth-before-emit + WS connection cap** ✅
+- Files: `apps/backend/src/domains/realtime/realtime.gateway.ts`, `apps/backend/src/domains/realtime/realtime.gateway.spec.ts`
+- Added per-IP connection limit (`WS_MAX_CONNECTIONS_PER_IP`, default 20) with `ipConnectionCounts` map.
+- Added unauthenticated socket timeout (`WS_UNAUTH_TIMEOUT_MS`, default 30s) via `unauthTimers` map.
+- Added `markAuthed()` called on all authenticated handlers (`bindScreen`, `bindPlayer`, `watchPairing`, `subscribeDashboard`).
+- Clean up IP counts and timers on disconnect.
+- Test: `realtime.gateway.spec.ts` — covers connection limit enforcement, unauth timeout, and auth tracking.
+- DoD: unauthenticated sockets can't linger; per-IP cap enforced; test added; `verify` green.
+
+**T2.5 — Unify CORS origin config** ✅
+- Files: `apps/backend/src/common/config/cors-config.ts`, `apps/backend/src/common/config/cors-config.spec.ts`, `apps/backend/src/main.ts`, `apps/backend/src/domains/realtime/realtime.gateway.ts`
+- Extracted shared `createCorsOriginChecker()` and `getAllowedOrigins()` in `cors-config.ts`.
+- Production: `ALLOWED_ORIGINS` only, no localhost fallback, no origin reflection.
+- Development: merges `FRONTEND_ORIGINS` + `FRONTEND_ORIGIN` + localhost defaults.
+- Replaced inline CORS logic in both `main.ts` (REST) and `realtime.gateway.ts` (WebSocket).
+- Test: `cors-config.spec.ts` — 15 test cases covering production/development behavior, deduplication, single-origin fallback, and origin checker function.
+- DoD: one config source governs both REST and WS CORS; `verify` green.
+
+**T2.6 — WorkspaceAuthHelper extraction** ✅ (extra task, not in original plan)
+- Files: `apps/backend/src/common/auth/workspace-auth.helper.ts`, `apps/backend/src/common/auth/workspace-auth.module.ts`, `apps/backend/src/common/auth/workspace-auth.helper.spec.ts`
+- Extracted `WorkspaceAuthHelper` for common workspace membership + role check pattern.
+- Super-admin bypass preserved, configurable via `superAdminBypass` option (default `true`).
+- Refactored `WorkspacesService` (4 sites) and `PairingService` (1 site) to use helper.
+- All exception types (`NotFoundException`, `ForbiddenException`) and error messages preserved.
+- Test: `workspace-auth.helper.spec.ts` — covers membership checks, admin role enforcement, super-admin bypass, and error messages.
+- DoD: duplicated auth logic eliminated; `verify` green.
+
+**T2.7 — Infrastructure code dedup** ✅ (extra task, not in original plan)
+- Files: `apps/backend/src/common/config/config.helper.ts`, `apps/backend/src/common/config/config-helper.module.ts`, `apps/backend/src/common/config/config.helper.spec.ts`, `apps/backend/src/common/auth/otp.helper.ts`, `apps/backend/src/common/auth/otp.helper.spec.ts`
+- Extracted `ConfigHelper`: `getFrontendBaseUrl()`, `requireStripeSecretKey()` — replaced 7 FRONTEND_ORIGIN sites and 3 Stripe secret key check sites.
+- Extracted `OtpHelper`: `generateOtp()` — replaced 3 OTP generation sites (6-digit code + bcrypt hash + 15min expiry).
+- Extracted `WorkspacesService.makeInvitationToken()` private helper — replaced 2 invitation token + 7-day expiry sites.
+- Removed unused `ConfigService` imports from `WorkspacesService`, `AccountService`, `SubscriptionEmailService`.
+- Tests: `config.helper.spec.ts` (9 tests), `otp.helper.spec.ts` (4 tests).
+- DoD: duplicated infrastructure code eliminated; `verify` green.
+
+**T2.1 — Redis-backed throttler storage** ⏸ DEFERRED
+- Requires adding Redis as a new third-party service (infra decision per §4).
+- Single-instance constraint documented below. Deferred until multi-instance deployment is planned.
+
+**T2.2 — Redis adapter for Socket.io** ⏸ DEFERRED
+- Requires adding Redis as a new third-party service (infra decision per §4).
+- `ScreenHeartbeatService` binding state remains in-process. Deferred until multi-instance deployment is planned.
+
+**T2.3 — Object storage for media** ⏸ DEFERRED
+- Design proposal for S3/GCS not yet written. Deferred until media scaling requires it.
+
+---
+
+### Phase 2 — Single-Instance Constraint Documentation
+
+**Date:** 2026-07-13
+
+The backend currently assumes a single running instance. The following in-process state is **not shared across instances** and will break if horizontally scaled without addressing these items:
+
+| Component | State | Impact if multi-instance | Task |
+|-----------|-------|--------------------------|------|
+| ThrottlerModule | In-memory rate-limit counters | Per-IP limits reset per instance; effective limit = N × configured limit | T2.1 |
+| Socket.io | In-memory adapter | Events emitted on instance A don't reach screens connected to instance B | T2.2 |
+| ScreenHeartbeatService | In-memory socket→screen binding | Heartbeat tracking splits across instances; stale bindings on the wrong instance | T2.2 |
+| Media storage | Local filesystem (`MEDIA_UPLOAD_DIR`) | Files uploaded on instance A not accessible by instance B | T2.3 |
+
+**Current mitigation:** Run exactly one backend instance. The Docker Compose setup (`docker-compose.yml`) runs a single `backend` container — this is safe.
+
+**When to revisit:** Before deploying more than one backend instance (e.g., behind a load balancer). At that point, T2.1 and T2.2 must be implemented with a shared Redis instance, and T2.3 must be resolved with object storage (S3/GCS) or a shared volume.
+
+**Decision:** Phase 2 remainder (T2.1–T2.3) deferred per user direction. Proceeding to Phase 3.
