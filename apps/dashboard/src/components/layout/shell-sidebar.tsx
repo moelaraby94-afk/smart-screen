@@ -43,6 +43,7 @@ import { pathWithLocale } from '@/components/language-switcher';
 import { setStoredAccessToken } from '@/features/auth/session';
 import { logout as apiLogout } from '@/features/auth/auth-api';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 /* ═══════════════════════════════════════════════════════════════
    Nimbus Rail v2 — Professional SaaS sidebar
@@ -366,7 +367,7 @@ export function ShellSidebar({
           {shellNavLoading ? (
             <div className="flex flex-col gap-1 px-3 pt-4" aria-hidden aria-busy="true">
               {Array.from({ length: 7 }).map((_, i) => (
-                <div key={i} className="h-12 animate-pulse rounded-xl bg-muted/40" />
+                <Skeleton key={i} className="h-12 rounded-xl bg-muted/40" />
               ))}
             </div>
           ) : sovereign ? (

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useTranslations } from 'next-intl';
@@ -131,10 +132,14 @@ export function ContentClient() {
           <CardContent className="space-y-3">
             <p className="text-sm text-muted-foreground">{t('autoExpiryDesc')}</p>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              <select className="flex h-11 w-full rounded-2xl border border-border bg-card px-4 py-2 text-[15px] outline-none">
-                <option value="">{t('selectContent')}</option>
-                {assets.map(a => <option key={a.id} value={a.id}>{a.originalName}</option>)}
-              </select>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('selectContent')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {assets.map(a => <SelectItem key={a.id} value={a.id}>{a.originalName}</SelectItem>)}
+                </SelectContent>
+              </Select>
               <Input type="date" />
               <Button size="sm">{t('setExpiry')}</Button>
             </div>

@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/table';
 import { adminGlassTable } from '@/lib/admin-glass-table';
 import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   type BranchRow,
   type Lifecycle,
@@ -486,33 +487,24 @@ export function ProfileTabBar({ activeTab, setActiveTab }: TabBarProps) {
   const t = useTranslations('adminCustomerProfile');
 
   return (
-    <div
-      role="tablist"
-      aria-label={t('tabsAria')}
-      className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:overflow-visible sm:pb-0"
-    >
-      {(['overview', 'subscription', 'usage', 'workspaces'] as ProfileTabId[]).map((tabId) => (
-        <button
-          key={tabId}
-          type="button"
-          role="tab"
-          id={`customer-tab-${tabId}`}
-          aria-selected={activeTab === tabId}
-          aria-controls={`customer-panel-${tabId}`}
-          onClick={() => setActiveTab(tabId)}
-          className={cn(
-            'shrink-0 rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition-all sm:px-4',
-            activeTab === tabId
-              ? 'border-primary/55 bg-primary/15 text-primary shadow-sm'
-              : 'border-border bg-card/30 text-muted-foreground hover:border-primary/30 hover:text-foreground',
-          )}
-        >
-          {tabId === 'overview' && t('tabs.overview')}
-          {tabId === 'subscription' && t('tabs.subscription')}
-          {tabId === 'usage' && t('tabs.usage')}
-          {tabId === 'workspaces' && t('tabs.workspaces')}
-        </button>
-      ))}
-    </div>
+    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ProfileTabId)}>
+      <TabsList
+        aria-label={t('tabsAria')}
+        className="flex h-auto gap-2 overflow-x-auto rounded-none border-0 bg-transparent p-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:overflow-visible"
+      >
+        {(['overview', 'subscription', 'usage', 'workspaces'] as ProfileTabId[]).map((tabId) => (
+          <TabsTrigger
+            key={tabId}
+            value={tabId}
+            className="shrink-0 rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition-all data-[state=active]:border-primary/55 data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=inactive]:border-border data-[state=inactive]:bg-card/30 data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:border-primary/30 data-[state=inactive]:hover:text-foreground sm:px-4"
+          >
+            {tabId === 'overview' && t('tabs.overview')}
+            {tabId === 'subscription' && t('tabs.subscription')}
+            {tabId === 'usage' && t('tabs.usage')}
+            {tabId === 'workspaces' && t('tabs.workspaces')}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
   );
 }

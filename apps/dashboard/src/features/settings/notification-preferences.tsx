@@ -5,6 +5,7 @@ import { Bell, Loader2, Save } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { apiFetch } from '@/features/auth/session';
 
 const NOTIFICATION_TYPES = [
@@ -95,21 +96,11 @@ export function NotificationPreferences() {
               <p className="text-sm font-medium text-foreground">{t(`pref_${type}`)}</p>
               <p className="text-xs text-muted-foreground">{t(`pref_${type}_desc`)}</p>
             </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={prefs[type] ?? false}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                prefs[type] ? 'bg-primary' : 'bg-muted-foreground/30'
-              }`}
-              onClick={() => setPrefs((prev) => ({ ...prev, [type]: !prev[type] }))}
-            >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition ${
-                  prefs[type] ? 'rtl:translate-x-[-1.25rem] ltr:translate-x-5' : 'translate-x-0'
-                }`}
-              />
-            </button>
+            <Switch
+              checked={prefs[type] ?? false}
+              onCheckedChange={(checked) => setPrefs((prev) => ({ ...prev, [type]: checked }))}
+              aria-label={t(`pref_${type}`)}
+            />
           </li>
         ))}
       </ul>

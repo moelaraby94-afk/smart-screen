@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -87,11 +88,10 @@ export function ScreenVisualCard({
     >
       {onToggleSelect && (
         <div className="absolute end-2 top-2 z-10">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={selected ?? false}
-            onChange={(e) => { e.stopPropagation(); onToggleSelect(screen.id); }}
-            className="h-5 w-5 rounded border-border bg-background/80 accent-primary"
+            onCheckedChange={() => onToggleSelect(screen.id)}
+            onClick={(e) => e.stopPropagation()}
             aria-label={t('selectScreen')}
           />
         </div>
