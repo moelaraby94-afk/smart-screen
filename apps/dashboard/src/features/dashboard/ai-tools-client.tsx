@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Sparkles, FileText, Target, Palette, TrendingUp, DollarSign, Hash, History, Trash2 } from 'lucide-react';
+import { Sparkles, FileText, Target, Palette, History, Trash2, Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -71,13 +71,13 @@ export function AiToolsClient() {
     }, 1000);
   };
 
-  const totalRequests = 142;
-  const spend = 3.27;
-  const budget = 50.0;
-  const budgetPct = (spend / budget) * 100;
-
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
+        <Info className="h-4 w-4 shrink-0" />
+        <span>{t('demoNotice')}</span>
+        <Badge variant="muted" className="ms-auto shrink-0">{t('demoBadge')}</Badge>
+      </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {suggestionTypes.map((s) => {
           const Icon = s.icon;
@@ -123,38 +123,7 @@ export function AiToolsClient() {
           <CardTitle className="text-lg">{t('usage')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg border border-primary/20 bg-primary/10 p-2.5">
-                <Hash className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold">{totalRequests}</p>
-                <p className="text-sm text-muted-foreground">{t('totalRequests')}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg border border-primary/20 bg-primary/10 p-2.5">
-                <DollarSign className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold">${spend.toFixed(2)}</p>
-                <p className="text-sm text-muted-foreground">{t('currentSpend')}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg border border-primary/20 bg-primary/10 p-2.5">
-                <TrendingUp className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold">${budget.toFixed(2)}</p>
-                <p className="text-sm text-muted-foreground">{t('monthlyBudget')}</p>
-                <Badge variant={budgetPct > 80 ? 'danger' : 'muted'} className="mt-1">
-                  {budgetPct.toFixed(0)}% {t('used')}
-                </Badge>
-              </div>
-            </div>
-          </div>
+          <p className="text-sm text-muted-foreground">{t('usageDemoNotice')}</p>
         </CardContent>
       </Card>
 

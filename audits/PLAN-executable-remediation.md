@@ -312,6 +312,16 @@ Claude, first read the `claude-api` skill/docs — R5), or clearly label it "pre
 the UI so it doesn't misrepresent capability. **Ask which** (§4) if the product intent is
 unclear. DoD: no user-facing implication of real AI unless it is real.
 
+> **Implementation note (T4.3):** The AI tools page was fully mocked — `mockResults`
+> hardcoded array, `setTimeout` simulating generation, and fake usage statistics (142
+> requests, $3.27 spend). No backend AI endpoint exists. Per §4, implementing a real AI
+> integration requires a third-party service decision (API key, provider choice). The
+> chosen path was **explicit demo labeling**: a visible "Demo" badge and demo notice
+> banner were added, the page description updated to disclose it's not connected to a
+> live AI model, and the misleading fake usage statistics were replaced with an
+> "illustrative only" notice. i18n keys added in both `en.json` and `ar.json`. Tests
+> verify the demo badge, demo notice, and absence of fake numbers.
+
 **T4.4 — Invoice PDF / payment history UI.** Depends on T3.4. Surface `PaymentRecord`
 history and optional PDF. DoD: user can view billing history that reflects real records.
 
