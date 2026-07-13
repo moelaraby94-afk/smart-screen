@@ -21,6 +21,8 @@ describe('StripeWebhookService P2-T4 (reconciliation)', () => {
   let syncFromStripe: jest.Mock;
   let prismaTx: {
     processedWebhookEvent: { create: jest.Mock };
+    workspaceMember: { findFirst: jest.Mock };
+    paymentRecord: { create: jest.Mock };
   };
 
   beforeEach(async () => {
@@ -30,6 +32,10 @@ describe('StripeWebhookService P2-T4 (reconciliation)', () => {
     syncFromStripe = jest.fn().mockResolvedValue(undefined);
     prismaTx = {
       processedWebhookEvent: { create: jest.fn().mockResolvedValue({}) },
+      workspaceMember: {
+        findFirst: jest.fn().mockResolvedValue({ userId: 'user_1' }),
+      },
+      paymentRecord: { create: jest.fn().mockResolvedValue({}) },
     };
     const prisma = {
       $transaction: jest.fn(
