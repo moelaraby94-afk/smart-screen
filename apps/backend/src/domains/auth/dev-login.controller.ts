@@ -26,9 +26,10 @@ export class DevLoginController {
     workspaces: Array<{ id: string; name: string; slug: string; role: string }>;
     accessToken: string;
   }> {
-    if (process.env.ENABLE_DEV_LOGIN === 'true') {
-      // explicit override (e.g. staging that runs with NODE_ENV=production)
-    } else if (process.env.NODE_ENV === 'production') {
+    if (
+      process.env.NODE_ENV === 'production' &&
+      process.env.ENABLE_DEV_LOGIN !== 'true'
+    ) {
       throw new NotFoundException();
     }
     const result = await this.authService.devLoginAsFirstUser();
