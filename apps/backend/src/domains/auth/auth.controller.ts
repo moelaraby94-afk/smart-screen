@@ -122,29 +122,6 @@ export class AuthController {
     };
   }
 
-  /** Development only: sign in as the first active user (no password). */
-  @HttpCode(200)
-  @Post('dev-login')
-  async devLogin(@Res({ passthrough: true }) response: Response): Promise<{
-    user: { id: string; email: string; fullName: string; locale: string };
-    workspaces: Array<{ id: string; name: string; slug: string; role: string }>;
-    accessToken: string;
-  }> {
-    if (
-      process.env.NODE_ENV === 'production' &&
-      process.env.ENABLE_DEV_LOGIN !== 'true'
-    ) {
-      throw new NotFoundException();
-    }
-    const result = await this.authService.devLoginAsFirstUser();
-    setAuthCookies(response, result.accessToken, result.refreshToken);
-    return {
-      user: result.user,
-      workspaces: result.workspaces,
-      accessToken: result.accessToken,
-    };
-  }
-
   @HttpCode(200)
   @Post('refresh')
   async refresh(

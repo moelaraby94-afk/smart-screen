@@ -9,6 +9,9 @@ import { LoginLockoutService } from './login-lockout.service';
 import { TwoFactorService } from './two-factor.service';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { AuditLogModule } from '../../common/audit/audit-log.module';
+import { DevLoginController } from './dev-login.controller';
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 @Module({
   imports: [
@@ -26,7 +29,12 @@ import { AuditLogModule } from '../../common/audit/audit-log.module';
       }),
     }),
   ],
-  controllers: [AuthController],
+  controllers: [
+    AuthController,
+    ...(!isProduction || process.env.ENABLE_DEV_LOGIN === 'true'
+      ? [DevLoginController]
+      : []),
+  ],
   providers: [AuthService, JwtStrategy, LoginLockoutService, TwoFactorService],
   exports: [AuthService, JwtModule],
 })
