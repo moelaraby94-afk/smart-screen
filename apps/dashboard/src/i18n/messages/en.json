@@ -866,7 +866,9 @@
       "createFailed": "Could not create API key.",
       "loadFailed": "Could not load API keys.",
       "cancel": "Cancel",
-      "done": "Done"
+      "done": "Done",
+      "confirmRevokeTitle": "Revoke API Key?",
+      "confirmRevokeDesc": "This action cannot be undone. Any integrations using this key will stop working immediately."
     },
     "webhooks": {
       "title": "Webhook Endpoints",
@@ -892,7 +894,9 @@
       "createFailed": "Could not create webhook.",
       "loadFailed": "Could not load webhooks.",
       "cancel": "Cancel",
-      "done": "Done"
+      "done": "Done",
+      "confirmDeleteTitle": "Delete Webhook Endpoint?",
+      "confirmDeleteDesc": "This action cannot be undone. The endpoint will stop receiving events immediately."
     }
   },
   "settingsPages": {

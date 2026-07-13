@@ -24,6 +24,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   fetchWebhooks,
   createWebhook,
   deleteWebhook,
@@ -61,6 +71,7 @@ export function WebhooksManager() {
   const [createdSecret, setCreatedSecret] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!workspaceId) return;
@@ -227,7 +238,7 @@ export function WebhooksManager() {
                   <button
                     type="button"
                     onClick={() => void handleTest(wh.id)}
-                    disabled={busyId === wh.id}
+                    disabled={busyId === wh.id || !wh.enabled}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:text-primary disabled:opacity-50"
                     aria-label={t('webhooks.test')}
                     title={t('webhooks.test')}
@@ -248,7 +259,7 @@ export function WebhooksManager() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => void handleDelete(wh.id)}
+                    onClick={() => setConfirmDeleteId(wh.id)}
                     disabled={busyId === wh.id}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:text-red-600 disabled:opacity-50"
                     aria-label={t('webhooks.delete')}
@@ -344,6 +355,21 @@ export function WebhooksManager() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!confirmDeleteId} onOpenChange={(v) => { if (!v) setConfirmDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('webhooks.confirmDeleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('webhooks.confirmDeleteDesc')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('webhooks.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (confirmDeleteId) void handleDelete(confirmDeleteId); setConfirmDeleteId(null); }}>
+              {t('webhooks.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

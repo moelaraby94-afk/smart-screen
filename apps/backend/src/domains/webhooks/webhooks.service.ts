@@ -1,10 +1,9 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { randomBytes } from 'crypto';
+import { createHmac, randomBytes } from 'crypto';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
 @Injectable()
@@ -30,10 +29,14 @@ export class WebhooksService {
     if (!url?.trim()) {
       throw new BadRequestException('Webhook URL is required');
     }
+    let parsed: URL;
     try {
-      new URL(url);
+      parsed = new URL(url);
     } catch {
       throw new BadRequestException('Invalid URL');
+    }
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      throw new BadRequestException('URL must use http or https protocol');
     }
     if (!events?.trim()) {
       throw new BadRequestException('At least one event type is required');
@@ -106,14 +109,20 @@ export class WebhooksService {
       data: { message: 'Test webhook from Cloud-Screen' },
     };
 
+    const body = JSON.stringify(payload);
+    const signature = createHmac('sha256', endpoint.secret)
+      .update(body)
+      .digest('hex');
+
     try {
       const response = await fetch(endpoint.url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-CloudScreen-Event': 'webhook.test',
+          'X-CloudScreen-Signature': `sha256=${signature}`,
         },
-        body: JSON.stringify(payload),
+        body,
         signal: AbortSignal.timeout(10_000),
       });
 

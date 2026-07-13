@@ -6,6 +6,7 @@ import { RolesGuard } from '../../common/auth/roles.guard';
 import { Roles } from '../../common/auth/roles.decorator';
 import { WebhooksService } from './webhooks.service';
 import { CreateWebhookDto } from './dto/create-webhook.dto';
+import { ToggleWebhookDto } from './dto/toggle-webhook.dto';
 
 @Controller('webhooks')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -44,7 +45,7 @@ export class WebhooksController {
   toggle(
     @Query('workspaceId') workspaceId: string,
     @Param('endpointId') endpointId: string,
-    @Body() body: { enabled: boolean },
+    @Body() body: ToggleWebhookDto,
   ) {
     return this.webhooks.toggle(workspaceId, endpointId, body.enabled);
   }

@@ -866,7 +866,9 @@
       "createFailed": "تعذر إنشاء مفتاح API.",
       "loadFailed": "تعذر تحميل مفاتيح API.",
       "cancel": "إلغاء",
-      "done": "تم"
+      "done": "تم",
+      "confirmRevokeTitle": "إلغاء مفتاح API؟",
+      "confirmRevokeDesc": "لا يمكن التراجع عن هذا الإجراء. أي تكاملات تستخدم هذا المفتاح سوف تتوقف فوراً."
     },
     "webhooks": {
       "title": "نقاط استقبال Webhook",
@@ -892,7 +894,9 @@
       "createFailed": "تعذر إنشاء Webhook.",
       "loadFailed": "تعذر تحميل Webhooks.",
       "cancel": "إلغاء",
-      "done": "تم"
+      "done": "تم",
+      "confirmDeleteTitle": "حذف نقطة استقبال Webhook؟",
+      "confirmDeleteDesc": "لا يمكن التراجع عن هذا الإجراء. سوف تتوقف النقطة عن استقبال الأحداث فوراً."
     }
   },
   "settingsPages": {

@@ -329,6 +329,10 @@ model Workspace {
 
   invitations   WorkspaceInvitation[]
 
+  apiKeys       ApiKey[]
+
+  webhookEndpoints WebhookEndpoint[]
+
 }
 
 
@@ -945,6 +949,8 @@ model ApiKey {
 
   workspaceId String
 
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
   name        String
 
   /// SHA-256 hash of the raw key. The raw key is only shown once at creation time.
@@ -976,6 +982,8 @@ model WebhookEndpoint {
   id          String    @id @default(cuid())
 
   workspaceId String
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   url         String
 

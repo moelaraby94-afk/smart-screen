@@ -24,6 +24,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   fetchApiKeys,
   createApiKey,
   revokeApiKey,
@@ -52,6 +62,7 @@ export function ApiKeysManager() {
   const [createdKey, setCreatedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!workspaceId) return;
@@ -175,7 +186,7 @@ export function ApiKeysManager() {
               </div>
               <button
                 type="button"
-                onClick={() => void handleRevoke(key.id)}
+                onClick={() => setConfirmRevokeId(key.id)}
                 disabled={revokingId === key.id}
                 className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:text-red-600 disabled:opacity-50"
                 aria-label={t('keys.revoke')}
@@ -267,6 +278,21 @@ export function ApiKeysManager() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!confirmRevokeId} onOpenChange={(v) => { if (!v) setConfirmRevokeId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('keys.confirmRevokeTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('keys.confirmRevokeDesc')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('keys.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (confirmRevokeId) void handleRevoke(confirmRevokeId); setConfirmRevokeId(null); }}>
+              {t('keys.revoke')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
