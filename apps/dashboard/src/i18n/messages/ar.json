@@ -2420,6 +2420,43 @@
       "isha": "العشاء"
     }
   },
+  "prayerSettings": {
+    "title": "إعدادات مواقيت الصلاة",
+    "description": "ضبط حساب المواقيت والإيقاف التلقائي",
+    "latitude": "خط العرض",
+    "longitude": "خط الطول",
+    "city": "المدينة",
+    "cityPlaceholder": "مثال: الرياض",
+    "calculationMethod": "طريقة الحساب",
+    "methodMakkah": "أم القرى (مكة)",
+    "methodEgypt": "الهيئة المصرية العامة",
+    "methodISNA": "ISNA (أمريكا الشمالية)",
+    "methodKarachi": "جامعة كراتشي",
+    "methodMWL": "رابطة العالم الإسلامي",
+    "methodTehran": "معهد الجيوفيزياء (طهران)",
+    "methodJafari": "الجعفري (الشيعة)",
+    "asrJuristic": "مذهب العصر",
+    "asrShafii": "الشافعي (قياسي)",
+    "asrHanafi": "الحنفي",
+    "bufferBefore": "إيقاف قبل (دقائق)",
+    "bufferBeforeHint": "عدد الدقائق لإيقاف المحتوى قبل كل صلاة",
+    "bufferAfter": "إيقاف بعد (دقائق)",
+    "bufferAfterHint": "عدد الدقائق لإيقاف المحتوى بعد كل صلاة",
+    "enabledPrayers": "الصلوات المفعّلة",
+    "autoPause": "الإيقاف التلقائي وقت الصلاة",
+    "autoPauseHint": "إيقاف تشغيل المحتوى تلقائياً وقت الصلاة",
+    "prayers": {
+      "fajr": "الفجر",
+      "dhuhr": "الظهر",
+      "asr": "العصر",
+      "maghrib": "المغرب",
+      "isha": "العشاء"
+    },
+    "save": "حفظ إعدادات الصلاة",
+    "saved": "تم حفظ إعدادات الصلاة بنجاح",
+    "saveFailed": "تعذّر حفظ إعدادات الصلاة",
+    "loading": "جاري تحميل إعدادات الصلاة…"
+  },
   "ramadanSettings": {
     "title": "وضع رمضان",
     "description": "وضع خاص لرمضان مع تبديل المحتوى عند الإفطار والسحور",

@@ -72,6 +72,12 @@ export function PrayerTimesWidget() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (!data) return;
+    const interval = setInterval(() => void load(), 60_000);
+    return () => clearInterval(interval);
+  }, [data, load]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-6">
@@ -96,7 +102,7 @@ export function PrayerTimesWidget() {
       <div className="relative flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
-            <Moon className="h-4.5 w-4.5 text-emerald-600" strokeWidth={ICON_STROKE} />
+            <Moon className="h-[18px] w-[18px] text-emerald-600" strokeWidth={ICON_STROKE} />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-foreground">{t('title')}</h3>

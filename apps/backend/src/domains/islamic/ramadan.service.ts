@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { formatInTimeZone } from 'date-fns-tz';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { PrayerTimesService } from './prayer-times.service';
 
@@ -104,7 +105,14 @@ export class RamadanService {
     const fajrTime = prayerResult.times['Fajr'];
     if (!maghribTime || !fajrTime) return { playlistId: null, mode: 'normal' };
 
-    const nowMinutes = at.getHours() * 60 + at.getMinutes();
+    const workspace = await this.prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { timezone: true },
+    });
+    const tz = workspace?.timezone ?? 'UTC';
+    const timeStr = formatInTimeZone(at, tz, 'HH:mm');
+    const [hh, mm] = timeStr.split(':').map((x) => parseInt(x, 10));
+    const nowMinutes = hh * 60 + mm;
     const [magh, magm] = maghribTime.split(':').map((x) => parseInt(x, 10));
     const [fajh, fajm] = fajrTime.split(':').map((x) => parseInt(x, 10));
     const maghribMin = magh * 60 + magm;

@@ -2420,6 +2420,43 @@
       "isha": "Isha"
     }
   },
+  "prayerSettings": {
+    "title": "Prayer Times Settings",
+    "description": "Configure prayer time calculations and auto-pause behavior",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "city": "City",
+    "cityPlaceholder": "e.g. Riyadh",
+    "calculationMethod": "Calculation Method",
+    "methodMakkah": "Umm al-Qura (Makkah)",
+    "methodEgypt": "Egyptian General Authority",
+    "methodISNA": "ISNA (North America)",
+    "methodKarachi": "University of Karachi",
+    "methodMWL": "Muslim World League",
+    "methodTehran": "Institute of Geophysics (Tehran)",
+    "methodJafari": "Shia Ithna-Ashari (Jafari)",
+    "asrJuristic": "Asr Juristic Method",
+    "asrShafii": "Shafii (Standard)",
+    "asrHanafi": "Hanafi",
+    "bufferBefore": "Pause Before (minutes)",
+    "bufferBeforeHint": "Minutes to pause content before each prayer",
+    "bufferAfter": "Pause After (minutes)",
+    "bufferAfterHint": "Minutes to pause content after each prayer",
+    "enabledPrayers": "Enabled Prayers",
+    "autoPause": "Auto-pause during prayers",
+    "autoPauseHint": "Automatically pause content playback during prayer times",
+    "prayers": {
+      "fajr": "Fajr",
+      "dhuhr": "Dhuhr",
+      "asr": "Asr",
+      "maghrib": "Maghrib",
+      "isha": "Isha"
+    },
+    "save": "Save Prayer Settings",
+    "saved": "Prayer settings saved successfully",
+    "saveFailed": "Failed to save prayer settings",
+    "loading": "Loading prayer settings…"
+  },
   "ramadanSettings": {
     "title": "Ramadan Mode",
     "description": "Special mode for Ramadan with Iftar/Suhoor content awareness",

@@ -36,7 +36,6 @@ export function RamadanSettingsPanel({
 }) {
   const t = useTranslations('ramadanSettings');
   const { workspaceId } = useWorkspace();
-  const [config, setConfig] = useState<RamadanConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -56,7 +55,6 @@ export function RamadanSettingsPanel({
       const res = await fetchRamadanConfig(workspaceId);
       if (res.ok) {
         const data = (await res.json()) as RamadanConfig;
-        setConfig(data);
         setEnabled(data.enabled);
         setIftarPlaylistId(data.iftarPlaylistId ?? '');
         setSuhoorPlaylistId(data.suhoorPlaylistId ?? '');
@@ -117,7 +115,7 @@ export function RamadanSettingsPanel({
     <div className="vc-card-surface rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
       <div className="flex items-center gap-2.5">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
-          <Moon className="h-4.5 w-4.5 text-emerald-600" strokeWidth={ICON_STROKE} />
+          <Moon className="h-[18px] w-[18px] text-emerald-600" strokeWidth={ICON_STROKE} />
         </div>
         <div>
           <h2 className="text-lg font-semibold tracking-tight">{t('title')}</h2>

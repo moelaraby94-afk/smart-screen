@@ -8,6 +8,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/auth/roles.guard';
 import { Roles } from '../../common/auth/roles.decorator';
@@ -42,6 +43,7 @@ export class IslamicController {
   // ─── Prayer Times ─────────────────────────────────────────────────
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @Get('prayer-times')
   async getPrayerTimes(
     @Query('workspaceId') workspaceId: string,

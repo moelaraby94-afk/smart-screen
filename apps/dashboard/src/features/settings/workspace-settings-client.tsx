@@ -14,6 +14,7 @@ import {
 } from '@/features/workspace/workspace-api';
 import { fetchPlaylistOptions, type PlaylistOption as ApiPlaylistOption } from '@/features/screens/api/screens-api';
 import { RamadanSettingsPanel } from '@/features/islamic/ramadan-settings-panel';
+import { PrayerConfigPanel } from '@/features/islamic/prayer-config-panel';
 
 type WorkspaceDetails = {
   id: string;
@@ -195,6 +196,8 @@ export function WorkspaceSettingsClient() {
           </span>
         </div>
       </div>
+
+      <PrayerConfigPanel />
 
       <RamadanSettingsPanel playlists={playlists} />
 

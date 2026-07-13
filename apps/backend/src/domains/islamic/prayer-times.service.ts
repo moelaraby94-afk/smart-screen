@@ -1,9 +1,30 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { formatInTimeZone } from 'date-fns-tz';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
 const PRAYER_NAMES = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const;
 
 const ALADHAN_BASE = 'https://api.aladhan.com/v1/timings';
+
+const MAX_CACHE_ENTRIES = 200;
+
+function safeParsePrayers(raw: string): string[] {
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((x): x is string => typeof x === 'string');
+    }
+  } catch {
+    /* fall through */
+  }
+  return ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+}
+
+function nowMinutesInTz(at: Date, timeZone: string): number {
+  const timeStr = formatInTimeZone(at, timeZone, 'HH:mm');
+  const [hh, mm] = timeStr.split(':').map((x) => parseInt(x, 10));
+  return hh * 60 + mm;
+}
 
 type AladhanTimings = {
   Fajr: string;
@@ -37,6 +58,13 @@ export class PrayerTimesService {
     { date: string; data: AladhanResponse['data'] }
   >();
 
+  private pruneCache() {
+    if (this.cache.size > MAX_CACHE_ENTRIES) {
+      const oldestKey = this.cache.keys().next().value;
+      if (oldestKey) this.cache.delete(oldestKey);
+    }
+  }
+
   constructor(private readonly prisma: PrismaService) {}
 
   async getPrayerTimes(workspaceId: string, dateOverride?: Date) {
@@ -50,17 +78,19 @@ export class PrayerTimesService {
       };
     }
 
+    const workspace = await this.prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { timezone: true },
+    });
+    const tz = workspace?.timezone ?? 'UTC';
+
     const at = dateOverride ?? new Date();
-    const dateStr = `${at.getDate().toString().padStart(2, '0')}-${(
-      at.getMonth() + 1
-    )
-      .toString()
-      .padStart(2, '0')}-${at.getFullYear()}`;
+    const dateStr = formatInTimeZone(at, tz, 'dd-MM-yyyy');
 
     const cacheKey = `${workspaceId}:${dateStr}:${config.method}:${config.asrJuristic}`;
     const cached = this.cache.get(cacheKey);
     if (cached) {
-      return this.formatResponse(cached.data, config, at);
+      return this.formatResponse(cached.data, config, at, tz);
     }
 
     try {
@@ -71,7 +101,8 @@ export class PrayerTimesService {
       }
       const json = (await res.json()) as AladhanResponse;
       this.cache.set(cacheKey, { date: dateStr, data: json.data });
-      return this.formatResponse(json.data, config, at);
+      this.pruneCache();
+      return this.formatResponse(json.data, config, at, tz);
     } catch (err) {
       this.logger.warn(
         `Failed to fetch prayer times: ${(err as Error).message}`,
@@ -149,8 +180,13 @@ export class PrayerTimesService {
     const result = await this.getPrayerTimes(workspaceId, at);
     if (!result.times) return { paused: false, prayer: null, remainingMinutes: 0 };
 
-    const enabledPrayers: string[] = JSON.parse(config.enabledPrayers);
-    const nowMinutes = at.getHours() * 60 + at.getMinutes();
+    const enabledPrayers = safeParsePrayers(config.enabledPrayers);
+    const workspace = await this.prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { timezone: true },
+    });
+    const tz = workspace?.timezone ?? 'UTC';
+    const nowMinutes = nowMinutesInTz(at, tz);
 
     for (const prayerName of enabledPrayers) {
       const timeStr = (result.times as Record<string, string>)[prayerName];
@@ -195,14 +231,15 @@ export class PrayerTimesService {
     data: AladhanResponse['data'],
     config: Awaited<ReturnType<PrayerTimesService['getOrCreateConfig']>>,
     at: Date,
+    tz: string,
   ) {
     const times: Record<string, string> = {};
     for (const name of PRAYER_NAMES) {
       times[name] = data.timings[name];
     }
 
-    const enabledPrayers: string[] = JSON.parse(config.enabledPrayers);
-    const nowMinutes = at.getHours() * 60 + at.getMinutes();
+    const enabledPrayers = safeParsePrayers(config.enabledPrayers);
+    const nowMinutes = nowMinutesInTz(at, tz);
 
     let nextPrayer: string | null = null;
     let nextPrayerTime: string | null = null;

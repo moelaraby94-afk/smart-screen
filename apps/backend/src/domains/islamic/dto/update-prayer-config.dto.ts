@@ -1,6 +1,7 @@
 import {
   IsArray,
   IsBoolean,
+  IsIn,
   IsInt,
   IsNumber,
   IsOptional,
@@ -8,6 +9,8 @@ import {
   Max,
   Min,
 } from 'class-validator';
+
+const VALID_PRAYERS = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
 export class UpdatePrayerConfigDto {
   @IsOptional()
@@ -52,7 +55,7 @@ export class UpdatePrayerConfigDto {
 
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
+  @IsIn(VALID_PRAYERS, { each: true })
   enabledPrayers?: string[];
 
   @IsOptional()
