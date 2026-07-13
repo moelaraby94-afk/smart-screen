@@ -37,5 +37,11 @@ jobs:
       - name: Verify
         run: npm run verify
 
+      # T1.3 — Dependency audit gate. Non-blocking for now (|| true) so CI
+      # stays green while remaining dev-only vulnerabilities are triaged.
+      # Flip to blocking (remove || true) once T1.2 is fully resolved.
+      - name: Dependency audit (high+critical)
+        run: npm audit --audit-level=high || true
+
       - name: Marketing build
         run: npm run build -w apps/marketing
