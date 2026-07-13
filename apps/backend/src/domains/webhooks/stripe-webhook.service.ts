@@ -137,13 +137,23 @@ export class StripeWebhookService {
           }
         } else if (
           event.type === 'customer.subscription.updated' ||
-          event.type === 'customer.subscription.deleted'
+          event.type === 'customer.subscription.deleted' ||
+          event.type === 'customer.subscription.created'
         ) {
           const stripeSub = event.data.object;
           await this.subscriptions.syncFromStripeSubscription(
             tx,
             stripeSub,
             event.type === 'customer.subscription.deleted',
+          );
+        } else if (event.type === 'invoice.payment_failed') {
+          const invoice = event.data.object;
+          const subscriptionId =
+            typeof invoice.subscription === 'string'
+              ? invoice.subscription
+              : undefined;
+          this.logger.warn(
+            `Invoice payment failed for subscription ${subscriptionId ?? 'unknown'} (invoice ${invoice.id})`,
           );
         }
       });
