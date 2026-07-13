@@ -69,6 +69,28 @@ export class PlayerController {
     return this.playerService.getCompiledCanvas(serialNumber, secret, canvasId);
   }
 
+  /** Kiosk player: prayer pause status (serial + secret auth). */
+  @Get('prayer-pause-status')
+  async prayerPauseStatus(
+    @Query('serialNumber') serialNumber: string | undefined,
+    @Headers('x-player-secret') secret: string | undefined,
+  ) {
+    return this.playerService.getPrayerPauseStatusForKiosk(
+      serialNumber,
+      secret,
+    );
+  }
+
+  /** JWT player: prayer pause status (Bearer auth). */
+  @UseGuards(JwtAuthGuard)
+  @Get('prayer-pause-status/jwt')
+  async prayerPauseStatusJwt(
+    @CurrentUser() user: JwtUser,
+    @Query('workspaceId') workspaceId: string | undefined,
+  ) {
+    return this.playerService.getPrayerPauseStatusForJwtUser(user, workspaceId);
+  }
+
   /**
    * Pairing v2: player shows `pairingCode`, dashboard claims with workspace JWT.
    *

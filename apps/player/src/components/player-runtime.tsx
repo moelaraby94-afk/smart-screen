@@ -15,7 +15,7 @@ import {
   loadOfflinePlaylistSnapshot,
   saveOfflinePlaylistSnapshot,
 } from '@/lib/offline-playlist-cache';
-import { fetchPlayerBootstrap, fetchWorkspaceBootstrap } from '@/lib/player-api';
+import { fetchPlayerBootstrap, fetchWorkspaceBootstrap, fetchPrayerPauseStatusKiosk, fetchPrayerPauseStatusJwt, type PrayerPauseStatus } from '@/lib/player-api';
 import {
   clearPlayerMediaCache,
   invalidateResolvedBlobUrls,
@@ -29,6 +29,7 @@ import { LoadingOverlay } from '@/components/loading-overlay';
 import { PlayerHud } from '@/components/player-hud';
 import { PlayerContentPlaceholder } from '@/components/player-content-placeholder';
 import { PlayerPairingWait } from '@/components/player-pairing-wait';
+import { PrayerPauseOverlay } from '@/components/prayer-pause-overlay';
 import {
   PlaylistEngine,
   type PlaylistPlaybackErrorPayload,
@@ -38,6 +39,7 @@ const HEARTBEAT_INTERVAL_MS = 30_000;
 const SCHEDULE_POLL_MS = 60_000;
 const OFFLINE_RETRY_BASE_MS = 5_000;
 const OFFLINE_RETRY_MAX_MS = 120_000;
+const PRAYER_PAUSE_POLL_MS = 30_000;
 
 function getRealtimeBaseUrl(): string {
   return process.env.NEXT_PUBLIC_REALTIME_URL ?? 'http://localhost:4000';
@@ -93,6 +95,7 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
   const [connectionHint, setConnectionHint] = useState<string | null>(null);
   const [liveCanvasLayouts, setLiveCanvasLayouts] = useState<Record<string, unknown>>({});
   const [workspaceDisplayName, setWorkspaceDisplayName] = useState<string | null>(null);
+  const [prayerPause, setPrayerPause] = useState<PrayerPauseStatus | null>(null);
 
   const identifyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const serialForIdentifyRef = useRef('');
@@ -357,6 +360,40 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
     }, SCHEDULE_POLL_MS);
     return () => clearInterval(poll);
   }, [bootMode]);
+
+  /** Prayer pause polling: checks if content should be paused for prayer. */
+  useEffect(() => {
+    if (bootMode !== 'jwt' && bootMode !== 'kiosk') return;
+    let cancelled = false;
+
+    const checkPrayerPause = async () => {
+      try {
+        if (bootMode === 'jwt') {
+          const token = getPlayerBearerToken();
+          const wsId = playlistRef.current?.workspaceId;
+          if (!token || !wsId) return;
+          const status = await fetchPrayerPauseStatusJwt(token, wsId);
+          if (!cancelled) setPrayerPause(status);
+        } else if (bootMode === 'kiosk') {
+          const serial = displaySerialRef.current || kioskSerialRef.current;
+          const s = pairedSecret || envSecret;
+          if (!serial || !s) return;
+          const status = await fetchPrayerPauseStatusKiosk(serial, s);
+          if (!cancelled) setPrayerPause(status);
+        }
+      } catch (e) {
+        devWarn('[player-runtime] prayer pause check failed (continuing playback)', e);
+        if (!cancelled) setPrayerPause(null);
+      }
+    };
+
+    void checkPrayerPause();
+    const interval = setInterval(checkPrayerPause, PRAYER_PAUSE_POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [bootMode, pairedSecret, envSecret]);
 
   /** JWT player: join screen room for live `player:ticker` without full bootstrap reload. */
   useEffect(() => {
@@ -737,6 +774,13 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
           )}
         </AnimatePresence>
       </div>
+
+      {prayerPause?.paused ? (
+        <PrayerPauseOverlay
+          prayer={prayerPause.prayer}
+          remainingMinutes={prayerPause.remainingMinutes}
+        />
+      ) : null}
 
       <AnimatePresence>
         {identifyOpen ? (

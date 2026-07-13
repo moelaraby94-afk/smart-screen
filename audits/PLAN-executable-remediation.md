@@ -302,6 +302,16 @@ Files: `apps/player/src/...` (read `apps/player/AGENTS.md` first — R1). DoD: w
 enabled, the player visibly pauses during a prayer window; graceful when the endpoint is
 unreachable (fall back to playing).
 
+> **Implementation note (T4.1):** The player runtime had no prayer pause logic. Two new
+> backend endpoints were added to `PlayerController`:
+> `GET /player/prayer-pause-status` (kiosk auth via serial + secret) and
+> `GET /player/prayer-pause-status/jwt` (Bearer auth). Both delegate to
+> `PrayerTimesService.checkPrayerPause()`. `IslamicModule` was imported into `PlayerModule`.
+> The player runtime polls every 30s in both kiosk and JWT modes; on `paused === true` a
+> `PrayerPauseOverlay` is rendered on top of content. On fetch failure, the player falls
+> back to playing (graceful degradation). 8 backend tests cover kiosk auth, JWT auth,
+> membership checks, and super-admin bypass.
+
 **T4.2 — Hijri calendar widget.** Genuinely missing (file 00 T5). Build a dashboard/player
 widget consuming the existing backend Hijri endpoint. i18n + RTL (R6). DoD: widget renders
 correct Hijri date in both locales.

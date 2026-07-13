@@ -13,6 +13,7 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 import type { JwtUser } from '../../common/auth/current-user.decorator';
 import { CanvasesService } from '../canvases/canvases.service';
 import { PlaylistsService } from '../playlists/playlists.service';
+import { PrayerTimesService } from '../islamic/prayer-times.service';
 
 @Injectable()
 export class PlayerService {
@@ -23,6 +24,7 @@ export class PlayerService {
     private readonly config: ConfigService,
     private readonly playlists: PlaylistsService,
     private readonly canvases: CanvasesService,
+    private readonly prayerTimes: PrayerTimesService,
   ) {}
 
   /**
@@ -235,5 +237,66 @@ export class PlayerService {
         items: [],
       },
     };
+  }
+
+  /**
+   * Prayer pause status for kiosk player (serial + secret auth).
+   * Returns { paused, prayer, remainingMinutes }.
+   */
+  async getPrayerPauseStatusForKiosk(
+    serialNumber: string | undefined,
+    secret: string | undefined,
+  ) {
+    if (!serialNumber?.trim()) {
+      throw new NotFoundException('serialNumber is required');
+    }
+
+    const screen = await this.prisma.screen.findFirst({
+      where: { serialNumber: serialNumber.trim() },
+      select: {
+        id: true,
+        serialNumber: true,
+        workspaceId: true,
+        pairingSecretHash: true,
+      },
+    });
+    if (!screen) {
+      throw new NotFoundException('Screen not found');
+    }
+    await this.assertPlayerSecretForScreen(screen, secret);
+
+    return this.prayerTimes.checkPrayerPause(screen.workspaceId);
+  }
+
+  /**
+   * Prayer pause status for JWT player (Bearer auth).
+   */
+  async getPrayerPauseStatusForJwtUser(
+    user: JwtUser,
+    workspaceId: string | undefined,
+  ) {
+    if (!workspaceId?.trim()) {
+      throw new NotFoundException('workspaceId is required');
+    }
+
+    const dbUser = await this.prisma.user.findUnique({
+      where: { id: user.sub },
+      select: { id: true, isSuperAdmin: true },
+    });
+    if (!dbUser) throw new UnauthorizedException();
+
+    if (!dbUser.isSuperAdmin) {
+      const m = await this.prisma.workspaceMember.findUnique({
+        where: {
+          workspaceId_userId: {
+            workspaceId: workspaceId.trim(),
+            userId: user.sub,
+          },
+        },
+      });
+      if (!m) throw new ForbiddenException('No access to this workspace');
+    }
+
+    return this.prayerTimes.checkPrayerPause(workspaceId.trim());
   }
 }

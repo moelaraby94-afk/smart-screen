@@ -14,6 +14,7 @@ import request from 'supertest';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { CanvasesService } from '../canvases/canvases.service';
 import { PlaylistsService } from '../playlists/playlists.service';
+import { PrayerTimesService } from '../islamic/prayer-times.service';
 import { PlayerController } from '../player/player.controller';
 import { PlayerService } from '../player/player.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
@@ -363,6 +364,16 @@ describe('pairing → player bootstrap (per-screen secret handoff)', () => {
         {
           provide: CanvasesService,
           useValue: { getCompiledForPlayer: jest.fn() },
+        },
+        {
+          provide: PrayerTimesService,
+          useValue: {
+            checkPrayerPause: jest.fn().mockResolvedValue({
+              paused: false,
+              prayer: null,
+              remainingMinutes: 0,
+            }),
+          },
         },
         { provide: JwtService, useValue: { verifyAsync: jest.fn() } },
         {

@@ -114,3 +114,48 @@ export async function pollPlayerPairingSession(
   }
   return res.json() as Promise<PollPairingSessionResponse>;
 }
+
+export type PrayerPauseStatus = {
+  paused: boolean;
+  prayer: string | null;
+  remainingMinutes: number;
+};
+
+/** Kiosk player: prayer pause status (serial + secret auth). */
+export async function fetchPrayerPauseStatusKiosk(
+  serialNumber: string,
+  secret: string,
+): Promise<PrayerPauseStatus> {
+  const url = new URL(`${getApiBaseUrl()}/player/prayer-pause-status`);
+  url.searchParams.set('serialNumber', serialNumber);
+  const res = await fetch(url.toString(), {
+    method: 'GET',
+    headers: { 'x-player-secret': secret },
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `Prayer pause status failed (${res.status})`);
+  }
+  return res.json() as Promise<PrayerPauseStatus>;
+}
+
+/** JWT player: prayer pause status (Bearer auth). */
+export async function fetchPrayerPauseStatusJwt(
+  accessToken: string,
+  workspaceId: string,
+): Promise<PrayerPauseStatus> {
+  const url = new URL(`${getApiBaseUrl()}/player/prayer-pause-status/jwt`);
+  url.searchParams.set('workspaceId', workspaceId);
+  const res = await fetch(url.toString(), {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    credentials: 'include',
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `Prayer pause status failed (${res.status})`);
+  }
+  return res.json() as Promise<PrayerPauseStatus>;
+}

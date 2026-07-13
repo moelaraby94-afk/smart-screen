@@ -9,6 +9,7 @@ import { PlayerService } from './player.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { PlaylistsService } from '../playlists/playlists.service';
 import { CanvasesService } from '../canvases/canvases.service';
+import { PrayerTimesService } from '../islamic/prayer-times.service';
 import { DomainException } from '../../common/errors/domain.exception';
 
 type FakeScreen = {
@@ -195,6 +196,13 @@ describe('PlayerService (P1-T6)', () => {
       config ?? createMockConfigService(),
       createMockPlaylistsService(),
       createMockCanvasesService(),
+      {
+        checkPrayerPause: jest.fn().mockResolvedValue({
+          paused: false,
+          prayer: null,
+          remainingMinutes: 0,
+        }),
+      } as unknown as PrayerTimesService,
     );
   }
 
