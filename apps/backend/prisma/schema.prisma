@@ -938,3 +938,65 @@ model Notification {
   @@index([userId, createdAt])
 
 }
+
+model ApiKey {
+
+  id          String    @id @default(cuid())
+
+  workspaceId String
+
+  name        String
+
+  /// SHA-256 hash of the raw key. The raw key is only shown once at creation time.
+
+  keyHash     String    @unique
+
+  /// Prefix of the key (cs_live_…) for display identification without revealing the full key.
+
+  keyPrefix   String
+
+  /// Space-delimited scopes: "screens:read playlists:read write" etc. Empty = all scopes.
+
+  scopes      String    @default("")
+
+  /// Soft-revoked: key is no longer accepted but row is retained for audit.
+
+  revokedAt   DateTime?
+
+  lastUsedAt  DateTime?
+
+  createdAt   DateTime  @default(now())
+
+  @@index([workspaceId, revokedAt])
+
+}
+
+model WebhookEndpoint {
+
+  id          String    @id @default(cuid())
+
+  workspaceId String
+
+  url         String
+
+  /// Space-delimited event types: "screen.online screen.offline media.uploaded" etc.
+
+  events      String
+
+  /// HMAC-SHA256 signing secret used to sign payloads sent to the endpoint.
+
+  secret      String
+
+  /// Soft-deleted: endpoint is no longer active but row is retained for audit.
+
+  deletedAt   DateTime?
+
+  enabled     Boolean   @default(true)
+
+  createdAt   DateTime  @default(now())
+
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId, enabled])
+
+}

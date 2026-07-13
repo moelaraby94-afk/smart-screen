@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ICON_STROKE } from '@/lib/icon-stroke';
+import { ApiKeysManager } from '@/features/api-docs/api-keys-manager';
+import { WebhooksManager } from '@/features/api-docs/webhooks-manager';
 
 type Endpoint = {
   method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
@@ -232,6 +234,16 @@ export function ApiDocsClient() {
             </div>
           );
         })}
+      </section>
+
+      {/* API Keys Management */}
+      <section className="vc-card-surface rounded-xl border border-border bg-card p-5">
+        <ApiKeysManager />
+      </section>
+
+      {/* Webhooks Management */}
+      <section className="vc-card-surface rounded-xl border border-border bg-card p-5">
+        <WebhooksManager />
       </section>
     </div>
   );

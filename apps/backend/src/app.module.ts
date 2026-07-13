@@ -21,6 +21,7 @@ import { SchedulesModule } from './domains/schedules/schedules.module';
 import { AdminModule } from './domains/admin/admin.module';
 import { AccountModule } from './domains/account/account.module';
 import { WebhooksModule } from './domains/webhooks/webhooks.module';
+import { ApiKeysModule } from './domains/api-keys/api-keys.module';
 import { MaintenanceModule } from './domains/maintenance/maintenance.module';
 import { EmailModule } from './domains/email/email.module';
 import { NotificationsModule } from './domains/notifications/notifications.module';
@@ -71,6 +72,7 @@ import { RequestContextModule } from './common/request-context/request-context.m
     AdminModule,
     AccountModule,
     WebhooksModule,
+    ApiKeysModule,
     MaintenanceModule,
     NotificationsModule,
     WorkspaceAuditLogModule,

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
@@ -38,6 +38,15 @@ export class AccountController {
   @Get('billing')
   billing(@CurrentUser() user: JwtUser) {
     return this.account.getBilling(user.sub);
+  }
+
+  @Get('billing/invoice/:invoiceRef/pdf')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  invoicePdf(
+    @CurrentUser() user: JwtUser,
+    @Param('invoiceRef') invoiceRef: string,
+  ) {
+    return this.account.getInvoicePdfUrl(user.sub, invoiceRef);
   }
 
   @Get('insights')

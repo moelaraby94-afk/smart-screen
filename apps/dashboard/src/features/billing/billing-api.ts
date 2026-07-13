@@ -31,6 +31,10 @@ export async function fetchAccountBilling(): Promise<Response> {
   return apiFetch('/account/billing');
 }
 
+export async function fetchInvoicePdfUrl(invoiceRef: string): Promise<Response> {
+  return apiFetch(`/account/billing/invoice/${encodeURIComponent(invoiceRef)}/pdf`);
+}
+
 export async function updateProfile(data: Record<string, unknown>): Promise<Response> {
   return apiFetch('/account/profile', {
     method: 'PATCH',

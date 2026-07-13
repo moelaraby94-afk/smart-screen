@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Download, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -16,6 +16,7 @@ import {
 import {
   fetchAccountBilling,
   fetchCurrentSubscription,
+  fetchInvoicePdfUrl,
   createStripePortal as apiCreateStripePortal,
 } from '@/features/billing/billing-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
@@ -104,6 +105,24 @@ export function SettingsBillingClient() {
       setPortalBusy(false);
     }
   }, [workspaceId, locale, t]);
+
+  const downloadInvoice = useCallback(async (invoiceRef: string) => {
+    try {
+      const res = await fetchInvoicePdfUrl(invoiceRef);
+      if (!res.ok) {
+        toast.error(t('invoiceDownloadFailed'));
+        return;
+      }
+      const data = (await res.json()) as { url?: string | null };
+      if (data.url) {
+        window.open(data.url, '_blank');
+      } else {
+        toast.error(t('invoiceDownloadFailed'));
+      }
+    } catch {
+      toast.error(t('invoiceDownloadFailed'));
+    }
+  }, [t]);
 
   if (loading) return <p className="text-sm text-muted-foreground">{t('loading')}</p>;
 
@@ -216,6 +235,7 @@ export function SettingsBillingClient() {
                 <TableHead>{t('table.invoice')}</TableHead>
                 <TableHead className="text-end">{t('table.amount')}</TableHead>
                 <TableHead>{t('table.status')}</TableHead>
+                <TableHead className="text-center">{t('table.download')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -232,6 +252,20 @@ export function SettingsBillingClient() {
                     {money(p.amountCents, p.currency)}
                   </TableCell>
                   <TableCell>{p.status}</TableCell>
+                  <TableCell className="text-center">
+                    {p.invoiceRef ? (
+                      <button
+                        type="button"
+                        onClick={() => void downloadInvoice(p.invoiceRef!)}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:text-foreground"
+                        aria-label={t('downloadInvoice')}
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
+                    ) : (
+                      <span className="text-muted-foreground/40">—</span>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

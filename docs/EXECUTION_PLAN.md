@@ -664,7 +664,36 @@
 
 ### تاسكات مكتملة
 
-*(لا يوجد بعد)*
+**Phase 7: Billing & API — Completed 2025-01-30**
+
+- **Task 7.1: Plan Selection UI Enhancement**
+  - Files: `apps/dashboard/src/features/billing/billing-client.tsx`, `apps/dashboard/src/i18n/messages/en.json`, `apps/dashboard/src/i18n/messages/ar.json`
+  - Added feature comparison table (9 rows × 4 plans) with check/minus icons
+  - EN + AR translations added
+  - Testing: Built successfully, dashboard running on localhost:3000
+
+- **Task 7.2: Invoice PDF Download**
+  - Files: `apps/backend/src/domains/account/account.service.ts`, `apps/backend/src/domains/account/account.controller.ts`, `apps/dashboard/src/features/billing/billing-api.ts`, `apps/dashboard/src/features/settings/settings-billing-client.tsx`, `apps/dashboard/src/i18n/messages/en.json`, `apps/dashboard/src/i18n/messages/ar.json`
+  - Backend: `GET /account/billing/invoice/:invoiceRef/pdf` — retrieves Stripe invoice PDF URL via `stripe.invoices.retrieve()` (official Stripe API)
+  - Frontend: Download button column in payment history table
+  - EN + AR translations added
+  - Testing: Backend built successfully, endpoint registered
+
+- **Task 7.3: API Keys Management**
+  - Files: `apps/backend/prisma/schema.prisma`, `apps/backend/src/domains/api-keys/*` (service, controller, module, DTO), `apps/backend/src/app.module.ts`, `apps/dashboard/src/features/api-docs/api-keys-manager.tsx`, `apps/dashboard/src/features/api-docs/api-management-api.ts`, `apps/dashboard/src/features/api-docs/api-docs-client.tsx`, `apps/dashboard/src/i18n/messages/en.json`, `apps/dashboard/src/i18n/messages/ar.json`
+  - Prisma: `ApiKey` model with SHA-256 key hash, prefix, scopes, soft-revoke
+  - Backend: CRUD endpoints (`GET/POST/DELETE /api-keys`) with OWNER/ADMIN role guard
+  - Frontend: Full management UI with create dialog (shows raw key once), revoke button, scope badges
+  - EN + AR translations added
+  - Testing: Backend + dashboard built successfully, prisma db push completed
+
+- **Task 7.4: Webhooks Management**
+  - Files: `apps/backend/prisma/schema.prisma`, `apps/backend/src/domains/webhooks/webhooks.service.ts`, `apps/backend/src/domains/webhooks/webhooks-customer.controller.ts`, `apps/backend/src/domains/webhooks/webhooks.module.ts`, `apps/backend/src/domains/webhooks/dto/create-webhook.dto.ts`, `apps/dashboard/src/features/api-docs/webhooks-manager.tsx`, `apps/dashboard/src/features/api-docs/api-management-api.ts`, `apps/dashboard/src/i18n/messages/en.json`, `apps/dashboard/src/i18n/messages/ar.json`
+  - Prisma: `WebhookEndpoint` model with URL, events, HMAC secret, enable/disable, soft-delete
+  - Backend: CRUD + toggle + test endpoints (`GET/POST/DELETE/PATCH/POST /webhooks`)
+  - Frontend: Full management UI with create dialog (event picker, signing secret display), enable/disable toggle, test button, delete
+  - EN + AR translations added
+  - Testing: All 3 containers healthy (backend, dashboard, db)
 
 ---
 

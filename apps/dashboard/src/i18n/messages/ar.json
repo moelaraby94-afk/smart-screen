@@ -842,6 +842,57 @@
       "createSchedule": "إنشاء جدولة جديدة",
       "updateSchedule": "تحديث إعدادات الجدولة",
       "deleteSchedule": "حذف جدولة"
+    },
+    "keys": {
+      "title": "مفاتيح API",
+      "create": "إنشاء مفتاح",
+      "createTitle": "إنشاء مفتاح API",
+      "createDesc": "أنشئ مفتاح API جديد للتكامل بين الخوادم. سيظهر المفتاح الكامل مرة واحدة فقط.",
+      "nameLabel": "اسم المفتاح",
+      "namePlaceholder": "مثال: خادم الإنتاج",
+      "scopesLabel": "النطاقات (اختياري)",
+      "scopesPlaceholder": "screens:read playlists:write",
+      "scopesHint": "نطاقات مفصولة بمسافات. اتركها فارغة لجميع الصلاحيات.",
+      "scopes": "نطاقات",
+      "lastUsed": "آخر استخدام",
+      "neverUsed": "لم يُستخدم",
+      "empty": "لا توجد مفاتيح API بعد. أنشئ واحداً للبدء.",
+      "createdTitle": "تم إنشاء مفتاح API",
+      "createdDesc": "انسخ مفتاح API الآن. لن تتمكن من رؤيته مرة أخرى.",
+      "warning": "احفظ هذا المفتاح بأمان. يمنح وصول API إلى مساحة عملك.",
+      "revoke": "إلغاء",
+      "revoked": "تم إلغاء مفتاح API.",
+      "revokeFailed": "تعذر إلغاء المفتاح.",
+      "createFailed": "تعذر إنشاء مفتاح API.",
+      "loadFailed": "تعذر تحميل مفاتيح API.",
+      "cancel": "إلغاء",
+      "done": "تم"
+    },
+    "webhooks": {
+      "title": "نقاط استقبال Webhook",
+      "create": "إضافة نقطة",
+      "createTitle": "إضافة نقطة استقبال Webhook",
+      "createDesc": "سجل عنوان URL لاستقبال إشعارات الأحداث في الوقت الفعلي من Cloud Signage.",
+      "urlLabel": "عنوان URL",
+      "eventsLabel": "الأحداث للاشتراك",
+      "empty": "لا توجد نقاط استقبال بعد. أضف واحدة لاستقبال إشعارات الأحداث.",
+      "createdTitle": "تم إنشاء Webhook",
+      "createdDesc": "انسخ سر التوقيع. ستحتاجه للتحقق من حمولات Webhook الواردة.",
+      "active": "نشط",
+      "disabled": "معطل",
+      "enable": "تفعيل",
+      "disable": "تعطيل",
+      "test": "اختبار",
+      "delete": "حذف",
+      "deleted": "تم حذف نقطة استقبال Webhook.",
+      "deleteFailed": "تعذر حذف Webhook.",
+      "toggleFailed": "تعذر تبديل حالة Webhook.",
+      "testSuccess": "تم إرسال Webhook التجريبي بنجاح.",
+      "testFailed": "فشل Webhook التجريبي.",
+      "createFailed": "تعذر إنشاء Webhook.",
+      "loadFailed": "تعذر تحميل Webhooks.",
+      "cancel": "إلغاء",
+      "done": "تم"
     }
   },
   "settingsPages": {
@@ -1497,8 +1548,11 @@
       "description": "الوصف",
       "invoice": "الفاتورة",
       "amount": "المبلغ",
-      "status": "الحالة"
-    }
+      "status": "الحالة",
+      "download": "PDF"
+    },
+    "downloadInvoice": "تحميل الفاتورة PDF",
+    "invoiceDownloadFailed": "تعذر تحميل الفاتورة. قد لا يكون Stripe مُعداً."
   },
   "settingsProfileClient": {
     "updateFailed": "فشل التحديث",
@@ -1729,7 +1783,24 @@
     "perScreenPrice": "لكل شاشة إضافية",
     "included": "مشمولة",
     "estimatedMonthly": "الإجمالي الشهري المقدر",
-    "overageWarning": "{count} شاشة فوق الحد المشمول — +{price}/شهر"
+    "overageWarning": "{count} شاشة فوق الحد المشمول — +{price}/شهر",
+    "comparisonTitle": "مقارنة الخطط",
+    "comparisonFeature": "الميزة",
+    "cmp": {
+      "screens": "حد الشاشات",
+      "seats": "مقاعد الفريق",
+      "storage": "التخزين",
+      "scheduling": "الجدولة",
+      "analytics": "التحليلات",
+      "apiAccess": "وصول API",
+      "prioritySync": "مزامنة أولوية",
+      "sso": "تسجيل دخول موحد وسجلات تدقيق",
+      "support": "الدعم",
+      "community": "المجتمع",
+      "email": "بريد إلكتروني",
+      "priority": "أولوية",
+      "dedicated": "مخصص"
+    }
   },
   "workspaceWelcome": {
     "sessionRestored": "تمت استعادة الجلسة — أكمل إنشاء مساحة عملك.",

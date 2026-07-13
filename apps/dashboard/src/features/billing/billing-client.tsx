@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, CreditCard, Monitor, Sparkles, Zap } from 'lucide-react';
+import { Check, CreditCard, Monitor, Sparkles, Zap, Minus } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -475,6 +475,60 @@ export function BillingClient() {
               )}
           </div>
         )}
+      </motion.section>
+
+      <motion.section
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="vc-card-surface overflow-hidden rounded-2xl border border-border"
+      >
+        <div className="border-b border-border/60 px-6 py-4">
+          <h3 className="text-lg font-semibold tracking-tight">{t('comparisonTitle')}</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border/60">
+                <th className="px-6 py-4 text-start font-medium text-muted-foreground">{t('comparisonFeature')}</th>
+                <th className="px-4 py-4 text-center font-semibold">{t('free')}</th>
+                <th className="px-4 py-4 text-center font-semibold">{t('starter')}</th>
+                <th className="px-4 py-4 text-center font-semibold">{t('pro')}</th>
+                <th className="px-4 py-4 text-center font-semibold">{t('enterprise')}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/40">
+              {[
+                { label: t('cmp.screens'), values: ['25', '100', '500', '2000'] },
+                { label: t('cmp.seats'), values: ['5', '15', '25', '100'] },
+                { label: t('cmp.storage'), values: ['5 GB', '50 GB', '200 GB', '1 TB'] },
+                { label: t('cmp.scheduling'), values: [true, true, true, true] },
+                { label: t('cmp.analytics'), values: [false, true, true, true] },
+                { label: t('cmp.apiAccess'), values: [false, false, true, true] },
+                { label: t('cmp.prioritySync'), values: [false, false, true, true] },
+                { label: t('cmp.sso'), values: [false, false, false, true] },
+                { label: t('cmp.support'), values: [t('cmp.community'), t('cmp.email'), t('cmp.priority'), t('cmp.dedicated')] },
+              ].map((row, i) => (
+                <tr key={i} className="hover:bg-muted/20">
+                  <td className="px-6 py-3.5 font-medium text-foreground">{row.label}</td>
+                  {row.values.map((val, j) => (
+                    <td key={j} className="px-4 py-3.5 text-center">
+                      {typeof val === 'boolean' ? (
+                        val ? (
+                          <Check className="mx-auto h-4 w-4 text-primary" />
+                        ) : (
+                          <Minus className="mx-auto h-4 w-4 text-muted-foreground/40" />
+                        )
+                      ) : (
+                        <span className="text-muted-foreground">{val}</span>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </motion.section>
     </div>
   );

@@ -842,6 +842,57 @@
       "createSchedule": "Create a new schedule",
       "updateSchedule": "Update schedule settings",
       "deleteSchedule": "Delete a schedule"
+    },
+    "keys": {
+      "title": "API Keys",
+      "create": "Create Key",
+      "createTitle": "Create API Key",
+      "createDesc": "Generate a new API key for server-to-server integrations. The full key will only be shown once.",
+      "nameLabel": "Key name",
+      "namePlaceholder": "e.g. Production server",
+      "scopesLabel": "Scopes (optional)",
+      "scopesPlaceholder": "screens:read playlists:write",
+      "scopesHint": "Space-delimited scopes. Leave empty for all permissions.",
+      "scopes": "scopes",
+      "lastUsed": "Last used",
+      "neverUsed": "Never used",
+      "empty": "No API keys yet. Create one to get started.",
+      "createdTitle": "API Key Created",
+      "createdDesc": "Copy your API key now. You won't be able to see it again.",
+      "warning": "Store this key securely. It grants API access to your workspace.",
+      "revoke": "Revoke",
+      "revoked": "API key revoked.",
+      "revokeFailed": "Could not revoke key.",
+      "createFailed": "Could not create API key.",
+      "loadFailed": "Could not load API keys.",
+      "cancel": "Cancel",
+      "done": "Done"
+    },
+    "webhooks": {
+      "title": "Webhook Endpoints",
+      "create": "Add Endpoint",
+      "createTitle": "Add Webhook Endpoint",
+      "createDesc": "Register a URL to receive real-time event notifications from Cloud Signage.",
+      "urlLabel": "Endpoint URL",
+      "eventsLabel": "Events to subscribe",
+      "empty": "No webhook endpoints yet. Add one to receive event notifications.",
+      "createdTitle": "Webhook Created",
+      "createdDesc": "Copy your signing secret. You'll need it to verify incoming webhook payloads.",
+      "active": "Active",
+      "disabled": "Disabled",
+      "enable": "Enable",
+      "disable": "Disable",
+      "test": "Test",
+      "delete": "Delete",
+      "deleted": "Webhook endpoint deleted.",
+      "deleteFailed": "Could not delete webhook.",
+      "toggleFailed": "Could not toggle webhook.",
+      "testSuccess": "Test webhook delivered successfully.",
+      "testFailed": "Test webhook failed.",
+      "createFailed": "Could not create webhook.",
+      "loadFailed": "Could not load webhooks.",
+      "cancel": "Cancel",
+      "done": "Done"
     }
   },
   "settingsPages": {
@@ -1497,8 +1548,11 @@
       "description": "Description",
       "invoice": "Invoice",
       "amount": "Amount",
-      "status": "Status"
-    }
+      "status": "Status",
+      "download": "PDF"
+    },
+    "downloadInvoice": "Download invoice PDF",
+    "invoiceDownloadFailed": "Could not download invoice. Stripe may not be configured."
   },
   "settingsProfileClient": {
     "updateFailed": "Update failed",
@@ -1729,7 +1783,24 @@
     "perScreenPrice": "Per extra screen",
     "included": "Included",
     "estimatedMonthly": "Est. monthly total",
-    "overageWarning": "{count} screen(s) over included limit — +{price}/mo"
+    "overageWarning": "{count} screen(s) over included limit — +{price}/mo",
+    "comparisonTitle": "Plan Comparison",
+    "comparisonFeature": "Feature",
+    "cmp": {
+      "screens": "Screen limit",
+      "seats": "Team seats",
+      "storage": "Storage",
+      "scheduling": "Scheduling",
+      "analytics": "Analytics",
+      "apiAccess": "API access",
+      "prioritySync": "Priority sync",
+      "sso": "SSO & audit logs",
+      "support": "Support",
+      "community": "Community",
+      "email": "Email",
+      "priority": "Priority",
+      "dedicated": "Dedicated"
+    }
   },
   "workspaceWelcome": {
     "sessionRestored": "Session restored — finish creating your workspace.",

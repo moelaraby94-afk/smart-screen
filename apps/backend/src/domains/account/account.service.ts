@@ -14,6 +14,7 @@ import { fromStorageLimitBytes } from '../../common/product/storage-limit';
 import { computeWorkspaceCapabilities } from '../../common/product/workspace-capabilities';
 import { EmailService } from '../email/email.service';
 import { emailChangeOtpEmail } from '../email/email-templates';
+import Stripe from 'stripe';
 
 @Injectable()
 export class AccountService {
@@ -304,5 +305,27 @@ export class AccountService {
       totals,
       branches,
     };
+  }
+
+  async getInvoicePdfUrl(userId: string, invoiceRef: string) {
+    const payment = await this.prisma.paymentRecord.findFirst({
+      where: { userId, invoiceRef },
+    });
+    if (!payment) {
+      throw new ForbiddenException('Invoice not found');
+    }
+
+    const secret = this.config.get<string>('STRIPE_SECRET_KEY')?.trim();
+    if (!secret) {
+      throw new ServiceUnavailableException('Stripe is not configured');
+    }
+
+    const stripe = new Stripe(secret);
+    const invoice = await stripe.invoices.retrieve(invoiceRef);
+    const pdfUrl = invoice.invoice_pdf;
+    if (!pdfUrl) {
+      throw new BadRequestException('Invoice PDF is not available yet');
+    }
+    return { url: pdfUrl };
   }
 }
