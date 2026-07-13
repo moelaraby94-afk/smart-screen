@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { BarChart3, Filter, TrendingUp, Eye, Loader2, Activity, Download } from 'lucide-react';
+import { BarChart3, Filter, TrendingUp, Eye, Loader2, Activity, Download, Clock, Monitor, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -34,8 +34,14 @@ export function ProofOfPlayClient() {
   useEffect(() => { void reload(); }, [reload, workspaceDataEpoch]);
 
   const totalScreens = analytics?.total ?? 0;
+  const onlineCount = analytics?.byStatus.ONLINE ?? 0;
+  const offlineCount = analytics?.byStatus.OFFLINE ?? 0;
+  const maintenanceCount = analytics?.byStatus.MAINTENANCE ?? 0;
   const uptimePercent = analytics?.uptimePercent ?? 0;
   const withPlaylist = analytics?.withPlaylist ?? 0;
+  const playlistDist = analytics?.playlistDistribution ?? [];
+  const hourlyActivity = analytics?.hourlyActivity ?? [];
+  const maxHourlyCount = Math.max(...hourlyActivity.map(h => h.count), 1);
 
   const filteredScreens = (analytics?.perScreen ?? []).filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -102,6 +108,131 @@ export function ProofOfPlayClient() {
           </div>
         </Card>
       </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card className="p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Monitor className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-semibold">{t('statusBreakdown')}</h3>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">{t('statusOnline')}</span>
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-24 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full bg-green-500" style={{ width: `${totalScreens ? (onlineCount / totalScreens) * 100 : 0}%` }} />
+                </div>
+                <span className="text-sm font-medium w-8 text-end">{onlineCount}</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">{t('statusOffline')}</span>
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-24 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full bg-red-500" style={{ width: `${totalScreens ? (offlineCount / totalScreens) * 100 : 0}%` }} />
+                </div>
+                <span className="text-sm font-medium w-8 text-end">{offlineCount}</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">{t('statusMaintenance')}</span>
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-24 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full bg-amber-500" style={{ width: `${totalScreens ? (maintenanceCount / totalScreens) * 100 : 0}%` }} />
+                </div>
+                <span className="text-sm font-medium w-8 text-end">{maintenanceCount}</span>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Clock className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-semibold">{t('hourlyActivity')}</h3>
+          </div>
+          {hourlyActivity.length > 0 ? (
+            <div className="flex items-end gap-0.5 h-32">
+              {hourlyActivity.map((h) => (
+                <div
+                  key={h.hour}
+                  className="flex-1 rounded-t bg-primary/60 hover:bg-primary transition-colors"
+                  style={{ height: `${(h.count / maxHourlyCount) * 100}%` }}
+                  title={`${h.hour}:00 — ${h.count}`}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">{t('noData')}</p>
+          )}
+        </Card>
+      </div>
+
+      {playlistDist.length > 0 && (
+        <Card className="p-5">
+          <h3 className="text-sm font-semibold mb-4">{t('playlistDistribution')}</h3>
+          <div className="space-y-2">
+            {playlistDist.map((p) => (
+              <div key={p.id} className="flex items-center justify-between">
+                <span className="text-sm text-foreground">{p.name}</span>
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-32 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full bg-primary" style={{ width: `${totalScreens ? (p.count / totalScreens) * 100 : 0}%` }} />
+                  </div>
+                  <span className="text-sm font-medium w-8 text-end">{p.count}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {offlineCount > 0 && (
+        <Card className="p-5 border-amber-500/30">
+          <div className="flex items-center gap-2 mb-4">
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <h3 className="text-sm font-semibold">{t('deviceAlerts')}</h3>
+            <Badge variant="danger">{offlineCount}</Badge>
+          </div>
+          <div className="space-y-2">
+            {(analytics?.perScreen ?? [])
+              .filter(s => s.status !== 'ONLINE')
+              .sort((a, b) => {
+                const aTime = a.lastSeenAt ? new Date(a.lastSeenAt).getTime() : 0;
+                const bTime = b.lastSeenAt ? new Date(b.lastSeenAt).getTime() : 0;
+                return aTime - bTime;
+              })
+              .map(s => {
+                const offlineDuration = s.lastSeenAt
+                  ? Math.floor((Date.now() - new Date(s.lastSeenAt).getTime()) / 60000)
+                  : null;
+                return (
+                  <div key={s.id} className="flex items-center justify-between rounded-lg border border-border/70 bg-muted/20 px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`h-2 w-2 rounded-full ${s.status === 'MAINTENANCE' ? 'bg-amber-500' : 'bg-red-500'}`} />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{s.name}</p>
+                        <p className="text-xs text-muted-foreground">{s.serialNumber}</p>
+                      </div>
+                    </div>
+                    <div className="text-end">
+                      <Badge variant={s.status === 'MAINTENANCE' ? 'muted' : 'danger'}>
+                        {s.status === 'MAINTENANCE' ? t('statusMaintenance') : t('statusOffline')}
+                      </Badge>
+                      {offlineDuration !== null && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {offlineDuration < 60
+                            ? `${offlineDuration}m ${t('ago')}`
+                            : `${Math.floor(offlineDuration / 60)}h ${offlineDuration % 60}m ${t('ago')}`}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

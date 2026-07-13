@@ -2192,7 +2192,15 @@
     "impressions": "Impressions",
     "noData": "No analytics data",
     "noDataDesc": "Analytics data will appear here once your screens start playing content.",
-    "exportCsv": "Export CSV"
+    "exportCsv": "Export CSV",
+    "statusBreakdown": "Status Breakdown",
+    "statusOnline": "Online",
+    "statusOffline": "Offline",
+    "statusMaintenance": "Maintenance",
+    "hourlyActivity": "Hourly Activity",
+    "playlistDistribution": "Playlist Distribution",
+    "deviceAlerts": "Device Alerts",
+    "ago": "ago"
   },
   "campaignsPage": {
     "kicker": "Campaigns",
@@ -2257,7 +2265,9 @@
     "totalRequests": "Total Requests",
     "currentSpend": "Current Spend",
     "monthlyBudget": "Monthly Budget",
-    "used": "used"
+    "used": "used",
+    "historyTitle": "Suggestion History",
+    "clearHistory": "Clear"
   },
   "emergencyPage": {
     "kicker": "Emergency",

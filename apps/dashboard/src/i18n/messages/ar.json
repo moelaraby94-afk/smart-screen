@@ -2192,7 +2192,15 @@
     "impressions": "المشاهدات",
     "noData": "لا توجد بيانات تحليلية",
     "noDataDesc": "ستظهر بيانات التحليلات هنا بمجرد بدء شاشاتك في تشغيل المحتوى.",
-    "exportCsv": "تصدير CSV"
+    "exportCsv": "تصدير CSV",
+    "statusBreakdown": "توزيع الحالة",
+    "statusOnline": "متصل",
+    "statusOffline": "غير متصل",
+    "statusMaintenance": "صيانة",
+    "hourlyActivity": "النشاط بالساعة",
+    "playlistDistribution": "توزيع قوائم التشغيل",
+    "deviceAlerts": "تنبيهات الأجهزة",
+    "ago": "مضت"
   },
   "campaignsPage": {
     "kicker": "الحملات",
@@ -2257,7 +2265,9 @@
     "totalRequests": "إجمالي الطلبات",
     "currentSpend": "الإنفاق الحالي",
     "monthlyBudget": "الميزانية الشهرية",
-    "used": "مستخدم"
+    "used": "مستخدم",
+    "historyTitle": "سجل الاقتراحات",
+    "clearHistory": "مسح"
   },
   "emergencyPage": {
     "kicker": "الطوارئ",

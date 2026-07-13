@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Sparkles, FileText, Target, Palette, TrendingUp, DollarSign, Hash } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Sparkles, FileText, Target, Palette, TrendingUp, DollarSign, Hash, History, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,11 +27,46 @@ export function AiToolsClient() {
   const [generating, setGenerating] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, string[]>>({});
   const [inputs, setInputs] = useState<Record<string, string>>({});
+  const [history, setHistory] = useState<Array<{ type: string; input: string; results: string[]; timestamp: number }>>([]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('ai-suggestion-history');
+      if (stored) setHistory(JSON.parse(stored));
+    } catch {
+      // ignore parse errors
+    }
+  }, []);
+
+  const saveToHistory = useCallback((type: string, input: string, res: string[]) => {
+    setHistory((prev) => {
+      const entry = { type, input, results: res, timestamp: Date.now() };
+      const next = [entry, ...prev].slice(0, 20);
+      try {
+        localStorage.setItem('ai-suggestion-history', JSON.stringify(next));
+      } catch {
+        // ignore storage errors
+      }
+      return next;
+    });
+  }, []);
+
+  const clearHistory = () => {
+    setHistory([]);
+    try {
+      localStorage.removeItem('ai-suggestion-history');
+    } catch {
+      // ignore
+    }
+  };
 
   const handleGenerate = (type: string) => {
+    const input = inputs[type] || '';
     setGenerating(type);
     setTimeout(() => {
-      setResults({ ...results, [type]: mockResults[type] || [] });
+      const res = mockResults[type] || [];
+      setResults({ ...results, [type]: res });
+      saveToHistory(type, input, res);
       setGenerating(null);
     }, 1000);
   };
@@ -64,7 +99,7 @@ export function AiToolsClient() {
                         onKeyDown={(e) => e.key === 'Enter' && handleGenerate(s.type)}
                       />
                       <Button size="sm" onClick={() => handleGenerate(s.type)} disabled={generating === s.type}>
-                        <Sparkles className="mr-1.5 h-4 w-4" />
+                        <Sparkles className="me-1.5 h-4 w-4" />
                         {generating === s.type ? t('generating') : t('generate')}
                       </Button>
                     </div>
@@ -122,6 +157,45 @@ export function AiToolsClient() {
           </div>
         </CardContent>
       </Card>
+
+      {history.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <History className="h-4 w-4" />
+                {t('historyTitle')}
+              </CardTitle>
+              <Button variant="ghost" size="sm" className="text-destructive" onClick={clearHistory}>
+                <Trash2 className="me-1.5 h-4 w-4" />
+                {t('clearHistory')}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {history.map((entry, i) => (
+                <div key={i} className="rounded-xl border border-border/70 bg-muted/20 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="muted">{t(`tool_${entry.type}`)}</Badge>
+                      {entry.input && <span className="text-sm text-muted-foreground">"{entry.input}"</span>}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(entry.timestamp).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="mt-2 space-y-1">
+                    {entry.results.map((r, j) => (
+                      <div key={j} className="text-sm text-foreground">{r}</div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
