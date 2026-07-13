@@ -1027,7 +1027,7 @@ model OnboardingProgress {
 
   /// JSON array of completed step keys: ["create_screen","upload_media","create_playlist","schedule_content","invite_team"]
 
-  completedSteps  String   @default("[]")
+  completedSteps  Json     @default("[]")
 
   /// When true the onboarding widget is hidden from the dashboard.
 
@@ -1111,7 +1111,7 @@ model PrayerConfig {
 
   /// Which prayers to auto-pause for (JSON array: ["Fajr","Dhuhr","Asr","Maghrib","Isha"])
 
-  enabledPrayers  String   @default("[\"Fajr\",\"Dhuhr\",\"Asr\",\"Maghrib\",\"Isha\"]")
+  enabledPrayers  Json     @default("[\"Fajr\",\"Dhuhr\",\"Asr\",\"Maghrib\",\"Isha\"]")
 
   /// Whether prayer-based auto-pause is active
 

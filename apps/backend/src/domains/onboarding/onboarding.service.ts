@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
 const ALL_STEPS = [
@@ -11,20 +11,12 @@ const ALL_STEPS = [
 
 @Injectable()
 export class OnboardingService {
-  private readonly logger = new Logger(OnboardingService.name);
-
   constructor(private readonly prisma: PrismaService) {}
 
-  private safeParseSteps(raw: string): string[] {
-    try {
-      const parsed: unknown = JSON.parse(raw);
-      return Array.isArray(parsed)
-        ? parsed.filter((s) => typeof s === 'string')
-        : [];
-    } catch {
-      this.logger.warn(`Invalid completedSteps JSON: ${raw}`);
-      return [];
-    }
+  private normalizeSteps(raw: unknown): string[] {
+    return Array.isArray(raw)
+      ? raw.filter((s): s is string => typeof s === 'string')
+      : [];
   }
 
   async getProgress(workspaceId: string) {
@@ -38,7 +30,7 @@ export class OnboardingService {
       });
     }
 
-    const completedSteps = this.safeParseSteps(progress.completedSteps);
+    const completedSteps = this.normalizeSteps(progress.completedSteps);
     const totalSteps = ALL_STEPS.length;
     const doneCount = completedSteps.length;
     const percentage = Math.round((doneCount / totalSteps) * 100);
@@ -71,7 +63,7 @@ export class OnboardingService {
       });
     }
 
-    const completed = this.safeParseSteps(progress.completedSteps);
+    const completed = this.normalizeSteps(progress.completedSteps);
     if (!completed.includes(step)) {
       completed.push(step);
     }
@@ -81,7 +73,7 @@ export class OnboardingService {
     const updated = await this.prisma.onboardingProgress.update({
       where: { workspaceId },
       data: {
-        completedSteps: JSON.stringify(completed),
+        completedSteps: completed,
         completedAt:
           allDone && !progress.completedAt ? new Date() : progress.completedAt,
       },
@@ -124,7 +116,7 @@ export class OnboardingService {
       where: { workspaceId },
       create: { workspaceId },
       update: {
-        completedSteps: '[]',
+        completedSteps: [],
         dismissed: false,
         completedAt: null,
       },

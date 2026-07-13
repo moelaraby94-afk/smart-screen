@@ -15,14 +15,10 @@ const ALADHAN_BASE = 'https://api.aladhan.com/v1/timings';
 
 const MAX_CACHE_ENTRIES = 200;
 
-function safeParsePrayers(raw: string): string[] {
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      return parsed.filter((x): x is string => typeof x === 'string');
-    }
-  } catch {
-    /* fall through */
+function normalizePrayers(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    const filtered = raw.filter((x): x is string => typeof x === 'string');
+    if (filtered.length > 0) return filtered;
   }
   return ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 }
@@ -143,9 +139,6 @@ export class PrayerTimesService {
     },
   ) {
     await this.getOrCreateConfig(workspaceId);
-    const enabledPrayers = updates.enabledPrayers
-      ? JSON.stringify(updates.enabledPrayers)
-      : undefined;
 
     return this.prisma.prayerConfig.update({
       where: { workspaceId },
@@ -167,7 +160,9 @@ export class PrayerTimesService {
         ...(updates.bufferAfter !== undefined
           ? { bufferAfter: updates.bufferAfter }
           : {}),
-        ...(enabledPrayers !== undefined ? { enabledPrayers } : {}),
+        ...(updates.enabledPrayers !== undefined
+          ? { enabledPrayers: updates.enabledPrayers }
+          : {}),
         ...(updates.autoPauseEnabled !== undefined
           ? { autoPauseEnabled: updates.autoPauseEnabled }
           : {}),
@@ -189,7 +184,7 @@ export class PrayerTimesService {
     if (!result.times)
       return { paused: false, prayer: null, remainingMinutes: 0 };
 
-    const enabledPrayers = safeParsePrayers(config.enabledPrayers);
+    const enabledPrayers = normalizePrayers(config.enabledPrayers);
     const workspace = await this.prisma.workspace.findUnique({
       where: { id: workspaceId },
       select: { timezone: true },
@@ -247,7 +242,7 @@ export class PrayerTimesService {
       times[name] = data.timings[name];
     }
 
-    const enabledPrayers = safeParsePrayers(config.enabledPrayers);
+    const enabledPrayers = normalizePrayers(config.enabledPrayers);
     const nowMinutes = nowMinutesInTz(at, tz);
 
     let nextPrayer: string | null = null;
