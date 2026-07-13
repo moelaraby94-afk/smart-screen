@@ -15,6 +15,7 @@ export const PII_FIELDS = new Set([
   'refreshToken',
   'accessToken',
   'csrfToken',
+  'x-csrf-token',
   'secret',
   'apiKey',
   'authorization',
@@ -42,10 +43,13 @@ export function scrubPII(data: unknown, depth = 0): unknown {
 
 const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 
+const ENCODED_EMAIL_RE = /[a-zA-Z0-9._%+-]+%40[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+
 const BEARER_RE = /(Bearer\s+|token=|apiKey=|secret=)([a-zA-Z0-9._-]+)/gi;
 
 function scrubStringPII(value: string): string {
   let result = value.replace(EMAIL_RE, '[Redacted]');
+  result = result.replace(ENCODED_EMAIL_RE, '[Redacted]');
   result = result.replace(BEARER_RE, '$1[Redacted]');
   return result;
 }
@@ -80,7 +84,7 @@ export function scrubSentryEvent<T>(event: T): T {
   if (e.request && typeof e.request === 'object') {
     const req = e.request as Record<string, unknown>;
     if (req.headers && typeof req.headers === 'object') {
-      req.headers = scrubPII(req.headers);
+      req.headers = scrubStringPIIDeep(req.headers);
     }
     req.cookies = undefined;
     req.data = scrubStringPIIDeep(req.data);

@@ -481,4 +481,128 @@ describe('scrubSentryEvent', () => {
     expect(device.model).toBe('iPhone 12');
     expect(device.os).toBe('iOS 17');
   });
+
+  // ── T6.5: Header value PII, x-csrf-token, URL-encoded emails ──
+
+  it('redacts emails in request.headers string values under non-PII header names', () => {
+    const event = {
+      request: {
+        headers: {
+          'x-user-email': 'alice@test.com',
+          'content-type': 'application/json',
+        },
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.headers['x-user-email']).not.toContain(
+      'alice@test.com',
+    );
+    expect(result.request.headers['x-user-email']).toContain('[Redacted]');
+    expect(result.request.headers['content-type']).toBe('application/json');
+  });
+
+  it('redacts bearer tokens in request.headers string values under non-PII header names', () => {
+    const event = {
+      request: {
+        headers: {
+          'x-custom-auth': 'Bearer eyJhbGciOiJIUzI1NiJ9',
+          accept: 'text/html',
+        },
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.headers['x-custom-auth']).not.toContain(
+      'eyJhbGciOiJIUzI1NiJ9',
+    );
+    expect(result.request.headers['x-custom-auth']).toContain('[Redacted]');
+    expect(result.request.headers.accept).toBe('text/html');
+  });
+
+  it('redacts x-csrf-token header by key name', () => {
+    const event = {
+      request: {
+        headers: {
+          'x-csrf-token': 'abc123csrfToken',
+          'content-type': 'application/json',
+        },
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.headers['x-csrf-token']).toBe('[Redacted]');
+    expect(result.request.headers['content-type']).toBe('application/json');
+  });
+
+  it('redacts URL-encoded emails from request.url', () => {
+    const event = {
+      request: {
+        url: 'https://app.example.com/users?email=alice%40test.com',
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.url).not.toContain('alice%40test.com');
+    expect(result.request.url).toContain('[Redacted]');
+  });
+
+  it('redacts URL-encoded emails from request.query_string string', () => {
+    const event = {
+      request: { query_string: 'filter=email%40bob.test.com&page=1' },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.query_string).not.toContain('email%40bob.test.com');
+    expect(result.request.query_string).toContain('[Redacted]');
+  });
+
+  it('still redacts authorization header by key name (no regression)', () => {
+    const event = {
+      request: {
+        headers: {
+          authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9',
+          'content-type': 'application/json',
+        },
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.headers.authorization).toBe('[Redacted]');
+    expect(result.request.headers['content-type']).toBe('application/json');
+  });
+
+  it('preserves standard non-PII header values (no false positives)', () => {
+    const event = {
+      request: {
+        headers: {
+          'content-type': 'application/json',
+          accept: 'text/html,application/xhtml+xml',
+          'user-agent': 'Mozilla/5.0',
+          'accept-encoding': 'gzip, deflate, br',
+          host: 'app.example.com',
+        },
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.headers['content-type']).toBe('application/json');
+    expect(result.request.headers.accept).toBe(
+      'text/html,application/xhtml+xml',
+    );
+    expect(result.request.headers['user-agent']).toBe('Mozilla/5.0');
+    expect(result.request.headers['accept-encoding']).toBe('gzip, deflate, br');
+    expect(result.request.headers.host).toBe('app.example.com');
+  });
+
+  it('preserves non-PII URLs (no false positives)', () => {
+    const event = {
+      request: { url: 'https://app.example.com/api/users?page=1&limit=20' },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.url).toBe(
+      'https://app.example.com/api/users?page=1&limit=20',
+    );
+  });
 });

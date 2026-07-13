@@ -11,6 +11,7 @@ export const PII_FIELDS = new Set([
   'refreshToken',
   'accessToken',
   'csrfToken',
+  'x-csrf-token',
   'secret',
   'apiKey',
   'authorization',
@@ -48,6 +49,13 @@ export function scrubPII(data: unknown, depth = 0): unknown {
 const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 
 /**
+ * URL-encoded email pattern (%40 = encoded @). The Sentry SDK populates
+ * `request.url` and `request.query_string` with raw (encoded) strings,
+ * so `EMAIL_RE` alone misses addresses like `alice%40test.com`.
+ */
+const ENCODED_EMAIL_RE = /[a-zA-Z0-9._%+-]+%40[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+
+/**
  * Bearer / token pattern used to redact credentials embedded in
  * string values (e.g. "Authorization: Bearer eyJhbGci...").
  * Captures the prefix (Bearer, token=, apiKey=, secret=) separately
@@ -61,6 +69,7 @@ const BEARER_RE = /(Bearer\s+|token=|apiKey=|secret=)([a-zA-Z0-9._-]+)/gi;
  */
 function scrubStringPII(value: string): string {
   let result = value.replace(EMAIL_RE, '[Redacted]');
+  result = result.replace(ENCODED_EMAIL_RE, '[Redacted]');
   result = result.replace(BEARER_RE, '$1[Redacted]');
   return result;
 }
@@ -100,7 +109,7 @@ function scrubStringPIIDeep(data: unknown, depth = 0): unknown {
  * Sentry's internal `Event` type, which varies across packages.
  *
  * Covers:
- * - `request.headers`, `request.data`, `request.json` — key-based scrub
+ * - `request.headers`, `request.data`, `request.json` — key-based + string-pattern scrub
  * - `request.cookies` — cleared entirely
  * - `request.url`, `request.query_string` — string pattern scrub
  * - `extra`, `contexts` — key-based + string-pattern scrub
@@ -119,7 +128,7 @@ export function scrubSentryEvent<T>(event: T): T {
   if (e.request && typeof e.request === 'object') {
     const req = e.request as Record<string, unknown>;
     if (req.headers && typeof req.headers === 'object') {
-      req.headers = scrubPII(req.headers);
+      req.headers = scrubStringPIIDeep(req.headers);
     }
     req.cookies = undefined;
     req.data = scrubStringPIIDeep(req.data);
