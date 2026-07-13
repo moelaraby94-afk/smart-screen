@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { devError } from '@/lib/dev-log';
 
@@ -10,8 +11,7 @@ type Props = {
 };
 
 export default function ShellError({ error, reset }: Props) {
-  const isArabic =
-    typeof document !== 'undefined' && document.documentElement.lang.toLowerCase().startsWith('ar');
+  const t = useTranslations('errorPage');
 
   useEffect(() => {
     devError('[shell route error]', error);
@@ -23,15 +23,11 @@ export default function ShellError({ error, reset }: Props) {
         <AlertTriangle className="h-8 w-8 text-destructive" strokeWidth={1.5} />
       </div>
       <div className="space-y-1.5">
-        <p className="text-lg font-semibold text-foreground">
-          {isArabic ? 'حدث خطأ أثناء تحميل الصفحة' : 'Failed to load page'}
-        </p>
+        <p className="text-lg font-semibold text-foreground">{t('shellTitle')}</p>
         {process.env.NODE_ENV === 'development' ? (
           <p className="max-w-lg text-sm text-muted-foreground">{error.message}</p>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            {isArabic ? 'يرجى المحاولة مرة أخرى' : 'Please try again'}
-          </p>
+          <p className="text-sm text-muted-foreground">{t('pleaseTryAgain')}</p>
         )}
       </div>
       <button
@@ -40,7 +36,7 @@ export default function ShellError({ error, reset }: Props) {
         className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
       >
         <RefreshCw className="h-4 w-4" strokeWidth={1.8} />
-        {isArabic ? 'إعادة المحاولة' : 'Try again'}
+        {t('retry')}
       </button>
     </div>
   );

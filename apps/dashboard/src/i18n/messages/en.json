@@ -2488,5 +2488,19 @@
     "saved": "Ramadan settings saved successfully",
     "saveFailed": "Failed to save Ramadan settings",
     "loading": "Loading Ramadan settings…"
+  },
+  "errorPage": {
+    "title": "Something went wrong",
+    "shellTitle": "Failed to load page",
+    "tryAgain": "Try again",
+    "retry": "Try again",
+    "pleaseTryAgain": "Please try again"
+  },
+  "notFoundPage": {
+    "code": "404",
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist or has been moved.",
+    "backToOverview": "Back to overview",
+    "backToHome": "Back to home"
   }
 }
