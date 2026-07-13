@@ -333,6 +333,10 @@ model Workspace {
 
   webhookEndpoints WebhookEndpoint[]
 
+  onboardingProgress OnboardingProgress?
+
+  featureFlags  FeatureFlag[]
+
 }
 
 
@@ -1004,6 +1008,62 @@ model WebhookEndpoint {
   createdAt   DateTime  @default(now())
 
   updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId, enabled])
+
+}
+
+model OnboardingProgress {
+
+  id              String   @id @default(cuid())
+
+  workspaceId     String   @unique
+
+  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  /// JSON array of completed step keys: ["create_screen","upload_media","create_playlist","schedule_content","invite_team"]
+
+  completedSteps  String   @default("[]")
+
+  /// When true the onboarding widget is hidden from the dashboard.
+
+  dismissed       Boolean  @default(false)
+
+  /// When the onboarding was marked as fully complete (all steps done).
+
+  completedAt     DateTime?
+
+  createdAt       DateTime @default(now())
+
+  updatedAt       DateTime @updatedAt
+
+}
+
+model FeatureFlag {
+
+  id              String   @id @default(cuid())
+
+  workspaceId     String
+
+  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  /// Module key: "billing","api_keys","webhooks","analytics","campaigns","ai","emergency","proof_of_play","templates"
+
+  module          String
+
+  /// Whether the module is enabled for this workspace.
+
+  enabled         Boolean  @default(true)
+
+  /// Who set this flag: "super_admin" or "system".
+
+  setBy           String   @default("system")
+
+  createdAt       DateTime @default(now())
+
+  updatedAt       DateTime @updatedAt
+
+  @@unique([workspaceId, module])
 
   @@index([workspaceId, enabled])
 

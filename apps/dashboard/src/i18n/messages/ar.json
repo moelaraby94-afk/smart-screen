@@ -58,6 +58,7 @@
     "returnToAdmin": "العودة إلى المشرف",
     "adminLogs": "سجل التدقيق",
     "adminSettings": "الإعدادات العامة",
+    "adminFeatureFlags": "مفاتيح الميزات",
     "branches": "الفروع",
     "settings": "الإعدادات",
     "displays": "الشاشات",
@@ -2372,5 +2373,27 @@
     "activated": "تم تفعيل تجاوز الطوارئ",
     "cancelled": "تم إلغاء التجاوز",
     "activeBadge": "نشط"
+  },
+  "onboardingWidget": {
+    "title": "ابدأ الآن",
+    "subtitle": "{done}/{total} خطوات مكتملة",
+    "dismiss": "إخفاء",
+    "dismissed": "تم إخفاء دليل البدء. يمكنك إعادة تفعيله لاحقاً من الإعدادات.",
+    "dismissFailed": "تعذّر إخفاء دليل البدء",
+    "go": "انتقل",
+    "stepCreateScreen": "أضف شاشتك الأولى",
+    "stepUploadMedia": "ارفع محتوى وسائط",
+    "stepCreatePlaylist": "أنشئ قائمة تشغيل",
+    "stepScheduleContent": "جدول المحتوى",
+    "stepInviteTeam": "ادعُ أعضاء الفريق"
+  },
+  "featureFlags": {
+    "loading": "جاري تحميل مفاتيح الميزات…",
+    "loadFailed": "تعذّر تحميل مفاتيح الميزات",
+    "searchPlaceholder": "ابحث في مساحات العمل…",
+    "active": "نشط",
+    "noResults": "لا توجد مساحات عمل",
+    "moduleEnabled": "تم تفعيل {module}",
+    "moduleDisabled": "تم تعطيل {module}"
   }
 }

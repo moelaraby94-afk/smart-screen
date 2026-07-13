@@ -74,3 +74,51 @@ export function subscriptionReminderEmail(params: {
   }`;
   return { subject, html, text };
 }
+
+export function welcomeEmail(params: {
+  fullName: string;
+  brandName?: string;
+  dashboardUrl?: string;
+}): { subject: string; html: string; text: string } {
+  const brand = params.brandName ?? 'Cloud Signage';
+  const subject = `Welcome to ${brand}, ${params.fullName}!`;
+  const name = esc(params.fullName);
+  const dash = params.dashboardUrl
+    ? `<p><a href="${esc(params.dashboardUrl)}" style="display:inline-block;padding:12px 28px;background:#6366f1;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Go to your dashboard</a></p>`
+    : '';
+  const html = `<p>Hi ${name},</p><p>Welcome to <strong>${brand}</strong>! Your workspace is ready.</p><p>Here's how to get started:</p><ul><li>Add your first screen</li><li>Upload media content</li><li>Create a playlist</li><li>Schedule content to your screens</li></ul>${dash}<p style="color:#666;margin-top:24px">If you have any questions, just reply to this email.</p>`;
+  const text = `Welcome to ${brand}, ${params.fullName}!\n\nYour workspace is ready. Here's how to get started:\n1. Add your first screen\n2. Upload media content\n3. Create a playlist\n4. Schedule content to your screens\n\n${params.dashboardUrl ? `Go to your dashboard: ${params.dashboardUrl}\n\n` : ''}If you have any questions, just reply to this email.`;
+  return { subject, html, text };
+}
+
+export function onboardingTipsEmail(params: {
+  fullName: string;
+  brandName?: string;
+  dashboardUrl?: string;
+  day: number;
+}): { subject: string; html: string; text: string } {
+  const brand = params.brandName ?? 'Cloud Signage';
+  const tips: Record<number, { title: string; body: string }> = {
+    1: {
+      title: 'Add your first screen',
+      body: 'Pair a display by generating a 6-digit code in the Screens page and entering it on your device.',
+    },
+    3: {
+      title: 'Upload your media',
+      body: 'Drag and drop images and videos in the Media page. They will be available for use in playlists immediately.',
+    },
+    7: {
+      title: 'Create a schedule',
+      body: 'Use the Schedules page to control when your playlists appear on each screen — by day, time, or recurrence.',
+    },
+  };
+  const tip = tips[params.day] ?? tips[1];
+  const subject = `${brand}: ${tip.title}`;
+  const name = esc(params.fullName);
+  const dash = params.dashboardUrl
+    ? `<p><a href="${esc(params.dashboardUrl)}" style="display:inline-block;padding:12px 28px;background:#6366f1;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Open dashboard</a></p>`
+    : '';
+  const html = `<p>Hi ${name},</p><p><strong>${esc(tip.title)}</strong></p><p>${esc(tip.body)}</p>${dash}<p style="color:#666;margin-top:24px">You are receiving this because you recently signed up for ${brand}.</p>`;
+  const text = `Hi ${params.fullName},\n\n${tip.title}\n${tip.body}\n\n${params.dashboardUrl ? `Open dashboard: ${params.dashboardUrl}\n\n` : ''}You are receiving this because you recently signed up for ${brand}.`;
+  return { subject, html, text };
+}

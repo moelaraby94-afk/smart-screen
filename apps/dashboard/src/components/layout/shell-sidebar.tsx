@@ -34,6 +34,7 @@ import {
   Sparkles,
   Sun,
   Terminal,
+  ToggleRight,
   UserCog,
   Users,
 } from 'lucide-react';
@@ -99,6 +100,7 @@ function hrefFor(
     | 'adminStats'
     | 'adminLogs'
     | 'adminSettings'
+    | 'adminFeatureFlags'
     | 'adminWorkspaces'
     | 'adminFleet'
     | 'adminScreens'
@@ -130,6 +132,7 @@ function hrefFor(
   if (hrefKey === 'adminStats') return `/${locale}/admin/stats`;
   if (hrefKey === 'adminLogs') return `/${locale}/admin/logs`;
   if (hrefKey === 'adminSettings') return `/${locale}/admin/settings`;
+  if (hrefKey === 'adminFeatureFlags') return `/${locale}/admin/feature-flags`;
   if (hrefKey === 'help') return `/${locale}/help`;
   if (hrefKey === 'apiDocs') return `/${locale}/api-docs`;
   if (hrefKey === 'notifications') return `/${locale}/notifications`;
@@ -170,6 +173,7 @@ function sovereignLinkActive(
     | 'adminStats'
     | 'adminLogs'
     | 'adminSettings'
+    | 'adminFeatureFlags'
     | 'adminFleet'
     | 'adminScreens'
     | 'help'
@@ -188,6 +192,7 @@ function sovereignLinkActive(
   if (hrefKey === 'adminStats') return pathname.startsWith(`/${locale}/admin/stats`);
   if (hrefKey === 'adminLogs') return pathname.startsWith(`/${locale}/admin/logs`);
   if (hrefKey === 'adminSettings') return pathname.startsWith(`/${locale}/admin/settings`);
+  if (hrefKey === 'adminFeatureFlags') return pathname.startsWith(`/${locale}/admin/feature-flags`);
   if (hrefKey === 'help') return pathname.startsWith(`/${locale}/help`);
   if (hrefKey === 'apiDocs') return pathname.startsWith(`/${locale}/api-docs`);
   if (hrefKey === 'notifications') return pathname.startsWith(`/${locale}/notifications`);
@@ -429,6 +434,12 @@ export function ShellSidebar({
                 label={t('adminSettings')}
                 active={sovereignLinkActive(pathname, navLocale, 'adminSettings')}
                 icon={Settings}
+              />
+              <NavItem
+                href={hrefFor(navLocale, 'adminFeatureFlags') as Route}
+                label={t('adminFeatureFlags')}
+                active={sovereignLinkActive(pathname, navLocale, 'adminFeatureFlags')}
+                icon={ToggleRight}
               />
 
               <SectionLabel>{t('resourcesSection')}</SectionLabel>

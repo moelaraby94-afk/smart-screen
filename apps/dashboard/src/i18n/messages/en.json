@@ -58,6 +58,7 @@
     "returnToAdmin": "Return to admin",
     "adminLogs": "Audit logs",
     "adminSettings": "Global settings",
+    "adminFeatureFlags": "Feature flags",
     "branches": "Branches",
     "settings": "Settings",
     "displays": "Displays",
@@ -2372,5 +2373,27 @@
     "activated": "Emergency override activated",
     "cancelled": "Override cancelled",
     "activeBadge": "active"
+  },
+  "onboardingWidget": {
+    "title": "Getting started",
+    "subtitle": "{done}/{total} steps completed",
+    "dismiss": "Dismiss",
+    "dismissed": "Onboarding hidden. You can reset it later from settings.",
+    "dismissFailed": "Failed to dismiss onboarding",
+    "go": "Go",
+    "stepCreateScreen": "Add your first screen",
+    "stepUploadMedia": "Upload media content",
+    "stepCreatePlaylist": "Create a playlist",
+    "stepScheduleContent": "Schedule content",
+    "stepInviteTeam": "Invite team members"
+  },
+  "featureFlags": {
+    "loading": "Loading feature flags…",
+    "loadFailed": "Failed to load feature flags",
+    "searchPlaceholder": "Search workspaces…",
+    "active": "active",
+    "noResults": "No workspaces found",
+    "moduleEnabled": "{module} enabled",
+    "moduleDisabled": "{module} disabled"
   }
 }

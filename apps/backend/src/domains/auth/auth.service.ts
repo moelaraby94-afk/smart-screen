@@ -19,7 +19,7 @@ import { AuditLogService } from '../../common/audit/audit-log.service';
 import { LoginLockoutService } from './login-lockout.service';
 import { TwoFactorService } from './two-factor.service';
 import { EmailService } from '../email/email.service';
-import { passwordResetEmail, registerOtpEmail } from '../email/email-templates';
+import { passwordResetEmail, registerOtpEmail, welcomeEmail } from '../email/email-templates';
 import { LoginDto } from './dto/login.dto';
 import { LoginTwoFactorDto } from './dto/login-two-factor.dto';
 import { RegisterStartDto } from './dto/register-start.dto';
@@ -241,6 +241,27 @@ export class AuthService {
     await this.setRefreshTokenSession(user.id, tokens.refreshToken, tokens.sessionId);
 
     const workspaceList = await this.buildWorkspaceListForUser(user.id, false);
+
+    // Send welcome email (best-effort, don't block registration on email failure)
+    if (this.email.isConfigured()) {
+      const dashboardUrl = this.configService.get<string>('DASHBOARD_URL')?.trim() || undefined;
+      const template = welcomeEmail({
+        fullName: user.fullName,
+        dashboardUrl,
+      });
+      this.email
+        .sendMail({
+          to: user.email,
+          ...template,
+        })
+        .then(() => {
+          const addr = user.email;
+          this.logger.log(`Welcome email sent to ${addr}`);
+        })
+        .catch((err) => {
+          this.logger.warn(`Welcome email failed: ${err?.message ?? err}`);
+        });
+    }
 
     return {
       user: {

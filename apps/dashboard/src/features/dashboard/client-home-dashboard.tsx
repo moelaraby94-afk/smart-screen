@@ -23,6 +23,7 @@ import {
   BranchCardsSection,
 } from '@/features/dashboard/home-dashboard-sections';
 import { RecentActivityFeed } from '@/features/dashboard/recent-activity-feed';
+import { OnboardingProgressWidget } from '@/features/onboarding/onboarding-progress-widget';
 import {
   RenameBranchDialog,
   DeleteBranchDialog,
@@ -225,6 +226,8 @@ export function ClientHomeDashboard() {
 
   return (
     <div className="space-y-8">
+      <OnboardingProgressWidget />
+
       {currentWsRow ? (
         <WorkspaceSummarySection
           currentWsRow={currentWsRow}
