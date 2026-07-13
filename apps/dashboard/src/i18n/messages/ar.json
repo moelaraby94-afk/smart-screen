@@ -402,6 +402,8 @@
     "calMonth": "شهر",
     "calDayCount": "جدولة",
     "calToday": "اليوم",
+    "calPrevMonth": "الشهر السابق",
+    "calNextMonth": "الشهر التالي",
     "calLoading": "جارٍ التحميل…",
     "calMore": "+{count} أخرى"
   },
@@ -1925,7 +1927,9 @@
     "undo": "تراجع",
     "redo": "إعادة",
     "searchMedia": "بحث في الوسائط…",
-    "duplicateItem": "تكرار العنصر"
+    "duplicateItem": "تكرار العنصر",
+    "prevItem": "العنصر السابق",
+    "nextItem": "العنصر التالي"
   },
   "errors": {
     "UNKNOWN_ERROR": "حدث خطأ ما. برجاء المحاولة مرة أخرى.",

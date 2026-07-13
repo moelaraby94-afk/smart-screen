@@ -119,6 +119,7 @@ export function PlaylistPreviewOverlay({ open, onClose, rows }: Props) {
               variant="ghost"
               size="icon"
               className="absolute start-4 text-white hover:bg-white/10"
+              aria-label={t('prevItem')}
               onClick={() => setIndex((i) => (i - 1 + rows.length) % rows.length)}
             >
               <ChevronLeft className="h-6 w-6" />
@@ -127,6 +128,7 @@ export function PlaylistPreviewOverlay({ open, onClose, rows }: Props) {
               variant="ghost"
               size="icon"
               className="absolute end-4 text-white hover:bg-white/10"
+              aria-label={t('nextItem')}
               onClick={() => setIndex((i) => (i + 1) % rows.length)}
             >
               <ChevronRight className="h-6 w-6" />

@@ -446,6 +446,7 @@ function MonthView({
             variant="ghost"
             size="icon"
             className="h-8 w-8 rounded-lg"
+            aria-label={t('calPrevMonth')}
             onClick={() => {
               const d = new Date(cursor);
               d.setMonth(d.getMonth() - 1);
@@ -472,6 +473,7 @@ function MonthView({
             variant="ghost"
             size="icon"
             className="h-8 w-8 rounded-lg"
+            aria-label={t('calNextMonth')}
             onClick={() => {
               const d = new Date(cursor);
               d.setMonth(d.getMonth() + 1);

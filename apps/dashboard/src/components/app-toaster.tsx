@@ -13,6 +13,7 @@ export function AppToaster() {
       closeButton
       position="top-right"
       theme={resolvedTheme === 'light' ? 'light' : 'dark'}
+      aria-live="polite"
       toastOptions={{
         classNames: {
           toast:

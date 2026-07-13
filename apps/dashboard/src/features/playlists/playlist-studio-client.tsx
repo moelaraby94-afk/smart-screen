@@ -460,6 +460,7 @@ export function PlaylistStudioClient() {
                   disabled={undoStack.length === 0}
                   onClick={undo}
                   title={t('undo')}
+                  aria-label={t('undo')}
                 >
                   <Undo2 className="h-4 w-4" />
                 </Button>
@@ -471,6 +472,7 @@ export function PlaylistStudioClient() {
                   disabled={redoStack.length === 0}
                   onClick={redo}
                   title={t('redo')}
+                  aria-label={t('redo')}
                 >
                   <Redo2 className="h-4 w-4" />
                 </Button>

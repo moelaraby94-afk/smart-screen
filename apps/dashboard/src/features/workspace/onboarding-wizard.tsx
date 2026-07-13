@@ -38,6 +38,7 @@ type Step = 'content' | 'nextSteps';
 export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceName }: Props) {
   const t = useTranslations('onboardingWizard');
   const locale = useLocale();
+  const dir = locale === 'ar' ? -1 : 1;
   const router = useRouter();
   const { bumpWorkspaceDataEpoch } = useWorkspace();
   const [step, setStep] = useState<Step>('content');
@@ -127,9 +128,9 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
           {step === 'content' && (
             <motion.div
               key="content"
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 20 * dir }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              exit={{ opacity: 0, x: -20 * dir }}
               className="px-6 pb-6 pt-4"
             >
               <div className="mb-6 text-center">
@@ -181,9 +182,9 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
           {step === 'nextSteps' && (
             <motion.div
               key="nextSteps"
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 20 * dir }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              exit={{ opacity: 0, x: -20 * dir }}
               className="px-6 pb-6 pt-4"
             >
               <div className="mb-6 text-center">

@@ -17,7 +17,7 @@ import {
   SquareStack,
   Type as TypeIcon,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -60,6 +60,7 @@ function objectLabel(obj: CanvasObjectJson): string {
 
 export function StudioLayersPanel({ objects, selectedId, onSelect, onReorder, onToggleVisibility }: LayersPanelProps) {
   const t = useTranslations('studio');
+  const dir = useLocale() === 'ar' ? -1 : 1;
   const reversed = [...objects].reverse();
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -78,7 +79,7 @@ export function StudioLayersPanel({ objects, selectedId, onSelect, onReorder, on
 
   return (
     <motion.aside
-      initial={{ opacity: 0, x: 20 }}
+      initial={{ opacity: 0, x: 20 * dir }}
       animate={{ opacity: 1, x: 0 }}
       className="vc-card-surface h-fit rounded-2xl border border-border p-5"
     >
@@ -129,10 +130,11 @@ export function StudioLayersPanel({ objects, selectedId, onSelect, onReorder, on
 
 export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject, playlists }: PropertiesPanelProps) {
   const t = useTranslations('studio');
+  const dir = useLocale() === 'ar' ? -1 : 1;
 
   return (
     <motion.aside
-      initial={{ opacity: 0, x: 20 }}
+      initial={{ opacity: 0, x: 20 * dir }}
       animate={{ opacity: 1, x: 0 }}
       className="vc-card-surface h-fit rounded-2xl border border-border p-5"
     >

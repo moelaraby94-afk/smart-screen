@@ -5,7 +5,7 @@ import Link from 'next/link';
 import type { Route } from 'next';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CalendarClock, FolderKanban, ListMusic, Megaphone, MonitorSmartphone, MapPin, Monitor, Zap, X } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,6 +43,7 @@ export function ScreenQuickEditPanel({
   onEditScreen,
 }: Props) {
   const t = useTranslations('screenQuickEditPanel');
+  const dir = useLocale() === 'ar' ? -1 : 1;
   const [playlists, setPlaylists] = useState<PlaylistOpt[]>([]);
   const [schedules, setSchedules] = useState<ScheduleOpt[]>([]);
   const [playlistId, setPlaylistId] = useState<string>('');
@@ -246,9 +247,9 @@ export function ScreenQuickEditPanel({
               'fixed inset-y-0 z-[70] flex w-full max-w-md flex-col border-l border-white/15 bg-background/80 shadow-2xl backdrop-blur-2xl dark:bg-background/70',
               'end-0',
             )}
-            initial={{ x: '100%' }}
+            initial={{ x: `${100 * dir}%` }}
             animate={{ x: 0 }}
-            exit={{ x: '100%' }}
+            exit={{ x: `${100 * dir}%` }}
             transition={{ type: 'spring', stiffness: 380, damping: 38 }}
           >
             <div className="flex items-start justify-between gap-3 border-b border-white/10 px-6 py-5">

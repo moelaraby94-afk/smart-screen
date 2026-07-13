@@ -402,6 +402,8 @@
     "calMonth": "Month",
     "calDayCount": "schedules",
     "calToday": "Today",
+    "calPrevMonth": "Previous month",
+    "calNextMonth": "Next month",
     "calLoading": "Loading…",
     "calMore": "+{count} more"
   },
@@ -1925,7 +1927,9 @@
     "undo": "Undo",
     "redo": "Redo",
     "searchMedia": "Search media…",
-    "duplicateItem": "Duplicate item"
+    "duplicateItem": "Duplicate item",
+    "prevItem": "Previous item",
+    "nextItem": "Next item"
   },
   "errors": {
     "UNKNOWN_ERROR": "Something went wrong. Please try again.",

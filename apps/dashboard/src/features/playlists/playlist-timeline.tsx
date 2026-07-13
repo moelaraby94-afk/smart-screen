@@ -146,6 +146,7 @@ export function PlaylistTimeline({
                               className="h-9 w-9 shrink-0 rounded-lg"
                               disabled={index === 0}
                               title={t('moveUp')}
+                              aria-label={t('moveUp')}
                               onClick={() => onMoveRow(index, -1)}
                             >
                               <ChevronUp className="h-4 w-4" />
@@ -157,6 +158,7 @@ export function PlaylistTimeline({
                               className="h-9 w-9 shrink-0 rounded-lg"
                               disabled={index >= rows.length - 1}
                               title={t('moveDown')}
+                              aria-label={t('moveDown')}
                               onClick={() => onMoveRow(index, 1)}
                             >
                               <ChevronDown className="h-4 w-4" />
@@ -167,6 +169,7 @@ export function PlaylistTimeline({
                               size="sm"
                               className="text-muted-foreground hover:bg-muted/40"
                               title={t('duplicateItem')}
+                              aria-label={t('duplicateItem')}
                               onClick={() => onDuplicateRow(row.clientId)}
                             >
                               <CopyPlus className="mr-1 h-4 w-4" />

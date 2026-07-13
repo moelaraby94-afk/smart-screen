@@ -45,6 +45,7 @@ const typeColor: Record<string, string> = {
 export function RecentActivityFeed() {
   const t = useTranslations('activityFeed');
   const locale = useLocale();
+  const dir = locale === 'ar' ? -1 : 1;
   const { workspaceId, workspaceDataEpoch } = useWorkspace();
   const [items, setItems] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,7 +121,7 @@ export function RecentActivityFeed() {
             return (
               <motion.li
                 key={`${item.type}-${item.id}`}
-                initial={{ opacity: 0, x: -8 }}
+                initial={{ opacity: 0, x: -8 * dir }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.03 * i, duration: 0.25 }}
                 className="flex items-center gap-3 rounded-xl border border-border/50 bg-muted/20 p-3"
