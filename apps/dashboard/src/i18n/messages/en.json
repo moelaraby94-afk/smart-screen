@@ -2406,6 +2406,13 @@
       "templates": { "label": "Templates", "enabled": "Templates enabled", "disabled": "Templates disabled" }
     }
   },
+  "hijriDateWidget": {
+    "title": "Hijri Date",
+    "loading": "Loading Hijri date…",
+    "notConfigured": "Set location in Prayer Times settings to see the Hijri date.",
+    "error": "Could not load Hijri date.",
+    "weekdayLabel": "Day"
+  },
   "prayerTimes": {
     "title": "Prayer Times",
     "hijri": "Hijri",

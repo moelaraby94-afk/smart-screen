@@ -316,6 +316,15 @@ unreachable (fall back to playing).
 widget consuming the existing backend Hijri endpoint. i18n + RTL (R6). DoD: widget renders
 correct Hijri date in both locales.
 
+> **Implementation note (T4.2):** A standalone `HijriDateWidget` was created at
+> `apps/dashboard/src/features/islamic/hijri-date-widget.tsx`. It fetches from the existing
+> `GET /islamic/hijri-date` endpoint via `fetchHijriDate()`, displays the Hijri day, month
+> name (locale-aware: Arabic month names for AR, English for EN), year, and weekday.
+> The widget is rendered on the dashboard home page alongside the `PrayerTimesWidget` in
+> a responsive grid. It gracefully handles not-configured and error states. i18n keys
+> added to `hijriDateWidget` namespace in both `en.json` and `ar.json`. 4 tests verify
+> successful render, error state, not-configured state, and title presence.
+
 **T4.3 — AI tools: real integration or honest labeling.** `ai-tools-client.tsx` uses
 `mockResults` (file 00 T4). Either wire it to a real model via a backend endpoint (for
 Claude, first read the `claude-api` skill/docs — R5), or clearly label it "preview/mock" in

@@ -25,6 +25,7 @@ import {
 import { RecentActivityFeed } from '@/features/dashboard/recent-activity-feed';
 import { OnboardingProgressWidget } from '@/features/onboarding/onboarding-progress-widget';
 import { PrayerTimesWidget } from '@/features/islamic/prayer-times-widget';
+import { HijriDateWidget } from '@/features/islamic/hijri-date-widget';
 import {
   RenameBranchDialog,
   DeleteBranchDialog,
@@ -228,7 +229,10 @@ export function ClientHomeDashboard() {
   return (
     <div className="space-y-8">
       <OnboardingProgressWidget />
-      <PrayerTimesWidget />
+      <div className="grid gap-4 md:grid-cols-[1fr_auto]">
+        <PrayerTimesWidget />
+        <HijriDateWidget />
+      </div>
 
       {currentWsRow ? (
         <WorkspaceSummarySection
