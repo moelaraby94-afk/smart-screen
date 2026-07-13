@@ -12,7 +12,7 @@ import { ListMediaDto } from './dto/list-media.dto';
 import { ErrorCode } from '../../common/errors/error-codes';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
-import { existsSync, mkdirSync, unlinkSync } from 'fs';
+import { existsSync, mkdirSync } from 'fs';
 import { copyFile, rename, unlink, writeFile } from 'fs/promises';
 import { join, relative } from 'path';
 import { randomUUID } from 'crypto';
@@ -410,11 +410,9 @@ export class MediaService {
     const abs = join(this.uploadRoot, ...media.relativePath.split('/'));
     await this.prisma.media.delete({ where: { id } });
     if (existsSync(abs)) {
-      try {
-        unlinkSync(abs);
-      } catch {
-        // ignore
-      }
+      await unlink(abs).catch(() => {
+        /* file already gone */
+      });
     }
   }
 
