@@ -7,6 +7,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { ConfigHelper } from '../../common/config/config.helper';
 import { OtpHelper } from '../../common/auth/otp.helper';
@@ -327,5 +328,162 @@ export class AccountService {
       throw new BadRequestException('Invoice PDF is not available yet');
     }
     return { url: pdfUrl };
+  }
+
+  /**
+   * GDPR data-subject export: returns all PII and related data for the user.
+   * Includes profile, payments, workspace memberships, sent invitations,
+   * notifications, and audit log entries where the user is the actor.
+   */
+  async exportUserData(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        businessName: true,
+        phone: true,
+        country: true,
+        city: true,
+        locale: true,
+        subscriptionStatus: true,
+        subscriptionEndDate: true,
+        lastLoginAt: true,
+        emailVerified: true,
+        twoFactorEnabled: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    if (!user) throw new ForbiddenException();
+
+    const [payments, memberships, sentInvitations, notifications, auditLogs] =
+      await Promise.all([
+        this.prisma.paymentRecord.findMany({
+          where: { userId },
+          orderBy: { createdAt: 'desc' },
+        }),
+        this.prisma.workspaceMember.findMany({
+          where: { userId },
+          include: {
+            workspace: {
+              select: { id: true, name: true, slug: true },
+            },
+          },
+        }),
+        this.prisma.workspaceInvitation.findMany({
+          where: { invitedById: userId },
+          orderBy: { createdAt: 'desc' },
+        }),
+        this.prisma.notification.findMany({
+          where: { userId },
+          orderBy: { createdAt: 'desc' },
+          take: 500,
+        }),
+        this.prisma.auditLog.findMany({
+          where: { userId },
+          orderBy: { createdAt: 'desc' },
+          take: 500,
+        }),
+      ]);
+
+    return {
+      user: {
+        ...user,
+        lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
+        subscriptionEndDate: user.subscriptionEndDate?.toISOString() ?? null,
+        createdAt: user.createdAt.toISOString(),
+        updatedAt: user.updatedAt.toISOString(),
+      },
+      payments: payments.map((p) => ({
+        ...p,
+        paidAt: p.paidAt?.toISOString() ?? null,
+        createdAt: p.createdAt.toISOString(),
+      })),
+      workspaceMemberships: memberships.map((m) => ({
+        id: m.id,
+        role: m.role,
+        workspaceId: m.workspaceId,
+        workspaceName: m.workspace.name,
+        workspaceSlug: m.workspace.slug,
+        createdAt: m.createdAt.toISOString(),
+      })),
+      sentInvitations: sentInvitations.map((i) => ({
+        ...i,
+        createdAt: i.createdAt.toISOString(),
+        expiresAt: i.expiresAt.toISOString(),
+        acceptedAt: i.acceptedAt?.toISOString() ?? null,
+      })),
+      notifications: notifications.map((n) => ({
+        ...n,
+        createdAt: n.createdAt.toISOString(),
+      })),
+      auditLogs: auditLogs.map((a) => ({
+        id: a.id,
+        action: a.action,
+        adminName: a.adminName,
+        ipAddress: a.ipAddress,
+        createdAt: a.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  /**
+   * GDPR erasure/anonymize: anonymizes the user's PII fields and deactivates
+   * the account. Billing records (PaymentRecord) and audit logs (AuditLog) are
+   * retained for compliance integrity. Canvas.createdById has onDelete: Restrict
+   * so we cannot hard-delete the user; instead we anonymize PII and invalidate
+   * credentials. Refresh tokens and notifications are deleted.
+   */
+  async anonymizeAccount(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true },
+    });
+    if (!user) throw new ForbiddenException();
+
+    const anonymizedEmail = `anonymized+${userId}@deleted.local`;
+
+    // Delete refresh tokens and notifications (no FK cascade from User)
+    await Promise.all([
+      this.prisma.refreshToken.deleteMany({ where: { userId } }),
+      this.prisma.notification.deleteMany({ where: { userId } }),
+      this.prisma.pairingClaimLockout.deleteMany({ where: { userId } }),
+    ]);
+
+    // Anonymize PII and invalidate credentials
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        email: anonymizedEmail,
+        fullName: 'Deleted User',
+        businessName: null,
+        phone: null,
+        country: null,
+        city: null,
+        passwordHash: 'ANONYMIZED',
+        refreshTokenHash: null,
+        twoFactorSecret: null,
+        twoFactorEnabled: false,
+        twoFactorBackupCodes: null,
+        verificationCode: null,
+        verificationCodeExpiresAt: null,
+        passwordResetToken: null,
+        passwordResetExpiresAt: null,
+        pendingEmail: null,
+        pendingEmailOtp: null,
+        pendingEmailOtpExpiresAt: null,
+        notificationPreferences: Prisma.JsonNull,
+        isActive: false,
+      },
+      select: { id: true, email: true },
+    });
+
+    this.logger.log(
+      `Anonymized account ${userId} (email was ${user.email}, now ${updated.email}).`,
+    );
+
+    return { ok: true, message: 'Account anonymized.' };
   }
 }

@@ -55,3 +55,13 @@ export async function verifyEmailChange(newEmail: string, code: string): Promise
     body: JSON.stringify({ newEmail, code }),
   });
 }
+
+export async function exportAccountData(): Promise<Response> {
+  return apiFetch('/account/export');
+}
+
+export async function anonymizeAccount(): Promise<Response> {
+  return apiFetch('/account', {
+    method: 'DELETE',
+  });
+}

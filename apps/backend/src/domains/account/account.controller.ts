@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -60,5 +61,17 @@ export class AccountController {
   @Get('insights')
   insights(@CurrentUser() user: JwtUser) {
     return this.account.getInsights(user.sub);
+  }
+
+  @Get('export')
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  exportData(@CurrentUser() user: JwtUser) {
+    return this.account.exportUserData(user.sub);
+  }
+
+  @Delete()
+  @Throttle({ default: { limit: 2, ttl: 60_000 } })
+  anonymizeAccount(@CurrentUser() user: JwtUser) {
+    return this.account.anonymizeAccount(user.sub);
   }
 }
