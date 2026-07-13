@@ -414,7 +414,7 @@ finding you haven't reconfirmed in the live code.
 ### Phase 0 — Baseline, confirmation & data-source sweep
 
 **T0.1 — Reproduce the green baseline** ✅
-- `npm run verify` passes: typecheck → lint → test (299 backend + 15 dashboard + 6 player) → i18n → build.
+- `npm run verify` passes: typecheck → lint → test (301 backend + 15 dashboard + 6 player = 322 total) → i18n → build.
 - Green baseline recorded. All future red is attributable to the change that caused it.
 
 **T0.2 — Confirm each finding still exists** ✅
@@ -441,10 +441,12 @@ finding you haven't reconfirmed in the live code.
   - Resolves hostname via `dns.lookup()`.
   - Blocks private/loopback/link-local/reserved IPs: `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, `::1`, `fc00::/7`, `fe80::/10`.
   - Blocks `localhost` hostname.
+  - Unwraps IPv4-mapped IPv6 addresses (`::ffff:127.0.0.1`, `::ffff:7f00:1`) and re-checks as IPv4 to prevent bypass.
+- `test()` method uses `redirect: 'manual'` and rejects 3xx responses to prevent redirect-based SSRF (public URL 302 → internal target).
 - Guard applied to both `create()` and `test()` methods.
 - Added `SSRF_BLOCKED` error code to `error-codes.ts`.
-- Test: `stripe-webhook.service.spec.ts` covers SSRF rejection.
-- DoD: private-range URLs rejected in create AND test; public URLs still work; `verify` green.
+- Test: `webhooks.service.spec.ts` — 18 test cases (13 private URL rejections, non-http rejection, public URL acceptance, stored private URL rejection in test(), redirect rejection, SSRF_BLOCKED code verification).
+- DoD: private-range URLs rejected in create AND test; public URLs still work; redirects blocked; `verify` green.
 
 **T1.2 — Triage & patch vulnerable dependencies** ✅
 - Before: 38 vulnerabilities (3 low, 22 moderate, 11 high, 2 critical).
@@ -495,4 +497,51 @@ finding you haven't reconfirmed in the live code.
 | T1.3 | ✅ | CI audit gate added (non-blocking) |
 | T1.4 | ✅ | .env untracked, never committed, no rotation needed |
 
-**`npm run verify` status: GREEN** (typecheck + lint + 320 tests + i18n + build all pass).
+**`npm run verify` status: GREEN** (typecheck + lint + 322 tests + i18n + build all pass).
+
+---
+
+### Accepted Deviations
+
+1. **T1.1 commit (6c93651) contains mixed concerns.**
+   - The SSRF fix (webhooks service, error codes, spec) is bundled with unrelated changes: media service formatting + mock fix, playlists duplicate-orderIndex validation, and i18n scanner allowlist additions.
+   - **Justification for keeping:** The commit is already published to the branch and shared with the team. Rewriting history (rebase/split) would change SHAs and require force-push, which is explicitly prohibited without instruction. The unrelated changes are small, safe, and do not introduce new behavior beyond a defensive validation (duplicate orderIndex check) and formatting.
+   - **Action:** Documented as accepted deviation. No history rewrite.
+
+2. **CI audit gate is non-blocking (`|| true`).**
+   - Intentional per plan §3 T1.3: "start non-blocking, then flip to blocking once T1.2 is fully resolved."
+   - **Action:** Keep non-blocking until `picomatch@4.0.2` dev dependency is resolved. Comment in `ci.yml:40-42` documents the flip plan.
+
+3. **`picomatch@4.0.2` (high severity) remains unpatched.**
+   - Nested under `@angular-devkit/core@19.2.22` via `@nestjs/cli`. Dev-only (eslint, nestjs CLI). Not production-facing.
+   - **Action:** Accepted. Cannot fix without major bumps to `@nestjs/cli`/`@angular-devkit` that would break the build. Tracked as technical debt.
+
+4. **12 moderate vulnerabilities remain.**
+   - All in dev-only dependencies (`@angular-devkit`, `@nestjs/cli`, `prisma`, `esbuild`, `postcss`). None production-facing.
+   - **Action:** Accepted. Will be addressed when upstream packages release compatible patches.
+
+---
+
+### Phase 0/1 Closure
+
+**Closure date:** 2026-07-13
+
+**Status:** All Phase 0 and Phase 1 tasks are complete, verified, and documented.
+
+**Final verification:**
+- `git status` → clean (no modified, staged, or untracked files)
+- `npm run verify` → GREEN (322 tests pass, typecheck, lint, i18n, build all pass)
+- Documentation synchronized with implementation
+
+**Commits (oldest → newest):**
+| SHA | Message | Task |
+|---|---|---|
+| `6c93651` | `fix(webhooks): block SSRF to private/internal addresses (T1.1)` | T1.1 |
+| `4586512` | `chore(deps): patch high/critical vulnerabilities (T1.2)` | T1.2 |
+| `3946ec6` | `ci: add high/critical dependency audit gate (T1.3)` | T1.3 |
+| `9f3d586` | `docs(audits): credibility review, deep-dive audits, remediation plan` | T0.3 + docs |
+| `4429ff2` | `fix(baseline): repair broken f93a626 (typecheck/lint/tests) + adapt tooling` | T0.1 + T0.2 |
+
+**Rollback status:** The branch can be safely reverted to `f93a626` (origin/fix/security-audit-v2) if needed. All Phase 0/1 commits are on top of that point.
+
+**Next phase:** Phase 3 (cheap correctness wins) — awaiting explicit approval to begin.
