@@ -507,7 +507,11 @@ export class MediaService {
     return this.toResponse(updated);
   }
 
-  async setExpiry(workspaceId: string, mediaId: string, expiresAt: string | null) {
+  async setExpiry(
+    workspaceId: string,
+    mediaId: string,
+    expiresAt: string | null,
+  ) {
     const media = await this.prisma.media.findFirst({
       where: { id: mediaId, workspaceId },
       select: { id: true },

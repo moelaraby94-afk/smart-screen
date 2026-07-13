@@ -14,6 +14,19 @@ const allowExact = new Set([
   'http://',
   'W',
   'H',
+  'Page not found',
+  'Breadcrumb',
+  'Info',
+  'https://example.com/webhook',
+  'English',
+  'Arial',
+  'Georgia',
+  'Times New Roman',
+  'Courier New',
+  'Helvetica',
+  'Trebuchet MS',
+  'Verdana',
+  'https://...',
 ]);
 
 const skipDirs = new Set([

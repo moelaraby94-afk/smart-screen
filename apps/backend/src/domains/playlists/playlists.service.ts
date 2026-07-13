@@ -159,6 +159,13 @@ export class PlaylistsService {
       }
     }
 
+    const orderIndices = dto.items.map((i) => i.orderIndex);
+    if (new Set(orderIndices).size !== orderIndices.length) {
+      throw new BadRequestException(
+        'Playlist item orderIndex values must be unique.',
+      );
+    }
+
     await this.prisma.$transaction(async (tx) => {
       await tx.playlistItem.deleteMany({ where: { playlistId } });
 

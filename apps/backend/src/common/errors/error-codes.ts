@@ -61,6 +61,9 @@ export const ErrorCode = {
   // --- billing
   UNSUPPORTED_PLAN: 'UNSUPPORTED_PLAN',
   STRIPE_NOT_CONFIGURED: 'STRIPE_NOT_CONFIGURED',
+
+  // --- webhooks
+  SSRF_BLOCKED: 'SSRF_BLOCKED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

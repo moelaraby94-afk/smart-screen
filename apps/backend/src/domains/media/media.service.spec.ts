@@ -15,7 +15,9 @@ import { MediaService } from './media.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
 
-const mockHeartbeat = {} as unknown as ScreenHeartbeatService;
+const mockHeartbeat = {
+  emitUploadComplete: () => {},
+} as unknown as ScreenHeartbeatService;
 
 describe('MediaService.buildPublicUrl', () => {
   it('points at the actual uploadRoot (uploads/media), not just uploads/', () => {
@@ -118,10 +120,14 @@ describe('MediaService storage quota + write ordering', () => {
       },
     } as unknown as PrismaService;
 
-    const service = new MediaService(prisma, {
-      get: (key: string, def?: unknown) =>
-        key === 'MEDIA_UPLOAD_DIR' ? uploadRoot : def,
-    } as unknown as ConfigService, mockHeartbeat);
+    const service = new MediaService(
+      prisma,
+      {
+        get: (key: string, def?: unknown) =>
+          key === 'MEDIA_UPLOAD_DIR' ? uploadRoot : def,
+      } as unknown as ConfigService,
+      mockHeartbeat,
+    );
 
     return { service, prisma, tx, mediaCreate, mediaDelete };
   }
@@ -299,10 +305,14 @@ describe('MediaService storage quota + write ordering', () => {
         },
       } as unknown as PrismaService;
 
-      const service = new MediaService(prisma, {
-        get: (key: string, def?: unknown) =>
-          key === 'MEDIA_UPLOAD_DIR' ? uploadRoot : def,
-      } as unknown as ConfigService, mockHeartbeat);
+      const service = new MediaService(
+        prisma,
+        {
+          get: (key: string, def?: unknown) =>
+            key === 'MEDIA_UPLOAD_DIR' ? uploadRoot : def,
+        } as unknown as ConfigService,
+        mockHeartbeat,
+      );
 
       return { service, mediaCreate };
     }
