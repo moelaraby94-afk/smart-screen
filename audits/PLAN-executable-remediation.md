@@ -270,9 +270,26 @@ add `status`/`provider` enums (audit 07 §4). Then write a `PaymentRecord` from 
 webhook so payment history is real. **This touches billing → R10 (test + risk note).**
 DoD: money stored as integer/Decimal; webhook creates records; tests.
 
+> **Implementation note (T3.4):** The schema already had `amountCents Int` — no type
+> change was needed. `status` and `provider` were intentionally kept as `String` instead
+> of Prisma enums: Stripe defines many status values across event types (e.g. `paid`,
+> `open`, `void`, `uncollectible`) and a fixed enum would require a migration for every
+> new Stripe status. `String` with controlled values at the application layer is the
+> safer forward-compatible choice. PaymentRecord is now created from
+> `checkout.session.completed` inside the webhook transaction, using `session.id` as
+> `externalId` (unique) for idempotency.
+
 **T3.5 — Missing Stripe webhook handlers.** Add `invoice.payment_failed` (notify user /
 mark past_due) and `customer.subscription.created` (audit 07 §2.3). R10 applies.
 DoD: handlers idempotent + tested.
+
+> **Implementation note (T3.5):** `customer.subscription.created` is now handled by the
+> existing `syncFromStripeSubscription` path (same as `updated`/`deleted`). The
+> `invoice.payment_failed` handler logs a warning with the subscription and invoice IDs.
+> Past-due marking is NOT done in this handler because Stripe also sends
+> `customer.subscription.updated` with `status: 'past_due'` on payment failure, which
+> IS handled by `syncFromStripeSubscription` → sets `SubscriptionStatus.PAST_DUE`. User
+> notification (email/in-app) for failed payments is deferred to a future phase.
 
 ---
 
