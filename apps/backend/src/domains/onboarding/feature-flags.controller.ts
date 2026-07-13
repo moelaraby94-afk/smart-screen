@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { SuperAdminDbGuard } from '../../common/auth/super-admin-db.guard';
 import { FeatureFlagsService } from './feature-flags.service';
@@ -31,6 +24,11 @@ export class FeatureFlagsController {
     @Param('workspaceId') workspaceId: string,
     @Body() dto: SetFeatureFlagDto,
   ) {
-    return this.flags.setFlag(workspaceId, dto.module, dto.enabled, 'super_admin');
+    return this.flags.setFlag(
+      workspaceId,
+      dto.module,
+      dto.enabled,
+      'super_admin',
+    );
   }
 }

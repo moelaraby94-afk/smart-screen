@@ -80,7 +80,9 @@ export class AuditLogService {
     });
   }
 
-  async listForWorkspace(workspaceId: string): Promise<WorkspaceAuditLogItem[]> {
+  async listForWorkspace(
+    workspaceId: string,
+  ): Promise<WorkspaceAuditLogItem[]> {
     const rows = await this.prisma.auditLog.findMany({
       where: { workspaceId },
       orderBy: { createdAt: 'desc' },

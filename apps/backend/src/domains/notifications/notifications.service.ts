@@ -58,7 +58,12 @@ export class NotificationsService {
 
   async createForUser(
     userId: string,
-    data: { type: string; title: string; message: string; link?: string | null },
+    data: {
+      type: string;
+      title: string;
+      message: string;
+      link?: string | null;
+    },
   ): Promise<NotificationRow> {
     const row = await this.prisma.notification.create({
       data: {
@@ -82,7 +87,12 @@ export class NotificationsService {
 
   async createForWorkspaceMembers(
     workspaceId: string,
-    data: { type: string; title: string; message: string; link?: string | null },
+    data: {
+      type: string;
+      title: string;
+      message: string;
+      link?: string | null;
+    },
   ): Promise<void> {
     const members = await this.prisma.workspaceMember.findMany({
       where: { workspaceId },
@@ -106,11 +116,17 @@ export class NotificationsService {
       select: { notificationPreferences: true },
     });
     if (!user) return {};
-    const prefs = user.notificationPreferences as Record<string, boolean> | null;
+    const prefs = user.notificationPreferences as Record<
+      string,
+      boolean
+    > | null;
     return prefs ?? {};
   }
 
-  async updatePreferences(userId: string, preferences: Record<string, boolean>): Promise<void> {
+  async updatePreferences(
+    userId: string,
+    preferences: Record<string, boolean>,
+  ): Promise<void> {
     await this.prisma.user.update({
       where: { id: userId },
       data: { notificationPreferences: preferences },

@@ -19,7 +19,11 @@ import { AuditLogService } from '../../common/audit/audit-log.service';
 import { LoginLockoutService } from './login-lockout.service';
 import { TwoFactorService } from './two-factor.service';
 import { EmailService } from '../email/email.service';
-import { passwordResetEmail, registerOtpEmail, welcomeEmail } from '../email/email-templates';
+import {
+  passwordResetEmail,
+  registerOtpEmail,
+  welcomeEmail,
+} from '../email/email-templates';
 import { LoginDto } from './dto/login.dto';
 import { LoginTwoFactorDto } from './dto/login-two-factor.dto';
 import { RegisterStartDto } from './dto/register-start.dto';
@@ -64,7 +68,12 @@ type LoginResult =
         platformStaffRole: string | null;
         emailVerified: boolean;
       };
-      workspaces: Array<{ id: string; name: string; slug: string; role: string }>;
+      workspaces: Array<{
+        id: string;
+        name: string;
+        slug: string;
+        role: string;
+      }>;
       accessToken: string;
       refreshToken: string;
       sessionId: string;
@@ -85,7 +94,7 @@ export class AuthService {
     private readonly workspaces: WorkspacesService,
     private readonly auditLog: AuditLogService,
     private readonly loginLockout: LoginLockoutService,
-  private readonly twoFactor: TwoFactorService,
+    private readonly twoFactor: TwoFactorService,
   ) {
     this.accessExpiresIn = this.parseDurationToSeconds(
       this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m'),
@@ -238,13 +247,18 @@ export class AuthService {
       sub: user.id,
       email: user.email,
     });
-    await this.setRefreshTokenSession(user.id, tokens.refreshToken, tokens.sessionId);
+    await this.setRefreshTokenSession(
+      user.id,
+      tokens.refreshToken,
+      tokens.sessionId,
+    );
 
     const workspaceList = await this.buildWorkspaceListForUser(user.id, false);
 
     // Send welcome email (best-effort, don't block registration on email failure)
     if (this.email.isConfigured()) {
-      const dashboardUrl = this.configService.get<string>('DASHBOARD_URL')?.trim() || undefined;
+      const dashboardUrl =
+        this.configService.get<string>('DASHBOARD_URL')?.trim() || undefined;
       const template = welcomeEmail({
         fullName: user.fullName,
         dashboardUrl,
@@ -259,7 +273,9 @@ export class AuthService {
           this.logger.log(`Welcome email sent to ${addr}`);
         })
         .catch((err) => {
-          this.logger.warn(`Welcome email failed: ${err?.message ?? err}`);
+          this.logger.warn(
+            `Welcome email failed: ${err instanceof Error ? err.message : String(err)}`,
+          );
         });
     }
 
@@ -435,7 +451,11 @@ export class AuthService {
       sub: user.id,
       email: user.email,
     });
-    await this.setRefreshTokenSession(user.id, tokens.refreshToken, tokens.sessionId);
+    await this.setRefreshTokenSession(
+      user.id,
+      tokens.refreshToken,
+      tokens.sessionId,
+    );
 
     if (isSuperAdmin) {
       try {
@@ -475,7 +495,10 @@ export class AuthService {
   }
 
   /** Second step of login when 2FA is enabled. */
-  async loginWithTwoFactor(dto: LoginTwoFactorDto, ipAddress?: string): Promise<Exclude<LoginResult, { requiresTwoFactor: true }>> {
+  async loginWithTwoFactor(
+    dto: LoginTwoFactorDto,
+    ipAddress?: string,
+  ): Promise<Exclude<LoginResult, { requiresTwoFactor: true }>> {
     await this.loginLockout.assertNotLockedOut(dto.email);
 
     const user = await this.prisma.user.findUnique({
@@ -557,7 +580,11 @@ export class AuthService {
       sub: user.id,
       email: user.email,
     });
-    await this.setRefreshTokenSession(user.id, tokens.refreshToken, tokens.sessionId);
+    await this.setRefreshTokenSession(
+      user.id,
+      tokens.refreshToken,
+      tokens.sessionId,
+    );
 
     if (isSuperAdmin) {
       try {
@@ -643,7 +670,11 @@ export class AuthService {
       sub: user.id,
       email: user.email,
     });
-    await this.setRefreshTokenSession(user.id, tokens.refreshToken, tokens.sessionId);
+    await this.setRefreshTokenSession(
+      user.id,
+      tokens.refreshToken,
+      tokens.sessionId,
+    );
 
     if (isSuperAdmin) {
       await this.workspaces.ensureAdminControlEntry(user.id);
@@ -738,7 +769,11 @@ export class AuthService {
         ? { impersonatedBy: impersonatedByFromRefresh }
         : undefined,
     );
-    await this.setRefreshTokenSession(user.id, tokens.refreshToken, tokens.sessionId);
+    await this.setRefreshTokenSession(
+      user.id,
+      tokens.refreshToken,
+      tokens.sessionId,
+    );
     return tokens;
   }
 
@@ -780,7 +815,11 @@ export class AuthService {
       },
       { impersonatedBy: actorUserId },
     );
-    await this.setRefreshTokenSession(target.id, tokens.refreshToken, tokens.sessionId);
+    await this.setRefreshTokenSession(
+      target.id,
+      tokens.refreshToken,
+      tokens.sessionId,
+    );
 
     return {
       user: {
@@ -820,7 +859,11 @@ export class AuthService {
       sub: superAdmin.id,
       email: superAdmin.email,
     });
-    await this.setRefreshTokenSession(superAdmin.id, tokens.refreshToken, tokens.sessionId);
+    await this.setRefreshTokenSession(
+      superAdmin.id,
+      tokens.refreshToken,
+      tokens.sessionId,
+    );
 
     const workspaceList = await this.buildWorkspaceListForUser(
       superAdmin.id,

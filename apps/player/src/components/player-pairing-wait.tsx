@@ -66,7 +66,7 @@ export function PlayerPairingWait({ kioskSecret = '' }: { kioskSecret?: string }
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [kioskSecret]);
 
   useEffect(() => {
     if (phase !== 'waiting' || !sessionRef.current) return;

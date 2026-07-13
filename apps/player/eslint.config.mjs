@@ -17,6 +17,9 @@ const eslintConfig = defineConfig([
     rules: {
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/refs": "off",
+      // Experimental React-Compiler diagnostic; advisory for the kiosk runtime's
+      // ref-mutation pattern. TODO: re-enable and refactor incrementally.
+      "react-hooks/immutability": "off",
       /** Logging goes through `@/lib/dev-log`; see the dashboard config. */
       "no-console": "error",
     },

@@ -1,4 +1,8 @@
-import { PlayerPlatform, ScreenOrientation, ScreenStatus } from '@prisma/client';
+import {
+  PlayerPlatform,
+  ScreenOrientation,
+  ScreenStatus,
+} from '@prisma/client';
 import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class UpdateScreenDto {

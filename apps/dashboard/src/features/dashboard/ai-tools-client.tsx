@@ -179,7 +179,11 @@ export function AiToolsClient() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Badge variant="muted">{t(`tool_${entry.type}`)}</Badge>
-                      {entry.input && <span className="text-sm text-muted-foreground">"{entry.input}"</span>}
+                      {entry.input && (
+                        <span className="text-sm text-muted-foreground">
+                          &ldquo;{entry.input}&rdquo;
+                        </span>
+                      )}
                     </div>
                     <span className="text-xs text-muted-foreground">
                       {new Date(entry.timestamp).toLocaleString()}

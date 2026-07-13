@@ -100,7 +100,12 @@ export class WorkspacesController {
     @CurrentUser() user: JwtUser,
     @Body() dto: UpdateMemberRoleDto,
   ) {
-    return this.workspaces.updateMemberRole(workspaceId, user.sub, membershipId, dto.role);
+    return this.workspaces.updateMemberRole(
+      workspaceId,
+      user.sub,
+      membershipId,
+      dto.role,
+    );
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -122,7 +127,12 @@ export class WorkspacesController {
     @CurrentUser() user: JwtUser,
     @Body() dto: InviteMemberDto,
   ) {
-    return this.workspaces.inviteMember(workspaceId, user.sub, dto.email, dto.role);
+    return this.workspaces.inviteMember(
+      workspaceId,
+      user.sub,
+      dto.email,
+      dto.role,
+    );
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -154,10 +164,7 @@ export class WorkspacesController {
 
   @UseGuards(JwtAuthGuard)
   @Post('invites/accept')
-  acceptInvite(
-    @CurrentUser() user: JwtUser,
-    @Body() body: { token: string },
-  ) {
+  acceptInvite(@CurrentUser() user: JwtUser, @Body() body: { token: string }) {
     return this.workspaces.acceptInvitation(body.token, user.sub);
   }
 
@@ -188,10 +195,7 @@ export class WorkspacesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get(':workspaceId/activity')
-  recentActivity(
-    @Param('workspaceId') workspaceId: string,
-    @CurrentUser() user: JwtUser,
-  ) {
+  recentActivity(@Param('workspaceId') workspaceId: string) {
     return this.workspaces.recentActivity(workspaceId);
   }
 }

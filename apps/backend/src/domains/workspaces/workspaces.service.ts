@@ -264,7 +264,11 @@ export class WorkspacesService {
     role: string,
   ) {
     const normalizedEmail = email.trim().toLowerCase();
-    const validRoles: string[] = [UserRole.VIEWER, UserRole.EDITOR, UserRole.ADMIN];
+    const validRoles: string[] = [
+      UserRole.VIEWER,
+      UserRole.EDITOR,
+      UserRole.ADMIN,
+    ];
     if (!validRoles.includes(role)) {
       throw new BadRequestException(
         'Invalid role. Must be VIEWER, EDITOR, or ADMIN.',
@@ -534,9 +538,7 @@ export class WorkspacesService {
     });
     if (!invitation) throw new NotFoundException('Invitation not found');
     if (invitation.status !== InvitationStatus.PENDING) {
-      throw new BadRequestException(
-        'Only pending invitations can be resent.',
-      );
+      throw new BadRequestException('Only pending invitations can be resent.');
     }
 
     const token = randomBytes(32).toString('hex');
@@ -606,10 +608,21 @@ export class WorkspacesService {
     dto: UpdateWorkspaceDto,
   ) {
     await this.assertWorkspaceAccess(workspaceId, userId, true);
-    if (dto.name === undefined && dto.isPaused === undefined && dto.timezone === undefined && dto.defaultLocale === undefined) {
+    if (
+      dto.name === undefined &&
+      dto.isPaused === undefined &&
+      dto.timezone === undefined &&
+      dto.defaultLocale === undefined
+    ) {
       throw new BadRequestException('No fields to update.');
     }
-    const data: { name?: string; slug?: string; isPaused?: boolean; timezone?: string; defaultLocale?: string } = {};
+    const data: {
+      name?: string;
+      slug?: string;
+      isPaused?: boolean;
+      timezone?: string;
+      defaultLocale?: string;
+    } = {};
     if (dto.name !== undefined) {
       const trimmed = dto.name.trim();
       if (trimmed.length < 2) {
@@ -630,7 +643,14 @@ export class WorkspacesService {
     return this.prisma.workspace.update({
       where: { id: workspaceId },
       data,
-      select: { id: true, name: true, slug: true, isPaused: true, timezone: true, defaultLocale: true },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        isPaused: true,
+        timezone: true,
+        defaultLocale: true,
+      },
     });
   }
 
@@ -660,9 +680,15 @@ export class WorkspacesService {
     membershipId: string,
     newRole: string,
   ) {
-    const validRoles: string[] = [UserRole.VIEWER, UserRole.EDITOR, UserRole.ADMIN];
+    const validRoles: string[] = [
+      UserRole.VIEWER,
+      UserRole.EDITOR,
+      UserRole.ADMIN,
+    ];
     if (!validRoles.includes(newRole)) {
-      throw new BadRequestException('Invalid role. Must be VIEWER, EDITOR, or ADMIN.');
+      throw new BadRequestException(
+        'Invalid role. Must be VIEWER, EDITOR, or ADMIN.',
+      );
     }
     await this.assertWorkspaceAccess(workspaceId, requesterId, true);
 
@@ -704,7 +730,9 @@ export class WorkspacesService {
       throw new NotFoundException('Member not found in this workspace.');
     }
     if (membership.role === UserRole.OWNER) {
-      throw new BadRequestException('Cannot remove an owner from the workspace.');
+      throw new BadRequestException(
+        'Cannot remove an owner from the workspace.',
+      );
     }
 
     await this.prisma.workspaceMember.delete({

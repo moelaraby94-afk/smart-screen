@@ -34,7 +34,8 @@ export class OnboardingController {
       where: { workspaceId_userId: { workspaceId, userId } },
       select: { role: true },
     });
-    if (!membership) throw new ForbiddenException('Not a member of this workspace');
+    if (!membership)
+      throw new ForbiddenException('Not a member of this workspace');
     return membership;
   }
 

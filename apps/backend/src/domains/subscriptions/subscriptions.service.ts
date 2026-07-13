@@ -158,7 +158,11 @@ export class SubscriptionsService {
       billingPortalAvailable: Boolean(sub.stripeCustomerId),
       activeScreenCount,
       perScreenPricing: planPricing,
-      estimatedMonthlyTotal: this.estimateMonthlyTotal(sub.plan, activeScreenCount, planPricing),
+      estimatedMonthlyTotal: this.estimateMonthlyTotal(
+        sub.plan,
+        activeScreenCount,
+        planPricing,
+      ),
     };
   }
 
@@ -170,25 +174,57 @@ export class SubscriptionsService {
   } {
     switch (plan) {
       case SubscriptionPlan.FREE:
-        return { basePrice: 0, includedScreens: 25, perScreenPrice: 0, currency: 'usd' };
+        return {
+          basePrice: 0,
+          includedScreens: 25,
+          perScreenPrice: 0,
+          currency: 'usd',
+        };
       case SubscriptionPlan.STARTER:
-        return { basePrice: 1900, includedScreens: 100, perScreenPrice: 15, currency: 'usd' };
+        return {
+          basePrice: 1900,
+          includedScreens: 100,
+          perScreenPrice: 15,
+          currency: 'usd',
+        };
       case SubscriptionPlan.PRO:
-        return { basePrice: 4900, includedScreens: 500, perScreenPrice: 8, currency: 'usd' };
+        return {
+          basePrice: 4900,
+          includedScreens: 500,
+          perScreenPrice: 8,
+          currency: 'usd',
+        };
       case SubscriptionPlan.ENTERPRISE:
-        return { basePrice: 19900, includedScreens: 2000, perScreenPrice: 5, currency: 'usd' };
+        return {
+          basePrice: 19900,
+          includedScreens: 2000,
+          perScreenPrice: 5,
+          currency: 'usd',
+        };
       default:
-        return { basePrice: 0, includedScreens: 25, perScreenPrice: 0, currency: 'usd' };
+        return {
+          basePrice: 0,
+          includedScreens: 25,
+          perScreenPrice: 0,
+          currency: 'usd',
+        };
     }
   }
 
   private estimateMonthlyTotal(
     plan: SubscriptionPlan,
     activeScreens: number,
-    pricing: { basePrice: number; includedScreens: number; perScreenPrice: number },
+    pricing: {
+      basePrice: number;
+      includedScreens: number;
+      perScreenPrice: number;
+    },
   ): number {
     if (plan === SubscriptionPlan.FREE) return 0;
-    const billableScreens = Math.max(0, activeScreens - pricing.includedScreens);
+    const billableScreens = Math.max(
+      0,
+      activeScreens - pricing.includedScreens,
+    );
     return pricing.basePrice + billableScreens * pricing.perScreenPrice;
   }
 

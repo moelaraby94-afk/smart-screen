@@ -145,14 +145,16 @@ function createFakePrisma(opts: {
       ),
     },
     user: {
-      findUnique: jest.fn(({ where }: { where: { id?: string; email?: string } }) => {
-        if (where.email) return Promise.resolve(null);
-        return Promise.resolve(
-          superAdmins.has(where.id!)
-            ? { isSuperAdmin: true }
-            : { isSuperAdmin: false },
-        );
-      }),
+      findUnique: jest.fn(
+        ({ where }: { where: { id?: string; email?: string } }) => {
+          if (where.email) return Promise.resolve(null);
+          return Promise.resolve(
+            superAdmins.has(where.id!)
+              ? { isSuperAdmin: true }
+              : { isSuperAdmin: false },
+          );
+        },
+      ),
     },
     screen: {
       count: jest.fn(() => Promise.resolve(screenCount)),
@@ -439,7 +441,13 @@ describe('WorkspacesService (P1-T6)', () => {
     const fake = createFakePrisma({
       workspaces: [{ id: WS_ID, name: 'Test', slug: 'test', isPaused: false }],
       memberships: [
-        { id: 'm1', workspaceId: WS_ID, userId: USER_ID, role: 'OWNER', createdAt: new Date() },
+        {
+          id: 'm1',
+          workspaceId: WS_ID,
+          userId: USER_ID,
+          role: 'OWNER',
+          createdAt: new Date(),
+        },
       ],
     });
     const service = makeService(fake);
@@ -454,11 +462,19 @@ describe('WorkspacesService (P1-T6)', () => {
     const fake = createFakePrisma({
       workspaces: [{ id: WS_ID, name: 'Test', slug: 'test', isPaused: false }],
       memberships: [
-        { id: 'm1', workspaceId: WS_ID, userId: USER_ID, role: 'OWNER', createdAt: new Date() },
+        {
+          id: 'm1',
+          workspaceId: WS_ID,
+          userId: USER_ID,
+          role: 'OWNER',
+          createdAt: new Date(),
+        },
       ],
     });
     // Override findFirst to simulate existing member
-    (fake.workspaceMember.findFirst as jest.Mock).mockResolvedValue({ id: 'm1' });
+    (fake.workspaceMember.findFirst as jest.Mock).mockResolvedValue({
+      id: 'm1',
+    });
     const service = makeService(fake);
 
     await expect(
@@ -471,13 +487,20 @@ describe('WorkspacesService (P1-T6)', () => {
     const fake = createFakePrisma({
       workspaces: [{ id: WS_ID, name: 'Test', slug: 'test', isPaused: false }],
       memberships: [
-        { id: 'm1', workspaceId: WS_ID, userId: USER_ID, role: 'OWNER', createdAt: new Date() },
+        {
+          id: 'm1',
+          workspaceId: WS_ID,
+          userId: USER_ID,
+          role: 'OWNER',
+          createdAt: new Date(),
+        },
       ],
     });
     (fake.workspaceMember.findFirst as jest.Mock).mockResolvedValue(null);
-    (fake.workspaceInvitation.findFirst as jest.Mock).mockResolvedValue(
-      { id: 'inv-1', status: 'PENDING' },
-    );
+    (fake.workspaceInvitation.findFirst as jest.Mock).mockResolvedValue({
+      id: 'inv-1',
+      status: 'PENDING',
+    });
     const service = makeService(fake);
 
     await expect(
@@ -490,18 +513,31 @@ describe('WorkspacesService (P1-T6)', () => {
     const fake = createFakePrisma({
       workspaces: [{ id: WS_ID, name: 'Test', slug: 'test', isPaused: false }],
       memberships: [
-        { id: 'm1', workspaceId: WS_ID, userId: USER_ID, role: 'OWNER', createdAt: new Date() },
+        {
+          id: 'm1',
+          workspaceId: WS_ID,
+          userId: USER_ID,
+          role: 'OWNER',
+          createdAt: new Date(),
+        },
       ],
     });
     (fake.workspaceMember.findFirst as jest.Mock).mockResolvedValue(null);
     (fake.workspaceInvitation.findFirst as jest.Mock).mockResolvedValue(null);
-    (fake.user.findUnique as jest.Mock).mockImplementation(({ where }: { where: { id?: string; email?: string } }) => {
-      if (where.email) return Promise.resolve(null);
-      return Promise.resolve({ id: where.id, fullName: 'Inviter' });
-    });
+    (fake.user.findUnique as jest.Mock).mockImplementation(
+      ({ where }: { where: { id?: string; email?: string } }) => {
+        if (where.email) return Promise.resolve(null);
+        return Promise.resolve({ id: where.id, fullName: 'Inviter' });
+      },
+    );
     const service = makeService(fake);
 
-    const result = await service.inviteMember(WS_ID, USER_ID, 'newuser@test.com', 'EDITOR');
+    const result = await service.inviteMember(
+      WS_ID,
+      USER_ID,
+      'newuser@test.com',
+      'EDITOR',
+    );
     expect(result.ok).toBe(true);
     expect(result.addedDirectly).toBe(false);
     expect(fake.workspaceInvitation.create).toHaveBeenCalled();
@@ -568,9 +604,10 @@ describe('WorkspacesService (P1-T6)', () => {
       expiresAt: new Date(Date.now() + 86400000),
       workspace: { id: WS_ID, name: 'Test' },
     });
-    (fake.user.findUnique as jest.Mock).mockResolvedValue(
-      { id: USER_ID, email: 'different@test.com' },
-    );
+    (fake.user.findUnique as jest.Mock).mockResolvedValue({
+      id: USER_ID,
+      email: 'different@test.com',
+    });
     const service = makeService(fake);
 
     await expect(
@@ -591,7 +628,9 @@ describe('WorkspacesService (P1-T6)', () => {
         expiresAt: new Date(Date.now() + 604800000),
       },
     ];
-    (fake.workspaceInvitation.findMany as jest.Mock).mockResolvedValue(mockInvites);
+    (fake.workspaceInvitation.findMany as jest.Mock).mockResolvedValue(
+      mockInvites,
+    );
     const service = makeService(fake);
 
     const result = await service.listInvitations(WS_ID);
@@ -605,21 +644,23 @@ describe('WorkspacesService (P1-T6)', () => {
     (fake.workspaceInvitation.findFirst as jest.Mock).mockResolvedValue(null);
     const service = makeService(fake);
 
-    await expect(
-      service.cancelInvitation(WS_ID, 'inv-999'),
-    ).rejects.toThrow(NotFoundException);
+    await expect(service.cancelInvitation(WS_ID, 'inv-999')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   // ─── Test 20: cancelInvitation already accepted → BadRequest ────────
   it('throws BadRequest when cancelling non-pending invitation', async () => {
     const fake = createFakePrisma({});
-    (fake.workspaceInvitation.findFirst as jest.Mock).mockResolvedValue(
-      { id: 'inv-1', status: 'ACCEPTED', workspaceId: WS_ID },
-    );
+    (fake.workspaceInvitation.findFirst as jest.Mock).mockResolvedValue({
+      id: 'inv-1',
+      status: 'ACCEPTED',
+      workspaceId: WS_ID,
+    });
     const service = makeService(fake);
 
-    await expect(
-      service.cancelInvitation(WS_ID, 'inv-1'),
-    ).rejects.toThrow(BadRequestException);
+    await expect(service.cancelInvitation(WS_ID, 'inv-1')).rejects.toThrow(
+      BadRequestException,
+    );
   });
 });

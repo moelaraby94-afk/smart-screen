@@ -146,7 +146,11 @@ export class MediaController {
     @Body() body: { expiresAt: string | null },
   ) {
     if (!workspaceId) throw new BadRequestException('workspaceId is required');
-    const updated = await this.mediaService.setExpiry(workspaceId, id, body.expiresAt);
+    const updated = await this.mediaService.setExpiry(
+      workspaceId,
+      id,
+      body.expiresAt,
+    );
     return this.mediaService.toResponse(updated);
   }
 }

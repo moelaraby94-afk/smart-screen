@@ -1,6 +1,6 @@
 import { RequestContextMiddleware } from './request-context.middleware';
 import { requestContext } from './request-context';
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response } from 'express';
 
 describe('RequestContextMiddleware', () => {
   let middleware: RequestContextMiddleware;
@@ -16,7 +16,9 @@ describe('RequestContextMiddleware', () => {
   function fakeRes(): Response {
     const headers: Record<string, string> = {};
     return {
-      setHeader: jest.fn((k: string, v: string) => { headers[k] = v; }),
+      setHeader: jest.fn((k: string, v: string) => {
+        headers[k] = v;
+      }),
       getHeader: jest.fn((k: string) => headers[k]),
     } as unknown as Response;
   }

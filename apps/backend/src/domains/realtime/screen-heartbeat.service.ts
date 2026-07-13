@@ -213,10 +213,7 @@ export class ScreenHeartbeatService implements OnModuleInit, OnModuleDestroy {
     this.io?.to(`pairing:${sessionId}`).emit('pairing:complete', payload);
   }
 
-  emitUploadComplete(
-    workspaceId: string,
-    payload: { fileName: string },
-  ): void {
+  emitUploadComplete(workspaceId: string, payload: { fileName: string }): void {
     this.io?.to(`workspace:${workspaceId}`).emit('upload:complete', payload);
   }
 }

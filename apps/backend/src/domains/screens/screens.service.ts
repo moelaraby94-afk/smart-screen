@@ -310,9 +310,10 @@ export class ScreensService {
       if (s.activePlaylistId) withPlaylist++;
 
       const lastSeenMs = s.lastSeenAt ? s.lastSeenAt.getTime() : null;
-      const uptimeSec = s.status === 'ONLINE' && lastSeenMs
-        ? Math.min((now - lastSeenMs) / 1000, 86400)
-        : 0;
+      const uptimeSec =
+        s.status === 'ONLINE' && lastSeenMs
+          ? Math.min((now - lastSeenMs) / 1000, 86400)
+          : 0;
 
       return {
         id: s.id,
@@ -327,9 +328,8 @@ export class ScreensService {
       };
     });
 
-    const uptimePercent = total > 0
-      ? Math.round((byStatus.ONLINE / total) * 100)
-      : 0;
+    const uptimePercent =
+      total > 0 ? Math.round((byStatus.ONLINE / total) * 100) : 0;
 
     const avgLastSeen = screens
       .map((s) => s.lastSeenAt)
@@ -337,7 +337,8 @@ export class ScreensService {
       .sort((a, b) => b.getTime() - a.getTime());
 
     const newestSeen = avgLastSeen[0]?.toISOString() ?? null;
-    const oldestSeen = avgLastSeen[avgLastSeen.length - 1]?.toISOString() ?? null;
+    const oldestSeen =
+      avgLastSeen[avgLastSeen.length - 1]?.toISOString() ?? null;
 
     // Playlist distribution
     const playlistMap = new Map<string, { name: string; count: number }>();
@@ -345,7 +346,11 @@ export class ScreensService {
       if (s.activePlaylist) {
         const existing = playlistMap.get(s.activePlaylist.id);
         if (existing) existing.count++;
-        else playlistMap.set(s.activePlaylist.id, { name: s.activePlaylist.name, count: 1 });
+        else
+          playlistMap.set(s.activePlaylist.id, {
+            name: s.activePlaylist.name,
+            count: 1,
+          });
       }
     }
     const playlistDistribution = Array.from(playlistMap.entries())

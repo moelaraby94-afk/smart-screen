@@ -11,7 +11,10 @@ if (dsn) {
     release: process.env.SENTRY_RELEASE?.trim() || undefined,
     beforeSend(event) {
       if (event.request) {
-        event.request.headers = scrubPII(event.request.headers) as Record<string, string>;
+        event.request.headers = scrubPII(event.request.headers) as Record<
+          string,
+          string
+        >;
         event.request.cookies = undefined;
         event.request.data = scrubPII(event.request.data);
       }

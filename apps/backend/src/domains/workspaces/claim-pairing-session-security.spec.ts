@@ -66,10 +66,16 @@ function createFakePrisma() {
       ),
     },
     pairingClaimLockout: {
-      findUnique: jest.fn(({ where }: { where: { userId_ip: { userId: string; ip: string | null } } }) => {
-        const key = `${where.userId_ip.userId}:${where.userId_ip.ip ?? 'null'}`;
-        return lockouts.get(key) ?? null;
-      }),
+      findUnique: jest.fn(
+        ({
+          where,
+        }: {
+          where: { userId_ip: { userId: string; ip: string | null } };
+        }) => {
+          const key = `${where.userId_ip.userId}:${where.userId_ip.ip ?? 'null'}`;
+          return lockouts.get(key) ?? null;
+        },
+      ),
       upsert: jest.fn(
         ({
           where,
@@ -91,7 +97,7 @@ function createFakePrisma() {
       ),
       deleteMany: jest.fn(({ where }: { where: { userId: string } }) => {
         let count = 0;
-        for (const [key, row] of lockouts) {
+        for (const [key] of lockouts) {
           if (key.startsWith(`${where.userId}:`)) {
             lockouts.delete(key);
             count += 1;

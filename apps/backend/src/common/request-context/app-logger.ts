@@ -22,7 +22,13 @@ export class AppLogger extends ConsoleLogger implements LoggerService {
     const requestId = store?.requestId ?? '-';
     const text = typeof message === 'string' ? message : String(message);
     return this.isProduction
-      ? JSON.stringify({ level: '', message: text, requestId, context: this.context, timestamp: new Date().toISOString() })
+      ? JSON.stringify({
+          level: '',
+          message: text,
+          requestId,
+          context: this.context,
+          timestamp: new Date().toISOString(),
+        })
       : `[${requestId}] ${text}`;
   }
 
@@ -31,7 +37,15 @@ export class AppLogger extends ConsoleLogger implements LoggerService {
     if (this.isProduction) {
       const store = requestContext.getStore();
       const text = typeof message === 'string' ? message : String(message);
-      console.log(JSON.stringify({ level: 'info', message: text, requestId: store?.requestId ?? '-', context: ctx, timestamp: new Date().toISOString() }));
+      console.log(
+        JSON.stringify({
+          level: 'info',
+          message: text,
+          requestId: store?.requestId ?? '-',
+          context: ctx,
+          timestamp: new Date().toISOString(),
+        }),
+      );
     } else {
       super.log(this.withRequestId(message), context);
     }
@@ -42,7 +56,16 @@ export class AppLogger extends ConsoleLogger implements LoggerService {
     if (this.isProduction) {
       const store = requestContext.getStore();
       const text = typeof message === 'string' ? message : String(message);
-      console.error(JSON.stringify({ level: 'error', message: text, trace: trace ?? undefined, requestId: store?.requestId ?? '-', context: ctx, timestamp: new Date().toISOString() }));
+      console.error(
+        JSON.stringify({
+          level: 'error',
+          message: text,
+          trace: trace ?? undefined,
+          requestId: store?.requestId ?? '-',
+          context: ctx,
+          timestamp: new Date().toISOString(),
+        }),
+      );
     } else {
       super.error(this.withRequestId(message), trace, context);
     }
@@ -53,7 +76,15 @@ export class AppLogger extends ConsoleLogger implements LoggerService {
     if (this.isProduction) {
       const store = requestContext.getStore();
       const text = typeof message === 'string' ? message : String(message);
-      console.warn(JSON.stringify({ level: 'warn', message: text, requestId: store?.requestId ?? '-', context: ctx, timestamp: new Date().toISOString() }));
+      console.warn(
+        JSON.stringify({
+          level: 'warn',
+          message: text,
+          requestId: store?.requestId ?? '-',
+          context: ctx,
+          timestamp: new Date().toISOString(),
+        }),
+      );
     } else {
       super.warn(this.withRequestId(message), context);
     }
@@ -64,7 +95,15 @@ export class AppLogger extends ConsoleLogger implements LoggerService {
     if (this.isProduction) {
       const store = requestContext.getStore();
       const text = typeof message === 'string' ? message : String(message);
-      console.debug(JSON.stringify({ level: 'debug', message: text, requestId: store?.requestId ?? '-', context: ctx, timestamp: new Date().toISOString() }));
+      console.debug(
+        JSON.stringify({
+          level: 'debug',
+          message: text,
+          requestId: store?.requestId ?? '-',
+          context: ctx,
+          timestamp: new Date().toISOString(),
+        }),
+      );
     } else {
       super.debug(this.withRequestId(message), context);
     }
@@ -75,7 +114,15 @@ export class AppLogger extends ConsoleLogger implements LoggerService {
     if (this.isProduction) {
       const store = requestContext.getStore();
       const text = typeof message === 'string' ? message : String(message);
-      console.log(JSON.stringify({ level: 'verbose', message: text, requestId: store?.requestId ?? '-', context: ctx, timestamp: new Date().toISOString() }));
+      console.log(
+        JSON.stringify({
+          level: 'verbose',
+          message: text,
+          requestId: store?.requestId ?? '-',
+          context: ctx,
+          timestamp: new Date().toISOString(),
+        }),
+      );
     } else {
       super.verbose(this.withRequestId(message), context);
     }

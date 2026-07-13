@@ -130,7 +130,13 @@ export class PairingService {
 
     await this.prisma.pairingClaimLockout.upsert({
       where: { userId_ip: { userId, ip: ip ?? 'unknown' } },
-      create: { userId, ip: ip ?? 'unknown', failedCount, windowStartAt, lockedUntil },
+      create: {
+        userId,
+        ip: ip ?? 'unknown',
+        failedCount,
+        windowStartAt,
+        lockedUntil,
+      },
       update: { failedCount, windowStartAt, lockedUntil },
     });
 
@@ -373,10 +379,7 @@ export class PairingService {
              * with workspaceId = null are unrestricted (player-initiated
              * pairing without a prior workspace context).
              */
-            OR: [
-              { workspaceId: null },
-              { workspaceId },
-            ],
+            OR: [{ workspaceId: null }, { workspaceId }],
           },
         });
         if (!session) {

@@ -2,7 +2,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { formatInTimeZone } from 'date-fns-tz';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
-const PRAYER_NAMES = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const;
+const PRAYER_NAMES = [
+  'Fajr',
+  'Sunrise',
+  'Dhuhr',
+  'Asr',
+  'Maghrib',
+  'Isha',
+] as const;
 
 const ALADHAN_BASE = 'https://api.aladhan.com/v1/timings';
 
@@ -10,7 +17,7 @@ const MAX_CACHE_ENTRIES = 200;
 
 function safeParsePrayers(raw: string): string[] {
   try {
-    const parsed = JSON.parse(raw);
+    const parsed: unknown = JSON.parse(raw);
     if (Array.isArray(parsed)) {
       return parsed.filter((x): x is string => typeof x === 'string');
     }
@@ -60,7 +67,7 @@ export class PrayerTimesService {
 
   private pruneCache() {
     if (this.cache.size > MAX_CACHE_ENTRIES) {
-      const oldestKey = this.cache.keys().next().value;
+      const oldestKey = this.cache.keys().next().value as string | undefined;
       if (oldestKey) this.cache.delete(oldestKey);
     }
   }
@@ -72,7 +79,8 @@ export class PrayerTimesService {
     if (!config.latitude || !config.longitude) {
       return {
         configured: false,
-        message: 'Location not set. Configure latitude and longitude in settings.',
+        message:
+          'Location not set. Configure latitude and longitude in settings.',
         times: null,
         hijriDate: null,
       };
@@ -134,7 +142,7 @@ export class PrayerTimesService {
       autoPauseEnabled?: boolean;
     },
   ) {
-    const config = await this.getOrCreateConfig(workspaceId);
+    await this.getOrCreateConfig(workspaceId);
     const enabledPrayers = updates.enabledPrayers
       ? JSON.stringify(updates.enabledPrayers)
       : undefined;
@@ -178,7 +186,8 @@ export class PrayerTimesService {
     }
 
     const result = await this.getPrayerTimes(workspaceId, at);
-    if (!result.times) return { paused: false, prayer: null, remainingMinutes: 0 };
+    if (!result.times)
+      return { paused: false, prayer: null, remainingMinutes: 0 };
 
     const enabledPrayers = safeParsePrayers(config.enabledPrayers);
     const workspace = await this.prisma.workspace.findUnique({
@@ -189,7 +198,7 @@ export class PrayerTimesService {
     const nowMinutes = nowMinutesInTz(at, tz);
 
     for (const prayerName of enabledPrayers) {
-      const timeStr = (result.times as Record<string, string>)[prayerName];
+      const timeStr = result.times[prayerName];
       if (!timeStr) continue;
       const [h, m] = timeStr.split(':').map((x) => parseInt(x, 10));
       const prayerMinutes = h * 60 + m;

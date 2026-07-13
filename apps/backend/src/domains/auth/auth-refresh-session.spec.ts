@@ -193,6 +193,7 @@ describe('AuthService — multi-session refresh tokens (P1-T1)', () => {
       null as never, // workspaces — not used
       null as never, // auditLog — not used
       createMockLoginLockoutService(),
+      null as never, // twoFactor — not used in these paths
     );
   });
 

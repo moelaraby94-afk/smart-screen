@@ -63,7 +63,9 @@ export class RamadanService {
           ? { showPrayerTimes: updates.showPrayerTimes }
           : {}),
         ...(updates.startDate !== undefined
-          ? { startDate: updates.startDate ? new Date(updates.startDate) : null }
+          ? {
+              startDate: updates.startDate ? new Date(updates.startDate) : null,
+            }
           : {}),
         ...(updates.endDate !== undefined
           ? { endDate: updates.endDate ? new Date(updates.endDate) : null }
@@ -75,7 +77,10 @@ export class RamadanService {
   /**
    * Check if Ramadan mode is currently active (manually or by date range).
    */
-  async isRamadanActive(workspaceId: string, at: Date = new Date()): Promise<boolean> {
+  async isRamadanActive(
+    workspaceId: string,
+    at: Date = new Date(),
+  ): Promise<boolean> {
     const config = await this.getConfig(workspaceId);
     if (!config.enabled) return false;
 
@@ -93,7 +98,10 @@ export class RamadanService {
   async getRamadanPlaylist(
     workspaceId: string,
     at: Date = new Date(),
-  ): Promise<{ playlistId: string | null; mode: 'iftar' | 'suhoor' | 'normal' }> {
+  ): Promise<{
+    playlistId: string | null;
+    mode: 'iftar' | 'suhoor' | 'normal';
+  }> {
     const isActive = await this.isRamadanActive(workspaceId, at);
     if (!isActive) return { playlistId: null, mode: 'normal' };
 
@@ -145,7 +153,9 @@ export class RamadanService {
         where: { workspaceId },
         data: { enabled: false },
       });
-      this.logger.log(`Auto-deactivated Ramadan mode for workspace ${workspaceId}`);
+      this.logger.log(
+        `Auto-deactivated Ramadan mode for workspace ${workspaceId}`,
+      );
     }
   }
 }

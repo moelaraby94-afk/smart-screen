@@ -17,8 +17,10 @@ export class OnboardingService {
 
   private safeParseSteps(raw: string): string[] {
     try {
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed.filter((s) => typeof s === 'string') : [];
+      const parsed: unknown = JSON.parse(raw);
+      return Array.isArray(parsed)
+        ? parsed.filter((s) => typeof s === 'string')
+        : [];
     } catch {
       this.logger.warn(`Invalid completedSteps JSON: ${raw}`);
       return [];
@@ -80,7 +82,8 @@ export class OnboardingService {
       where: { workspaceId },
       data: {
         completedSteps: JSON.stringify(completed),
-        completedAt: allDone && !progress.completedAt ? new Date() : progress.completedAt,
+        completedAt:
+          allDone && !progress.completedAt ? new Date() : progress.completedAt,
       },
     });
 

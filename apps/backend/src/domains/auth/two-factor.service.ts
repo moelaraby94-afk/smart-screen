@@ -16,7 +16,8 @@ export class TwoFactorService {
     private readonly configService: ConfigService,
   ) {
     this.issuer =
-      this.configService.get<string>('APP_NAME', 'Cloud Signage') ?? 'Cloud Signage';
+      this.configService.get<string>('APP_NAME', 'Cloud Signage') ??
+      'Cloud Signage';
   }
 
   /** Generate a new TOTP secret and otpauth URL for the user. */
@@ -71,7 +72,7 @@ export class TwoFactorService {
     });
     if (!user?.twoFactorBackupCodes) return false;
 
-    const hashes: string[] = JSON.parse(user.twoFactorBackupCodes);
+    const hashes = JSON.parse(user.twoFactorBackupCodes) as string[];
     let consumed = false;
     const remaining: string[] = [];
 

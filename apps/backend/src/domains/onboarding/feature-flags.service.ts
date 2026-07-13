@@ -53,7 +53,12 @@ export class FeatureFlagsService {
     });
   }
 
-  async setFlag(workspaceId: string, module: string, enabled: boolean, setBy: string) {
+  async setFlag(
+    workspaceId: string,
+    module: string,
+    enabled: boolean,
+    setBy: string,
+  ) {
     const workspace = await this.prisma.workspace.findUnique({
       where: { id: workspaceId },
       select: { id: true },
@@ -71,7 +76,11 @@ export class FeatureFlagsService {
     return { module: flag.module, enabled: flag.enabled };
   }
 
-  async bulkSet(workspaceId: string, flags: { module: string; enabled: boolean }[], setBy: string) {
+  async bulkSet(
+    workspaceId: string,
+    flags: { module: string; enabled: boolean }[],
+    setBy: string,
+  ) {
     await Promise.all(
       flags.map((f) =>
         this.prisma.featureFlag.upsert({

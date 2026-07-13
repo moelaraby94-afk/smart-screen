@@ -103,9 +103,13 @@ describe('cross-tenant scoping of by-id getters', () => {
     {
       name: 'MediaService.getById',
       build: (prisma) => {
-        const svc = new MediaService(prisma, {
-          get: (_k: string, d?: unknown) => d,
-        } as never, mockHeartbeat);
+        const svc = new MediaService(
+          prisma,
+          {
+            get: (_k: string, d?: unknown) => d,
+          } as never,
+          mockHeartbeat,
+        );
         return { get: (ws, id) => svc.getById(ws, id) };
       },
     },
