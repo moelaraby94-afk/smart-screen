@@ -5,7 +5,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma, SubscriptionPlan } from '@prisma/client';
+import { Prisma, SubscriptionPlan, UserRole } from '@prisma/client';
 import Stripe from 'stripe';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
@@ -104,6 +104,32 @@ export class StripeWebhookService {
               stripeCustomerId: customerId ?? undefined,
               stripeSubscriptionId: subscriptionId ?? undefined,
             });
+
+            const owner = await tx.workspaceMember.findFirst({
+              where: { workspaceId, role: UserRole.OWNER },
+              select: { userId: true },
+            });
+            if (owner) {
+              const amountTotal = session.amount_total ?? 0;
+              const currency = session.currency ?? 'usd';
+              await tx.paymentRecord.create({
+                data: {
+                  userId: owner.userId,
+                  amountCents: amountTotal,
+                  currency,
+                  status: 'paid',
+                  provider: 'stripe',
+                  externalId: session.id,
+                  paidAt: new Date(),
+                  metadata: {
+                    workspaceId,
+                    plan,
+                    subscriptionId: subscriptionId ?? null,
+                    customerId: customerId ?? null,
+                  },
+                },
+              });
+            }
           } else {
             this.logger.warn(
               'checkout.session.completed missing workspace_id or plan in metadata',
