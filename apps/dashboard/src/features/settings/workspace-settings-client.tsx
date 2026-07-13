@@ -140,6 +140,7 @@ export function WorkspaceSettingsClient() {
               className="h-10 w-full rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
               value={defaultLocale}
               onChange={(e) => setDefaultLocale(e.target.value)}
+              aria-label={t('defaultLocale')}
             >
               <option value="en">English</option>
               <option value="ar">العربية</option>
@@ -151,6 +152,7 @@ export function WorkspaceSettingsClient() {
               className="h-10 w-full rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
               value={timezone}
               onChange={(e) => setTimezone(e.target.value)}
+              aria-label={t('timezone')}
             >
               {COMMON_TIMEZONES.map((tz) => (
                 <option key={tz} value={tz}>{tz}</option>

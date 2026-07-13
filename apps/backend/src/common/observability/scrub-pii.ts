@@ -18,6 +18,9 @@ export const PII_FIELDS = new Set([
   'cookie',
   'email',
   'phone',
+  'x-player-secret',
+  'x-pairing-poll-secret',
+  'stripe-signature',
 ]);
 
 /**
@@ -26,7 +29,7 @@ export const PII_FIELDS = new Set([
  * original error/context.
  */
 export function scrubPII(data: unknown, depth = 0): unknown {
-  if (depth > 5) return data;
+  if (depth > 10) return data;
   if (typeof data !== 'object' || data === null) return data;
   if (Array.isArray(data)) return data.map((item) => scrubPII(item, depth + 1));
 
@@ -61,7 +64,8 @@ const ENCODED_EMAIL_RE = /[a-zA-Z0-9._%+-]+%40[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
  * Captures the prefix (Bearer, token=, apiKey=, secret=) separately
  * so the credential value can be replaced with [Redacted].
  */
-const BEARER_RE = /(Bearer\s+|token=|apiKey=|secret=)([a-zA-Z0-9._-]+)/gi;
+const BEARER_RE =
+  /(Bearer\s+|token=|apiKey=|secret=|password=|passwd=|pwd=|passcode=)([^&\s]+)/gi;
 
 /**
  * Redacts emails and bearer tokens from a string value.
@@ -82,7 +86,7 @@ function scrubStringPII(value: string): string {
  * PII may appear in free-text strings.
  */
 function scrubStringPIIDeep(data: unknown, depth = 0): unknown {
-  if (depth > 5) return data;
+  if (depth > 10) return data;
   if (typeof data === 'string') return scrubStringPII(data);
   if (typeof data !== 'object' || data === null) return data;
   if (Array.isArray(data))
@@ -98,6 +102,70 @@ function scrubStringPIIDeep(data: unknown, depth = 0): unknown {
     }
   }
   return result;
+}
+
+/**
+ * When the Sentry SDK's `patchRequestToCaptureBody` captures the raw HTTP
+ * request body, it stores it as a *string* on `event.request.data`.
+ * `scrubStringPII` alone only redacts email/bearer patterns and would miss
+ * sensitive values identified by key name (e.g. `{"password":"abc123"}`).
+ *
+ * This helper tries to parse the string as JSON first; if successful it scrubs
+ * the resulting object with `scrubStringPIIDeep` (key-based + pattern-based)
+ * and re-stringifies it. If the string is not valid JSON, it tries form-encoded
+ * parsing (key=value&key=value) for `application/x-www-form-urlencoded` bodies.
+ * If neither parse succeeds, it falls back to `scrubStringPII` for pattern-based
+ * redaction.
+ */
+function scrubBodyString(value: string): string {
+  if (
+    (value.startsWith('{') && value.endsWith('}')) ||
+    (value.startsWith('[') && value.endsWith(']'))
+  ) {
+    try {
+      const parsed: unknown = JSON.parse(value);
+      const scrubbed = scrubStringPIIDeep(parsed);
+      return JSON.stringify(scrubbed);
+    } catch {
+      // Not valid JSON — try form-encoded
+    }
+  }
+  if (value.includes('=') && !value.includes(' ')) {
+    try {
+      const params = new URLSearchParams(value);
+      const entries = Array.from(params.entries());
+      if (entries.length > 0) {
+        const obj: Record<string, unknown> = {};
+        for (const [key, val] of entries) {
+          obj[key] = val;
+        }
+        const scrubbed = scrubStringPIIDeep(obj) as Record<string, unknown>;
+        return Object.entries(scrubbed)
+          .map(([k, v]) => {
+            const val = String(v);
+            if (val === '[Redacted]') {
+              return `${encodeURIComponent(k)}=[Redacted]`;
+            }
+            return `${encodeURIComponent(k)}=${encodeURIComponent(val)}`;
+          })
+          .join('&');
+      }
+    } catch {
+      // Not valid form-encoded — fall through
+    }
+  }
+  return scrubStringPII(value);
+}
+
+/**
+ * Scrubs `request.data` / `request.json` which the SDK may store as a raw
+ * JSON string (via `patchRequestToCaptureBody`) or as a parsed object.
+ * Strings that look like JSON are parsed, key-scrubbed, and re-stringified
+ * so that sensitive fields like `password` are redacted by key name.
+ */
+function scrubBodyData(data: unknown): unknown {
+  if (typeof data === 'string') return scrubBodyString(data);
+  return scrubStringPIIDeep(data);
 }
 
 /**
@@ -131,8 +199,8 @@ export function scrubSentryEvent<T>(event: T): T {
       req.headers = scrubStringPIIDeep(req.headers);
     }
     req.cookies = undefined;
-    req.data = scrubStringPIIDeep(req.data);
-    req.json = scrubStringPIIDeep(req.json);
+    req.data = scrubBodyData(req.data);
+    req.json = scrubBodyData(req.json);
     if (typeof req.url === 'string') {
       req.url = scrubStringPII(req.url);
     }

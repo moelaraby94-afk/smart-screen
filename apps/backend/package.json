@@ -40,9 +40,23 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.(t|j)s",
+      "!**/*.module.ts",
+      "!**/main.ts",
+      "!**/instrument.ts",
+      "!**/*.dto.ts",
+      "!**/*.spec.ts",
+      "!**/*.mock.ts"
     ],
     "coverageDirectory": "../coverage",
+    "coverageThreshold": {
+      "global": {
+        "branches": 35,
+        "functions": 35,
+        "lines": 42,
+        "statements": 42
+      }
+    },
     "testEnvironment": "node"
   },
   "dependencies": {
@@ -78,6 +92,7 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.20.0",
+    "prom-client": "^15.1.1",
     "qrcode": "^1.5.4",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",

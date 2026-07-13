@@ -574,6 +574,7 @@ export function MediaLibraryClient() {
             className="h-10 rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
+            aria-label={t('filterByType')}
           >
             <option value="all">{t('filterAll')}</option>
             <option value="image">{t('filterImages')}</option>
@@ -801,6 +802,7 @@ export function MediaLibraryClient() {
                 className="h-11 w-full rounded-xl border border-border bg-card px-4 text-[15px] text-foreground outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
                 value={selectedPlaylistId}
                 onChange={(e) => setSelectedPlaylistId(e.target.value)}
+                aria-label={t('selectPlaylist')}
               >
                 <option value="">{t('selectPlaylist')}</option>
                 {playlistOptions.map((p) => (

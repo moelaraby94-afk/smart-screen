@@ -74,20 +74,20 @@ describe('scrubPII', () => {
     expect(input.email).toBe('keep@original.com');
   });
 
-  it('stops recursion at depth 5 to prevent stack overflow', () => {
+  it('stops recursion at depth 10 to prevent stack overflow', () => {
     let nested: Record<string, unknown> = { email: 'deep@example.com' };
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 12; i++) {
       nested = { child: nested };
     }
 
     const result = scrubPII(nested) as Record<string, unknown>;
     // Walk down to find the email at the bottom
     let current: Record<string, unknown> = result;
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 12; i++) {
       current = current.child as Record<string, unknown>;
     }
 
-    // At depth > 5, scrubbing stopped so the email was NOT redacted
+    // At depth > 10, scrubbing stopped so the email was NOT redacted
     expect(current.email).toBe('deep@example.com');
   });
 });
@@ -604,5 +604,271 @@ describe('scrubSentryEvent', () => {
     expect(result.request.url).toBe(
       'https://app.example.com/api/users?page=1&limit=20',
     );
+  });
+
+  // ── T6.5 Round 2: x-player-secret, x-pairing-poll-secret, JSON body ──
+
+  it('redacts x-player-secret header by key name', () => {
+    const event = {
+      request: {
+        headers: {
+          'x-player-secret': 'aBcDeFgHiJkLmN0pQrStUvWxYz123456789',
+          'content-type': 'application/json',
+        },
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.headers['x-player-secret']).toBe('[Redacted]');
+    expect(result.request.headers['content-type']).toBe('application/json');
+  });
+
+  it('redacts x-pairing-poll-secret header by key name', () => {
+    const event = {
+      request: {
+        headers: {
+          'x-pairing-poll-secret': 'pairingSecretValue456',
+          'content-type': 'application/json',
+        },
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.headers['x-pairing-poll-secret']).toBe('[Redacted]');
+    expect(result.request.headers['content-type']).toBe('application/json');
+  });
+
+  it('redacts password in raw JSON string request.data', () => {
+    const event = {
+      request: {
+        data: '{"email":"alice@test.com","password":"secret123","name":"Alice"}',
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(typeof result.request.data).toBe('string');
+    const parsed = JSON.parse(result.request.data) as Record<string, unknown>;
+    expect(parsed.password).toBe('[Redacted]');
+    expect(parsed.email).toBe('[Redacted]');
+    expect(parsed.name).toBe('Alice');
+  });
+
+  it('redacts token in raw JSON string request.data', () => {
+    const event = {
+      request: {
+        data: '{"token":"jwt-abc-456","action":"login"}',
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    const parsed = JSON.parse(result.request.data) as Record<string, unknown>;
+    expect(parsed.token).toBe('[Redacted]');
+    expect(parsed.action).toBe('login');
+  });
+
+  it('redacts nested PII in raw JSON string request.data', () => {
+    const event = {
+      request: {
+        data: '{"user":{"email":"bob@test.com","password":"pass456"},"ok":true}',
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    const parsed = JSON.parse(result.request.data) as Record<
+      string,
+      Record<string, unknown> & { ok: boolean }
+    >;
+    expect(parsed.user.email).toBe('[Redacted]');
+    expect(parsed.user.password).toBe('[Redacted]');
+    expect(parsed.ok).toBe(true);
+  });
+
+  it('redacts PII in raw JSON array string request.data', () => {
+    const event = {
+      request: {
+        data: '[{"email":"alice@test.com","password":"p1"},{"name":"Bob"}]',
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    const parsed = JSON.parse(result.request.data) as Array<
+      Record<string, unknown>
+    >;
+    expect(parsed[0].email).toBe('[Redacted]');
+    expect(parsed[0].password).toBe('[Redacted]');
+    expect(parsed[1].name).toBe('Bob');
+  });
+
+  it('falls back to pattern scrubbing for non-JSON string request.data', () => {
+    const event = {
+      request: {
+        data: 'user=alice@test.com&action=login',
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.data).not.toContain('alice@test.com');
+    expect(result.request.data).toContain('[Redacted]');
+  });
+
+  it('handles non-JSON string request.data without errors', () => {
+    const event = {
+      request: {
+        data: 'plain text body without PII',
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.data).toBe('plain text body without PII');
+  });
+
+  it('still scrubs request.data when it is a parsed object', () => {
+    const event = {
+      request: {
+        data: { email: 'alice@test.com', password: 'secret', name: 'Alice' },
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.data.email).toBe('[Redacted]');
+    expect(result.request.data.password).toBe('[Redacted]');
+    expect(result.request.data.name).toBe('Alice');
+  });
+
+  it('redacts PII in raw JSON string request.json', () => {
+    const event = {
+      request: {
+        json: '{"password":"secret123","email":"alice@test.com"}',
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    const parsed = JSON.parse(result.request.json) as Record<string, unknown>;
+    expect(parsed.password).toBe('[Redacted]');
+    expect(parsed.email).toBe('[Redacted]');
+  });
+
+  it('preserves non-PII fields in JSON string request.data (no false positives)', () => {
+    const event = {
+      request: {
+        data: '{"name":"Alice","age":30,"active":true,"tags":["a","b"]}',
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    const parsed = JSON.parse(result.request.data) as Record<string, unknown>;
+    expect(parsed.name).toBe('Alice');
+    expect(parsed.age).toBe(30);
+    expect(parsed.active).toBe(true);
+    expect(parsed.tags).toEqual(['a', 'b']);
+  });
+
+  // ── T6.6: stripe-signature, form-encoded bodies, BEARER_RE password, deep nesting ──
+
+  it('redacts stripe-signature header by key name', () => {
+    const event = {
+      request: {
+        headers: {
+          'stripe-signature': 't=1234567890,v1=abc123def456',
+          'content-type': 'application/json',
+        },
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.headers['stripe-signature']).toBe('[Redacted]');
+    expect(result.request.headers['content-type']).toBe('application/json');
+  });
+
+  it('redacts password in form-encoded string request.data', () => {
+    const event = {
+      request: {
+        data: 'email=alice@test.com&password=secret123&name=Alice',
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(typeof result.request.data).toBe('string');
+    expect(result.request.data).not.toContain('secret123');
+    expect(result.request.data).not.toContain('alice@test.com');
+    expect(result.request.data).toContain('[Redacted]');
+    expect(result.request.data).toContain('Alice');
+  });
+
+  it('redacts token in form-encoded string request.data', () => {
+    const event = {
+      request: {
+        data: 'token=jwt-abc-456&action=login',
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.data).not.toContain('jwt-abc-456');
+    expect(result.request.data).toContain('[Redacted]');
+    expect(result.request.data).toContain('login');
+  });
+
+  it('redacts password= in URL query strings via BEARER_RE', () => {
+    const event = {
+      request: {
+        url: 'https://app.example.com/api/reset?password=secret123&token=abc',
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.url).not.toContain('secret123');
+    expect(result.request.url).toContain('password=[Redacted]');
+  });
+
+  it('redacts password= with special characters in URL via BEARER_RE', () => {
+    const event = {
+      request: {
+        url: 'https://app.example.com/api/reset?password=p@ssw0rd!&next=foo',
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.url).not.toContain('p@ssw0rd!');
+  });
+
+  it('scrubs deeply nested JSON body (depth > 5)', () => {
+    const event = {
+      request: {
+        data: '{"a":{"b":{"c":{"d":{"e":{"f":{"g":{"password":"deep_secret"}}}}}}}}',
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    const parsed = JSON.parse(result.request.data) as Record<string, unknown>;
+    let cursor: unknown = parsed;
+    for (const key of ['a', 'b', 'c', 'd', 'e', 'f', 'g']) {
+      cursor = (cursor as Record<string, unknown>)[key];
+    }
+    expect((cursor as Record<string, unknown>).password).toBe('[Redacted]');
+  });
+
+  it('preserves non-PII form-encoded fields (no false positives)', () => {
+    const event = {
+      request: {
+        data: 'name=Alice&age=30&active=true',
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.data).toContain('Alice');
+    expect(result.request.data).toContain('30');
+    expect(result.request.data).toContain('true');
+  });
+
+  it('handles plain text body with = sign without false positive', () => {
+    const event = {
+      request: {
+        data: 'Equation: x = y + 1',
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    // Contains space, so form-encoded parsing is skipped
+    expect(result.request.data).toBe('Equation: x = y + 1');
   });
 });

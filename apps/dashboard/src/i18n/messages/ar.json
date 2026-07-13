@@ -569,6 +569,7 @@
     "emptyDescription": "أضف شاشة جديدة لبدء الربط وتوزيع قوائم التشغيل.",
     "searchPlaceholder": "ابحث بالاسم أو الموقع أو الرقم التسلسلي…",
     "filterAll": "كل الحالات",
+    "filterByStatus": "تصفية حسب الحالة",
     "filterOnline": "متصل",
     "filterOffline": "غير متصل",
     "filterMaintenance": "صيانة",
@@ -672,6 +673,7 @@
     "emptyDescription": "أسقط الملفات هنا أو اضغط رفع لإضافة الصور والفيديو. تظهر المعاينات فورًا.",
     "searchPlaceholder": "ابحث باسم الملف…",
     "filterAll": "كل الأنواع",
+    "filterByType": "تصفية حسب النوع",
     "filterImages": "صور",
     "filterVideos": "فيديو",
     "uploadFirst": "ارفع أول ملف",
@@ -711,6 +713,7 @@
     "folderDeleteFailed": "تعذر حذف المجلد.",
     "moveFolderFailed": "تعذر نقل الوسائط إلى المجلد المحدد.",
     "noFolder": "بدون مجلد",
+    "moveToFolderAria": "نقل {name} إلى مجلد",
     "selectAll": "تحديد الكل",
     "selected": "محدد",
     "deleteSelected": "حذف المحدد",
@@ -1713,6 +1716,7 @@
     "email": "البريد الإلكتروني",
     "emailPlaceholder": "colleague@company.com",
     "role": "الدور",
+    "changeRoleAria": "تغيير دور {name}",
     "sending": "جارٍ الإرسال…",
     "sendInvite": "إرسال الدعوة",
     "inviteHint": "سيتم إرسال دعوة عبر البريد الإلكتروني إلى هذا العنوان. إذا كان المستخدم لديه حساب بالفعل، سيتمت إضافته فورًا.",
@@ -1877,6 +1881,7 @@
     "locationSaved": "تم تحديث الموقع.",
     "locationFailed": "تعذر تحديث الموقع.",
     "overrideLabel": "تجاوز سريع",
+    "overrideDuration": "مدة التجاوز",
     "overrideNone": "— بدون تجاوز —",
     "overrideHint": "فرض قائمة تشغيل فوراً لمدة محددة، متجاوزاً الجداول. اضغط مسح للعودة للجدولة العادية.",
     "override30min": "30 دقيقة",
@@ -2077,6 +2082,7 @@
     "pairingStarted": "تم بدء إقران شاشة جديدة.",
     "title": "الإشعارات",
     "bellLabel": "الإشعارات",
+    "unread": "غير مقروء",
     "markAllRead": "تحديد الكل كمقروء",
     "empty": "لا توجد إشعارات بعد.",
     "justNow": "الآن",
@@ -2213,6 +2219,7 @@
     "setExpiry": "تعيين انتهاء الصلاحية",
     "autoExpiry": "انتهاء تلقائي",
     "autoExpiryDesc": "تعيين تاريخ انتهاء تلقائي للمحتوى لإيقاف تشغيله بعد وقت معين.",
+    "expiryDate": "تاريخ الانتهاء",
     "selectContent": "اختر المحتوى...",
     "noAssets": "لا توجد ملفات مرفوعة",
     "noAssetsDesc": "ارفع أول ملف وسائط للبدء.",
@@ -2371,7 +2378,7 @@
     "warningTitle": "نظام تجاوز الطوارئ",
     "warningDesc": "استخدم هذه الميزة لتجاوز جميع الشاشات برسالة طوارئ. استخدمها بحذر.",
     "activate": "تفعيل التنبيه",
-    "templates": "قوالب سريعة",
+    "templatesLabel": "قوالب سريعة",
     "customMessage": "رسالة مخصصة",
     "messagePlaceholder": "أدخل رسالة الطوارئ...",
     "scope": "النطاق",
@@ -2391,7 +2398,26 @@
     "noAlerts": "لا توجد تنبيهات نشطة",
     "activated": "تم تفعيل تجاوز الطوارئ",
     "cancelled": "تم إلغاء التجاوز",
-    "activeBadge": "نشط"
+    "activeBadge": "نشط",
+    "cancelOverride": "إلغاء التجاوز",
+    "templates": {
+      "fire": {
+        "label": "حريق طارئ",
+        "message": "إنذار حريق - يرجى إخلاء المبنى فوراً"
+      },
+      "weather": {
+        "label": "تنبيه طقس",
+        "message": "تحذير طقس - يرجى التوجه إلى مناطق آمنة"
+      },
+      "maintenance": {
+        "label": "صيانة",
+        "message": "جارٍ صيانة النظام - ستستأنف الشاشات العمل قريباً"
+      },
+      "lockdown": {
+        "label": "إغلاق أمني",
+        "message": "تنبيه أمني - المبنى في حالة إغلاق. لا تغادروا."
+      }
+    }
   },
   "onboardingWidget": {
     "title": "ابدأ الآن",

@@ -269,7 +269,7 @@ export function NotificationBell() {
         <button
           type="button"
           className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-foreground transition hover:bg-muted"
-          aria-label={t('bellLabel')}
+          aria-label={unreadCount > 0 ? `${t('bellLabel')} (${unreadCount} ${t('unread')})` : t('bellLabel')}
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (

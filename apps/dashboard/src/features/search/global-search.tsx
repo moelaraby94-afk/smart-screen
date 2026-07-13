@@ -202,6 +202,9 @@ export function GlobalSearch() {
             />
             <motion.div
               className="fixed left-1/2 top-[15%] z-[101] w-full max-w-xl -translate-x-1/2 px-4"
+              role="dialog"
+              aria-modal="true"
+              aria-label={t('placeholder')}
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -217,6 +220,7 @@ export function GlobalSearch() {
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder={t('placeholder')}
+                    aria-label={t('placeholder')}
                     className="flex-1 bg-transparent text-[15px] text-foreground outline-none placeholder:text-muted-foreground"
                   />
                   <button

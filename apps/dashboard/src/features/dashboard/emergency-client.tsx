@@ -13,12 +13,7 @@ import { setScreenOverride } from '@/features/screens/api/screens-api';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { toast } from 'sonner';
 
-const templates = [
-  { id: 'fire', label: 'Fire Emergency', message: 'FIRE ALARM - Please evacuate the building immediately' },
-  { id: 'weather', label: 'Weather Alert', message: 'WEATHER WARNING - Please proceed to safe areas' },
-  { id: 'maintenance', label: 'Maintenance', message: 'System maintenance in progress - Displays will resume shortly' },
-  { id: 'lockdown', label: 'Lockdown', message: 'SECURITY ALERT - Building is in lockdown. Do not exit.' },
-];
+const templateIds = ['fire', 'weather', 'maintenance', 'lockdown'] as const;
 
 export function EmergencyClient() {
   const t = useTranslations('emergencyPage');
@@ -54,11 +49,8 @@ export function EmergencyClient() {
   const overriddenScreens = screens.filter(s => s.overridePlaylistId);
 
   const handleSelectTemplate = (id: string) => {
-    const tpl = templates.find(tpl => tpl.id === id);
-    if (tpl) {
-      setSelectedTemplate(id);
-      setMessage(tpl.message);
-    }
+    setSelectedTemplate(id);
+    setMessage(t(`templates.${id}.message`));
   };
 
   const handleActivate = useCallback(async () => {
@@ -116,16 +108,16 @@ export function EmergencyClient() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="mb-2 text-sm font-medium">{t('templates')}</p>
+              <p className="mb-2 text-sm font-medium">{t('templatesLabel')}</p>
               <div className="grid grid-cols-2 gap-2">
-                {templates.map((tpl) => (
+                {templateIds.map((id) => (
                   <Button
-                    key={tpl.id}
-                    variant={selectedTemplate === tpl.id ? 'default' : 'outline'}
+                    key={id}
+                    variant={selectedTemplate === id ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => handleSelectTemplate(tpl.id)}
+                    onClick={() => handleSelectTemplate(id)}
                   >
-                    {tpl.label}
+                    {t(`templates.${id}.label`)}
                   </Button>
                 ))}
               </div>
@@ -137,6 +129,7 @@ export function EmergencyClient() {
                 placeholder={t('messagePlaceholder')}
                 value={message}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}
+                aria-label={t('customMessage')}
                 className="flex min-h-[80px] w-full rounded-2xl border border-border bg-card px-4 py-2 text-[15px] text-foreground outline-none transition placeholder:text-muted-foreground/80 focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
               />
             </div>
@@ -147,6 +140,7 @@ export function EmergencyClient() {
                 className="flex h-11 w-full rounded-2xl border border-border bg-card px-4 py-2 text-[15px] outline-none"
                 value={selectedScreenId}
                 onChange={(e) => setSelectedScreenId(e.target.value)}
+                aria-label={t('scope')}
               >
                 <option value="">{t('scopeAll')}</option>
                 {screens.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -158,6 +152,7 @@ export function EmergencyClient() {
                 className="flex h-11 w-full rounded-2xl border border-border bg-card px-4 py-2 text-[15px] outline-none transition focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
                 value={durationPreset}
                 onChange={(e) => setDurationPreset(e.target.value)}
+                aria-label={t('duration')}
               >
                 {durationPresets.map((p) => (
                   <option key={p.value} value={p.value}>{p.label}</option>
@@ -171,6 +166,7 @@ export function EmergencyClient() {
                   value={durationCustom}
                   onChange={(e) => setDurationCustom(e.target.value)}
                   placeholder={t('durationPlaceholder')}
+                  aria-label={t('durationCustom')}
                 />
               )}
             </div>
@@ -211,7 +207,7 @@ export function EmergencyClient() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleCancelOverride(screen.id)} disabled={!canEdit}>
+                      <Button variant="ghost" size="sm" onClick={() => handleCancelOverride(screen.id)} disabled={!canEdit} aria-label={t('cancelOverride')}>
                         <X className="h-4 w-4" />
                       </Button>
                     </div>

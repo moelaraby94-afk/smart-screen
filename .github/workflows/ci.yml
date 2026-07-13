@@ -45,3 +45,16 @@ jobs:
 
       - name: Marketing build
         run: npm run build -w apps/marketing
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Start dashboard for E2E
+        run: |
+          npm run start -w apps/dashboard &
+          npx wait-on http://localhost:3000/api/health --timeout 60000
+
+      - name: E2E tests
+        run: npm run test:e2e -w apps/dashboard
+        env:
+          E2E_BASE_URL: http://localhost:3000

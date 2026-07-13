@@ -16,9 +16,10 @@
     "lint": "npm run lint -w apps/backend && npm run lint -w apps/dashboard && npm run lint -w apps/player",
     "format": "prettier --write .",
     "test": "npm run test -w apps/backend && npm run test -w apps/dashboard && npm run test -w apps/player",
+    "test:cov": "npm run test:cov -w apps/backend && npm run test -w apps/dashboard && npm run test -w apps/player",
     "typecheck": "npm run typecheck -w apps/backend && npm run typecheck -w apps/dashboard && npm run typecheck -w apps/player",
     "lint:fix": "npm run lint:fix -w apps/backend && npm run lint:fix -w apps/dashboard && npm run lint:fix -w apps/player",
-    "verify": "npm run typecheck && npm run lint && npm run test && npm run i18n:check && npm run build"
+    "verify": "npm run typecheck && npm run lint && npm run test:cov && npm run i18n:check && npm run build"
   },
   "private": true,
   "workspaces": [

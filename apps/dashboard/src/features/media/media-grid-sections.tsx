@@ -261,6 +261,7 @@ export function MediaGrid(props: MediaGridProps) {
                   <select
                     className="h-7 w-full rounded border border-border bg-background px-2 text-[11px]"
                     value={m.folderId ?? 'all'}
+                    aria-label={t('moveToFolderAria', { name: m.originalName })}
                     onChange={(e) => {
                       void props.onMoveMedia(m.id, e.target.value);
                     }}

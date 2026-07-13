@@ -181,6 +181,7 @@ export function EditScreenDialogContent({
           <select
             className="h-11 w-full rounded-xl border border-border bg-card px-4 text-[15px] text-foreground outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
             {...form.register('status')}
+            aria-label={t('status')}
           >
             <option value="ONLINE">{t('online')}</option>
             <option value="OFFLINE">{t('offline')}</option>

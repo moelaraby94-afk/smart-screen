@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Info } from 'lucide-react';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 
@@ -13,6 +13,7 @@ type Props = {
 export function InfoTooltip({ content, side = 'top', className }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
+  const tooltipId = useId();
 
   useEffect(() => {
     if (!open) return;
@@ -40,11 +41,14 @@ export function InfoTooltip({ content, side = 'top', className }: Props) {
         }}
         className="inline-flex h-4 w-4 items-center justify-center text-muted-foreground transition hover:text-foreground"
         aria-label="Info"
+        aria-describedby={open ? tooltipId : undefined}
+        aria-expanded={open}
       >
         <Info className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
       </button>
       {open && (
         <span
+          id={tooltipId}
           role="tooltip"
           className={`absolute z-50 w-56 rounded-xl border border-border bg-popover p-3 text-xs leading-relaxed text-popover-foreground shadow-lg ${
             side === 'top' ? 'bottom-full mb-2 left-1/2 -translate-x-1/2' : 'top-full mt-2 left-1/2 -translate-x-1/2'

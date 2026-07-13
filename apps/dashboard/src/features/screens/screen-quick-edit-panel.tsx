@@ -288,6 +288,7 @@ export function ScreenQuickEditPanel({
                   className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none ring-0 focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
                   value={playlistGroupId}
                   disabled={busy}
+                  aria-label={t('screenPlaylistGroup')}
                   onChange={(e) => {
                     const v = e.target.value;
                     setPlaylistGroupId(v);
@@ -313,6 +314,7 @@ export function ScreenQuickEditPanel({
                   className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none ring-0 focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
                   value={playlistId}
                   disabled={busy}
+                  aria-label={t('activePlaylist')}
                   onChange={(e) => {
                     const v = e.target.value;
                     setPlaylistId(v);
@@ -340,6 +342,7 @@ export function ScreenQuickEditPanel({
                   className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
                   value={scheduleId}
                   disabled={busy}
+                  aria-label={t('scheduleFocus')}
                   onChange={(e) => {
                     const v = e.target.value;
                     setScheduleId(v);
@@ -368,6 +371,7 @@ export function ScreenQuickEditPanel({
                   className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none ring-0 focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
                   value={overridePlId}
                   disabled={busy}
+                  aria-label={t('overrideLabel')}
                   onChange={(e) => {
                     const v = e.target.value;
                     setOverridePlId(v);
@@ -388,6 +392,7 @@ export function ScreenQuickEditPanel({
                       className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none ring-0 focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
                       value={String(overrideDuration)}
                       disabled={busy}
+                      aria-label={t('overrideDuration')}
                       onChange={(e) => {
                         const v = parseInt(e.target.value, 10);
                         setOverrideDuration(v);

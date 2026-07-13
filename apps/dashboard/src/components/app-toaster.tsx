@@ -2,16 +2,19 @@
 
 import { Toaster } from 'sonner';
 import { useTheme } from 'next-themes';
+import { useLocale } from 'next-intl';
 
 export function AppToaster() {
   const { resolvedTheme } = useTheme();
+  const locale = useLocale();
+  const isRtl = locale === 'ar';
 
   return (
     <Toaster
       richColors
       expand
       closeButton
-      position="top-right"
+      position={isRtl ? 'top-left' : 'top-right'}
       theme={resolvedTheme === 'light' ? 'light' : 'dark'}
       aria-live="polite"
       toastOptions={{

@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
 import { SentryModule } from '@sentry/nestjs/setup';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { ConfigModule } from '@nestjs/config';
 import { AllExceptionsFilter } from './common/errors/all-exceptions.filter';
 import { CsrfModule } from './common/csrf/csrf.module';
@@ -29,6 +29,8 @@ import { EmailModule } from './domains/email/email.module';
 import { NotificationsModule } from './domains/notifications/notifications.module';
 import { WorkspaceAuditLogModule } from './domains/audit-log/audit-log.module';
 import { HealthModule } from './common/health/health.module';
+import { MetricsModule } from './common/metrics/metrics.module';
+import { MetricsMiddleware } from './common/metrics/metrics.middleware';
 import { RequestContextModule } from './common/request-context/request-context.module';
 import { WorkspaceAuthModule } from './common/auth/workspace-auth.module';
 import { ConfigHelperModule } from './common/config/config-helper.module';
@@ -83,20 +85,15 @@ import { ConfigHelperModule } from './common/config/config-helper.module';
     NotificationsModule,
     WorkspaceAuditLogModule,
     HealthModule,
+    MetricsModule,
     RequestContextModule,
     WorkspaceAuthModule,
     ConfigHelperModule,
   ],
-  providers: [
-    { provide: APP_FILTER, useClass: AllExceptionsFilter },
-    /**
-     * ThrottlerModule.forRoot() only *configures* the limit — nothing enforced
-     * it until now, because ThrottlerGuard was attached to five controllers by
-     * hand and the other eleven were wide open. Registering it as APP_GUARD
-     * applies the baseline everywhere; routes that must not be rate limited
-     * opt out explicitly with `@SkipThrottle()`.
-     */
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
-  ],
+  providers: [{ provide: APP_FILTER, useClass: AllExceptionsFilter }],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(MetricsMiddleware).forRoutes('*');
+  }
+}

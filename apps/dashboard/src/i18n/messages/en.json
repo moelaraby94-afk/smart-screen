@@ -569,6 +569,7 @@
     "emptyDescription": "Add a display to provision serial numbers and push playlists.",
     "searchPlaceholder": "Search by name, location, or serial…",
     "filterAll": "All statuses",
+    "filterByStatus": "Filter by status",
     "filterOnline": "Online",
     "filterOffline": "Offline",
     "filterMaintenance": "Maintenance",
@@ -672,6 +673,7 @@
     "emptyDescription": "Drop files here or tap Upload to add images and video. Thumbnails appear instantly after upload.",
     "searchPlaceholder": "Search by file name…",
     "filterAll": "All types",
+    "filterByType": "Filter by type",
     "filterImages": "Images",
     "filterVideos": "Videos",
     "uploadFirst": "Upload your first file",
@@ -711,6 +713,7 @@
     "folderDeleteFailed": "Could not delete folder.",
     "moveFolderFailed": "Could not move media to selected folder.",
     "noFolder": "No folder",
+    "moveToFolderAria": "Move {name} to folder",
     "selectAll": "Select all",
     "selected": "selected",
     "deleteSelected": "Delete selected",
@@ -1713,6 +1716,7 @@
     "email": "Email",
     "emailPlaceholder": "colleague@company.com",
     "role": "Role",
+    "changeRoleAria": "Change role for {name}",
     "sending": "Sending…",
     "sendInvite": "Send invite",
     "inviteHint": "An email invitation will be sent to this address. If the user already has an account, they will be added immediately.",
@@ -1877,6 +1881,7 @@
     "locationSaved": "Location updated.",
     "locationFailed": "Could not update location.",
     "overrideLabel": "Quick override",
+    "overrideDuration": "Override duration",
     "overrideNone": "— No override —",
     "overrideHint": "Force a playlist to play immediately for a set duration, bypassing schedules. Clear to return to normal scheduling.",
     "override30min": "30 minutes",
@@ -2077,6 +2082,7 @@
     "pairingStarted": "A new screen pairing was initiated.",
     "title": "Notifications",
     "bellLabel": "Notifications",
+    "unread": "unread",
     "markAllRead": "Mark all as read",
     "empty": "No notifications yet.",
     "justNow": "Just now",
@@ -2213,6 +2219,7 @@
     "setExpiry": "Set Expiry",
     "autoExpiry": "Auto-Expiry",
     "autoExpiryDesc": "Set an automatic expiry date for content to stop playing after a certain time.",
+    "expiryDate": "Expiry date",
     "selectContent": "Select content...",
     "noAssets": "No assets uploaded",
     "noAssetsDesc": "Upload your first media asset to get started.",
@@ -2371,7 +2378,7 @@
     "warningTitle": "Emergency Override System",
     "warningDesc": "Use this feature to override all displays with an emergency message. Use with caution.",
     "activate": "Activate Alert",
-    "templates": "Quick Templates",
+    "templatesLabel": "Quick Templates",
     "customMessage": "Custom Message",
     "messagePlaceholder": "Enter emergency message...",
     "scope": "Scope",
@@ -2391,7 +2398,26 @@
     "noAlerts": "No active alerts",
     "activated": "Emergency override activated",
     "cancelled": "Override cancelled",
-    "activeBadge": "active"
+    "activeBadge": "active",
+    "cancelOverride": "Cancel override",
+    "templates": {
+      "fire": {
+        "label": "Fire Emergency",
+        "message": "FIRE ALARM - Please evacuate the building immediately"
+      },
+      "weather": {
+        "label": "Weather Alert",
+        "message": "WEATHER WARNING - Please proceed to safe areas"
+      },
+      "maintenance": {
+        "label": "Maintenance",
+        "message": "System maintenance in progress - Displays will resume shortly"
+      },
+      "lockdown": {
+        "label": "Lockdown",
+        "message": "SECURITY ALERT - Building is in lockdown. Do not exit."
+      }
+    }
   },
   "onboardingWidget": {
     "title": "Getting started",

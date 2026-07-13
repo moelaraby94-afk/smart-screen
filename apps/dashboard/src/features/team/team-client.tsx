@@ -227,6 +227,7 @@ export function TeamClient() {
                             value={m.role}
                             disabled={updatingRoleId === m.membershipId}
                             onChange={(e) => void handleChangeRole(m.membershipId, e.target.value)}
+                            aria-label={t('changeRoleAria', { name: m.user.fullName })}
                           >
                             {ROLES.filter((r) => r !== 'OWNER').map((r) => (
                               <option key={r} value={r}>{r}</option>

@@ -294,6 +294,7 @@ export function ScreensClient({ locale }: Props) {
             className="h-10 rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
+            aria-label={t('filterByStatus')}
           >
             <option value="all">{t('filterAll')}</option>
             <option value="ONLINE">{t('filterOnline')}</option>

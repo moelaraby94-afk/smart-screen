@@ -113,7 +113,7 @@ async function bootstrap() {
   });
   app.use(cookieParser());
   app.setGlobalPrefix('api/v1', {
-    exclude: ['health', 'ready'],
+    exclude: ['health', 'ready', 'metrics'],
   });
 
   app.enableCors({

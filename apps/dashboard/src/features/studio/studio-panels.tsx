@@ -186,6 +186,7 @@ export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject
               onChange={(e) =>
                 onUpdateObject(selected.id, { opacity: Number(e.target.value) })
               }
+              aria-label={t('opacity')}
               className="w-full accent-primary"
             />
           </div>
@@ -209,6 +210,7 @@ export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject
                   className="h-10 w-full rounded-xl border border-border bg-card px-3 text-sm"
                   value={selected.fontFamily ?? ''}
                   onChange={(e) => onUpdateObject(selected.id, { fontFamily: e.target.value })}
+                  aria-label={t('fontFamily')}
                 >
                   <option value="">{t('fontDefault')}</option>
                   <option value='Arial, sans-serif'>Arial</option>
@@ -313,6 +315,7 @@ export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject
                   <select
                     className="h-9 w-full rounded-lg border border-border bg-card px-2 text-sm"
                     value={selected.zonePlaylistId ?? ''}
+                    aria-label={t('zonePlaylist')}
                     onChange={(e) =>
                       onUpdateObject(selected.id, {
                         zonePlaylistId: e.target.value || null,

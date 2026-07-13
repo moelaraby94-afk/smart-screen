@@ -140,7 +140,7 @@ export function ContentClient() {
                   {assets.map(a => <SelectItem key={a.id} value={a.id}>{a.originalName}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <Input type="date" />
+              <Input type="date" aria-label={t('expiryDate')} />
               <Button size="sm">{t('setExpiry')}</Button>
             </div>
           </CardContent>
