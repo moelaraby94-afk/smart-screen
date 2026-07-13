@@ -1,4 +1,4 @@
-import { scrubPII } from './scrub-pii';
+import { scrubPII, scrubSentryEvent } from './scrub-pii';
 
 describe('scrubPII', () => {
   it('redacts known PII fields at the top level', () => {
@@ -89,5 +89,260 @@ describe('scrubPII', () => {
 
     // At depth > 5, scrubbing stopped so the email was NOT redacted
     expect(current.email).toBe('deep@example.com');
+  });
+});
+
+describe('scrubSentryEvent', () => {
+  it('scrubs request.headers by key name', () => {
+    const event = {
+      request: {
+        headers: {
+          authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9',
+          'content-type': 'application/json',
+        },
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.headers.authorization).toBe('[Redacted]');
+    expect(result.request.headers['content-type']).toBe('application/json');
+  });
+
+  it('clears request.cookies entirely', () => {
+    const event = {
+      request: { cookies: { session: 'abc123', csrf: 'xyz' } },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.cookies).toBeUndefined();
+  });
+
+  it('scrubs request.data by key name', () => {
+    const event = {
+      request: { data: { email: 'alice@example.com', name: 'Alice' } },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.data).toEqual({
+      email: '[Redacted]',
+      name: 'Alice',
+    });
+  });
+
+  it('scrubs request.json by key name', () => {
+    const event = {
+      request: { json: { password: 'secret', data: 'ok' } },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.json).toEqual({
+      password: '[Redacted]',
+      data: 'ok',
+    });
+  });
+
+  it('redacts emails from request.url string', () => {
+    const event = {
+      request: { url: 'https://app.example.com/users?email=bob@test.com' },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.url).toBe(
+      'https://app.example.com/users?email=[Redacted]',
+    );
+  });
+
+  it('redacts tokens from request.url string', () => {
+    const event = {
+      request: { url: 'https://app.example.com/api?token=abc123def' },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.url).toContain('[Redacted]');
+    expect(result.request.url).not.toContain('abc123def');
+  });
+
+  it('scrubs request.query_string deeply', () => {
+    const event = {
+      request: { query_string: { filter: { email: 'admin@corp.com' } } },
+    };
+
+    const result = scrubSentryEvent(event);
+    const qs = result.request.query_string as Record<string, unknown>;
+    const filter = qs.filter as Record<string, unknown>;
+    expect(filter.email).toBe('[Redacted]');
+  });
+
+  it('scrubs extra by key name', () => {
+    const event = {
+      extra: { email: 'leaked@test.com', requestId: 'r-1' },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.extra).toEqual({ email: '[Redacted]', requestId: 'r-1' });
+  });
+
+  it('scrubs tags by key name', () => {
+    const event = {
+      tags: { email: 'tagged@test.com', route: '/api/users' },
+    };
+
+    const result = scrubSentryEvent(event);
+    const tags = result.tags as Record<string, unknown>;
+    expect(tags.email).toBe('[Redacted]');
+    expect(tags.route).toBe('/api/users');
+  });
+
+  it('scrubs contexts by key name', () => {
+    const event = {
+      contexts: { auth: { token: 'secret-xyz', user: 'admin' } },
+    };
+
+    const result = scrubSentryEvent(event);
+    const ctx = result.contexts as Record<string, unknown>;
+    const auth = ctx.auth as Record<string, unknown>;
+    expect(auth.token).toBe('[Redacted]');
+    expect(auth.user).toBe('admin');
+  });
+
+  it('redacts user.email and user.ip_address', () => {
+    const event = {
+      user: { email: 'user@test.com', ip_address: '192.168.1.1', id: 'u-1' },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.user.email).toBe('[Redacted]');
+    expect(result.user.ip_address).toBe('[Redacted]');
+    expect(result.user.id).toBe('u-1');
+  });
+
+  it('scrubs breadcrumb messages for email patterns', () => {
+    const event = {
+      breadcrumbs: [
+        { message: 'Login attempt for alice@example.com', data: {} },
+        { message: 'Request completed', data: { status: 200 } },
+      ],
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.breadcrumbs[0].message).not.toContain('alice@example.com');
+    expect(result.breadcrumbs[0].message).toContain('[Redacted]');
+    expect(result.breadcrumbs[1].message).toBe('Request completed');
+  });
+
+  it('scrubs breadcrumb data by key name', () => {
+    const event = {
+      breadcrumbs: [
+        { message: 'ok', data: { email: 'bob@bob.com', path: '/home' } },
+      ],
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.breadcrumbs[0].data).toEqual({
+      email: '[Redacted]',
+      path: '/home',
+    });
+  });
+
+  it('redacts emails from exception values', () => {
+    const event = {
+      exception: {
+        values: [
+          { value: 'User not found: alice@example.com' },
+          { value: 'Database connection failed' },
+        ],
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.exception.values[0].value).not.toContain('alice@example.com');
+    expect(result.exception.values[0].value).toContain('[Redacted]');
+    expect(result.exception.values[1].value).toBe('Database connection failed');
+  });
+
+  it('redacts bearer tokens from exception values', () => {
+    const event = {
+      exception: {
+        values: [
+          { value: 'Auth failed for Bearer eyJhbGciOiJIUzI1NiJ9.token' },
+        ],
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.exception.values[0].value).not.toContain(
+      'eyJhbGciOiJIUzI1NiJ9',
+    );
+  });
+
+  it('redacts emails from top-level message', () => {
+    const event = {
+      message: 'Failed to process user bob@company.com request',
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.message).not.toContain('bob@company.com');
+    expect(result.message).toContain('[Redacted]');
+  });
+
+  it('handles events with no PII-carrying fields without crashing', () => {
+    const event = { event_id: 'abc123', level: 'error' as const };
+
+    const result = scrubSentryEvent(event);
+    expect(result).toEqual({ event_id: 'abc123', level: 'error' });
+  });
+
+  it('handles null/non-object events without crashing', () => {
+    expect(scrubSentryEvent(null)).toBeNull();
+    expect(scrubSentryEvent(undefined)).toBeUndefined();
+    expect(scrubSentryEvent('string')).toBe('string');
+  });
+
+  it('preserves non-PII data in a complex event', () => {
+    const event = {
+      event_id: 'evt-1',
+      level: 'error' as const,
+      request: {
+        headers: {
+          'content-type': 'application/json',
+          authorization: 'Bearer xyz',
+        },
+        url: 'https://app.example.com/api/users',
+        data: { userId: 'u-1', email: 'alice@test.com' },
+      },
+      extra: { requestId: 'r-1', password: 'secret' },
+      user: { id: 'u-1', email: 'alice@test.com', ip_address: '1.2.3.4' },
+      breadcrumbs: [{ message: 'GET /api/users', data: { status: 500 } }],
+      exception: {
+        values: [{ value: 'TypeError: cannot read property of undefined' }],
+      },
+      message: 'Something went wrong',
+    };
+
+    const result = scrubSentryEvent(event);
+
+    // Non-PII preserved
+    expect(result.event_id).toBe('evt-1');
+    expect(result.level).toBe('error');
+    expect(result.request.headers['content-type']).toBe('application/json');
+    expect(result.request.url).toBe('https://app.example.com/api/users');
+    expect(result.extra.requestId).toBe('r-1');
+    expect(result.user.id).toBe('u-1');
+    expect(result.breadcrumbs[0].message).toBe('GET /api/users');
+    expect(result.breadcrumbs[0].data).toEqual({ status: 500 });
+    expect(result.exception.values[0].value).toBe(
+      'TypeError: cannot read property of undefined',
+    );
+    expect(result.message).toBe('Something went wrong');
+
+    // PII redacted
+    expect(result.request.headers.authorization).toBe('[Redacted]');
+    expect(result.request.data).toEqual({
+      userId: 'u-1',
+      email: '[Redacted]',
+    });
+    expect(result.extra.password).toBe('[Redacted]');
+    expect(result.user.email).toBe('[Redacted]');
+    expect(result.user.ip_address).toBe('[Redacted]');
   });
 });

@@ -1,6 +1,10 @@
 /**
  * Fields whose values are stripped from Sentry events to prevent
  * leaking PII (emails, passwords, tokens) to the error tracker.
+ *
+ * This is a mirror of the backend's `common/observability/scrub-pii.ts`.
+ * The dashboard cannot import from the backend, so the implementation
+ * is duplicated here. Keep both copies in sync.
  */
 export const PII_FIELDS = new Set([
   'password',
@@ -19,11 +23,6 @@ export const PII_FIELDS = new Set([
   'phone',
 ]);
 
-/**
- * Recursively walks an object and replaces values of PII keys with
- * `[Redacted]`. Operates on a shallow clone to avoid mutating the
- * original error/context.
- */
 export function scrubPII(data: unknown, depth = 0): unknown {
   if (depth > 5) return data;
   if (typeof data !== 'object' || data === null) return data;
@@ -41,37 +40,16 @@ export function scrubPII(data: unknown, depth = 0): unknown {
   return result;
 }
 
-/**
- * Email pattern used to redact emails embedded in string values
- * (e.g. exception messages like "user alice@example.com not found").
- */
 const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 
-/**
- * Bearer / token pattern used to redact credentials embedded in
- * string values (e.g. "Authorization: Bearer eyJhbGci...").
- * Captures the prefix (Bearer, token=, apiKey=, secret=) separately
- * so the credential value can be replaced with [Redacted].
- */
 const BEARER_RE = /(Bearer\s+|token=|apiKey=|secret=)([a-zA-Z0-9._-]+)/gi;
 
-/**
- * Redacts emails and bearer tokens from a string value.
- * Returns the original value if no PII patterns are found.
- */
 function scrubStringPII(value: string): string {
   let result = value.replace(EMAIL_RE, '[Redacted]');
   result = result.replace(BEARER_RE, '$1[Redacted]');
   return result;
 }
 
-/**
- * Recursively scrubs PII from string values within nested structures.
- * Unlike `scrubPII` (which redacts by key name), this function redacts
- * PII *patterns* (emails, bearer tokens) from string *values* regardless
- * of the key name. Used for exception messages and breadcrumbs where
- * PII may appear in free-text strings.
- */
 function scrubStringPIIDeep(data: unknown, depth = 0): unknown {
   if (depth > 5) return data;
   if (typeof data === 'string') return scrubStringPII(data);
@@ -93,27 +71,12 @@ function scrubStringPIIDeep(data: unknown, depth = 0): unknown {
 
 /**
  * Scrubs PII from a Sentry event before it is sent to the server.
- * This is the single canonical implementation used by both the backend
- * `instrument.ts` and the dashboard `sentry.*.config.ts` files.
- *
- * Accepts `unknown` and uses runtime checks to avoid coupling to
- * Sentry's internal `Event` type, which varies across packages.
- *
- * Covers:
- * - `request.headers`, `request.data`, `request.json` — key-based scrub
- * - `request.cookies` — cleared entirely
- * - `request.url`, `request.query_string` — string pattern scrub
- * - `extra`, `tags`, `contexts` — key-based scrub
- * - `user.email`, `user.ip_address` — redacted
- * - `breadcrumbs[].message`, `breadcrumbs[].data` — string pattern + key scrub
- * - `exception.values[].value` — string pattern scrub (emails/tokens in error messages)
- * - `message` (top-level) — string pattern scrub
+ * Mirrors the backend's `scrubSentryEvent` — keep both in sync.
  */
 export function scrubSentryEvent<T>(event: T): T {
   if (typeof event !== 'object' || event === null) return event;
   const e = event as Record<string, unknown>;
 
-  // request
   if (e.request && typeof e.request === 'object') {
     const req = e.request as Record<string, unknown>;
     if (req.headers && typeof req.headers === 'object') {
@@ -128,29 +91,24 @@ export function scrubSentryEvent<T>(event: T): T {
     req.query_string = scrubStringPIIDeep(req.query_string);
   }
 
-  // extra
   if (e.extra && typeof e.extra === 'object') {
     e.extra = scrubPII(e.extra);
   }
 
-  // tags
   if (e.tags && typeof e.tags === 'object') {
     e.tags = scrubPII(e.tags);
   }
 
-  // contexts
   if (e.contexts && typeof e.contexts === 'object') {
     e.contexts = scrubPII(e.contexts);
   }
 
-  // user
   if (e.user && typeof e.user === 'object') {
     const user = e.user as Record<string, unknown>;
     if (user.email) user.email = '[Redacted]';
     if (user.ip_address) user.ip_address = '[Redacted]';
   }
 
-  // breadcrumbs
   if (Array.isArray(e.breadcrumbs)) {
     for (const crumb of e.breadcrumbs) {
       if (crumb && typeof crumb === 'object') {
@@ -165,7 +123,6 @@ export function scrubSentryEvent<T>(event: T): T {
     }
   }
 
-  // exception
   if (e.exception && typeof e.exception === 'object') {
     const exc = e.exception as Record<string, unknown>;
     if (Array.isArray(exc.values)) {
@@ -180,7 +137,6 @@ export function scrubSentryEvent<T>(event: T): T {
     }
   }
 
-  // top-level message
   if (typeof e.message === 'string') {
     e.message = scrubStringPII(e.message);
   }
