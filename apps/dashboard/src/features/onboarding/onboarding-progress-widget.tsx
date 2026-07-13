@@ -5,10 +5,9 @@ import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   CheckCircle2,
-  Circle,
   Monitor,
   Upload,
   ListVideo,
@@ -18,7 +17,6 @@ import {
   Loader2,
   Sparkles,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import {
   fetchOnboardingProgress,

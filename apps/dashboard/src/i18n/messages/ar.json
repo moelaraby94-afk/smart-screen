@@ -2393,7 +2393,18 @@
     "searchPlaceholder": "ابحث في مساحات العمل…",
     "active": "نشط",
     "noResults": "لا توجد مساحات عمل",
-    "moduleEnabled": "تم تفعيل {module}",
-    "moduleDisabled": "تم تعطيل {module}"
+    "title": "مفاتيح الميزات",
+    "subtitle": "تفعيل أو تعطيل المديولات لكل مساحة عمل",
+    "modules": {
+      "billing": { "label": "الفوترة", "enabled": "تم تفعيل الفوترة", "disabled": "تم تعطيل الفوترة" },
+      "api_keys": { "label": "مفاتيح API", "enabled": "تم تفعيل مفاتيح API", "disabled": "تم تعطيل مفاتيح API" },
+      "webhooks": { "label": "Webhooks", "enabled": "تم تفعيل Webhooks", "disabled": "تم تعطيل Webhooks" },
+      "analytics": { "label": "التحليلات", "enabled": "تم تفعيل التحليلات", "disabled": "تم تعطيل التحليلات" },
+      "campaigns": { "label": "الحملات", "enabled": "تم تفعيل الحملات", "disabled": "تم تعطيل الحملات" },
+      "ai": { "label": "الذكاء الاصطناعي", "enabled": "تم تفعيل الذكاء الاصطناعي", "disabled": "تم تعطيل الذكاء الاصطناعي" },
+      "emergency": { "label": "الطوارئ", "enabled": "تم تفعيل الطوارئ", "disabled": "تم تعطيل الطوارئ" },
+      "proof_of_play": { "label": "إثبات التشغيل", "enabled": "تم تفعيل إثبات التشغيل", "disabled": "تم تعطيل إثبات التشغيل" },
+      "templates": { "label": "القوالب", "enabled": "تم تفعيل القوالب", "disabled": "تم تعطيل القوالب" }
+    }
   }
 }

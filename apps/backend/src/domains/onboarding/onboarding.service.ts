@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
 const ALL_STEPS = [
@@ -11,7 +11,19 @@ const ALL_STEPS = [
 
 @Injectable()
 export class OnboardingService {
+  private readonly logger = new Logger(OnboardingService.name);
+
   constructor(private readonly prisma: PrismaService) {}
+
+  private safeParseSteps(raw: string): string[] {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.filter((s) => typeof s === 'string') : [];
+    } catch {
+      this.logger.warn(`Invalid completedSteps JSON: ${raw}`);
+      return [];
+    }
+  }
 
   async getProgress(workspaceId: string) {
     let progress = await this.prisma.onboardingProgress.findUnique({
@@ -24,7 +36,7 @@ export class OnboardingService {
       });
     }
 
-    const completedSteps: string[] = JSON.parse(progress.completedSteps);
+    const completedSteps = this.safeParseSteps(progress.completedSteps);
     const totalSteps = ALL_STEPS.length;
     const doneCount = completedSteps.length;
     const percentage = Math.round((doneCount / totalSteps) * 100);
@@ -57,7 +69,7 @@ export class OnboardingService {
       });
     }
 
-    const completed: string[] = JSON.parse(progress.completedSteps);
+    const completed = this.safeParseSteps(progress.completedSteps);
     if (!completed.includes(step)) {
       completed.push(step);
     }

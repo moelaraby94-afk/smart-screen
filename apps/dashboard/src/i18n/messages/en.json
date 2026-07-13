@@ -2393,7 +2393,18 @@
     "searchPlaceholder": "Search workspaces…",
     "active": "active",
     "noResults": "No workspaces found",
-    "moduleEnabled": "{module} enabled",
-    "moduleDisabled": "{module} disabled"
+    "title": "Feature flags",
+    "subtitle": "Enable or disable modules per workspace",
+    "modules": {
+      "billing": { "label": "Billing", "enabled": "Billing enabled", "disabled": "Billing disabled" },
+      "api_keys": { "label": "API Keys", "enabled": "API Keys enabled", "disabled": "API Keys disabled" },
+      "webhooks": { "label": "Webhooks", "enabled": "Webhooks enabled", "disabled": "Webhooks disabled" },
+      "analytics": { "label": "Analytics", "enabled": "Analytics enabled", "disabled": "Analytics disabled" },
+      "campaigns": { "label": "Campaigns", "enabled": "Campaigns enabled", "disabled": "Campaigns disabled" },
+      "ai": { "label": "AI", "enabled": "AI enabled", "disabled": "AI disabled" },
+      "emergency": { "label": "Emergency", "enabled": "Emergency enabled", "disabled": "Emergency disabled" },
+      "proof_of_play": { "label": "Proof of Play", "enabled": "Proof of Play enabled", "disabled": "Proof of Play disabled" },
+      "templates": { "label": "Templates", "enabled": "Templates enabled", "disabled": "Templates disabled" }
+    }
   }
 }

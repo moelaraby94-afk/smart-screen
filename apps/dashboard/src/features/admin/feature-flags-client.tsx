@@ -23,18 +23,6 @@ type WorkspaceFlags = {
   modules: ModuleFlag[];
 };
 
-const MODULE_LABELS: Record<string, string> = {
-  billing: 'Billing',
-  api_keys: 'API Keys',
-  webhooks: 'Webhooks',
-  analytics: 'Analytics',
-  campaigns: 'Campaigns',
-  ai: 'AI',
-  emergency: 'Emergency',
-  proof_of_play: 'Proof of Play',
-  templates: 'Templates',
-};
-
 export function FeatureFlagsClient() {
   const t = useTranslations('featureFlags');
   const { toastResponseError } = useApiErrorToast();
@@ -87,8 +75,8 @@ export function FeatureFlagsClient() {
         );
         toast.success(
           !currentEnabled
-            ? t('moduleEnabled', { module: MODULE_LABELS[module] ?? module })
-            : t('moduleDisabled', { module: MODULE_LABELS[module] ?? module }),
+            ? t(`modules.${module}.enabled`)
+            : t(`modules.${module}.disabled`),
         );
       } finally {
         setToggling(null);
@@ -105,6 +93,17 @@ export function FeatureFlagsClient() {
 
   return (
     <div className="space-y-6">
+      {/* Page header */}
+      <div className="space-y-2">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+          {t('title')}
+        </p>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+          {t('title')}
+        </h1>
+        <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
+      </div>
+
       {/* Search */}
       <div className="relative max-w-sm">
         <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={ICON_STROKE} />
@@ -153,7 +152,7 @@ export function FeatureFlagsClient() {
                     }`}
                   >
                     <span className={`font-medium ${mod.enabled ? 'text-foreground' : 'text-muted-foreground'}`}>
-                      {MODULE_LABELS[mod.module] ?? mod.module}
+                      {t(`modules.${mod.module}.label`)}
                     </span>
                     {isToggling ? (
                       <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Info } from 'lucide-react';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 
@@ -12,9 +12,21 @@ type Props = {
 
 export function InfoTooltip({ content, side = 'top', className }: Props) {
   const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDown(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
 
   return (
-    <span className={`relative inline-flex ${className ?? ''}`}>
+    <span ref={ref} className={`relative inline-flex ${className ?? ''}`}>
       <button
         type="button"
         onMouseEnter={() => setOpen(true)}
