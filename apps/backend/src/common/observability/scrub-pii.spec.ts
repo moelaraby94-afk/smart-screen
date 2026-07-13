@@ -345,4 +345,140 @@ describe('scrubSentryEvent', () => {
     expect(result.user.email).toBe('[Redacted]');
     expect(result.user.ip_address).toBe('[Redacted]');
   });
+
+  // ── Regression: PII in string values under non-PII keys ──
+
+  it('redacts emails in extra string values under non-PII keys', () => {
+    const event = {
+      extra: { description: 'Email sent to alice@test.com', requestId: 'r-1' },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.extra.description).not.toContain('alice@test.com');
+    expect(result.extra.description).toContain('[Redacted]');
+    expect(result.extra.requestId).toBe('r-1');
+  });
+
+  it('redacts tokens in extra string values under non-PII keys', () => {
+    const event = {
+      extra: { detail: 'Request used Bearer eyJhbGciOiJIUzI1NiJ9' },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.extra.detail).not.toContain('eyJhbGciOiJIUzI1NiJ9');
+    expect(result.extra.detail).toContain('[Redacted]');
+  });
+
+  it('redacts emails in contexts string values under non-PII keys', () => {
+    const event = {
+      contexts: {
+        runtime: { note: 'User admin@corp.com triggered alert' },
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    const ctx = result.contexts as Record<string, unknown>;
+    const runtime = ctx.runtime as Record<string, unknown>;
+    expect(runtime.note).not.toContain('admin@corp.com');
+    expect(runtime.note).toContain('[Redacted]');
+  });
+
+  it('redacts emails in breadcrumbs data string values under non-PII keys', () => {
+    const event = {
+      breadcrumbs: [
+        {
+          message: 'ok',
+          data: { path: '/users', detail: 'Created alice@test.com' },
+        },
+      ],
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.breadcrumbs[0].data.detail).not.toContain('alice@test.com');
+    expect(result.breadcrumbs[0].data.detail).toContain('[Redacted]');
+    expect(result.breadcrumbs[0].data.path).toBe('/users');
+  });
+
+  it('redacts emails in request.data string values under non-PII keys', () => {
+    const event = {
+      request: {
+        data: { feedback: 'My email is bob@test.com', userId: 'u-1' },
+      },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.data.feedback).not.toContain('bob@test.com');
+    expect(result.request.data.feedback).toContain('[Redacted]');
+    expect(result.request.data.userId).toBe('u-1');
+  });
+
+  it('redacts emails in request.json string values under non-PII keys', () => {
+    const event = {
+      request: { json: { note: 'Contact: carol@test.com', ok: true } },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.request.json.note).not.toContain('carol@test.com');
+    expect(result.request.json.note).toContain('[Redacted]');
+    expect(result.request.json.ok).toBe(true);
+  });
+
+  it('still redacts PII by key name in extra (no regression)', () => {
+    const event = {
+      extra: { email: 'leaked@test.com', description: 'ok' },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.extra.email).toBe('[Redacted]');
+    expect(result.extra.description).toBe('ok');
+  });
+
+  it('still redacts PII by key name in contexts (no regression)', () => {
+    const event = {
+      contexts: { auth: { token: 'secret-xyz', user: 'admin' } },
+    };
+
+    const result = scrubSentryEvent(event);
+    const ctx = result.contexts as Record<string, unknown>;
+    const auth = ctx.auth as Record<string, unknown>;
+    expect(auth.token).toBe('[Redacted]');
+    expect(auth.user).toBe('admin');
+  });
+
+  it('still redacts PII by key name in breadcrumbs data (no regression)', () => {
+    const event = {
+      breadcrumbs: [
+        { message: 'ok', data: { email: 'bob@bob.com', path: '/home' } },
+      ],
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.breadcrumbs[0].data.email).toBe('[Redacted]');
+    expect(result.breadcrumbs[0].data.path).toBe('/home');
+  });
+
+  it('preserves non-PII string values in extra (no false positives)', () => {
+    const event = {
+      extra: { route: '/api/users', method: 'GET', count: 42 },
+    };
+
+    const result = scrubSentryEvent(event);
+    expect(result.extra).toEqual({
+      route: '/api/users',
+      method: 'GET',
+      count: 42,
+    });
+  });
+
+  it('preserves non-PII string values in contexts (no false positives)', () => {
+    const event = {
+      contexts: { device: { model: 'iPhone 12', os: 'iOS 17' } },
+    };
+
+    const result = scrubSentryEvent(event);
+    const ctx = result.contexts as Record<string, unknown>;
+    const device = ctx.device as Record<string, unknown>;
+    expect(device.model).toBe('iPhone 12');
+    expect(device.os).toBe('iOS 17');
+  });
 });

@@ -83,8 +83,8 @@ export function scrubSentryEvent<T>(event: T): T {
       req.headers = scrubPII(req.headers);
     }
     req.cookies = undefined;
-    req.data = scrubPII(req.data);
-    req.json = scrubPII(req.json);
+    req.data = scrubStringPIIDeep(req.data);
+    req.json = scrubStringPIIDeep(req.json);
     if (typeof req.url === 'string') {
       req.url = scrubStringPII(req.url);
     }
@@ -92,7 +92,7 @@ export function scrubSentryEvent<T>(event: T): T {
   }
 
   if (e.extra && typeof e.extra === 'object') {
-    e.extra = scrubPII(e.extra);
+    e.extra = scrubStringPIIDeep(e.extra);
   }
 
   if (e.tags && typeof e.tags === 'object') {
@@ -100,7 +100,7 @@ export function scrubSentryEvent<T>(event: T): T {
   }
 
   if (e.contexts && typeof e.contexts === 'object') {
-    e.contexts = scrubPII(e.contexts);
+    e.contexts = scrubStringPIIDeep(e.contexts);
   }
 
   if (e.user && typeof e.user === 'object') {
@@ -117,7 +117,7 @@ export function scrubSentryEvent<T>(event: T): T {
           c.message = scrubStringPII(c.message);
         }
         if (c.data && typeof c.data === 'object') {
-          c.data = scrubPII(c.data);
+          c.data = scrubStringPIIDeep(c.data);
         }
       }
     }

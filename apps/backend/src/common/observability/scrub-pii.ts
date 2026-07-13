@@ -103,9 +103,11 @@ function scrubStringPIIDeep(data: unknown, depth = 0): unknown {
  * - `request.headers`, `request.data`, `request.json` — key-based scrub
  * - `request.cookies` — cleared entirely
  * - `request.url`, `request.query_string` — string pattern scrub
- * - `extra`, `tags`, `contexts` — key-based scrub
+ * - `extra`, `contexts` — key-based + string-pattern scrub
+ * - `tags` — key-based scrub
  * - `user.email`, `user.ip_address` — redacted
- * - `breadcrumbs[].message`, `breadcrumbs[].data` — string pattern + key scrub
+ * - `breadcrumbs[].message` — string pattern scrub
+ * - `breadcrumbs[].data` — key-based + string-pattern scrub
  * - `exception.values[].value` — string pattern scrub (emails/tokens in error messages)
  * - `message` (top-level) — string pattern scrub
  */
@@ -120,8 +122,8 @@ export function scrubSentryEvent<T>(event: T): T {
       req.headers = scrubPII(req.headers);
     }
     req.cookies = undefined;
-    req.data = scrubPII(req.data);
-    req.json = scrubPII(req.json);
+    req.data = scrubStringPIIDeep(req.data);
+    req.json = scrubStringPIIDeep(req.json);
     if (typeof req.url === 'string') {
       req.url = scrubStringPII(req.url);
     }
@@ -130,7 +132,7 @@ export function scrubSentryEvent<T>(event: T): T {
 
   // extra
   if (e.extra && typeof e.extra === 'object') {
-    e.extra = scrubPII(e.extra);
+    e.extra = scrubStringPIIDeep(e.extra);
   }
 
   // tags
@@ -140,7 +142,7 @@ export function scrubSentryEvent<T>(event: T): T {
 
   // contexts
   if (e.contexts && typeof e.contexts === 'object') {
-    e.contexts = scrubPII(e.contexts);
+    e.contexts = scrubStringPIIDeep(e.contexts);
   }
 
   // user
@@ -159,7 +161,7 @@ export function scrubSentryEvent<T>(event: T): T {
           c.message = scrubStringPII(c.message);
         }
         if (c.data && typeof c.data === 'object') {
-          c.data = scrubPII(c.data);
+          c.data = scrubStringPIIDeep(c.data);
         }
       }
     }
