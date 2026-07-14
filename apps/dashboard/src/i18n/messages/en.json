@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "Cloud Signage",
+    "title": "Smart Screen",
     "subtitle": "Operate your global signage network with precision"
   },
   "nav": {
@@ -46,7 +46,7 @@
     "accountSection": "Account",
     "profileSettings": "Profile",
     "workspaceSettings": "Workspace",
-    "brandName": "Cloud Signage",
+    "brandName": "Smart Screen",
     "roleSuperAdmin": "Super Admin",
     "roleClientImpersonated": "Client (impersonated)",
     "roleClientAdmin": "Client Admin",
@@ -76,7 +76,7 @@
   },
   "shell": {
     "kicker": {
-      "platform": "Cloud Signage",
+      "platform": "Smart Screen",
       "admin": "Administration"
     },
     "backToCustomers": "Customers",
@@ -264,13 +264,13 @@
     "description": "Build dynamic content pipelines, deploy instantly to your fleet, and monitor every screen in real time."
   },
   "auth": {
-    "title": "Sign in to Cloud Signage",
+    "title": "Sign in to Smart Screen",
     "description": "Use your enterprise credentials to continue.",
     "registerTitle": "Don't have an account?",
     "register": "Sign up",
     "registerDescription": "Registration will be available in a future release. For now, sign in with an existing workspace.",
     "backToLogin": "Back to sign in",
-    "brand": "Cloud Signage",
+    "brand": "Smart Screen",
     "loading": "Loading…",
     "tagline": "Vibrant Crystal · Enterprise control"
   },
@@ -760,7 +760,7 @@
   "helpPage": {
     "kicker": "Support",
     "title": "Help & support",
-    "description": "Guides, FAQs, and contact options to help you get the most out of Cloud Signage.",
+    "description": "Guides, FAQs, and contact options to help you get the most out of Smart Screen.",
     "guidesTitle": "Quick guides",
     "faqTitle": "Frequently asked questions",
     "contactTitle": "Still need help?",
@@ -797,7 +797,7 @@
   "apiDocs": {
     "kicker": "Developers",
     "title": "API documentation",
-    "description": "REST API reference for integrating with Cloud Signage. All endpoints require JWT authentication unless noted.",
+    "description": "REST API reference for integrating with Smart Screen. All endpoints require JWT authentication unless noted.",
     "baseUrlLabel": "Base URL",
     "baseUrlValue": "https://api.cloudscreen.app/v1",
     "authExampleTitle": "Authentication example",
@@ -880,7 +880,7 @@
       "title": "Webhook Endpoints",
       "create": "Add Endpoint",
       "createTitle": "Add Webhook Endpoint",
-      "createDesc": "Register a URL to receive real-time event notifications from Cloud Signage.",
+      "createDesc": "Register a URL to receive real-time event notifications from Smart Screen.",
       "urlLabel": "Endpoint URL",
       "eventsLabel": "Events to subscribe",
       "empty": "No webhook endpoints yet. Add one to receive event notifications.",
@@ -1644,7 +1644,7 @@
     "missingTokenOrEmail": "Missing token or email.",
     "resetFailed": "Reset failed — link may be expired.",
     "passwordUpdated": "Password updated. You can sign in.",
-    "brand": "Cloud Signage",
+    "brand": "Smart Screen",
     "setNewPasswordTitle": "Set new password",
     "forgotPasswordTitle": "Forgot password",
     "setNewPasswordDescription": "Choose a new password for your account.",
@@ -1664,8 +1664,8 @@
     "resendCode": "Resend code",
     "resending": "Sending…",
     "invalidCode": "Invalid or expired code.",
-    "welcome": "Welcome to Cloud Signage.",
-    "brand": "Cloud Signage",
+    "welcome": "Welcome to Smart Screen.",
+    "brand": "Smart Screen",
     "createWorkspaceTitle": "Create your workspace",
     "verifyEmailTitle": "Verify your email",
     "formDescription": "Professional signage onboarding — business details and secure OTP.",
@@ -1691,7 +1691,7 @@
     "termsLink": "Terms of service",
     "privacyLink": "Privacy policy",
     "privacyTitle": "Privacy policy",
-    "privacyLead": "This page describes how Cloud Signage handles data in the product. Replace with counsel-approved text before production launch.",
+    "privacyLead": "This page describes how Smart Screen handles data in the product. Replace with counsel-approved text before production launch.",
     "privacyP1": "We process account and workspace data to operate the service, including authentication, billing when enabled, and content delivery to your screens.",
     "privacyP2": "You can export or delete workspace content through the dashboard where supported; contact support for account-level requests.",
     "privacyP3": "Analytics and error reporting may use third-party subprocessors when you enable optional monitoring (for example Sentry) via environment configuration.",
@@ -1733,7 +1733,7 @@
     "confirmRemove": "Are you sure you want to remove this member from the workspace?"
   },
   "inviteAccept": {
-    "brand": "Cloud Signage",
+    "brand": "Smart Screen",
     "pageTitle": "Accept invitation",
     "loading": "Loading…",
     "redirecting": "Redirecting to login…",
@@ -1831,7 +1831,7 @@
   },
   "workspaceWelcome": {
     "sessionRestored": "Session restored — finish creating your workspace.",
-    "title": "Welcome to Cloud Signage",
+    "title": "Welcome to Smart Screen",
     "description": "Create your first workspace to unlock media, screens, playlists, and scheduling. You will add playlists and screens yourself — nothing is pre-filled.",
     "createFirstWorkspace": "Create your first workspace",
     "createWithDemo": "Start with demo content",

@@ -11,7 +11,7 @@ import { NotificationProvider } from '@/features/notifications/notification-prov
 import { routing } from '@/i18n/routing';
 
 export const metadata: Metadata = {
-  title: 'Cloud Signage Dashboard',
+  title: 'Smart Screen Dashboard',
   description: 'Premium, enterprise control center for digital signage',
 };
 export const dynamic = 'force-dynamic';

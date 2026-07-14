@@ -15,7 +15,7 @@ export type BrandingState = {
 };
 
 const defaultBranding: BrandingState = {
-  platformName: 'Cloud Signage',
+  platformName: 'Smart Screen',
   brandingEpoch: 0,
   logoUrlEn: '',
   logoUrlAr: '',

@@ -15,7 +15,7 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
-  title: 'Cloud Signage',
+  title: 'Smart Screen',
   description: 'AI-powered cloud signage dashboard',
 };
 
