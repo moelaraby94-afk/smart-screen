@@ -555,11 +555,11 @@ W0 (تأكيد)
 | T1.7 Analytics: وقت نسبي محلّي (B7) | ✅ | Intl.RelativeTimeFormat · `5d5fefb` |
 | B6 expiry الميت في Content | ✅ | حُلّ بدمج Content→Media |
 | T2.1–T2.3 ربط المبني | ⬜ | GlobalSearch / OverviewMetrics / Skeleton |
-| T3.1 دمج Displays → Screens | ⬜ | يحتاج نقل عرض الجدول |
-| T3.4 دمج Campaigns → Schedules | ⬜ | يحتاج نقل عرض Timeline |
-| T3.5 دمج Proof of Play → Analytics | ⬜ | يحتاج نقل بحث + CSV + جدول |
-| T3.6 دمج Billing + T3.7 تبويب Settings | ⬜ | يحلّ A1/A2/B4 + W10 |
-| T3.8 إعادة هيكلة أقسام السايدبار | ⬜ | بعد اكتمال الدمج |
+| T3.1 دمج Displays → Screens | ✅ | redirect-only + حذف client · `a9520d6` |
+| T3.4 دمج Campaigns → Schedules | ✅ | نقل Timeline + view toggle + redirect + حذف client · `33c0c62` |
+| T3.5 دمج Proof of Play → Analytics | ✅ | نقل بحث+CSV+جدول + redirect + حذف client · `f9ca57a` |
+| T3.6 دمج Billing + T3.7 تبويب Settings | ✅ (T-D+T-E) | نقل plan selection + redirect + حذف client · `1feb132` + tabs `e947786` |
+| T3.8 إعادة هيكلة أقسام السايدبار | ✅ | 7 أقسام (Overview/Fleet/Content/Playback/Insights/Management/Resources) · `94752ee` |
 | W9 تشريح صفحة + سطح تحكّم | ⬜ | ListShell / palette / saved views |
 | W4/W6 طبقة عرضية + a11y | ⬜ | skeleton/empty/sort/export/confirm |
 | T5 موديل (Quick Publish) · W7 فيتشرز | ⬜ | لاحق |

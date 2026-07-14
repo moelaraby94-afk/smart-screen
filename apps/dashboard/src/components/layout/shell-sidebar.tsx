@@ -113,8 +113,6 @@ function hrefFor(
     | 'team'
     | 'screens'
     | 'studio'
-    | 'displayGroups'
-    | 'content'
     | 'templates'
     | 'ai'
     | 'emergency',
@@ -139,8 +137,6 @@ function hrefFor(
   if (hrefKey === 'team') return `/${locale}/team`;
   if (hrefKey === 'screens') return `/${locale}/screens`;
   if (hrefKey === 'studio') return `/${locale}/studio`;
-  if (hrefKey === 'displayGroups') return `/${locale}/displays/groups`;
-  if (hrefKey === 'content') return `/${locale}/content`;
   if (hrefKey === 'templates') return `/${locale}/templates`;
   if (hrefKey === 'ai') return `/${locale}/ai`;
   if (hrefKey === 'emergency') return `/${locale}/emergency`;

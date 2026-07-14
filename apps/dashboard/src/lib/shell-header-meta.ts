@@ -117,18 +117,8 @@ export function useShellHeaderMeta(pathname: string | null): ShellHeaderMeta {
       pageTitle = t('pageTitles.overview');
     } else if (rest[0] === 'screens') {
       pageTitle = t('pageTitles.screens');
-    } else if (rest[0] === 'displays' && rest[1] === 'groups') {
-      pageTitle = t('pageTitles.displayGroups');
-    } else if (rest[0] === 'displays') {
-      pageTitle = t('pageTitles.displays');
-    } else if (rest[0] === 'content') {
-      pageTitle = t('pageTitles.content');
     } else if (rest[0] === 'templates') {
       pageTitle = t('pageTitles.templates');
-    } else if (rest[0] === 'proof-of-play') {
-      pageTitle = t('pageTitles.proofOfPlay');
-    } else if (rest[0] === 'campaigns') {
-      pageTitle = t('pageTitles.campaigns');
     } else if (rest[0] === 'ai') {
       pageTitle = t('pageTitles.ai');
     } else if (rest[0] === 'emergency') {
@@ -153,8 +143,6 @@ export function useShellHeaderMeta(pathname: string | null): ShellHeaderMeta {
       pageTitle = t('pageTitles.schedules');
     } else if (rest[0] === 'team') {
       pageTitle = t('pageTitles.team');
-    } else if (rest[0] === 'billing') {
-      pageTitle = t('pageTitles.billing');
     } else if (rest[0] === 'settings' && rest[1] === 'profile') {
       pageTitle = t('pageTitles.settingsProfile');
     } else if (rest[0] === 'settings' && rest[1] === 'billing') {
@@ -194,12 +182,7 @@ export function useShellHeaderMeta(pathname: string | null): ShellHeaderMeta {
       'playlists',
       'schedules',
       'team',
-      'billing',
-      'displays',
-      'content',
       'templates',
-      'proof-of-play',
-      'campaigns',
       'ai',
       'emergency',
       'analytics',
