@@ -563,6 +563,8 @@ W0 (تأكيد)
 | W9 تشريح صفحة + سطح تحكّم | ✅ (جزئي) | Command Palette (quick-nav + command matching) · `66c8399` |
 | W4/W6 طبقة عرضية + a11y | ✅ | sort في Media/Playlists/Schedules + CSV في Screens + empty CTA + aria-busy · `66c8399` |
 | T5 موديل (Quick Publish) · W7 فيتشرز | ✅ (T5.1) | Quick Publish dialog from media card · `5414931` |
+| W8.2 تدقيق نصوص | ✅ | plural forms + dead key cleanup · `a325b99` |
+| W8.3 design tokens + density | ✅ | tokens doc + density toggle · `04078af` |
 
 ---
 
