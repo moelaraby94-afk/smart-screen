@@ -10,6 +10,7 @@ import { UserMenu } from '@/components/user-menu';
 import { WorkspaceSwitcher } from '@/features/workspace/workspace-switcher';
 import { NotificationBell } from '@/features/notifications/notification-provider';
 import { GlobalSearch } from '@/features/search/global-search';
+import { DensityToggle } from '@/components/density-toggle';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
 
@@ -113,6 +114,7 @@ export function ShellHeader({
   const desktopActions = (
     <div className="hidden shrink-0 flex-nowrap items-center justify-end gap-2.5 lg:flex">
       <GlobalSearch />
+      <DensityToggle />
       {showWorkspaceSwitcher ? <WorkspaceSwitcher /> : null}
       <NotificationBell />
       <UserMenu rtl={rtl} variant={sovereign ? 'sovereign' : 'workspace'} />
@@ -122,6 +124,7 @@ export function ShellHeader({
   const mobileActions = (
     <div className="flex shrink-0 items-center gap-1.5 lg:hidden">
       <GlobalSearch />
+      <DensityToggle />
       <NotificationBell />
       <UserMenu rtl={rtl} variant={sovereign ? 'sovereign' : 'workspace'} />
     </div>

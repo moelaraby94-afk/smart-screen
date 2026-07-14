@@ -2079,6 +2079,10 @@
     "storage": "Storage",
     "nearLimit": "Near limit"
   },
+  "density": {
+    "switchToCompact": "Switch to compact density",
+    "switchToComfortable": "Switch to comfortable density"
+  },
   "globalSearch": {
     "placeholder": "Search screens, playlists, media…",
     "openSearch": "Open search",

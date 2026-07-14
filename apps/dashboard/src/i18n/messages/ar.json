@@ -2079,6 +2079,10 @@
     "storage": "التخزين",
     "nearLimit": "قارب الحد"
   },
+  "density": {
+    "switchToCompact": "تبديل إلى الكثافة المضغوطة",
+    "switchToComfortable": "تبديل إلى الكثافة المريحة"
+  },
   "globalSearch": {
     "placeholder": "ابحث في الشاشات والقوائم والوسائط…",
     "openSearch": "فتح البحث",
