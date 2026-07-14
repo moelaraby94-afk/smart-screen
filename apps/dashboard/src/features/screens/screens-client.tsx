@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Monitor, Search, Trash2, CheckSquare, Radio, Download, LayoutGrid, Table as TableIcon, RefreshCw, MoreHorizontal, BadgeAlert, PenLine, Zap } from 'lucide-react';
+import { Monitor, Search, Trash2, CheckSquare, Radio, Download, LayoutGrid, Table as TableIcon, RefreshCw, MoreHorizontal, BadgeAlert, PenLine, Zap, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScreenActions } from '@/features/screens/hooks/use-screen-actions';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { CardGridSkeleton } from '@/components/ui/skeleton-patterns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { UsageIndicator } from '@/components/usage-indicator';
 import {
   fetchPlaylistOptions,
@@ -133,6 +143,7 @@ export function ScreensClient({ locale }: Props) {
   const [modalScreen, setModalScreen] = useState<ScreenRow | null>(null);
   const [isPairingMode, setIsPairingMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearch = useDeferredValue(searchQuery);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
@@ -140,9 +151,10 @@ export function ScreensClient({ locale }: Props) {
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bulkPlaylistId, setBulkPlaylistId] = useState<string>('');
   const [bulkSyncBusy, setBulkSyncBusy] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'single' | 'bulk'; screenId?: string; screenName?: string } | null>(null);
 
   const filteredScreens = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+    const q = deferredSearch.trim().toLowerCase();
     const filtered = screens.filter((s) => {
       if (statusFilter !== 'all' && s.status !== statusFilter) return false;
       if (q) {
@@ -170,7 +182,7 @@ export function ScreensClient({ locale }: Props) {
       }
     });
     return sorted;
-  }, [screens, searchQuery, statusFilter, sortBy]);
+  }, [screens, deferredSearch, statusFilter, sortBy]);
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -277,7 +289,7 @@ export function ScreensClient({ locale }: Props) {
 
   const exportCsv = useCallback(() => {
     if (!filteredScreens.length) return;
-    const headers = ['Name', 'Serial', 'Status', 'Location', 'Playlist', 'Last Seen'];
+    const headers = [t('colName'), t('colSerial'), t('colStatus'), t('colLocation'), t('colPlaylist'), t('colLastSeen')];
     const rows = filteredScreens.map((s) => [
       s.name,
       s.serialNumber,
@@ -460,7 +472,7 @@ export function ScreensClient({ locale }: Props) {
             variant="outline"
             className="rounded-xl text-sm hover:text-destructive"
             disabled={bulkBusy}
-            onClick={() => void bulkDelete()}
+            onClick={() => setDeleteTarget({ type: 'bulk' })}
           >
             <Trash2 className="me-2 h-4 w-4" />
             {t('bulkDelete')}
@@ -585,7 +597,7 @@ export function ScreensClient({ locale }: Props) {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
-                          onClick={() => void onDelete(screen.id)}
+                          onClick={() => setDeleteTarget({ type: 'single', screenId: screen.id, screenName: screen.name })}
                         >
                           <Trash2 className="me-2 h-4 w-4" />
                           {t('deleteScreen')}
@@ -609,7 +621,10 @@ export function ScreensClient({ locale }: Props) {
               index={i}
               onCardClick={openQuick}
               onEdit={(s) => openQuick(s)}
-              onDelete={(id) => void onDelete(id)}
+              onDelete={(id) => {
+                const s = screens.find((sc) => sc.id === id);
+                setDeleteTarget({ type: 'single', screenId: id, screenName: s?.name });
+              }}
               onRemote={(id, cmd) => void sendRemoteCommand(id, cmd)}
               playlists={playlists}
               canAssignPlayback={canAssignPlayback}
@@ -635,6 +650,42 @@ export function ScreensClient({ locale }: Props) {
         pairing={pairing}
         isPairingMode={isPairingMode}
       />
+
+      <AlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              {deleteTarget?.type === 'bulk'
+                ? t('bulkDeleteConfirmTitle')
+                : t('deleteConfirmTitle')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget?.type === 'bulk'
+                ? t('bulkDeleteConfirm', { count: selectedIds.size })
+                : t('deleteConfirm', { name: deleteTarget?.screenName ?? '' })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('deleteNo')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (deleteTarget?.type === 'bulk') {
+                  await bulkDelete();
+                } else if (deleteTarget?.screenId) {
+                  await onDelete(deleteTarget.screenId);
+                }
+                setDeleteTarget(null);
+              }}
+            >
+              {t('deleteYes')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

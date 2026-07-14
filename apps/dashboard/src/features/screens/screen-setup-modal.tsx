@@ -66,7 +66,7 @@ type ScheduleOpt = {
   endDate: string | null;
 };
 
-type TabKey = 'pairing' | 'content' | 'override' | 'ticker' | 'settings';
+type TabKey = 'pairing' | 'content' | 'override' | 'schedule' | 'ticker' | 'settings';
 
 type PairingProps = {
   code: string;
@@ -96,6 +96,7 @@ const TABS: { key: TabKey; icon: typeof ListMusic }[] = [
   { key: 'pairing', icon: Radio },
   { key: 'content', icon: ListMusic },
   { key: 'override', icon: Zap },
+  { key: 'schedule', icon: CalendarClock },
   { key: 'ticker', icon: Megaphone },
   { key: 'settings', icon: MonitorSmartphone },
 ];
@@ -107,6 +108,15 @@ function formatDateTime(iso: string | null, locale: string): string {
   } catch {
     return iso;
   }
+}
+
+function getWeekdayShortLabels(locale: string): string[] {
+  const labels: string[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(2024, 0, 7 + i);
+    labels.push(new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(d));
+  }
+  return labels;
 }
 
 export function ScreenSetupModal({
@@ -796,6 +806,12 @@ export function ScreenSetupModal({
               )}
               </div>
 
+            </div>
+          )}
+
+          {/* Schedule tab */}
+          {activeTab === 'schedule' && (
+            <div className="space-y-4">
               {/* Schedule management */}
               <div className="space-y-3 rounded-xl border border-border p-4">
                 <Label className="flex items-center gap-2 text-sm font-semibold">
@@ -813,12 +829,12 @@ export function ScreenSetupModal({
                           <span className="block truncate text-[11px] text-muted-foreground">
                             {s.recurrence === 'MONTHLY'
                               ? `${t('recurrenceMONTHLY')} · ${s.daysOfMonth.map((d) => d).join(', ')}`
-                              : `${t('recurrenceWEEKLY')} · ${s.daysOfWeek.map((d) => ['Su','Mo','Tu','We','Th','Fr','Sa'][d] ?? '').join(' ')}`}
+                              : `${t('recurrenceWEEKLY')} · ${s.daysOfWeek.map((d) => getWeekdayShortLabels(locale)[d] ?? '').join(' ')}`}
                             {' · '}
                             {s.startTime}–{s.endTime}
                             {(s.startDate || s.endDate) && (
                               <span className="ms-1 text-[10px]">
-                                ({s.startDate ? new Date(s.startDate).toLocaleDateString() : '…'} → {s.endDate ? new Date(s.endDate).toLocaleDateString() : '…'})
+                                ({s.startDate ? new Date(s.startDate).toLocaleDateString(locale) : '…'} → {s.endDate ? new Date(s.endDate).toLocaleDateString(locale) : '…'})
                               </span>
                             )}
                           </span>
@@ -869,7 +885,7 @@ export function ScreenSetupModal({
 
                   {newSchedRecurrence === 'WEEKLY' && (
                     <div className="flex flex-wrap gap-1.5">
-                      {['Su','Mo','Tu','We','Th','Fr','Sa'].map((day, i) => (
+                      {getWeekdayShortLabels(locale).map((day, i) => (
                         <button
                           key={i}
                           type="button"

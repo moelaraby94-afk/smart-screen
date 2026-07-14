@@ -560,7 +560,7 @@
     "empty": "No customer accounts yet."
   },
   "screensClient": {
-    "fleet": "Fleet",
+    "fleet": "Screens",
     "title": "Screen management",
     "description": "Assign content, override playlists, and monitor your screens in real time. Tap a card for instant edits.",
     "screensCount": "screens",
@@ -569,7 +569,7 @@
     "pairScreen": "Pair screen",
     "pairScreenPrimary": "Pair a device",
     "pairingHint": "Enter the 6-digit code displayed on your player device to link it to this workspace.",
-    "loading": "Loading fleet…",
+    "loading": "Loading screens…",
     "selectWorkspace": "Select a workspace first, then open Screens.",
     "emptyTitle": "No screens paired",
     "emptyDescription": "Pair a player device to your workspace. It will appear here once connected.",
@@ -618,8 +618,8 @@
     "bulkSyncOk": "Sync signal sent to {count} screens.",
     "bulkSyncPartial": "{failed} screen(s) could not be synced.",
     "fleetStatus": {
-      "online": "Live",
-      "stale": "Away",
+      "online": "Online",
+      "stale": "Idle",
       "offline": "Offline",
       "maintenance": "Maintenance",
       "lastSeen": "Last {relative}"
@@ -649,6 +649,12 @@
     "bulkAssignPartial": "{failed} screen(s) could not be updated.",
     "screenSettings": "Screen settings",
     "deleteScreen": "Delete screen",
+    "deleteConfirmTitle": "Delete screen?",
+    "deleteConfirm": "Are you sure you want to delete \"{name}\"? This will permanently remove the screen and stop playback on the device.",
+    "deleteYes": "Yes, delete",
+    "deleteNo": "Cancel",
+    "bulkDeleteConfirmTitle": "Delete selected screens?",
+    "bulkDeleteConfirm": "Are you sure you want to delete {count} screens? This will permanently remove them and stop playback on all affected devices.",
     "editDesign": "Edit design",
     "powerOff": "Power off",
     "identify": "Identify screen",
@@ -1991,6 +1997,7 @@
     "tab_pairing": "Pairing",
     "tab_content": "Content",
     "tab_override": "Override",
+    "tab_schedule": "Schedule",
     "tab_ticker": "Ticker",
     "tab_settings": "Settings",
     "currentStatus": "Current status",
@@ -2398,6 +2405,7 @@
   },
   "screenAnalytics": {
     "title": "Screen Analytics",
+    "total": "Total",
     "online": "Online",
     "offline": "Offline",
     "maintenance": "Maintenance",

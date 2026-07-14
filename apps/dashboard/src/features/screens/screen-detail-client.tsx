@@ -6,7 +6,6 @@ import type { Route } from 'next';
 import { useTranslations, useLocale } from 'next-intl';
 import { toast } from 'sonner';
 import {
-  ArrowLeft,
   MapPin,
   Monitor,
   RefreshCw,
@@ -18,6 +17,7 @@ import {
   Megaphone,
   ListMusic,
   CalendarClock,
+  ChevronRight,
 } from 'lucide-react';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import {
@@ -39,7 +39,6 @@ import { useScreenActivePreview } from '@/features/screens/use-screen-active-pre
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
 
 type Props = {
   screenId: string;
@@ -213,20 +212,20 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
+      <nav className="flex items-center gap-2 text-sm">
         <Link
           href={`/${locale}/screens` as Route}
-          className={cn(
-            'flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card transition-colors hover:bg-muted',
-            isAr && 'rotate-180',
-          )}
+          className="text-muted-foreground transition-colors hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" />
+          {t('fleet')}
         </Link>
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">{screen.name}</h1>
-          <p className="font-mono text-xs text-muted-foreground">{screen.serialNumber}</p>
-        </div>
+        <ChevronRight className={`h-4 w-4 text-muted-foreground/50 ${isAr ? 'rotate-180' : ''}`} />
+        <span className="font-medium text-foreground">{screen.name}</span>
+      </nav>
+
+      <div className="flex items-center gap-3">
+        <h1 className="text-xl font-bold tracking-tight">{screen.name}</h1>
+        <span className="font-mono text-xs text-muted-foreground">{screen.serialNumber}</span>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
@@ -410,7 +409,12 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
               } />
               <InfoRow icon={MapPin} label={tDetail('locationLabel')} value={screen.location || '—'} />
               <InfoRow icon={Clock} label={tDetail('lastSeen')} value={lastSeen} />
-              <InfoRow icon={Activity} label={tDetail('status')} value={reach} />
+              <InfoRow icon={Activity} label={tDetail('status')} value={
+                reach === 'online' ? t('fleetStatus.online')
+                  : reach === 'stale' ? t('fleetStatus.stale')
+                  : reach === 'maintenance' ? t('fleetStatus.maintenance')
+                  : t('fleetStatus.offline')
+              } />
               <InfoRow icon={Film} label={tDetail('activePlaylist')} value={screen.activePlaylist?.name ?? '—'} />
               <InfoRow icon={CalendarClock} label={tDetail('orientation')} value={screen.orientation ?? 'AUTO'} />
               {screen.overridePlaylistId && (

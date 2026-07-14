@@ -1,26 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Activity, Wifi, WifiOff, Wrench, MonitorPlay, Clock } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { Activity, Wifi, WifiOff, Wrench, MonitorPlay, Clock, Film } from 'lucide-react';
+import { useTranslations, useLocale } from 'next-intl';
 import { fetchScreenAnalytics, type ScreenAnalytics } from '@/features/screens/api/screens-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
-
-function formatRelative(iso: string | null): string {
-  if (!iso) return '—';
-  const diff = Date.now() - new Date(iso).getTime();
-  const sec = Math.floor(diff / 1000);
-  if (sec < 60) return `${sec}s ago`;
-  const min = Math.floor(sec / 60);
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const days = Math.floor(hr / 24);
-  return `${days}d ago`;
-}
+import { formatLastSeenRelative } from '@/features/screens/screen-fleet-status';
 
 export function ScreenAnalyticsPanel() {
   const t = useTranslations('screenAnalytics');
+  const locale = useLocale();
   const { workspaceId, workspaceDataEpoch } = useWorkspace();
   const [data, setData] = useState<ScreenAnalytics | null>(null);
 
@@ -35,6 +24,13 @@ export function ScreenAnalyticsPanel() {
   if (!data || data.total === 0) return null;
 
   const stats = [
+    {
+      icon: MonitorPlay,
+      label: t('total'),
+      value: data.total,
+      color: 'text-foreground',
+      bg: 'bg-muted/50',
+    },
     {
       icon: Wifi,
       label: t('online'),
@@ -57,7 +53,7 @@ export function ScreenAnalyticsPanel() {
       bg: 'bg-amber-500/10',
     },
     {
-      icon: MonitorPlay,
+      icon: Film,
       label: t('withPlaylist'),
       value: data.withPlaylist,
       color: 'text-blue-500',
@@ -74,7 +70,7 @@ export function ScreenAnalyticsPanel() {
         </h3>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {stats.map((s) => (
           <div
             key={s.label}
@@ -108,11 +104,11 @@ export function ScreenAnalyticsPanel() {
         </div>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Clock className="h-3.5 w-3.5" />
-          <span>{t('newestSeen')}: {formatRelative(data.newestSeen)}</span>
+          <span>{t('newestSeen')}: {formatLastSeenRelative(data.newestSeen, locale) ?? '—'}</span>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Clock className="h-3.5 w-3.5" />
-          <span>{t('oldestSeen')}: {formatRelative(data.oldestSeen)}</span>
+          <span>{t('oldestSeen')}: {formatLastSeenRelative(data.oldestSeen, locale) ?? '—'}</span>
         </div>
       </div>
     </div>

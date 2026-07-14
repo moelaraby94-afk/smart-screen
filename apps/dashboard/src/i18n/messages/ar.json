@@ -560,7 +560,7 @@
     "empty": "لا توجد حسابات عملاء بعد."
   },
   "screensClient": {
-    "fleet": "الأسطول",
+    "fleet": "الشاشات",
     "title": "إدارة الشاشات",
     "description": "أسند المحتوى، تجاوز قوائم التشغيل، وراقب شاشاتك في الوقت الفعلي. اضغط البطاقة للتعديل الفوري.",
     "screensCount": "شاشة",
@@ -569,7 +569,7 @@
     "pairScreen": "ربط شاشة",
     "pairScreenPrimary": "ربط جهاز",
     "pairingHint": "أدخل الرمز المكوّن من 6 أرقام الظاهر على جهاز المشغل لربطه بمساحة العمل هذه.",
-    "loading": "جاري تحميل الأسطول…",
+    "loading": "جاري تحميل الشاشات…",
     "selectWorkspace": "اختر مساحة عمل أولاً ثم افتح الشاشات.",
     "emptyTitle": "لا توجد شاشات مربوطة",
     "emptyDescription": "اربط جهاز مشغل بمساحة عملك. ستظهر هنا بمجرد اتصاله.",
@@ -619,7 +619,7 @@
     "bulkSyncPartial": "تعذرت مزامنة {failed} شاشة.",
     "fleetStatus": {
       "online": "متصل",
-      "stale": "غائب",
+      "stale": "خامل",
       "offline": "غير متصل",
       "maintenance": "صيانة",
       "lastSeen": "آخر ظهور {relative}"
@@ -649,6 +649,12 @@
     "bulkAssignPartial": "تعذر تحديث {failed} شاشة.",
     "screenSettings": "إعدادات الشاشة",
     "deleteScreen": "حذف الشاشة",
+    "deleteConfirmTitle": "حذف الشاشة؟",
+    "deleteConfirm": "هل أنت متأكد من حذف \"{name}\"؟ سيتم حذف الشاشة نهائياً وإيقاف التشغيل على الجهاز.",
+    "deleteYes": "نعم، احذف",
+    "deleteNo": "إلغاء",
+    "bulkDeleteConfirmTitle": "حذف الشاشات المحددة؟",
+    "bulkDeleteConfirm": "هل أنت متأكد من حذف {count} شاشة؟ سيتم حذفها نهائياً وإيقاف التشغيل على جميع الأجهزة المتأثرة.",
     "editDesign": "تحرير التصميم",
     "powerOff": "إيقاف التشغيل",
     "identify": "تعريف الشاشة",
@@ -1991,6 +1997,7 @@
     "tab_pairing": "الربط",
     "tab_content": "المحتوى",
     "tab_override": "تجاوز",
+    "tab_schedule": "الجدولة",
     "tab_ticker": "الشريط",
     "tab_settings": "الإعدادات",
     "currentStatus": "الحالة الحالية",
@@ -2398,6 +2405,7 @@
   },
   "screenAnalytics": {
     "title": "تحليلات الشاشات",
+    "total": "الإجمالي",
     "online": "متصل",
     "offline": "غير متصل",
     "maintenance": "صيانة",
