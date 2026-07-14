@@ -40,14 +40,8 @@ import {
   addAssignment as apiAddAssignment,
   removeAssignment as apiRemoveAssignment,
   reorderAssignments as apiReorderAssignments,
-  fetchOverrideRules,
-  createOverrideRule as apiCreateOverrideRule,
-  deleteOverrideRule as apiDeleteOverrideRule,
-  checkOverrideConflicts as apiCheckConflicts,
   type PlaylistOption,
   type PlaylistAssignment,
-  type OverrideRule,
-  type OverrideConflict,
 } from '@/features/screens/api/screens-api';
 import {
   fetchSchedules,
@@ -135,17 +129,7 @@ export function ScreenSetupModal({
   const [dirty, setDirty] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [assignments, setAssignments] = useState<PlaylistAssignment[]>([]);
-  const [overrideRules, setOverrideRules] = useState<OverrideRule[]>([]);
   const [newAssignmentPl, setNewAssignmentPl] = useState('');
-  const [newRulePl, setNewRulePl] = useState('');
-  const [newRuleRecurrence, setNewRuleRecurrence] = useState<'ONCE' | 'DAILY' | 'WEEKLY' | 'MONTHLY'>('ONCE');
-  const [newRuleStartDate, setNewRuleStartDate] = useState('');
-  const [newRuleEndDate, setNewRuleEndDate] = useState('');
-  const [newRuleStartTime, setNewRuleStartTime] = useState('00:00');
-  const [newRuleEndTime, setNewRuleEndTime] = useState('23:59');
-  const [newRuleDays, setNewRuleDays] = useState<number[]>([]);
-  const [conflicts, setConflicts] = useState<OverrideConflict[]>([]);
-  const [showConflictWarning, setShowConflictWarning] = useState(false);
   const [pendingSettings, setPendingSettings] = useState<null | {
     name: string;
     location: string;
@@ -174,11 +158,6 @@ export function ScreenSetupModal({
     setAssignments(data);
   }, [workspaceId]);
 
-  const loadOverrideRules = useCallback(async (screenId: string) => {
-    const data = await fetchOverrideRules(workspaceId, screenId);
-    setOverrideRules(data);
-  }, [workspaceId]);
-
   useEffect(() => {
     if (!open) return;
     setActiveTab(isPairingMode ? 'pairing' : 'content');
@@ -196,9 +175,8 @@ export function ScreenSetupModal({
     void loadOptions();
     if (effectiveScreen?.id) {
       void loadAssignments(effectiveScreen.id);
-      void loadOverrideRules(effectiveScreen.id);
     }
-  }, [open, effectiveScreen, loadOptions, loadAssignments, loadOverrideRules]);
+  }, [open, effectiveScreen, loadOptions, loadAssignments]);
 
   useEffect(() => {
     if (!open || !effectiveScreen) return;
@@ -332,76 +310,6 @@ export function ScreenSetupModal({
     try {
       await apiReorderAssignments(workspaceId, effectiveScreen.id, items);
       await loadAssignments(effectiveScreen.id);
-    } finally { setBusy(false); }
-  };
-
-  const handleCheckConflicts = async () => {
-    if (!effectiveScreen || !newRulePl) return;
-    const result = await apiCheckConflicts(workspaceId, effectiveScreen.id, {
-      playlistId: newRulePl,
-      recurrence: newRuleRecurrence,
-      daysOfWeek: newRuleRecurrence === 'WEEKLY' ? newRuleDays : undefined,
-      startDate: newRuleRecurrence === 'ONCE' ? newRuleStartDate : undefined,
-      endDate: newRuleRecurrence === 'ONCE' ? newRuleEndDate : undefined,
-      startTime: newRuleStartTime,
-      endTime: newRuleEndTime,
-    });
-    setConflicts(result);
-    setShowConflictWarning(result.length > 0);
-    return result;
-  };
-
-  const handleCreateOverrideRule = async (force = false) => {
-    if (!effectiveScreen || !newRulePl) return;
-    if (!force) {
-      const detected = await handleCheckConflicts();
-      if (detected && detected.length > 0) {
-        setShowConflictWarning(true);
-        return;
-      }
-    }
-    setBusy(true);
-    try {
-      const res = await apiCreateOverrideRule(workspaceId, effectiveScreen.id, {
-        playlistId: newRulePl,
-        recurrence: newRuleRecurrence,
-        daysOfWeek: newRuleRecurrence === 'WEEKLY' ? newRuleDays : undefined,
-        startDate: newRuleRecurrence === 'ONCE' ? newRuleStartDate : undefined,
-        endDate: newRuleRecurrence === 'ONCE' ? newRuleEndDate : undefined,
-        startTime: newRuleStartTime,
-        endTime: newRuleEndTime,
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        if (body?.conflicts) {
-          setConflicts(body.conflicts);
-          setShowConflictWarning(true);
-          return;
-        }
-        toast.error(t('overrideRuleCreateFailed'));
-        return;
-      }
-      toast.success(t('overrideRuleCreated'));
-      setNewRulePl('');
-      setNewRuleStartDate('');
-      setNewRuleEndDate('');
-      setNewRuleDays([]);
-      setNewRuleStartTime('00:00');
-      setNewRuleEndTime('23:59');
-      setShowConflictWarning(false);
-      setConflicts([]);
-      await loadOverrideRules(effectiveScreen.id);
-    } finally { setBusy(false); }
-  };
-
-  const handleDeleteOverrideRule = async (ruleId: string) => {
-    if (!effectiveScreen) return;
-    setBusy(true);
-    try {
-      const res = await apiDeleteOverrideRule(workspaceId, effectiveScreen.id, ruleId);
-      if (!res.ok) { toast.error(t('overrideRuleDeleteFailed')); return; }
-      toast.success(t('overrideRuleDeleted'));
-      await loadOverrideRules(effectiveScreen.id);
     } finally { setBusy(false); }
   };
 
@@ -876,160 +784,6 @@ export function ScreenSetupModal({
                   ))}
                 </select>
                 <p className="text-xs text-muted-foreground">{t('scheduleHint')}</p>
-              </div>
-
-              {/* Advanced override rules */}
-              <div className="space-y-3 rounded-xl border border-border p-4">
-                <Label className="flex items-center gap-2 text-sm font-semibold">
-                  <CalendarClock className="h-4 w-4 text-primary" />
-                  {t('advancedOverrideRules')}
-                </Label>
-
-                {overrideRules.length > 0 ? (
-                  <div className="space-y-2">
-                    {overrideRules.map((rule) => (
-                      <div key={rule.id} className="rounded-lg border border-border bg-background px-3 py-2.5">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="truncate text-sm font-medium">{rule.playlist.name}</span>
-                          <div className="flex items-center gap-2">
-                            <span className={cn(
-                              'rounded-full px-2 py-0.5 text-[10px] font-bold',
-                              rule.enabled ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-muted text-muted-foreground',
-                            )}>
-                              {rule.enabled ? t('enabled') : t('disabled')}
-                            </span>
-                            <button
-                              type="button"
-                              disabled={busy}
-                              onClick={() => void handleDeleteOverrideRule(rule.id)}
-                              className="rounded-md p-1 text-destructive hover:bg-destructive/10"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-                          <span className="font-medium text-foreground">{rule.recurrence}</span>
-                          <span>{rule.startTime} - {rule.endTime}</span>
-                          {rule.startDate && <span>{rule.startDate.slice(0,10)} → {rule.endDate?.slice(0,10) ?? '∞'}</span>}
-                          {rule.daysOfWeek.length > 0 && (
-                            <span>{rule.daysOfWeek.map((d) => ['Su','Mo','Tu','We','Th','Fr','Sa'][d]).join(', ')}</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-center text-xs text-muted-foreground py-2">{t('noOverrideRules')}</p>
-                )}
-
-                {/* New rule form */}
-                <div className="space-y-3 border-t border-border pt-3">
-                  <select
-                    className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium outline-none focus:border-primary/40"
-                    value={newRulePl}
-                    onChange={(e) => { setNewRulePl(e.target.value); setShowConflictWarning(false); }}
-                  >
-                    <option value="">{t('selectPlaylist')}</option>
-                    {playlists.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-
-                  <div className="grid grid-cols-4 gap-2">
-                    {(['ONCE', 'DAILY', 'WEEKLY', 'MONTHLY'] as const).map((r) => (
-                      <button
-                        key={r}
-                        type="button"
-                        onClick={() => { setNewRuleRecurrence(r); setShowConflictWarning(false); }}
-                        className={cn(
-                          'rounded-xl border px-2 py-2 text-xs font-medium transition',
-                          newRuleRecurrence === r ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40',
-                        )}
-                      >
-                        {t(`recurrence${r}`)}
-                      </button>
-                    ))}
-                  </div>
-
-                  {newRuleRecurrence === 'WEEKLY' && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {['Su','Mo','Tu','We','Th','Fr','Sa'].map((day, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => {
-                            setNewRuleDays((prev) => prev.includes(i) ? prev.filter((d) => d !== i) : [...prev, i]);
-                            setShowConflictWarning(false);
-                          }}
-                          className={cn(
-                            'h-8 w-8 rounded-lg border text-xs font-medium transition',
-                            newRuleDays.includes(i) ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40',
-                          )}
-                        >
-                          {day}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {newRuleRecurrence === 'ONCE' && (
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">{t('startDate')}</Label>
-                        <Input type="date" value={newRuleStartDate} onChange={(e) => { setNewRuleStartDate(e.target.value); setShowConflictWarning(false); }} className="rounded-xl" />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">{t('endDate')}</Label>
-                        <Input type="date" value={newRuleEndDate} onChange={(e) => { setNewRuleEndDate(e.target.value); setShowConflictWarning(false); }} className="rounded-xl" />
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">{t('startTime')}</Label>
-                      <Input type="time" value={newRuleStartTime} onChange={(e) => { setNewRuleStartTime(e.target.value); setShowConflictWarning(false); }} className="rounded-xl" />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">{t('endTime')}</Label>
-                      <Input type="time" value={newRuleEndTime} onChange={(e) => { setNewRuleEndTime(e.target.value); setShowConflictWarning(false); }} className="rounded-xl" />
-                    </div>
-                  </div>
-
-                  {showConflictWarning && conflicts.length > 0 && (
-                    <div className="rounded-xl border border-amber-400/40 bg-amber-500/10 p-3">
-                      <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">{t('conflictWarning')}</p>
-                      <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
-                        {conflicts.map((c, i) => (
-                          <li key={i}>• {c.playlistName}: {t(`conflict_${c.reason}`)}</li>
-                        ))}
-                      </ul>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="mt-2 rounded-xl"
-                        disabled={busy}
-                        onClick={() => void handleCreateOverrideRule(true)}
-                      >
-                        {t('proceedAnyway')}
-                      </Button>
-                    </div>
-                  )}
-
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="cta"
-                    className="w-full rounded-xl"
-                    disabled={busy || !newRulePl || !effectiveScreen}
-                    onClick={() => void handleCreateOverrideRule(false)}
-                  >
-                    <Plus className="me-1.5 h-4 w-4" />
-                    {t('addOverrideRule')}
-                  </Button>
-                </div>
               </div>
 
             </div>

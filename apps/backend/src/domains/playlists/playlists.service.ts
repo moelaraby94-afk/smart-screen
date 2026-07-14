@@ -627,7 +627,7 @@ export class PlaylistsService {
       items: (PlaylistItem & { media: Media | null; canvas: Canvas | null })[];
     },
 
-    activeSource: 'override' | 'schedule' | 'default' = 'default',
+    activeSource: 'override' | 'schedule' | 'rotation' | 'default' = 'default',
   ) {
     return {
       workspaceId,

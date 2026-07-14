@@ -79,14 +79,16 @@ export class SchedulingService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Effective playlist id for playback: override → highest-priority matching schedule → default (activePlaylistId).
+   * Effective playlist id for playback:
+   * override → highest-priority matching schedule → playlist rotation (assignments) → default (activePlaylistId).
+   * Also auto-cleans expired overrides.
    */
   async resolveEffectivePlaylistId(
     screenId: string,
     at: Date = new Date(),
   ): Promise<{
     playlistId: string | null;
-    source: 'override' | 'schedule' | 'default';
+    source: 'override' | 'schedule' | 'rotation' | 'default';
   }> {
     const screen = await this.prisma.screen.findUnique({
       where: { id: screenId },
@@ -94,6 +96,16 @@ export class SchedulingService {
     });
     if (!screen) {
       return { playlistId: null, source: 'default' };
+    }
+
+    // Auto-clean expired override
+    if (screen.overridePlaylistId && screen.overrideExpiresAt && screen.overrideExpiresAt <= at) {
+      await this.prisma.screen.update({
+        where: { id: screenId },
+        data: { overridePlaylistId: null, overrideExpiresAt: null },
+      });
+      screen.overridePlaylistId = null;
+      screen.overrideExpiresAt = null;
     }
 
     if (
@@ -127,6 +139,28 @@ export class SchedulingService {
     if (matching.length > 0) {
       const best = matching[0];
       return { playlistId: best.playlistId, source: 'schedule' };
+    }
+
+    // Playlist rotation: if assignments exist, pick one based on time-based round-robin
+    const assignments = await this.prisma.screenPlaylistAssignment.findMany({
+      where: { screenId },
+      orderBy: { orderIndex: 'asc' },
+      include: { playlist: { select: { id: true, isPublished: true } } },
+    });
+
+    const publishedAssignments = assignments.filter((a) => a.playlist.isPublished);
+    if (publishedAssignments.length > 0) {
+      // Time-based rotation: divide the day into equal slots, pick the assignment for the current slot
+      const currentMinutes = minutes;
+      const slotSize = Math.floor((24 * 60) / publishedAssignments.length);
+      const slotIndex = Math.min(
+        Math.floor(currentMinutes / slotSize),
+        publishedAssignments.length - 1,
+      );
+      return {
+        playlistId: publishedAssignments[slotIndex].playlistId,
+        source: 'rotation',
+      };
     }
 
     return { playlistId: screen.activePlaylistId, source: 'default' };
