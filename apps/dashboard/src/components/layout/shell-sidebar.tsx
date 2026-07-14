@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import {
   Activity,
   AlertTriangle,
-  BarChart3,
   Bell,
   Building2,
   CalendarClock,
@@ -73,7 +72,6 @@ const SCHEDULING_NAV = [
 ] as const;
 
 const TOOLS_NAV = [
-  { key: 'proofOfPlay', hrefKey: 'proofOfPlay' as const, icon: BarChart3 },
   { key: 'analytics', hrefKey: 'analytics' as const, icon: Activity },
   { key: 'ai', hrefKey: 'ai' as const, icon: Sparkles },
   { key: 'emergency', hrefKey: 'emergency' as const, icon: AlertTriangle },
@@ -81,7 +79,7 @@ const TOOLS_NAV = [
 
 const CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE = new Set<
   string
->(['overview', 'screens', 'displays', 'media', 'studio', 'templates', 'team', 'proofOfPlay', 'playlists', 'campaigns', 'schedules', 'ai', 'analytics', 'emergency', 'help', 'apiDocs', 'notifications', 'auditLog']);
+>(['overview', 'screens', 'displays', 'media', 'studio', 'templates', 'team', 'playlists', 'campaigns', 'schedules', 'ai', 'analytics', 'emergency', 'help', 'apiDocs', 'notifications', 'auditLog']);
 
 function hrefFor(
   locale: string,
@@ -114,7 +112,6 @@ function hrefFor(
     | 'displayGroups'
     | 'content'
     | 'templates'
-    | 'proofOfPlay'
     | 'campaigns'
     | 'ai'
     | 'emergency',
@@ -143,7 +140,6 @@ function hrefFor(
   if (hrefKey === 'displayGroups') return `/${locale}/displays/groups`;
   if (hrefKey === 'content') return `/${locale}/content`;
   if (hrefKey === 'templates') return `/${locale}/templates`;
-  if (hrefKey === 'proofOfPlay') return `/${locale}/proof-of-play`;
   if (hrefKey === 'campaigns') return `/${locale}/campaigns`;
   if (hrefKey === 'ai') return `/${locale}/ai`;
   if (hrefKey === 'emergency') return `/${locale}/emergency`;
@@ -560,11 +556,9 @@ export function ShellSidebar({
               {TOOLS_NAV.map((item) => {
                 const href = hrefFor(navLocale, item.hrefKey);
                 const active =
-                  item.hrefKey === 'proofOfPlay'
-                    ? Boolean(pathname?.startsWith(`/${navLocale}/proof-of-play`))
-                    : item.hrefKey === 'analytics'
-                      ? Boolean(pathname?.startsWith(`/${navLocale}/analytics`))
-                      : Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
+                  item.hrefKey === 'analytics'
+                    ? Boolean(pathname?.startsWith(`/${navLocale}/analytics`))
+                    : Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
                 return (
                   <NavItem
                     key={item.key}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
 import {
@@ -14,10 +14,14 @@ import {
   BarChart3,
   MapPin,
   Film,
+  Download,
+  Filter,
 } from 'lucide-react';
-import { fetchScreenAnalytics, type ScreenAnalytics } from '@/features/screens/api/screens-api';
+import { fetchScreenAnalytics, type ScreenAnalytics, type PerScreenAnalytics } from '@/features/screens/api/screens-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 function formatUptime(sec: number): string {
   if (sec < 60) return `${Math.floor(sec)}s`;
@@ -57,6 +61,7 @@ export function AnalyticsPageClient() {
   const { workspaceId } = useWorkspace();
   const [data, setData] = useState<ScreenAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     if (!workspaceId) return;
@@ -72,6 +77,41 @@ export function AnalyticsPageClient() {
     if (!data) return 0;
     return Math.max(...data.hourlyActivity.map((h) => h.count), 1);
   }, [data]);
+
+  const filteredScreens = useMemo<PerScreenAnalytics[]>(() => {
+    if (!data) return [];
+    const q = search.trim().toLowerCase();
+    if (!q) return data.perScreen;
+    return data.perScreen.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        s.serialNumber.toLowerCase().includes(q),
+    );
+  }, [data, search]);
+
+  const exportCsv = useCallback(() => {
+    if (!filteredScreens.length) return;
+    const headers = ['Screen', 'Serial Number', 'Status', 'Active Playlist', 'Location', 'Last Seen', 'Uptime'];
+    const rows = filteredScreens.map((s) => [
+      s.name,
+      s.serialNumber,
+      s.status,
+      s.activePlaylist ?? '',
+      s.location ?? '',
+      s.lastSeenAt ? new Date(s.lastSeenAt).toLocaleString() : '',
+      s.uptimeSec > 0 ? formatUptime(s.uptimeSec) : '',
+    ]);
+    const csv = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `analytics-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [filteredScreens]);
 
   if (loading) {
     return (
@@ -229,9 +269,32 @@ export function AnalyticsPageClient() {
       {/* Per-screen table */}
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <div className="border-b border-border p-5">
-          <div className="flex items-center gap-2">
-            <MonitorPlay className="h-5 w-5 text-primary" />
-            <h3 className="text-sm font-semibold tracking-tight">{t('perScreenTitle')}</h3>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <MonitorPlay className="h-5 w-5 text-primary" />
+              <h3 className="text-sm font-semibold tracking-tight">{t('perScreenTitle')}</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Filter className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  className="h-9 w-48 ps-8 text-sm"
+                  placeholder={t('searchPlaceholder')}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl"
+                disabled={!filteredScreens.length}
+                onClick={exportCsv}
+              >
+                <Download className="me-1.5 h-4 w-4" />
+                {t('exportCsv')}
+              </Button>
+            </div>
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -247,41 +310,49 @@ export function AnalyticsPageClient() {
               </tr>
             </thead>
             <tbody>
-              {data.perScreen.map((s, i) => (
-                <motion.tr
-                  key={s.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.01 * i, duration: 0.2 }}
-                  className="border-b border-border/50 last:border-0 hover:bg-muted/20"
-                >
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-foreground">{s.name}</div>
-                    <div className="font-mono text-[10px] text-muted-foreground">{s.serialNumber}</div>
+              {filteredScreens.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                    {t('noSearchResults')}
                   </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center gap-1.5">
-                      <span className={cn('h-2 w-2 rounded-full', STATUS_COLORS[s.status])} />
-                      <span className={cn('text-xs font-semibold', STATUS_TEXT[s.status])}>
-                        {s.status}
+                </tr>
+              ) : (
+                filteredScreens.map((s, i) => (
+                  <motion.tr
+                    key={s.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.01 * i, duration: 0.2 }}
+                    className="border-b border-border/50 last:border-0 hover:bg-muted/20"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-foreground">{s.name}</div>
+                      <div className="font-mono text-[10px] text-muted-foreground">{s.serialNumber}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className={cn('h-2 w-2 rounded-full', STATUS_COLORS[s.status])} />
+                        <span className={cn('text-xs font-semibold', STATUS_TEXT[s.status])}>
+                          {s.status}
+                        </span>
                       </span>
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{s.activePlaylist ?? '—'}</td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {s.location ? (
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {s.location}
-                      </span>
-                    ) : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">{formatRelative(s.lastSeenAt, locale)}</td>
-                  <td className="px-4 py-3 text-xs font-medium text-foreground">
-                    {s.uptimeSec > 0 ? formatUptime(s.uptimeSec) : '—'}
-                  </td>
-                </motion.tr>
-              ))}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{s.activePlaylist ?? '—'}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {s.location ? (
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {s.location}
+                        </span>
+                      ) : '—'}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">{formatRelative(s.lastSeenAt, locale)}</td>
+                    <td className="px-4 py-3 text-xs font-medium text-foreground">
+                      {s.uptimeSec > 0 ? formatUptime(s.uptimeSec) : '—'}
+                    </td>
+                  </motion.tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

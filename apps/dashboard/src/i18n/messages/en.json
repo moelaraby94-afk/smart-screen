@@ -2126,7 +2126,10 @@
     "colPlaylist": "Active playlist",
     "colLocation": "Location",
     "colLastSeen": "Last seen",
-    "colUptime": "Uptime"
+    "colUptime": "Uptime",
+    "searchPlaceholder": "Filter by name or serial...",
+    "exportCsv": "Export CSV",
+    "noSearchResults": "No screens match your search."
   },
   "screenAnalytics": {
     "title": "Screen Analytics",
