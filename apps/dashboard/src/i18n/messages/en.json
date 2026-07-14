@@ -405,7 +405,11 @@
     "calPrevMonth": "Previous month",
     "calNextMonth": "Next month",
     "calLoading": "Loading…",
-    "calMore": "+{count} more"
+    "calMore": "+{count} more",
+    "viewCalendar": "Calendar view",
+    "viewTimeline": "Timeline view",
+    "viewList": "List view",
+    "timelineTitle": "Weekly timeline"
   },
   "teamPage": {
     "title": "Team",

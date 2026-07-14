@@ -405,7 +405,11 @@
     "calPrevMonth": "الشهر السابق",
     "calNextMonth": "الشهر التالي",
     "calLoading": "جارٍ التحميل…",
-    "calMore": "+{count} أخرى"
+    "calMore": "+{count} أخرى",
+    "viewCalendar": "عرض التقويم",
+    "viewTimeline": "عرض الجدول الزمني",
+    "viewList": "عرض القائمة",
+    "timelineTitle": "الجدول الزمني الأسبوعي"
   },
   "teamPage": {
     "title": "الفريق",

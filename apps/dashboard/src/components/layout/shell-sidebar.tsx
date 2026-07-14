@@ -22,7 +22,6 @@ import {
   LayoutGrid,
   LayoutTemplate,
   LogOut,
-  Megaphone,
   Monitor,
   Moon,
   ScrollText,
@@ -67,7 +66,6 @@ const MANAGEMENT_NAV = [
 
 const SCHEDULING_NAV = [
   { key: 'playlists', hrefKey: 'playlists' as const, icon: Clapperboard },
-  { key: 'campaigns', hrefKey: 'campaigns' as const, icon: Megaphone },
   { key: 'schedules', hrefKey: 'schedules' as const, icon: CalendarClock },
 ] as const;
 
@@ -79,7 +77,7 @@ const TOOLS_NAV = [
 
 const CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE = new Set<
   string
->(['overview', 'screens', 'displays', 'media', 'studio', 'templates', 'team', 'playlists', 'campaigns', 'schedules', 'ai', 'analytics', 'emergency', 'help', 'apiDocs', 'notifications', 'auditLog']);
+>(['overview', 'screens', 'displays', 'media', 'studio', 'templates', 'team', 'playlists', 'schedules', 'ai', 'analytics', 'emergency', 'help', 'apiDocs', 'notifications', 'auditLog']);
 
 function hrefFor(
   locale: string,
@@ -112,7 +110,6 @@ function hrefFor(
     | 'displayGroups'
     | 'content'
     | 'templates'
-    | 'campaigns'
     | 'ai'
     | 'emergency',
 ): string {
@@ -140,7 +137,6 @@ function hrefFor(
   if (hrefKey === 'displayGroups') return `/${locale}/displays/groups`;
   if (hrefKey === 'content') return `/${locale}/content`;
   if (hrefKey === 'templates') return `/${locale}/templates`;
-  if (hrefKey === 'campaigns') return `/${locale}/campaigns`;
   if (hrefKey === 'ai') return `/${locale}/ai`;
   if (hrefKey === 'emergency') return `/${locale}/emergency`;
   return `/${locale}/${hrefKey}`;

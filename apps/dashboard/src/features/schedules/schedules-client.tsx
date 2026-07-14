@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { CalendarClock, Play, Plus, CalendarDays } from 'lucide-react';
+import { CalendarClock, Play, Plus, CalendarDays, Calendar, List, LayoutDashboard } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -32,6 +32,7 @@ import { useTranslations } from 'next-intl';
 import { shiftSameDayWindow } from './schedule-calendar-utils';
 import { CreateScheduleForm } from '@/features/schedules/schedule-create-dialog';
 import { ScheduleCalendar, ScheduleList } from '@/features/schedules/schedule-calendar';
+import { SchedulesTimelineView } from '@/features/schedules/schedules-timeline-view';
 
 const PX_PER_HOUR = 40;
 
@@ -63,6 +64,7 @@ export function SchedulesClient({ locale }: { locale: string }) {
   const [screens, setScreens] = useState<ScreenOpt[]>([]);
   const [loading, setLoading] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
+  const [viewMode, setViewMode] = useState<'calendar' | 'timeline' | 'list'>('calendar');
 
   const overlapIds = useMemo(() => {
     const s = new Set<string>();
@@ -104,6 +106,11 @@ export function SchedulesClient({ locale }: { locale: string }) {
       }).format(base);
     },
     [locale],
+  );
+
+  const dayLabels = useMemo(
+    () => Array.from({ length: 7 }, (_, i) => dayShort(i)),
+    [dayShort],
   );
 
   const dragRef = useRef<{
@@ -216,6 +223,33 @@ export function SchedulesClient({ locale }: { locale: string }) {
               <p className="text-sm text-muted-foreground">{t('engineDesc')}</p>
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            <div className="inline-flex rounded-xl border border-border bg-muted/50 p-1">
+              <button
+                type="button"
+                onClick={() => setViewMode('calendar')}
+                aria-label={t('viewCalendar')}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${viewMode === 'calendar' ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <Calendar className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('timeline')}
+                aria-label={t('viewTimeline')}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${viewMode === 'timeline' ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <LayoutDashboard className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                aria-label={t('viewList')}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${viewMode === 'list' ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
           <Dialog open={openCreate} onOpenChange={setOpenCreate}>
             <DialogTrigger asChild>
               <Button className="rounded-xl font-semibold" variant="cta">
@@ -238,6 +272,7 @@ export function SchedulesClient({ locale }: { locale: string }) {
               t={t}
             />
           </Dialog>
+          </div>
         </div>
 
         <div className="mt-6 flex flex-wrap gap-4 text-xs">
@@ -324,26 +359,36 @@ export function SchedulesClient({ locale }: { locale: string }) {
           actionLabel={t('addSchedule')}
           onAction={() => setOpenCreate(true)}
         />
-      ) : (
-        <ScheduleCalendar
-          schedules={schedules}
-          overlapIds={overlapIds}
-          loading={loading}
-          locale={locale}
-          dayShort={dayShort}
-          dragRef={dragRef}
-          onDragStart={() => setDragActive(true)}
-        />
-      )}
-
-      {!loading && schedules.length > 0 ? (
+      ) : viewMode === 'timeline' ? (
+        <SchedulesTimelineView schedules={schedules} dayLabels={dayLabels} />
+      ) : viewMode === 'list' ? (
         <ScheduleList
           schedules={schedules}
           dayShort={dayShort}
           onDelete={(id) => void onDeleteSchedule(id)}
           t={t}
         />
-      ) : null}
+      ) : (
+        <>
+          <ScheduleCalendar
+            schedules={schedules}
+            overlapIds={overlapIds}
+            loading={loading}
+            locale={locale}
+            dayShort={dayShort}
+            dragRef={dragRef}
+            onDragStart={() => setDragActive(true)}
+          />
+          {!loading && schedules.length > 0 ? (
+            <ScheduleList
+              schedules={schedules}
+              dayShort={dayShort}
+              onDelete={(id) => void onDeleteSchedule(id)}
+              t={t}
+            />
+          ) : null}
+        </>
+      )}
     </div>
   );
 }
