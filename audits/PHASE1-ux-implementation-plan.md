@@ -608,7 +608,7 @@ W0 (تأكيد)
 2. **المصطلح:** Workspace / مساحة عمل. **ممنوع** إرجاع "Branch/فرع/الفروع" لأي نص واجهة. *(منجَز.)* لاحظ: أسماء الكود/الملفات/المتغيّرات (branches routes، BranchDetailClient…) تبقى كما هي — المصطلح للنصوص فقط.
 3. **الطوارئ:** overlay canvas (خلفية حمراء + رسالة). *(منجَز.)*
 4. **كل route مُدمَج:** يُستبدَل بـ `redirect()` — **ممنوع 404**. الروابط القديمة تبقى.
-5. **Displays → Screens: redirect-only.** **ممنوع** بناء عرض جدول في Screens الآن؛ عرض الجدول يأتي لاحقاً ضمن ListShell (W9). الميزة الوحيدة المفقودة (تخطيط جدول) مؤجَّلة عمداً.
+5. **Displays → Screens: redirect + table view.** ~~redirect-only~~ **مُحدَّث (2026-07-14):** أُضيف عرض جدول (cards/table toggle) لـ Screens في commit `8fa2d64` و**بُورِك من المالك** — يُعتبر مقبولاً ومنجَزاً. (القرار الأصلي كان تأجيل الجدول لـ ListShell؛ اعتُمد الإنجاز المبكّر بدلاً منه.)
 6. **Proof of Play → Analytics:** انقل (بحث + تصدير CSV + جدول per-screen) من `proof-of-play-client.tsx` إلى `analytics-page-client.tsx` **قبل** الـ redirect. لا تفقد ميزة.
 7. **Campaigns → Schedules:** انقل عرض Timeline من `campaigns-client.tsx` إلى `schedules-client.tsx` كـ view-toggle ثالث (تقويم/Timeline/قائمة) **قبل** الـ redirect.
 8. **Billing:** `/billing` (standalone) يُدمَج في `/settings/billing`. `/settings/billing` هو عنصر السايدبار "Billing" الحالي (يبقى). انقل UI اختيار الخطة فقط؛ **لا تلمس أي استدعاء Stripe** (انسخه حرفياً). **T-D يتطلّب مراجعة بشرية قبل commit — قف واطلبها.**
