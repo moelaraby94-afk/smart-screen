@@ -124,7 +124,6 @@ export function ScreenSetupModal({
   const [activeTab, setActiveTab] = useState<TabKey>(isPairingMode ? 'pairing' : 'content');
   const [playlists, setPlaylists] = useState<PlaylistOption[]>([]);
   const [schedules, setSchedules] = useState<ScheduleOpt[]>([]);
-  const [playlistId, setPlaylistId] = useState('');
   const [tickerText, setTickerText] = useState('');
   const [orientation, setOrientation] = useState<'AUTO' | 'LANDSCAPE' | 'PORTRAIT'>('AUTO');
   const [overridePlId, setOverridePlId] = useState('');
@@ -149,7 +148,6 @@ export function ScreenSetupModal({
     name: string;
     location: string;
     orientation: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
-    playlistId: string;
     tickerText: string;
     overridePlId: string;
     overrideDuration: number;
@@ -178,7 +176,6 @@ export function ScreenSetupModal({
     setDirty(false);
     setConfirmDelete(false);
     if (effectiveScreen) {
-      setPlaylistId(effectiveScreen.activePlaylistId ?? '');
       setTickerText(effectiveScreen.playerTicker ?? '');
       setOrientation(effectiveScreen.orientation ?? 'AUTO');
       setOverridePlId(effectiveScreen.overridePlaylistId ?? '');
@@ -204,7 +201,6 @@ export function ScreenSetupModal({
         if (pendingSettings.name !== screen.name) updates.name = pendingSettings.name;
         if (pendingSettings.location !== (screen.location ?? '')) updates.location = pendingSettings.location.trim() || null;
         if (pendingSettings.orientation !== (screen.orientation ?? 'AUTO')) updates.orientation = pendingSettings.orientation;
-        if (pendingSettings.playlistId !== (screen.activePlaylistId ?? '')) updates.activePlaylistId = pendingSettings.playlistId || null;
         if (pendingSettings.tickerText.trim() !== (screen.playerTicker ?? '')) updates.playerTicker = pendingSettings.tickerText.trim() || null;
 
         const hasUpdates = Object.keys(updates).length > 0;
@@ -381,7 +377,6 @@ export function ScreenSetupModal({
         name: screenName,
         location: screenLocation,
         orientation,
-        playlistId,
         tickerText,
         overridePlId,
         overrideDuration,
@@ -396,7 +391,6 @@ export function ScreenSetupModal({
       if (screenName !== effectiveScreen.name) updates.name = screenName;
       if (screenLocation !== (effectiveScreen.location ?? '')) updates.location = screenLocation.trim() || null;
       if (orientation !== (effectiveScreen.orientation ?? 'AUTO')) updates.orientation = orientation;
-      if (playlistId !== (effectiveScreen.activePlaylistId ?? '')) updates.activePlaylistId = playlistId || null;
       if (tickerText.trim() !== (effectiveScreen.playerTicker ?? '')) updates.playerTicker = tickerText.trim() || null;
       if (screenStatus !== ((effectiveScreen as ScreenRow).status ?? 'OFFLINE')) updates.status = screenStatus;
 
@@ -644,7 +638,7 @@ export function ScreenSetupModal({
                       <Film className="h-3 w-3" />
                       {t('rotationActive')}
                     </span>
-                  ) : playlistId ? (
+                  ) : (effectiveScreen as ScreenRow)?.activePlaylistId ? (
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                       <Film className="h-3 w-3" />
                       {t('nowPlaying')}
