@@ -1,7 +1,9 @@
 # خطة التنفيذ الاحترافية — تجربة المستخدم وواجهة داشبورد الكلاينت
 
-**الإصدار:** 1.0 · **التاريخ:** 2026-07-14 · **المصدر:** `audits/PHASE1-full-dashboard-analysis.md`
+**الإصدار:** 1.1 · **التاريخ:** 2026-07-14 · **المصدر:** `audits/PHASE1-full-dashboard-analysis.md`
 **الجمهور:** وكيل برمجي منفّذ (افترض استقلالية محدودة — اتّبع الوثيقة حرفياً).
+
+> ⛔ **ابدأ من هنا:** إن كنت الإيجنت المكلّف بالإكمال، اقرأ **Part H — توجيه التنفيذ الصارم** (في آخر الملف) **أولاً وحرفياً**. كل قرار محسوم هناك؛ ممنوع الاجتهاد.
 **الهدف:** أفضل وأسهل وأمتع تجربة مستخدم — عبر **تفكيك التشابك + ربط المبني + إصلاح الباجات + توحيد الطبقة العرضية**، مع بقاء كل فيتشر شغّالاً باحترافية.
 
 > اقرأ أولاً: `PLAN-executable-remediation.md` §1 (القواعد الذهبية R1–R11) و`apps/dashboard/AGENTS.md`. هذه القواعد سارية هنا كلياً، خصوصاً **R2 (اقرأ قبل التغيير — أكّد العيب في الكود الحيّ أولاً)** و**R6 (i18n في كل نص، en+ar، RTL)** و**R3 (verify أخضر بعد كل مهمة)**.
@@ -561,3 +563,165 @@ W0 (تأكيد)
 | W9 تشريح صفحة + سطح تحكّم | ⬜ | ListShell / palette / saved views |
 | W4/W6 طبقة عرضية + a11y | ⬜ | skeleton/empty/sort/export/confirm |
 | T5 موديل (Quick Publish) · W7 فيتشرز | ⬜ | لاحق |
+
+---
+
+# ═══════════════════════════════════════════════════════════
+# Part H — توجيه التنفيذ الصارم (HANDOFF DIRECTIVE)
+# ═══════════════════════════════════════════════════════════
+
+> **موجّه إلى الإيجنت الذي سيُكمل العمل.** هذا **أمر تنفيذ**، لا اقتراح. كل قرار مُنتَجي/تصميمي **محسوم** في هذا الجزء. **ممنوع الاجتهاد.** لو صادفت شيئاً غير محسوم هنا: **توقّف**، اكتب `<!-- BLOCKED: <السبب> -->` في مكان العمل، ولا تُخمّن ولا تُكمل تلك المهمة.
+
+## H0 — قواعد إلزامية (اقرأها حرفياً)
+
+1. **لا قرار باجتهادك.** كل الخيارات محسومة في H2. لا "أعتقد"، لا "الأفضل"، لا "يمكن أيضاً".
+2. **مهمة واحدة = commit واحد.** لا تجمع مهمتين. لا تعمل drive-by refactor. لا تلمس ملفاً خارج قائمة ملفات المهمة.
+3. **تحقّق أخضر قبل كل commit** (أوامر H3 بالضبط). ممنوع commit على build أحمر أو lint فيه errors.
+4. **اتبع الوصفات في H4 حرفياً.** لا تبتكر نهجاً بديلاً لعملية موجودة لها وصفة.
+5. **اقرأ الملف كاملاً قبل تعديله أو حذفه** (R2). لو العيب مُصلَّح أصلاً → علّم "N/A" وتابع.
+6. **ممنوع:** `npm install` أو تعديل `package-lock.json` (خطر dual-checkout) · `prisma db push` أو تعديل migration قائم · حذف/إعادة كتابة ملفات `audits/`.
+7. **تحذيرات `LF will be replaced by CRLF` من git طبيعية على ويندوز — تجاهلها تماماً.**
+8. **i18n:** كل نص عبر مفتاح في en.json **و** ar.json بنفس البنية. RTL عبر خصائص منطقية فقط (`ms/me/ps/pe`, `start/end`).
+9. **لا تلمس منطق Stripe/الفوترة** إلا في المهمة المخصّصة (T-D) وبحاجز مراجعة بشري صريح.
+
+## H1 — الحالة الحالية (منجَز · متحقَّق · محفوظ — لا تُعِده)
+
+| العمل | SHA |
+|---|---|
+| الأوديت + الخطة + طبقة الانتربرايز (Part B) | `0c1be77` |
+| دمج Content→Media + Display Groups→Playlists (redirect + حذف clients + عدّاد الشاشات) | `add9dd4` |
+| توحيد الاسم Smart Screen / شاشة ذكية | `294e68a` |
+| توحيد المصطلح Workspace / مساحة عمل (93 en + 98 ar، تأنيث نحوي) | `7d32f2e` |
+| B3 إشعارات: إلغاء reload | `55bf611` |
+| B1+B2 طوارئ: overlay canvas + كل الشاشات | `f2d5462` |
+| B4+B5 locale: فواتير + مساعدة | `27973aa` |
+| B7 Analytics: وقت نسبي محلّي | `5d5fefb` |
+
+**ملفات حُذفت (لا تُعِد إنشاءها):** `features/media/content-client.tsx` · `features/screens/display-groups-client.tsx`.
+**مكوّن جديد:** `features/dashboard/emergency-overlay.ts`.
+
+## H2 — القرارات المحسومة (نهائية — لا تُراجَع، لا تسأل عنها)
+
+1. **الاسم:** Smart Screen (en) / شاشة ذكية (ar). *(منجَز.)*
+2. **المصطلح:** Workspace / مساحة عمل. **ممنوع** إرجاع "Branch/فرع/الفروع" لأي نص واجهة. *(منجَز.)* لاحظ: أسماء الكود/الملفات/المتغيّرات (branches routes، BranchDetailClient…) تبقى كما هي — المصطلح للنصوص فقط.
+3. **الطوارئ:** overlay canvas (خلفية حمراء + رسالة). *(منجَز.)*
+4. **كل route مُدمَج:** يُستبدَل بـ `redirect()` — **ممنوع 404**. الروابط القديمة تبقى.
+5. **Displays → Screens: redirect-only.** **ممنوع** بناء عرض جدول في Screens الآن؛ عرض الجدول يأتي لاحقاً ضمن ListShell (W9). الميزة الوحيدة المفقودة (تخطيط جدول) مؤجَّلة عمداً.
+6. **Proof of Play → Analytics:** انقل (بحث + تصدير CSV + جدول per-screen) من `proof-of-play-client.tsx` إلى `analytics-page-client.tsx` **قبل** الـ redirect. لا تفقد ميزة.
+7. **Campaigns → Schedules:** انقل عرض Timeline من `campaigns-client.tsx` إلى `schedules-client.tsx` كـ view-toggle ثالث (تقويم/Timeline/قائمة) **قبل** الـ redirect.
+8. **Billing:** `/billing` (standalone) يُدمَج في `/settings/billing`. `/settings/billing` هو عنصر السايدبار "Billing" الحالي (يبقى). انقل UI اختيار الخطة فقط؛ **لا تلمس أي استدعاء Stripe** (انسخه حرفياً). **T-D يتطلّب مراجعة بشرية قبل commit — قف واطلبها.**
+9. **Settings:** تبويب واحد (Profile | Workspace | Billing) عبر مكوّن `components/ui/tabs.tsx`. يحلّ وصول `/settings/workspace` (A1) بلا إضافة عنصر سايدبار منفصل.
+10. **Quick Publish (T5.1):** يُنشئ **playlist دائمة** (لا override مؤقت).
+11. **OverviewMetrics (B8):** **احذفه** (`features/dashboard/overview-metrics.tsx`) — كود يتيم. لا تحاول استخدامه.
+12. **المفاتيح الميتة:** تُنظَّف في T-G فقط، بوصفة B، ولا قبلها.
+13. **commit لكل مهمة**، رسالة `type(scope): what — why` + trailer.
+
+## H3 — البيئة وأوامر التحقّق (استخدمها بالضبط)
+
+بيئة: **Windows**، `node_modules` موجود، Node 22. **لا تشغّل `npm run verify` الكامل** (يحتاج DB على WSL). استخدم مجموعة الداشبورد بعد كل مهمة:
+
+```
+npm run typecheck -w apps/dashboard      # يجب: لا مخرجات خطأ
+npm run lint -w apps/dashboard           # يجب: "0 errors". تحذيرات ≤ 32 (خط الأساس). ممنوع زيادتها.
+npm run i18n:check                       # يجب: key-parity/hardcoded/missing-marker كلها OK
+npm run build -w apps/dashboard          # يجب: "Compiled successfully" + exit 0
+```
+
+الأربعة يجب تمرّ قبل commit. لو انكسر ما كان أخضر → **تغييرك السبب، أصلحه قبل المتابعة**.
+
+## H4 — الوصفات (اتبعها حرفياً)
+
+### Recipe A — دمج صفحة مكرّرة (redirect-only)
+1. استبدل محتوى `app/[locale]/(shell)/<route>/page.tsx` بالقالب (انسخ من `content/page.tsx` الحالي، غيّر الوجهة):
+   ```tsx
+   import { redirect } from 'next/navigation';
+   type Props = { params: Promise<{ locale: string }> };
+   export default async function Page({ params }: Props) {
+     const { locale } = await params;
+     redirect(`/${locale}/<TARGET>`);
+   }
+   ```
+2. في `components/layout/shell-sidebar.tsx`: احذف عنصر الـ nav من مصفوفته؛ احذف المفتاح من `CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE`؛ احذف أي أيقونة `import` صارت غير مستخدمة؛ بسّط أي `active` ternary خاص بالعنصر (كما فُعِل مع displayGroups).
+3. احذف ملف الـ client المهجور (بعد قراءته كاملاً)؛ أكّد `grep -rln "<ClientName>"` = لا مراجع.
+4. تحقّق (H3) → commit `refactor(nav): merge /<route> into /<target>`.
+
+### Recipe B — تعديل/تنظيف i18n
+- **إضافة مفتاح:** أضِفه في `en.json` **و** `ar.json` بنفس المسار والموضع النسبي.
+- **حذف مفاتيح ميتة:** احذفها من الملفين **معاً**، **و** احذف كل مرجع كود لها في **نفس** المهمة (وإلا ينكسر key-parity أو استدعاء `t()`). استخدم `grep -rn "<key>"` أولاً.
+- **تعديل جماعي للقيم:** استخدم script **يعدّل القيم فقط** (كما في `scratchpad/term-*.cjs`) — ممنوع تعديل المفاتيح.
+
+### Recipe C — commit
+`git add <ملفات المهمة بالضبط>` ثم:
+```
+git commit -m "type(scope): what — why
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+```
+
+## H5 — المهام المتبقية (نفّذها بهذا الترتيب؛ كل واحدة محسومة)
+
+> بعد كل مهمة: تحقّق (H3) + commit + حدّث جدول §6 بالـ SHA.
+
+### T-A — Proof of Play → Analytics  *(port ثم redirect)*
+- **ملفات:** `features/analytics/analytics-page-client.tsx`, `features/analytics/proof-of-play-client.tsx`, `app/[locale]/(shell)/proof-of-play/page.tsx`, `shell-sidebar.tsx`, i18n.
+- **خطوات:** (1) اقرأ `proof-of-play-client.tsx` كاملاً. (2) انقل إلى Analytics **فقط** الثلاثة الناقصة: حقل بحث (فلترة الجدول بالاسم/السيريال)، زر تصدير CSV (انسخ منطق CSV حرفياً)، جدول per-screen. لا تضف أي شيء آخر. (3) أعِد استخدام مفاتيح i18n الموجودة في proofOfPlayPage حيثما أمكن؛ المفقود أضِفه (en+ar). (4) طبّق Recipe A على `/proof-of-play` → `/analytics` (احذف `proofOfPlay` من `TOOLS_NAV` + الأيقونة `BarChart3` إن لم تُستخدم + active-check). (5) احذف `proof-of-play-client.tsx`.
+- **قبول:** بحث + CSV + جدول تعمل في Analytics؛ `/proof-of-play` يحوّل؛ H3 أخضر.
+
+### T-B — Campaigns → Schedules  *(port ثم redirect)*
+- **ملفات:** `features/dashboard/campaigns-client.tsx`, `features/schedules/schedules-client.tsx` (+ ملف view جديد إن لزم), `app/[locale]/(shell)/campaigns/page.tsx`, `shell-sidebar.tsx`, i18n.
+- **خطوات:** (1) اقرأ الملفين كاملين. (2) استخرج شبكة Timeline (7×24) من `campaigns-client.tsx` إلى مكوّن `features/schedules/schedules-timeline-view.tsx`. (3) أضِف مبدّل عرض في `schedules-client.tsx`: تقويم | Timeline | قائمة (استخدم نمط الأزرار الموجود). (4) i18n للمبدّل (en+ar). (5) Recipe A على `/campaigns` → `/schedules` (احذف `campaigns` من `SCHEDULING_NAV` + أيقونة `Megaphone` إن لم تُستخدم). (6) احذف `campaigns-client.tsx`.
+- **قبول:** Timeline متاح داخل Schedules؛ `/campaigns` يحوّل؛ H3 أخضر.
+
+### T-C — Displays → Screens  *(redirect-only — H2#5)*
+- **ملفات:** `app/[locale]/(shell)/displays/page.tsx`, `shell-sidebar.tsx`, `features/screens/displays-client.tsx`, i18n (T-G لاحقاً).
+- **خطوات:** طبّق Recipe A بالكامل: redirect `/displays` → `/screens`؛ احذف `displays` من `CLIENT_NAV` + active-check؛ احذف `displays-client.tsx`. **لا تبنِ جدولاً في Screens.**
+- **قبول:** `/displays` يحوّل؛ Screens بلا تغيير وظيفي؛ H3 أخضر.
+
+### T-D — Billing merge  *(⚠️ يتطلّب مراجعة بشرية قبل commit — R10)*
+- **ملفات:** `features/settings/settings-billing-client.tsx`, `features/billing/billing-client.tsx`, `app/[locale]/(shell)/billing/page.tsx`, i18n.
+- **خطوات:** (1) اقرأ الملفين. (2) انقل UI اختيار الخطة + mock toggle من `BillingClient` إلى قسم جديد في `SettingsBillingClient`. **انسخ كل استدعاءات Stripe/checkout حرفياً — لا تعدّل منطقها.** (3) redirect `/billing` → `/settings/billing`. (4) i18n (en+ar). (5) **قف — اطلب مراجعة بشرية — لا تعمل commit قبل موافقة صريحة.**
+- **قبول:** صفحة فواتير واحدة؛ `/billing` يحوّل؛ H3 أخضر؛ **موافقة بشرية مسجّلة**.
+
+### T-E — Settings تبويب موحّد  *(يحلّ A1)*
+- **ملفات:** `features/settings/*` (profile/workspace/billing clients أو أغلفتها), مكوّن تبويب مشترك جديد `features/settings/settings-tabs.tsx`, `components/ui/tabs.tsx`, i18n.
+- **خطوات:** (1) أنشئ `SettingsTabs` يعرض 3 روابط (Profile | Workspace | Billing) بالحالة النشطة من `usePathname`. (2) ضعه أعلى الصفحات الثلاث. (3) i18n للعناوين (en+ar، استخدم `nav.profileSettings`/`nav.workspaceSettings`/`nav.billing` الموجودة). لا تضف عنصر سايدبار جديد.
+- **قبول:** التنقّل بين الإعدادات الثلاثة يعمل؛ `/settings/workspace` قابل للوصول؛ H3 أخضر.
+
+### T-F — إعادة هيكلة أقسام السايدبار  *(بعد T-A..T-C)*
+- **ملفات:** `shell-sidebar.tsx`, i18n (مفاتيح الأقسام).
+- **خطوات:** طبّق البنية من §2.3 بالأوديت: OVERVIEW / FLEET (Screens, Emergency) / CONTENT (Media, Studio, Templates) / PLAYBACK (Playlists, Schedules) / INSIGHTS (Analytics, AI) / MANAGEMENT (Team, Billing, Settings) / RESOURCES. حرّك العناصر بين المصفوفات؛ حدّث مفاتيح عناوين الأقسام (en+ar).
+- **قبول:** 7 أقسام كما بالأوديت؛ لا عنصر مكرّر؛ الحالة النشطة صحيحة؛ H3 أخضر.
+
+### T-G — تنظيف مفاتيح i18n الميتة  *(Recipe B)*
+- **مفاتيح للحذف (من en.json و ar.json):** `nav.content`, `nav.displayGroups`, namespace `contentPage` كامل, namespace `displayGroupsPage` كامل. وبعد T-A/T-B: `campaignsPage`, `proofOfPlayPage`, `displaysPage`, `nav.campaigns`, `nav.proofOfPlay`, `nav.displays`.
+- **مراجع كود يجب حذفها في نفس المهمة:** في `lib/shell-header-meta.ts` احذف فروع `rest[0] === 'content'`, `'displays'&&'groups'`, `'displays'`, `'campaigns'`, `'proof-of-play'` + إدخالاتها في `clientMainWithBack`. في `features/workspace/workspace-gate.tsx` احذف `'content'`, `'displays'`, `'campaigns'`, `'proof-of-play'` من `CLIENT_ROUTE_SEGMENTS`. في `shell-sidebar.tsx` احذف فروع hrefFor + type-union للمفاتيح المحذوفة.
+- **قبول:** `grep -rn "contentPage\|displayGroupsPage\|campaignsPage\|proofOfPlayPage\|displaysPage"` = لا مراجع؛ i18n:check OK؛ H3 أخضر.
+
+### T-H — ربط GlobalSearch + ⌘K  *(B9)*
+- **ملفات:** `components/layout/header.tsx`, `features/search/global-search.tsx`, i18n.
+- **خطوات:** (1) اقرأ `global-search.tsx` وافهم واجهته (props). (2) أضِف زر بحث في الهيدر بين `WorkspaceSwitcher` و`NotificationBell` يفتح المكوّن. (3) listener عالمي لـ `Ctrl/⌘+K` يفتحه. (4) تأكّد a11y موجودة (`role=dialog`, `aria-modal`, focus). i18n لأي نص جديد.
+- **قبول:** البحث يُفتح بالزر و⌘K؛ يعمل RTL؛ H3 أخضر.
+
+### T-I — حذف OverviewMetrics  *(B8)*
+- **خطوات:** أكّد `grep -rln "OverviewMetrics\|overview-metrics"` = ملف واحد فقط؛ احذف `features/dashboard/overview-metrics.tsx`؛ H3 أخضر.
+- **قبول:** لا مراجع؛ H3 أخضر.
+
+### T-J — تبنّي Skeleton  *(U1)*
+- **ملفات:** كل feature-client بحالة تحميل (Overview, Screens, Media, Playlists, Schedules, Analytics, Team, Audit Log) + `components/ui/skeleton.tsx`.
+- **خطوات:** استبدل `Loader2` spinners بـ skeletons تحاكي التخطيط. **صفحة واحدة = commit واحد.** استخدم `aria-hidden` على الـ skeleton.
+- **قبول:** كل صفحة تعرض skeleton أثناء التحميل؛ H3 أخضر لكل commit.
+
+### لاحقاً (بعد ما سبق): W9 (ListShell + palette) · W4 (فرز/تصدير/bulk/تأكيدات) · W6 (a11y) · W5 (Quick Publish) · W7. اتبع معايير **Part B** حرفياً؛ لا تبتكر خارجها.
+
+## H6 — لا تُعِد عمل المنجَز (فخاخ)
+
+- **لا** تُعِد إضافة `content`/`displayGroups` للسايدبار — دُمجا عمداً.
+- **لا** تُعِد تشغيل توحيد المصطلح/الاسم — منجَز؛ لو رأيت "Branch/فرع" في نص واجهة **جديد** فقط، صحّحه.
+- **لا** تُنشئ ملفات `content-client.tsx`/`display-groups-client.tsx` — محذوفة عمداً.
+- **لا** تبنِ جدولاً في Screens (T-C redirect-only).
+
+## H7 — تسليمات للإنسان (خارج نطاق الإيجنت — لا تحاولها)
+
+1. **تحقّق بصري من الطوارئ (B1):** شغّل الـ stack الكامل (backend+player+DB) وفعّل طوارئ فعلية على شاشة للتأكد أن الـ overlay canvas يُعرَض. الإصلاح متحقَّق ستاتيكياً فقط.
+2. **مراجعة T-D (Billing/Stripe)** قبل الدمج.
+3. قرار خدمات الطرف الثالث في W7 (AI model، screenshot، map) — لا يُوفّرها الإيجنت.
