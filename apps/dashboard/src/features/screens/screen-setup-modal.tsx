@@ -353,6 +353,9 @@ export function ScreenSetupModal({
       setNewSchedDaysOfMonth([]);
       setNewSchedStartDate('');
       setNewSchedEndDate('');
+      setNewSchedRecurrence('WEEKLY');
+      setNewSchedStartTime('09:00');
+      setNewSchedEndTime('17:00');
       await loadOptions();
     } finally { setBusy(false); }
   };
