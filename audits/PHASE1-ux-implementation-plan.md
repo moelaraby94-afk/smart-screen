@@ -547,7 +547,11 @@ W0 (تأكيد)
 | T3.3 دمج Display Groups → Playlists | ✅ | نقل عدّاد الشاشات + redirect + حذف · `add9dd4` |
 | W8.1a توحيد الاسم (Smart Screen/شاشة ذكية) | ✅ | كل الواجهة + metadata + branding · `294e68a` |
 | W8.1b توحيد المصطلح (Workspace/مساحة عمل) | ✅ | 93 en + 98 ar، تأنيث نحوي صحيح · `7d32f2e` |
-| T1.1–T1.7 باجات (B1–B7) | ⬜ | التالي المقترح — يبدأ بـ P0 (الطوارئ/الإشعارات) |
+| T1.3 إشعارات: إلغاء reload (B3) | ✅ | تحديث state بدل reload · `55bf611` |
+| T1.1/T1.2 طوارئ: overlay canvas + كل الشاشات (B1/B2) | ✅ | canvas خلفية حمراء+رسالة عبر override · `f2d5462` |
+| T1.4/T1.5 locale: فواتير + مساعدة (B4/B5) | ✅ | روابط من useLocale · `27973aa` |
+| T1.7 Analytics: وقت نسبي محلّي (B7) | ✅ | Intl.RelativeTimeFormat · `5d5fefb` |
+| B6 expiry الميت في Content | ✅ | حُلّ بدمج Content→Media |
 | T2.1–T2.3 ربط المبني | ⬜ | GlobalSearch / OverviewMetrics / Skeleton |
 | T3.1 دمج Displays → Screens | ⬜ | يحتاج نقل عرض الجدول |
 | T3.4 دمج Campaigns → Schedules | ⬜ | يحتاج نقل عرض Timeline |
