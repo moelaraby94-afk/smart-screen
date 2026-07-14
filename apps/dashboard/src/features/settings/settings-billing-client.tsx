@@ -24,6 +24,7 @@ import {
 } from '@/features/billing/billing-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
+import { CardGridSkeleton } from '@/components/ui/skeleton-patterns';
 
 type Payment = {
   id: string;
@@ -201,7 +202,7 @@ export function SettingsBillingClient() {
     }
   }, [workspaceId, tBilling]);
 
-  if (loading) return <p className="text-sm text-muted-foreground">{t('loading')}</p>;
+  if (loading) return <CardGridSkeleton count={2} />;
 
   if (!data) return null;
 

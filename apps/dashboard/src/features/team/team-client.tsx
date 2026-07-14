@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, Mail, RefreshCw, Shield, UserPlus, UserCheck, X, Trash2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -9,6 +9,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Search } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   fetchMembers as apiFetchMembers,
   inviteMember as apiInviteMember,
@@ -20,6 +31,7 @@ import {
 } from '@/features/team/team-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
+import { ListSkeleton } from '@/components/ui/skeleton-patterns';
 
 type Member = {
   membershipId: string;
@@ -59,6 +71,10 @@ export function TeamClient() {
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
 
   const load = useCallback(async () => {
     if (!workspaceId) return;
@@ -156,8 +172,8 @@ export function TeamClient() {
 
   const handleRemoveMember = async (membershipId: string) => {
     if (!workspaceId) return;
-    if (!confirm(t('confirmRemove'))) return;
     setRemovingId(membershipId);
+    setRemoveDialogOpen(false);
     try {
       const res = await apiRemoveMember(workspaceId, membershipId);
       if (!res.ok) {
@@ -169,8 +185,26 @@ export function TeamClient() {
       void load();
     } finally {
       setRemovingId(null);
+      setRemoveTarget(null);
     }
   };
+
+  const openRemoveDialog = (membershipId: string) => {
+    setRemoveTarget(membershipId);
+    setRemoveDialogOpen(true);
+  };
+
+  const filteredMembers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return members.filter((m) => {
+      if (roleFilter !== 'all' && m.role !== roleFilter) return false;
+      if (!q) return true;
+      return (
+        m.user.fullName.toLowerCase().includes(q) ||
+        m.user.email.toLowerCase().includes(q)
+      );
+    });
+  }, [members, search, roleFilter]);
 
   if (!workspaceId) {
     return (
@@ -193,7 +227,7 @@ export function TeamClient() {
                 {t('members')}
               </h3>
               {loading ? (
-                <p className="text-sm text-muted-foreground">{t('loading')}</p>
+                <ListSkeleton count={4} />
               ) : members.length === 0 ? (
                 <EmptyState
                   icon={UserCheck}
@@ -201,18 +235,45 @@ export function TeamClient() {
                   description={t('noMembersDescription')}
                 />
               ) : (
-                <ul className="space-y-2">
-                  {members.map((m) => (
-                    <li
-                      key={m.membershipId}
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/70 bg-muted/20 px-4 py-3"
+                <>
+                  <div className="mb-4 flex flex-wrap items-center gap-3">
+                    <div className="relative flex-1 min-w-[180px]">
+                      <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        type="search"
+                        className="ps-8"
+                        placeholder={t('searchPlaceholder')}
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                      />
+                    </div>
+                    <select
+                      className="h-9 rounded-lg border border-border bg-card px-3 text-sm"
+                      value={roleFilter}
+                      onChange={(e) => setRoleFilter(e.target.value)}
                     >
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-foreground">{m.user.fullName}</p>
-                        <p className="truncate text-sm text-muted-foreground">{m.user.email}</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {m.role === 'OWNER' ? (
+                      <option value="all">{t('filterAllRoles')}</option>
+                      <option value="OWNER">OWNER</option>
+                      <option value="ADMIN">ADMIN</option>
+                      <option value="EDITOR">EDITOR</option>
+                      <option value="VIEWER">VIEWER</option>
+                    </select>
+                  </div>
+                  {filteredMembers.length === 0 ? (
+                    <p className="py-8 text-center text-sm text-muted-foreground">{t('noSearchResults')}</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {filteredMembers.map((m) => (
+                        <li
+                          key={m.membershipId}
+                          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/70 bg-muted/20 px-4 py-3"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate font-medium text-foreground">{m.user.fullName}</p>
+                            <p className="truncate text-sm text-muted-foreground">{m.user.email}</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {m.role === 'OWNER' ? (
                           <span
                             className={cn(
                               'rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide',
@@ -243,7 +304,7 @@ export function TeamClient() {
                             size="sm"
                             className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                             disabled={removingId === m.membershipId}
-                            onClick={() => void handleRemoveMember(m.membershipId)}
+                            onClick={() => openRemoveDialog(m.membershipId)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -252,6 +313,8 @@ export function TeamClient() {
                     </li>
                   ))}
                 </ul>
+                  )}
+                </>
               )}
             </div>
 
@@ -351,6 +414,28 @@ export function TeamClient() {
           </div>
         </div>
       </motion.section>
+
+      <AlertDialog open={removeDialogOpen} onOpenChange={setRemoveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('removeMemberTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('confirmRemove')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setRemoveTarget(null)}>
+              {t('cancelRemove')}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={!!removingId}
+              onClick={() => {
+                if (removeTarget) void handleRemoveMember(removeTarget);
+              }}
+            >
+              {t('removeMemberConfirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

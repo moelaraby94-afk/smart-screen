@@ -56,13 +56,15 @@ type NotificationContextValue = {
   notifications: NotificationItem[];
   unreadCount: number;
   markAllRead: () => void;
+  removeNotification: (id: string) => void;
+  clearAll: () => void;
 };
 
 const NotificationContext = createContext<NotificationContextValue | null>(null);
 
 export function useNotifications() {
   const ctx = useContext(NotificationContext);
-  if (!ctx) return { notifications: [], unreadCount: 0, markAllRead: () => {} };
+  if (!ctx) return { notifications: [], unreadCount: 0, markAllRead: () => {}, removeNotification: () => {}, clearAll: () => {} };
   return ctx;
 }
 
@@ -225,8 +227,16 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     void markAllNotificationsRead();
   }, []);
 
+  const removeNotification = useCallback((id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  }, []);
+
+  const clearAll = useCallback(() => {
+    setNotifications([]);
+  }, []);
+
   return (
-    <NotificationContext.Provider value={{ notifications, unreadCount, markAllRead }}>
+    <NotificationContext.Provider value={{ notifications, unreadCount, markAllRead, removeNotification, clearAll }}>
       {children}
     </NotificationContext.Provider>
   );

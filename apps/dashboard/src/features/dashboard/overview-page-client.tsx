@@ -1,10 +1,10 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { HomeOverview } from '@/features/dashboard/home-overview';
 import { AdminOverview } from '@/features/dashboard/admin-overview';
 import { useWorkspace } from '@/features/workspace/workspace-context';
+import { CardGridSkeleton } from '@/components/ui/skeleton-patterns';
 
 type Props = {
   appTitle: string;
@@ -18,9 +18,12 @@ export function OverviewPageClient({ appTitle, headline, description }: Props) {
   const { isSuperAdmin, isLoading } = useWorkspace();
   if (isLoading) {
     return (
-      <div className="flex min-h-[48vh] flex-col items-center justify-center gap-3 text-muted-foreground">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-sm font-medium">{t('loading')}</p>
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+          <div className="h-7 w-48 animate-pulse rounded bg-muted" />
+        </div>
+        <CardGridSkeleton count={4} />
       </div>
     );
   }
