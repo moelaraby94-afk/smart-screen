@@ -6,7 +6,7 @@ import {
   type DropResult,
 } from '@hello-pangea/dnd';
 import { motion } from 'framer-motion';
-import { Plus, Save, ListVideo, Eye, EyeOff, Play, Copy, FolderInput, Undo2, Redo2, Search, CopyPlus } from 'lucide-react';
+import { Plus, Save, ListVideo, Eye, EyeOff, Play, Copy, FolderInput, Undo2, Redo2, Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';

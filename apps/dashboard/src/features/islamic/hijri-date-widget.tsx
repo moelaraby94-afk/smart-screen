@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Calendar, Loader2, MapPin } from 'lucide-react';
+import { Calendar, Loader2 } from 'lucide-react';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { fetchHijriDate } from '@/features/islamic/islamic-api';
 import { ICON_STROKE } from '@/lib/icon-stroke';

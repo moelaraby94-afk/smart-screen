@@ -17,7 +17,6 @@ import {
   Radio,
   Trash2,
 } from 'lucide-react';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -32,7 +31,7 @@ import { type ScreenRow } from '@/features/screens/useApiScreens';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
 import { CardGridSkeleton, ListSkeleton } from '@/components/ui/skeleton-patterns';
-import { computeOnlineByPlaylistId, type BranchScreenStats } from '@/features/branches/branch-stats';
+import { type BranchScreenStats } from '@/features/branches/branch-stats';
 import type { BranchPlaylistRow } from '@/features/branches/use-branch-playlists';
 
 type StatsSectionProps = {

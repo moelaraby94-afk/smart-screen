@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
-import { Check, Trash2, Upload, Search, X, Info as InfoIcon, ListPlus } from 'lucide-react';
+import { Upload, Search, Info as InfoIcon, ListPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog,

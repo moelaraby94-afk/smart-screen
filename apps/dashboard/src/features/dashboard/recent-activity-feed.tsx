@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import {
-  Film,
   Image as ImageIcon,
   ListMusic,
   Mail,

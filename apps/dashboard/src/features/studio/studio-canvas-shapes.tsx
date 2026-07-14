@@ -11,7 +11,7 @@ import {
   Text,
 } from 'react-konva';
 import useImage from 'use-image';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import type { CanvasLayoutV1, CanvasObjectJson } from '@/features/studio/canvas-layout';
 

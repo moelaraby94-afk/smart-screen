@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import {
   useCallback,
   useEffect,
@@ -8,7 +7,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { CalendarClock, Play, Plus, CalendarDays, Calendar, List, LayoutDashboard, ArrowUpDown } from 'lucide-react';
+import { CalendarClock, Play, Plus, CalendarDays, Calendar, List, LayoutDashboard } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';

@@ -1,6 +1,6 @@
 'use client';
 
-import { useLocale, useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import { HomeOverview } from '@/features/dashboard/home-overview';
 import { AdminOverview } from '@/features/dashboard/admin-overview';
 import { useWorkspace } from '@/features/workspace/workspace-context';
@@ -13,7 +13,6 @@ type Props = {
 };
 
 export function OverviewPageClient({ appTitle, headline, description }: Props) {
-  const t = useTranslations('overviewClient');
   const locale = useLocale();
   const { isSuperAdmin, isLoading } = useWorkspace();
   if (isLoading) {

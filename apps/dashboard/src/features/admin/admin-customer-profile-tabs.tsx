@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/table';
 import { adminGlassTable } from '@/lib/admin-glass-table';
 import { cn } from '@/lib/utils';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   type BranchRow,
   type Lifecycle,
