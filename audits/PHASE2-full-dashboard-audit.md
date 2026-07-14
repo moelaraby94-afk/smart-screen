@@ -36,7 +36,7 @@
 > | **F7** Analytics status i18n | ✅ منجَز | `analytics-page-client.tsx:362` (`tAnalytics('status'+...)` + لون + نقطة) |
 > | **F8** sort في القوائم | ✅ منجَز (Screens/Playlists) | `screens-client.tsx:139,350` · `playlist-studio-client.tsx:73-89` |
 >
-> **الصحة المُتحقَّقة:** typecheck ✅ · i18n:check ✅ · lint 0 errors (16 warnings) ✅ · build ✅. **المتبقّي فعلياً = لا شيء من F1–F8**؛ فقط تحسينات طويلة المدى (F9 عرض `screensInGroup` كبطاقة بدل dropdown، sort في Media، وباك‑لوج W7: AI حقيقي/screenshot/OTA/map/recurrence).
+> **الصحة المُتحقَّقة:** typecheck ✅ · i18n:check ✅ · lint 0 errors (16 warnings) ✅ · build ✅. **المتبقّي فعلياً = لا شيء من F1–F9** (Media sort أيضاً منجَز `media-library-client.tsx:94,601`؛ F9 `screensInGroup` ظاهر في نص الـ dropdown وقابل للفرز — كافٍ). **الباقي كله = باك‑لوج W7 (ميزات كبيرة تحتاج قراراً):** AI حقيقي · Proof-of-Play حقيقي · screenshot مباشر · OTA · map view · schedule recurrence.
 
 ## 1. ما تم إصلاحه (مؤكد في الشجرة الحالية)
 
