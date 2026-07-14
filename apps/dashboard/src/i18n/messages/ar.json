@@ -1904,7 +1904,7 @@
     "emptyDescription": "أدخل اسمًا بالأسفل واضغط إنشاء لإضافة أول قائمة تشغيل، ثم اسحب الوسائط أو تصاميم الكانفاس إلى الخط الزمني.",
     "playlist": "قائمة التشغيل",
     "selectOption": "— اختر —",
-    "playlistItems": "{name} ({count} عناصر)",
+    "playlistItems": "{name} ({count} عناصر · {screens} شاشة)",
     "newPlaylistPlaceholder": "اسم قائمة تشغيل جديدة",
     "create": "إنشاء",
     "saving": "جارٍ الحفظ…",

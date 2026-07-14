@@ -41,7 +41,7 @@ type PlaylistSummary = {
   id: string;
   name: string;
   isPublished: boolean;
-  _count: { items: number };
+  _count: { items: number; screensInGroup?: number };
 };
 
 export function PlaylistStudioClient() {
@@ -420,7 +420,7 @@ export function PlaylistStudioClient() {
               <option value="">{t('selectOption')}</option>
               {playlists.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {t('playlistItems', { name: p.name, count: p._count.items })}
+                  {t('playlistItems', { name: p.name, count: p._count.items, screens: p._count.screensInGroup ?? 0 })}
                 </option>
               ))}
             </select>

@@ -1904,7 +1904,7 @@
     "emptyDescription": "Enter a name below and click Create to add your first playlist, then drag media or canvas designs into the timeline.",
     "playlist": "Playlist",
     "selectOption": "— Select —",
-    "playlistItems": "{name} ({count} items)",
+    "playlistItems": "{name} ({count} items · {screens} screens)",
     "newPlaylistPlaceholder": "New playlist name",
     "create": "Create",
     "saving": "Saving…",

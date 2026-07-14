@@ -19,8 +19,6 @@ import {
   CreditCard,
   FolderOpen,
   Globe2,
-  Group,
-  Image as ImageIcon,
   LayoutDashboard,
   LayoutGrid,
   LayoutTemplate,
@@ -60,12 +58,10 @@ const CLIENT_NAV = [
   { key: 'screens', hrefKey: 'screens' as const, icon: Monitor },
   { key: 'displays', hrefKey: 'displays' as const, icon: Monitor },
   { key: 'media', hrefKey: 'media' as const, icon: FolderOpen },
-  { key: 'content', hrefKey: 'content' as const, icon: ImageIcon },
   { key: 'studio', hrefKey: 'studio' as const, icon: Clapperboard },
 ] as const;
 
 const MANAGEMENT_NAV = [
-  { key: 'displayGroups', hrefKey: 'displayGroups' as const, icon: Group },
   { key: 'templates', hrefKey: 'templates' as const, icon: LayoutTemplate },
   { key: 'team', hrefKey: 'team' as const, icon: Users },
 ] as const;
@@ -85,7 +81,7 @@ const TOOLS_NAV = [
 
 const CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE = new Set<
   string
->(['overview', 'screens', 'displays', 'media', 'content', 'studio', 'displayGroups', 'templates', 'team', 'proofOfPlay', 'playlists', 'campaigns', 'schedules', 'ai', 'analytics', 'emergency', 'help', 'apiDocs', 'notifications', 'auditLog']);
+>(['overview', 'screens', 'displays', 'media', 'studio', 'templates', 'team', 'proofOfPlay', 'playlists', 'campaigns', 'schedules', 'ai', 'analytics', 'emergency', 'help', 'apiDocs', 'notifications', 'auditLog']);
 
 function hrefFor(
   locale: string,
@@ -505,10 +501,7 @@ export function ShellSidebar({
               <SectionLabel>{t('managementSection')}</SectionLabel>
               {MANAGEMENT_NAV.map((item) => {
                 const href = hrefFor(navLocale, item.hrefKey);
-                const active =
-                  item.hrefKey === 'displayGroups'
-                    ? Boolean(pathname?.startsWith(`/${navLocale}/displays/groups`))
-                    : Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
+                const active = Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
                 return (
                   <NavItem
                     key={item.key}
