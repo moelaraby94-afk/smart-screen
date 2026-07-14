@@ -23,7 +23,20 @@
 
 ---
 
-> **تصحيح المراجع (Reviewer correction — 2026-07-14):** البندان **F1** (Team: `confirm()` → `AlertDialog`) و**F5** (Team: بحث/فلتر) **مُصلَحان بالفعل** في نفس commit التوثيق (`4fd341b`) — أُدرِجا هنا سهواً كـ "متبقٍ". الدليل: `team-client.tsx:418` (`AlertDialog` للحذف) و`team-client.tsx:76-77,197-207` (search + roleFilter). لذا المتبقّي فعلياً = F2/F3/F4 فقط.
+> **تصحيح المراجع الشامل (Reviewer verification — 2026-07-14، Claude):** أُعيد التحقّق من **كل** بنود هذا الأوديت في الشجرة الحالية بعد أوديت مستقل كامل. **قائمة "المتبقّي" في §0 قديمة/متشائمة — البنود التالية كلها مُنجَزة ومُتحقَّقة فعلاً:**
+>
+> | البند | الحالة الفعلية | الدليل |
+> |---|---|---|
+> | **F1** Team confirm→AlertDialog | ✅ منجَز | `team-client.tsx:418` |
+> | **F2** Skeleton في كل الصفحات | ✅ منجَز | Overview/Analytics/Billing (`4fd341b`) + Audit Log/Team (`ListSkeleton` import) |
+> | **F3** Audit Log بحث/فلتر/ترقيم/تصدير | ✅ منجَز | `audit-log-page-client.tsx:64` (search) `:83-94` (filter) `:96` (pagination slice) `:99` (export) |
+> | **F4** Notifications فلتر نوع/حذف/click/clearAll | ✅ منجَز | `notifications-page-client.tsx:43,58,80,139,193,216` |
+> | **F5** Team بحث/فلتر | ✅ منجَز | `team-client.tsx:76-77,197-207` |
+> | **F6** per-page error boundaries | ✅ منجَز | 8 `error.tsx` (admin/analytics/billing/media/playlists/schedules/screens/settings) |
+> | **F7** Analytics status i18n | ✅ منجَز | `analytics-page-client.tsx:362` (`tAnalytics('status'+...)` + لون + نقطة) |
+> | **F8** sort في القوائم | ✅ منجَز (Screens/Playlists) | `screens-client.tsx:139,350` · `playlist-studio-client.tsx:73-89` |
+>
+> **الصحة المُتحقَّقة:** typecheck ✅ · i18n:check ✅ · lint 0 errors (16 warnings) ✅ · build ✅. **المتبقّي فعلياً = لا شيء من F1–F8**؛ فقط تحسينات طويلة المدى (F9 عرض `screensInGroup` كبطاقة بدل dropdown، sort في Media، وباك‑لوج W7: AI حقيقي/screenshot/OTA/map/recurrence).
 
 ## 1. ما تم إصلاحه (مؤكد في الشجرة الحالية)
 
