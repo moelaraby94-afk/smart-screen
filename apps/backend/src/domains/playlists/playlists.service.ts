@@ -427,6 +427,10 @@ export class PlaylistsService {
       new Date(),
     );
 
+    if (resolved.source === 'rotation') {
+      return this.buildRotationPayload(screen, screenId);
+    }
+
     if (!resolved.playlistId) {
       return {
         workspaceId: screen.workspaceId,
@@ -615,6 +619,81 @@ export class PlaylistsService {
       ...base,
 
       kind: 'unknown' as const,
+    };
+  }
+
+  private async buildRotationPayload(
+    screen: { workspaceId: string; id: string },
+    screenId: string,
+  ) {
+    const assignments = await this.prisma.screenPlaylistAssignment.findMany({
+      where: { screenId },
+      orderBy: { orderIndex: 'asc' },
+      include: {
+        playlist: {
+          include: {
+            items: {
+              orderBy: { orderIndex: 'asc' },
+              include: { media: true, canvas: true },
+            },
+          },
+        },
+      },
+    });
+
+    const published = assignments.filter(
+      (a) => a.playlist.isPublished && a.playlist.items.length > 0,
+    );
+
+    if (published.length === 0) {
+      return {
+        workspaceId: screen.workspaceId,
+        screenId,
+        playlistId: null,
+        name: null,
+        isPublished: false,
+        activeSource: 'rotation' as const,
+        items: [],
+      };
+    }
+
+    let globalOrder = 0;
+    const mergedItems: Array<{
+      kind: 'media' | 'canvas';
+      orderIndex: number;
+      durationSec: number;
+      media?: ReturnType<MediaService['toResponse']>;
+      canvas?: ReturnType<CanvasesService['toCompiledPayload']>;
+    }> = [];
+
+    for (const assignment of published) {
+      for (const item of assignment.playlist.items) {
+        if (item.mediaId && item.media) {
+          mergedItems.push({
+            kind: 'media' as const,
+            orderIndex: globalOrder++,
+            durationSec: item.durationSec,
+            media: this.mediaService.toResponse(item.media),
+          });
+        } else if (item.canvasId && item.canvas) {
+          mergedItems.push({
+            kind: 'canvas' as const,
+            orderIndex: globalOrder++,
+            durationSec: item.durationSec,
+            canvas: this.canvasesService.toCompiledPayload(item.canvas),
+          });
+        }
+      }
+    }
+
+    return {
+      workspaceId: screen.workspaceId,
+      screenId,
+      playlistId: published[0]!.playlist.id,
+      name: published.map((a) => a.playlist.name).join(' → '),
+      isPublished: true,
+      activeSource: 'rotation' as const,
+      items: mergedItems,
     };
   }
 

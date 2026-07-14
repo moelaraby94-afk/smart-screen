@@ -34,8 +34,8 @@ export type PlaylistPayload = {
   screenId: string;
   playlistId: string | null;
   name: string | null;
-  /** override | schedule | default — from scheduling engine */
-  activeSource?: 'override' | 'schedule' | 'default';
+  /** override | schedule | rotation | default — from scheduling engine */
+  activeSource?: 'override' | 'schedule' | 'rotation' | 'default';
   items: PlaylistItemUnion[];
 };
 

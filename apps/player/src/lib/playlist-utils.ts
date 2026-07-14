@@ -77,7 +77,7 @@ export function parsePlaylistPayload(raw: unknown): PlaylistPayload | null {
     screenId: String(o.screenId ?? ''),
     playlistId: o.playlistId == null ? null : String(o.playlistId),
     name: o.name == null ? null : String(o.name),
-    ...(src === 'override' || src === 'schedule' || src === 'default'
+    ...(src === 'override' || src === 'schedule' || src === 'rotation' || src === 'default'
       ? { activeSource: src }
       : {}),
     items,

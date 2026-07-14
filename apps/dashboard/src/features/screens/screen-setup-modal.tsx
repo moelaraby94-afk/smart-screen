@@ -46,6 +46,8 @@ import {
 import {
   fetchSchedules,
   updateSchedule as apiUpdateSchedule,
+  createSchedule as apiCreateSchedule,
+  deleteSchedule as apiDeleteSchedule,
 } from '@/features/schedules/api/schedules-api';
 import { readPageItems } from '@/features/api/page';
 import { ScreenFleetStatusBadge } from '@/features/screens/screen-fleet-status';
@@ -130,6 +132,14 @@ export function ScreenSetupModal({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [assignments, setAssignments] = useState<PlaylistAssignment[]>([]);
   const [newAssignmentPl, setNewAssignmentPl] = useState('');
+  const [newSchedPl, setNewSchedPl] = useState('');
+  const [newSchedRecurrence, setNewSchedRecurrence] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
+  const [newSchedDays, setNewSchedDays] = useState<number[]>([]);
+  const [newSchedDaysOfMonth, setNewSchedDaysOfMonth] = useState<number[]>([]);
+  const [newSchedStartTime, setNewSchedStartTime] = useState('09:00');
+  const [newSchedEndTime, setNewSchedEndTime] = useState('17:00');
+  const [newSchedStartDate, setNewSchedStartDate] = useState('');
+  const [newSchedEndDate, setNewSchedEndDate] = useState('');
   const [pendingSettings, setPendingSettings] = useState<null | {
     name: string;
     location: string;
@@ -310,6 +320,54 @@ export function ScreenSetupModal({
     try {
       await apiReorderAssignments(workspaceId, effectiveScreen.id, items);
       await loadAssignments(effectiveScreen.id);
+    } finally { setBusy(false); }
+  };
+
+  const handleCreateSchedule = async () => {
+    if (!effectiveScreen || !newSchedPl) return;
+    if (newSchedRecurrence === 'WEEKLY' && newSchedDays.length === 0) {
+      toast.error(t('selectDaysFirst'));
+      return;
+    }
+    if (newSchedRecurrence === 'MONTHLY' && newSchedDaysOfMonth.length === 0) {
+      toast.error(t('selectDaysOfMonthFirst'));
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await apiCreateSchedule({
+        workspaceId,
+        playlistId: newSchedPl,
+        screenId: effectiveScreen.id,
+        recurrence: newSchedRecurrence,
+        daysOfWeek: newSchedRecurrence === 'WEEKLY' ? newSchedDays : [],
+        daysOfMonth: newSchedRecurrence === 'MONTHLY' ? newSchedDaysOfMonth : [],
+        startTime: newSchedStartTime,
+        endTime: newSchedEndTime,
+        startDate: newSchedStartDate || null,
+        endDate: newSchedEndDate || null,
+        enabled: true,
+      });
+      if (!res.ok) { toast.error(t('scheduleCreateFailed')); return; }
+      toast.success(t('scheduleCreated'));
+      setNewSchedPl('');
+      setNewSchedDays([]);
+      setNewSchedDaysOfMonth([]);
+      setNewSchedStartDate('');
+      setNewSchedEndDate('');
+      await loadOptions();
+    } finally { setBusy(false); }
+  };
+
+  const handleDeleteSchedule = async (schedId: string) => {
+    if (!effectiveScreen) return;
+    setBusy(true);
+    try {
+      const res = await apiDeleteSchedule(workspaceId, schedId);
+      if (!res.ok) { toast.error(t('scheduleDeleteFailed')); return; }
+      toast.success(t('scheduleDeleted'));
+      if (scheduleId === schedId) { setScheduleId(''); markDirty(); }
+      await loadOptions();
     } finally { setBusy(false); }
   };
 
@@ -588,6 +646,11 @@ export function ScreenSetupModal({
                       <Zap className="h-3 w-3" />
                       {t('overrideActive')}
                     </span>
+                  ) : assignments.length > 0 ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                      <Film className="h-3 w-3" />
+                      {t('rotationActive')}
+                    </span>
                   ) : playlistId ? (
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                       <Film className="h-3 w-3" />
@@ -596,40 +659,22 @@ export function ScreenSetupModal({
                   ) : (
                     <span className="text-sm text-muted-foreground">{t('noContent')}</span>
                   )}
-                  {activePlaylist && (
+                  {assignments.length > 0 && (
                     <span className="truncate text-sm font-medium text-foreground">
-                      {overridePlaylistId ? playlists.find((p) => p.id === overridePlaylistId)?.name ?? '—' : activePlaylist.name}
+                      {assignments.length} {t('playlistsInRotation')}
                     </span>
                   )}
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2 text-sm font-semibold">
-                  <ListMusic className="h-4 w-4 text-primary" />
-                  {t('assignPlaylist')}
-                </Label>
-                <select
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
-                  value={playlistId}
-                  onChange={(e) => { setPlaylistId(e.target.value); markDirty(); }}
-                >
-                  <option value="">{t('noPlaylist')}</option>
-                  {playlists.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-muted-foreground">{t('assignPlaylistHint')}</p>
-              </div>
-
-              {/* Multi-playlist rotation */}
+              {/* Playlist rotation - primary content system */}
               <div className="space-y-3 rounded-xl border border-border p-4">
                 <div className="flex items-center justify-between">
                   <Label className="flex items-center gap-2 text-sm font-semibold">
                     <ListMusic className="h-4 w-4 text-primary" />
                     {t('playlistRotation')}
                   </Label>
-                  <span className="text-xs text-muted-foreground">{t('playlistRotationHint')}</span>
+                  <span className="text-xs text-muted-foreground">{t('sequentialPlaybackHint')}</span>
                 </div>
 
                 {assignments.length > 0 ? (
@@ -764,26 +809,137 @@ export function ScreenSetupModal({
               )}
               </div>
 
-              {/* Schedule selector */}
-              <div className="space-y-2 rounded-xl border border-border p-4">
+              {/* Schedule management */}
+              <div className="space-y-3 rounded-xl border border-border p-4">
                 <Label className="flex items-center gap-2 text-sm font-semibold">
                   <CalendarClock className="h-4 w-4 text-primary" />
                   {t('scheduleFocus')}
                 </Label>
-                <select
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
-                  value={scheduleId}
-                  onChange={(e) => { setScheduleId(e.target.value); markDirty(); }}
-                >
-                  <option value="">{t('clearSchedule')}</option>
-                  {schedules.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.playlist?.name ?? s.id}
-                      {s.screenId === effectiveScreen?.id ? t('thisScreenSuffix') : ''}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-muted-foreground">{t('scheduleHint')}</p>
+
+                {/* Existing schedules for this screen */}
+                {schedules.filter((s) => s.screenId === effectiveScreen?.id).length > 0 ? (
+                  <div className="space-y-2">
+                    {schedules.filter((s) => s.screenId === effectiveScreen?.id).map((s) => (
+                      <div key={s.id} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2">
+                        <span className="truncate text-sm font-medium">{s.playlist?.name ?? s.id}</span>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void handleDeleteSchedule(s.id)}
+                          className="rounded-md p-1 text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-xs text-muted-foreground py-2">{t('noSchedules')}</p>
+                )}
+
+                {/* New schedule form */}
+                <div className="space-y-3 border-t border-border pt-3">
+                  <select
+                    className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium outline-none focus:border-primary/40"
+                    value={newSchedPl}
+                    onChange={(e) => setNewSchedPl(e.target.value)}
+                  >
+                    <option value="">{t('selectPlaylist')}</option>
+                    {playlists.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['WEEKLY', 'MONTHLY'] as const).map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => { setNewSchedRecurrence(r); setNewSchedDays([]); setNewSchedDaysOfMonth([]); }}
+                        className={cn(
+                          'rounded-xl border px-2 py-2 text-xs font-medium transition',
+                          newSchedRecurrence === r ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40',
+                        )}
+                      >
+                        {t(`recurrence${r}`)}
+                      </button>
+                    ))}
+                  </div>
+
+                  {newSchedRecurrence === 'WEEKLY' && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {['Su','Mo','Tu','We','Th','Fr','Sa'].map((day, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => {
+                            setNewSchedDays((prev) => prev.includes(i) ? prev.filter((d) => d !== i) : [...prev, i]);
+                          }}
+                          className={cn(
+                            'h-8 w-8 rounded-lg border text-xs font-medium transition',
+                            newSchedDays.includes(i) ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40',
+                          )}
+                        >
+                          {day}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {newSchedRecurrence === 'MONTHLY' && (
+                    <div className="flex flex-wrap gap-1">
+                      {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                        <button
+                          key={day}
+                          type="button"
+                          onClick={() => {
+                            setNewSchedDaysOfMonth((prev) => prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]);
+                          }}
+                          className={cn(
+                            'h-7 w-7 rounded-lg border text-[10px] font-medium transition',
+                            newSchedDaysOfMonth.includes(day) ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40',
+                          )}
+                        >
+                          {day}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">{t('startTime')}</Label>
+                      <Input type="time" value={newSchedStartTime} onChange={(e) => setNewSchedStartTime(e.target.value)} className="rounded-xl" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">{t('endTime')}</Label>
+                      <Input type="time" value={newSchedEndTime} onChange={(e) => setNewSchedEndTime(e.target.value)} className="rounded-xl" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">{t('startDateOptional')}</Label>
+                      <Input type="date" value={newSchedStartDate} onChange={(e) => setNewSchedStartDate(e.target.value)} className="rounded-xl" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">{t('endDateOptional')}</Label>
+                      <Input type="date" value={newSchedEndDate} onChange={(e) => setNewSchedEndDate(e.target.value)} className="rounded-xl" />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="cta"
+                    className="w-full rounded-xl"
+                    disabled={busy || !newSchedPl || !effectiveScreen}
+                    onClick={() => void handleCreateSchedule()}
+                  >
+                    <Plus className="me-1.5 h-4 w-4" />
+                    {t('addSchedule')}
+                  </Button>
+                </div>
               </div>
 
             </div>
