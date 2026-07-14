@@ -540,17 +540,20 @@ W0 (تأكيد)
 
 > يُملأ أثناء التنفيذ. سطر لكل مهمة: `<ID> ✅/⏸/N-A — ملاحظة + SHA`.
 
-| المهمة | الحالة | ملاحظة |
+| المهمة | الحالة | ملاحظة / SHA |
 |---|---|---|
-| T0.1 تأكيد الأساس | ⬜ | — |
-| T0.2 تأكيد العيوب | ⬜ | — |
-| T1.1–T1.7 باجات | ⬜ | B1–B7 |
+| T0.1 تأكيد الأساس الأخضر | ✅ | i18n + typecheck + build خضراء قبل أي تغيير |
+| T3.2 دمج Content → Media | ✅ | redirect + حذف مكوّن ميت + تنظيف سايدبار · `add9dd4` |
+| T3.3 دمج Display Groups → Playlists | ✅ | نقل عدّاد الشاشات + redirect + حذف · `add9dd4` |
+| W8.1a توحيد الاسم (Smart Screen/شاشة ذكية) | ✅ | كل الواجهة + metadata + branding · `294e68a` |
+| W8.1b توحيد المصطلح (Workspace/مساحة عمل) | ✅ | 93 en + 98 ar، تأنيث نحوي صحيح · `7d32f2e` |
+| T1.1–T1.7 باجات (B1–B7) | ⬜ | التالي المقترح — يبدأ بـ P0 (الطوارئ/الإشعارات) |
 | T2.1–T2.3 ربط المبني | ⬜ | GlobalSearch / OverviewMetrics / Skeleton |
-| W8.1–W8.3 مصطلحات+نصوص+tokens | ⬜ | قبل W3 |
-| T3.1–T3.8 دمج+IA+سايدبار | ⬜ | 5 أزواج + billing + settings |
-| W10.1–W10.2 تكامل الإعدادات | ⬜ | يوسّع T3.7 |
-| W9.1–W9.6 تشريح صفحة+تحكّم | ⬜ | ListShell / palette / saved views |
-| T4.1–T4.5 طبقة عرضية | ⬜ | confirm/sort/export/empty |
-| W6.1–W6.4 a11y + ListStates | ⬜ | — |
-| T5.1–T5.2 موديل | ⬜ | Quick Publish |
-| W7 فيتشرز لاحقة | ⬜ | اختياري |
+| T3.1 دمج Displays → Screens | ⬜ | يحتاج نقل عرض الجدول |
+| T3.4 دمج Campaigns → Schedules | ⬜ | يحتاج نقل عرض Timeline |
+| T3.5 دمج Proof of Play → Analytics | ⬜ | يحتاج نقل بحث + CSV + جدول |
+| T3.6 دمج Billing + T3.7 تبويب Settings | ⬜ | يحلّ A1/A2/B4 + W10 |
+| T3.8 إعادة هيكلة أقسام السايدبار | ⬜ | بعد اكتمال الدمج |
+| W9 تشريح صفحة + سطح تحكّم | ⬜ | ListShell / palette / saved views |
+| W4/W6 طبقة عرضية + a11y | ⬜ | skeleton/empty/sort/export/confirm |
+| T5 موديل (Quick Publish) · W7 فيتشرز | ⬜ | لاحق |
