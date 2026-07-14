@@ -19,6 +19,9 @@ import { ListScreensDto } from './dto/list-screens.dto';
 import { RemoteCommandDto } from './dto/remote-command.dto';
 import { OverrideScreenDto } from './dto/override-screen.dto';
 import { UpdateScreenDto } from './dto/update-screen.dto';
+import { AssignPlaylistDto } from './dto/assign-playlist.dto';
+import { ReorderAssignmentDto } from './dto/reorder-assignments.dto';
+import { CreateOverrideRuleDto } from './dto/create-override-rule.dto';
 import { ScreensService } from './screens.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -61,6 +64,101 @@ export class ScreensController {
     @Query('workspaceId') workspaceId: string,
   ) {
     return this.screensService.getActiveContent(workspaceId, id);
+  }
+
+  // ─── Playlist Assignments ───
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
+  @Get(':id/assignments')
+  listAssignments(
+    @Param('id') id: string,
+    @Query('workspaceId') workspaceId: string,
+  ) {
+    return this.screensService.listAssignments(workspaceId, id);
+  }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
+  @Post(':id/assignments')
+  addAssignment(
+    @Param('id') id: string,
+    @Query('workspaceId') workspaceId: string,
+    @Body() dto: AssignPlaylistDto,
+  ) {
+    return this.screensService.addAssignment(workspaceId, id, dto);
+  }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
+  @Patch(':id/assignments/reorder')
+  reorderAssignments(
+    @Param('id') id: string,
+    @Query('workspaceId') workspaceId: string,
+    @Body() dto: ReorderAssignmentDto,
+  ) {
+    return this.screensService.reorderAssignments(workspaceId, id, dto.items);
+  }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
+  @HttpCode(204)
+  @Delete(':id/assignments/:assignmentId')
+  async removeAssignment(
+    @Param('id') id: string,
+    @Param('assignmentId') assignmentId: string,
+    @Query('workspaceId') workspaceId: string,
+  ): Promise<void> {
+    await this.screensService.removeAssignment(workspaceId, id, assignmentId);
+  }
+
+  // ─── Override Rules ───
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
+  @Get(':id/override-rules')
+  listOverrideRules(
+    @Param('id') id: string,
+    @Query('workspaceId') workspaceId: string,
+  ) {
+    return this.screensService.listOverrideRules(workspaceId, id);
+  }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
+  @Post(':id/override-rules')
+  createOverrideRule(
+    @Param('id') id: string,
+    @Query('workspaceId') workspaceId: string,
+    @Body() dto: CreateOverrideRuleDto,
+  ) {
+    return this.screensService.createOverrideRule(workspaceId, id, dto);
+  }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
+  @Patch(':id/override-rules/:ruleId')
+  updateOverrideRule(
+    @Param('id') id: string,
+    @Param('ruleId') ruleId: string,
+    @Query('workspaceId') workspaceId: string,
+    @Body() dto: Partial<CreateOverrideRuleDto>,
+  ) {
+    return this.screensService.updateOverrideRule(workspaceId, id, ruleId, dto);
+  }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
+  @HttpCode(204)
+  @Delete(':id/override-rules/:ruleId')
+  async deleteOverrideRule(
+    @Param('id') id: string,
+    @Param('ruleId') ruleId: string,
+    @Query('workspaceId') workspaceId: string,
+  ): Promise<void> {
+    await this.screensService.deleteOverrideRule(workspaceId, id, ruleId);
+  }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
+  @Post(':id/override-rules/check-conflicts')
+  checkOverrideConflicts(
+    @Param('id') id: string,
+    @Query('workspaceId') workspaceId: string,
+    @Body() dto: CreateOverrideRuleDto,
+  ) {
+    return this.screensService.checkOverrideConflicts(workspaceId, id, dto);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)

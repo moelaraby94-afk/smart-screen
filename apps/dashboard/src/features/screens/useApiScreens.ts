@@ -25,6 +25,7 @@ export type ScreenRow = {
   overrideExpiresAt?: string | null;
   playerTicker?: string | null;
   orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
+  playerPlatform?: string | null;
   updatedAt: string;
 };
 

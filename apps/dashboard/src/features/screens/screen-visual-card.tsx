@@ -1,16 +1,16 @@
 'use client';
 
-import type { Route } from 'next';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   Loader2,
   MapPin,
   MoreHorizontal,
   PenLine,
-  Power,
   RefreshCw,
   Monitor,
+  Zap,
+  BadgeAlert,
+  Trash2,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -56,7 +56,7 @@ export function ScreenVisualCard({
   onCardClick: (s: ScreenRow) => void;
   onEdit: (s: ScreenRow) => void;
   onDelete: (id: string) => void;
-  onRemote: (id: string, c: 'refresh_content' | 'restart') => void;
+  onRemote: (id: string, c: 'refresh_content' | 'identify') => void;
   playlists: PlaylistOption[];
   canAssignPlayback: boolean;
   assignPlaylistBusy: boolean;
@@ -185,37 +185,22 @@ export function ScreenVisualCard({
             ) : null}
           </div>
         </div>
-        <div className="flex justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0 rounded-xl" aria-label={t('screenActionsAria')}>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[11rem] rounded-xl">
-              <DropdownMenuItem onClick={() => onEdit(screen)}>{t('screenSettings')}</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => onDelete(screen.id)}
-              >
-                {t('deleteScreen')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+
+        <div className="flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
+          {screen.overridePlaylistId && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400">
+              <Zap className="h-3 w-3" />
+              {t('overrideBadge')}
+            </span>
+          )}
+          {!screen.overridePlaylistId && !screen.activePlaylistId && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+              {t('noContentAssigned')}
+            </span>
+          )}
         </div>
-        <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
-          <Button
-            type="button"
-            size="sm"
-            className="h-9 flex-1 rounded-xl text-[13px] font-semibold"
-            asChild
-          >
-            <Link href={`/${locale}/studio` as Route}>
-              <PenLine className="me-1.5 h-3.5 w-3.5" />
-              {t('editDesign')}
-            </Link>
-          </Button>
+
+        <div className="flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
           <Button
             type="button"
             size="sm"
@@ -224,18 +209,47 @@ export function ScreenVisualCard({
             onClick={() => onRemote(screen.id, 'refresh_content')}
           >
             <RefreshCw className="me-1.5 h-3.5 w-3.5" />
-            {t('refresh')}
+            {t('syncContent')}
           </Button>
           <Button
             type="button"
             size="sm"
             variant="outline"
-            className="h-9 flex-1 rounded-xl border-destructive/30 bg-destructive/5 text-[13px] font-medium text-destructive hover:bg-destructive/10"
-            onClick={() => onRemote(screen.id, 'restart')}
+            className="h-9 flex-1 rounded-xl text-[13px] font-medium"
+            onClick={() => onRemote(screen.id, 'identify')}
           >
-            <Power className="me-1.5 h-3.5 w-3.5" />
-            {t('powerOff')}
+            <BadgeAlert className="me-1.5 h-3.5 w-3.5" />
+            {t('identifyScreen')}
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0 rounded-xl" aria-label={t('screenActionsAria')}>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[11rem] rounded-xl">
+              <DropdownMenuItem onClick={() => onEdit(screen)}>
+                <PenLine className="me-2 h-4 w-4" />
+                {t('screenSettings')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onRemote(screen.id, 'refresh_content')}>
+                <RefreshCw className="me-2 h-4 w-4" />
+                {t('syncContent')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onRemote(screen.id, 'identify')}>
+                <BadgeAlert className="me-2 h-4 w-4" />
+                {t('identify')}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => onDelete(screen.id)}
+              >
+                <Trash2 className="me-2 h-4 w-4" />
+                {t('deleteScreen')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </motion.article>

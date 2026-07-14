@@ -3,37 +3,36 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Monitor, Plus, Search, Trash2, CheckSquare, Radio, Download, LayoutGrid, Table as TableIcon } from 'lucide-react';
+import { Monitor, Search, Trash2, CheckSquare, Radio, Download, LayoutGrid, Table as TableIcon, RefreshCw, MoreHorizontal, BadgeAlert, PenLine, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScreenActions } from '@/features/screens/hooks/use-screen-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { CardGridSkeleton } from '@/components/ui/skeleton-patterns';
 import { UsageIndicator } from '@/components/usage-indicator';
-import {
-  Dialog,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import {
   fetchPlaylistOptions,
   updateScreen as apiUpdateScreen,
   deleteScreen as apiDeleteScreen,
+  sendRemoteCommand as apiSendRemoteCommand,
   type PlaylistOption as ApiPlaylistOption,
 } from '@/features/screens/api/screens-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { usePlayerPairing } from '@/features/branches/use-player-pairing';
-import { BranchPairingDialog } from '@/features/branches/branch-pairing-dialog';
-import { ScreenQuickEditPanel } from '@/features/screens/screen-quick-edit-panel';
+import { ScreenSetupModal } from '@/features/screens/screen-setup-modal';
 import { useApiScreens, type ScreenRow } from './useApiScreens';
 import { useScreenRealtime } from './useScreenRealtime';
 import { ScreenVisualCard } from '@/features/screens/screen-visual-card';
 import { ScreenFleetStatusBadge } from '@/features/screens/screen-fleet-status';
 import { ScreenAnalyticsPanel } from '@/features/screens/screen-analytics-panel';
-import {
-  CreateScreenDialogContent,
-  EditScreenDialogContent,
-} from '@/features/screens/screen-dialogs';
 
 type Props = {
   locale: string;
@@ -85,6 +84,7 @@ export function ScreensClient({ locale }: Props) {
     canClaim: canClaimPairing,
     pairingActivityEpoch,
     onClaimed: reloadScreensAndBump,
+    autoClose: false,
   });
 
   const { onDelete, sendRemoteCommand } = useScreenActions({
@@ -129,11 +129,9 @@ export function ScreensClient({ locale }: Props) {
     [workspaceId, playlists, setScreens, bumpWorkspaceDataEpoch, t],
   );
 
-  const [selected, setSelected] = useState<ScreenRow | null>(null);
-  const [openAdd, setOpenAdd] = useState(false);
-  const [openEdit, setOpenEdit] = useState(false);
-  const [quickOpen, setQuickOpen] = useState(false);
-  const [quickScreen, setQuickScreen] = useState<ScreenRow | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalScreen, setModalScreen] = useState<ScreenRow | null>(null);
+  const [isPairingMode, setIsPairingMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name');
@@ -141,6 +139,7 @@ export function ScreensClient({ locale }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bulkPlaylistId, setBulkPlaylistId] = useState<string>('');
+  const [bulkSyncBusy, setBulkSyncBusy] = useState(false);
 
   const filteredScreens = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -212,6 +211,27 @@ export function ScreensClient({ locale }: Props) {
     }
   };
 
+  const bulkSyncContent = async () => {
+    if (!workspaceId || selectedIds.size === 0) return;
+    setBulkSyncBusy(true);
+    try {
+      const ids = Array.from(selectedIds);
+      const results = await Promise.all(
+        ids.map((id) => apiSendRemoteCommand(workspaceId, id, 'refresh_content')),
+      );
+      const failed = results.filter((r) => !r.ok).length;
+      if (failed > 0) {
+        toast.error(t('bulkSyncPartial', { failed }));
+      } else {
+        toast.success(t('bulkSyncOk', { count: ids.length }));
+      }
+      setSelectedIds(new Set());
+      bumpWorkspaceDataEpoch();
+    } finally {
+      setBulkSyncBusy(false);
+    }
+  };
+
   const bulkAssignPlaylist = async () => {
     if (!workspaceId || selectedIds.size === 0 || !bulkPlaylistId) return;
     setBulkBusy(true);
@@ -243,8 +263,16 @@ export function ScreensClient({ locale }: Props) {
   };
 
   const openQuick = (s: ScreenRow) => {
-    setQuickScreen(s);
-    setQuickOpen(true);
+    setModalScreen(s);
+    setIsPairingMode(false);
+    setModalOpen(true);
+  };
+
+  const openPairing = () => {
+    setModalScreen(null);
+    setIsPairingMode(true);
+    pairing.open();
+    setModalOpen(true);
   };
 
   const exportCsv = useCallback(() => {
@@ -292,31 +320,14 @@ export function ScreensClient({ locale }: Props) {
           </Button>
           {canClaimPairing && (
             <Button
-              variant="outline"
+              variant="cta"
               className="rounded-xl font-semibold"
-              onClick={pairing.open}
+              onClick={openPairing}
             >
               <Radio className="me-2 h-4 w-4" />
-              {t('pairScreen')}
+              {t('pairScreenPrimary')}
             </Button>
           )}
-          <Dialog open={openAdd} onOpenChange={setOpenAdd}>
-            <DialogTrigger asChild>
-              <Button className="rounded-xl font-semibold" variant="cta">
-                <Plus className="me-2 h-4 w-4" />
-                {t('addScreen')}
-              </Button>
-            </DialogTrigger>
-            <CreateScreenDialogContent
-              workspaceId={workspaceId}
-              onCancel={() => setOpenAdd(false)}
-              onSuccess={async () => {
-                setOpenAdd(false);
-                await reload();
-                bumpWorkspaceDataEpoch();
-              }}
-            />
-          </Dialog>
         </div>
       </motion.div>
 
@@ -434,6 +445,17 @@ export function ScreensClient({ locale }: Props) {
               {t('bulkAssign')}
             </Button>
           )}
+          {canAssignPlayback && (
+            <Button
+              variant="outline"
+              className="rounded-xl text-sm"
+              disabled={bulkSyncBusy}
+              onClick={() => void bulkSyncContent()}
+            >
+              <RefreshCw className="me-2 h-4 w-4" />
+              {t('bulkSyncContent')}
+            </Button>
+          )}
           <Button
             variant="outline"
             className="rounded-xl text-sm hover:text-destructive"
@@ -446,7 +468,7 @@ export function ScreensClient({ locale }: Props) {
           <Button
             variant="ghost"
             className="rounded-xl text-sm"
-            disabled={bulkBusy}
+            disabled={bulkBusy || bulkSyncBusy}
             onClick={clearSelection}
           >
             {t('clearSelection')}
@@ -465,13 +487,19 @@ export function ScreensClient({ locale }: Props) {
           <p className="max-w-md text-center text-sm text-muted-foreground">
             {t('emptyDescription')}
           </p>
-          <Button
-            className="rounded-xl font-semibold" variant="cta"
-            onClick={() => setOpenAdd(true)}
-          >
-            <Plus className="me-2 h-4 w-4" />
-            {t('addScreen')}
-          </Button>
+          {canClaimPairing && (
+            <Button
+              variant="cta"
+              className="rounded-xl font-semibold"
+              onClick={openPairing}
+            >
+              <Radio className="me-2 h-4 w-4" />
+              {t('pairScreenPrimary')}
+            </Button>
+          )}
+          <p className="max-w-sm text-center text-xs text-muted-foreground">
+            {t('emptyPairHint')}
+          </p>
         </div>
       ) : filteredScreens.length === 0 ? (
         <div className="vc-card-surface flex flex-col items-center gap-4 rounded-2xl py-16">
@@ -525,16 +553,45 @@ export function ScreensClient({ locale }: Props) {
                   <td className="px-4 py-3 text-muted-foreground">{screen.activePlaylist?.name ?? '—'}</td>
                   <td className="px-4 py-3 font-mono-nums text-xs text-muted-foreground">{screen.lastSeenAt ? new Date(screen.lastSeenAt).toLocaleString(locale) : '—'}</td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => openQuick(screen)}
-                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                        aria-label={t('quickEdit')}
-                      >
-                        <Monitor className="h-4 w-4" />
-                      </button>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                          aria-label={t('screenActionsAria')}
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="min-w-[11rem] rounded-xl">
+                        <DropdownMenuItem onClick={() => openQuick(screen)}>
+                          <PenLine className="me-2 h-4 w-4" />
+                          {t('screenSettings')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => void sendRemoteCommand(screen.id, 'refresh_content')}>
+                          <RefreshCw className="me-2 h-4 w-4" />
+                          {t('syncContent')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => void sendRemoteCommand(screen.id, 'identify')}>
+                          <BadgeAlert className="me-2 h-4 w-4" />
+                          {t('identify')}
+                        </DropdownMenuItem>
+                        {screen.overridePlaylistId && (
+                          <DropdownMenuItem disabled>
+                            <Zap className="me-2 h-4 w-4 text-amber-500" />
+                            {t('overrideBadge')}
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => void onDelete(screen.id)}
+                        >
+                          <Trash2 className="me-2 h-4 w-4" />
+                          {t('deleteScreen')}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </td>
                 </tr>
               ))}
@@ -551,10 +608,7 @@ export function ScreensClient({ locale }: Props) {
               workspaceId={workspaceId}
               index={i}
               onCardClick={openQuick}
-              onEdit={(s) => {
-                setSelected(s);
-                setOpenEdit(true);
-              }}
+              onEdit={(s) => openQuick(s)}
               onDelete={(id) => void onDelete(id)}
               onRemote={(id, cmd) => void sendRemoteCommand(id, cmd)}
               playlists={playlists}
@@ -568,45 +622,19 @@ export function ScreensClient({ locale }: Props) {
         </div>
       )}
 
-      <ScreenQuickEditPanel
-        open={quickOpen}
-        onOpenChange={setQuickOpen}
-        screen={quickScreen}
+      <ScreenSetupModal
+        open={modalOpen}
+        onOpenChange={(v: boolean) => {
+          setModalOpen(v);
+          if (!v) pairing.close();
+        }}
+        screen={modalScreen}
         workspaceId={workspaceId}
         locale={locale}
         onSaved={reloadScreensAndBump}
-        onEditScreen={() => {
-          if (quickScreen) {
-            setSelected(quickScreen);
-            setOpenEdit(true);
-          }
-        }}
+        pairing={pairing}
+        isPairingMode={isPairingMode}
       />
-
-      <BranchPairingDialog
-               pairing={pairing}
-               branchName={workspaces.find((w) => w.id === workspaceId)?.name ?? ''}
-               canClaim={canClaimPairing}
-      />
-
-      <Dialog open={openEdit} onOpenChange={setOpenEdit}>
-        {selected ? (
-          <EditScreenDialogContent
-            screen={selected}
-            workspaceId={workspaceId}
-            onCancel={() => {
-              setOpenEdit(false);
-              setSelected(null);
-            }}
-            onSuccess={async () => {
-              setOpenEdit(false);
-              setSelected(null);
-              await reload();
-              bumpWorkspaceDataEpoch();
-            }}
-          />
-        ) : null}
-      </Dialog>
     </div>
   );
 }

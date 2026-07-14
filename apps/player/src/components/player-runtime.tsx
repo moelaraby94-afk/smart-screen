@@ -591,7 +591,7 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
         identifyTimerRef.current = setTimeout(() => {
           setIdentifyOpen(false);
           identifyTimerRef.current = null;
-        }, 5000);
+        }, 30000);
       } else if (cmd === 'refresh_content') {
         void (async () => {
           await clearPlayerMediaCache();

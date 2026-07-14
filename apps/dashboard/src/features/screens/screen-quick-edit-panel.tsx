@@ -4,13 +4,13 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CalendarClock, FolderKanban, ListMusic, Megaphone, MonitorSmartphone, MapPin, Monitor, Zap, X } from 'lucide-react';
+import { CalendarClock, ListMusic, Megaphone, MonitorSmartphone, MapPin, Monitor, Zap, X, RefreshCw, BadgeAlert, Film } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { fetchPlaylistOptions, setScreenOverride, updateScreen as apiUpdateScreen } from '@/features/screens/api/screens-api';
+import { fetchPlaylistOptions, setScreenOverride, updateScreen as apiUpdateScreen, sendRemoteCommand as apiSendRemoteCommand } from '@/features/screens/api/screens-api';
 import { fetchSchedules, updateSchedule as apiUpdateSchedule } from '@/features/schedules/api/schedules-api';
 import { readPageItems } from '@/features/api/page';
 import { cn } from '@/lib/utils';
@@ -48,7 +48,6 @@ export function ScreenQuickEditPanel({
   const [schedules, setSchedules] = useState<ScheduleOpt[]>([]);
   const [playlistId, setPlaylistId] = useState<string>('');
   const [scheduleId, setScheduleId] = useState<string>('');
-  const [playlistGroupId, setPlaylistGroupId] = useState<string>('');
   const [tickerText, setTickerText] = useState<string>('');
   const [orientation, setOrientation] = useState<'AUTO' | 'LANDSCAPE' | 'PORTRAIT'>('AUTO');
   const [overridePlId, setOverridePlId] = useState<string>('');
@@ -68,7 +67,6 @@ export function ScreenQuickEditPanel({
   useEffect(() => {
     if (!open || !screen) return;
     setPlaylistId(screen.activePlaylistId ?? '');
-    setPlaylistGroupId(screen.playlistGroupId ?? '');
     setTickerText(screen.playerTicker ?? '');
     setOrientation(screen.orientation ?? 'AUTO');
     setOverridePlId(screen.overridePlaylistId ?? '');
@@ -82,20 +80,31 @@ export function ScreenQuickEditPanel({
     setScheduleId(match?.id ?? '');
   }, [open, screen, schedules]);
 
-  const applyPlaylistGroup = async (nextId: string) => {
+  const handleSyncContent = async () => {
     if (!screen) return;
     setBusy(true);
     try {
-      const res = await apiUpdateScreen(workspaceId, screen.id, {
-        playlistGroupId: nextId || null,
-      });
+      const res = await apiSendRemoteCommand(workspaceId, screen.id, 'refresh_content');
       if (!res.ok) {
-        toast.error(t('couldNotUpdatePlaylistGroup'));
+        toast.error(t('syncFailed'));
         return;
       }
-      toast.success(t('playlistGroupAssigned'));
-      setPlaylistGroupId(nextId);
-      await onSaved();
+      toast.success(t('syncSent'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleIdentify = async () => {
+    if (!screen) return;
+    setBusy(true);
+    try {
+      const res = await apiSendRemoteCommand(workspaceId, screen.id, 'identify');
+      if (!res.ok) {
+        toast.error(t('identifyFailed'));
+        return;
+      }
+      toast.success(t('identifySent'));
     } finally {
       setBusy(false);
     }
@@ -279,30 +288,56 @@ export function ScreenQuickEditPanel({
             </div>
 
             <div className="flex-1 space-y-8 overflow-y-auto px-6 py-6">
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2 text-sm font-semibold">
-                  <FolderKanban className="h-4 w-4 text-primary" />
-                  {t('screenPlaylistGroup')}
-                </Label>
-                <select
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none ring-0 focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
-                  value={playlistGroupId}
-                  disabled={busy}
-                  aria-label={t('screenPlaylistGroup')}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setPlaylistGroupId(v);
-                    void applyPlaylistGroup(v);
-                  }}
-                >
-                  <option value="">{t('noPlaylistGroupOption')}</option>
-                  {playlists.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[12px] text-muted-foreground">{t('screenPlaylistGroupHint')}</p>
+              <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  {t('contentStatus')}
+                </p>
+                <div className="flex items-center gap-2">
+                  {screen.overridePlaylistId ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-bold text-amber-600 dark:text-amber-400">
+                      <Zap className="h-3 w-3" />
+                      {t('overrideActiveBadge')}
+                    </span>
+                  ) : screen.activePlaylistId ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                      <Film className="h-3 w-3" />
+                      {t('nowPlaying')}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">{t('noContent')}</span>
+                  )}
+                  {screen.activePlaylist && (
+                    <span className="truncate text-sm font-medium text-foreground">
+                      {screen.overridePlaylistId
+                        ? playlists.find((p) => p.id === screen.overridePlaylistId)?.name ?? '—'
+                        : screen.activePlaylist.name}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-xl text-xs"
+                    disabled={busy}
+                    onClick={() => void handleSyncContent()}
+                  >
+                    <RefreshCw className="me-1.5 h-3.5 w-3.5" />
+                    {t('syncNow')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-xl text-xs"
+                    disabled={busy}
+                    onClick={() => void handleIdentify()}
+                  >
+                    <BadgeAlert className="me-1.5 h-3.5 w-3.5" />
+                    {t('identifyScreen')}
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-2">

@@ -325,6 +325,8 @@ model Workspace {
 
   schedules     Schedule[]
 
+  overrideRules ScreenOverrideRule[]
+
   subscription  Subscription?
 
   invitations   WorkspaceInvitation[]
@@ -464,6 +466,12 @@ model Screen {
   overridePlaylist   Playlist?    @relation("ScreenOverridePlaylist", fields: [overridePlaylistId], references: [id], onDelete: SetNull)
 
   schedules Schedule[]
+
+  /// Multiple playlists assigned to this screen with ordering (rotation)
+  playlistAssignments ScreenPlaylistAssignment[]
+
+  /// Advanced override rules with date/time/recurrence
+  overrideRules ScreenOverrideRule[]
 
   @@index([workspaceId, playlistGroupId])
 
@@ -735,6 +743,10 @@ model Playlist {
 
   screensInGroup  Screen[]       @relation("PlaylistGroupForScreen")
 
+  screenAssignments ScreenPlaylistAssignment[]
+
+  overrideRuleScreens ScreenOverrideRule[]
+
   schedules       Schedule[]
 
 }
@@ -822,6 +834,88 @@ model Schedule {
   @@index([workspaceId])
 
   @@index([screenId])
+
+  @@index([playlistId])
+
+}
+
+
+
+/// Multiple playlists assigned to a screen with ordering for rotation playback
+model ScreenPlaylistAssignment {
+
+  id          String   @id @default(cuid())
+
+  screenId    String
+
+  playlistId  String
+
+  /// Order in the rotation (0 = first to play)
+  orderIndex  Int      @default(0)
+
+  createdAt   DateTime @default(now())
+
+  updatedAt   DateTime @updatedAt
+
+  screen    Screen   @relation(fields: [screenId], references: [id], onDelete: Cascade)
+
+  playlist  Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  @@unique([screenId, playlistId])
+
+  @@index([screenId, orderIndex])
+
+}
+
+
+
+/// Advanced override rule: force a playlist on a screen with date/time/recurrence and conflict detection
+model ScreenOverrideRule {
+
+  id          String   @id @default(cuid())
+
+  workspaceId String
+
+  screenId    String
+
+  playlistId  String
+
+  /// "ONCE" = one-time date range, "DAILY" = every day in time window, "WEEKLY" = specific days of week, "MONTHLY" = specific days of month
+  recurrence  String   @default("ONCE")
+
+  /// For WEEKLY: days 0-6 (Sun-Sat). Empty = all days
+  daysOfWeek  Int[]    @default([])
+
+  /// For MONTHLY: days 1-31. Empty = all days
+  daysOfMonth Int[]    @default([])
+
+  /// Start date for ONCE mode (inclusive)
+  startDate   DateTime?
+
+  /// End date for ONCE mode (inclusive)
+  endDate     DateTime?
+
+  /// Daily start time HH:mm
+  startTime   String   @default("00:00")
+
+  /// Daily end time HH:mm
+  endTime     String   @default("23:59")
+
+  enabled     Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  screen    Screen   @relation(fields: [screenId], references: [id], onDelete: Cascade)
+
+  playlist  Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, screenId])
+
+  @@index([screenId, enabled])
 
   @@index([playlistId])
 

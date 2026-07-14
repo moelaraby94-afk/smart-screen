@@ -1,0 +1,1224 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import {
+  ArrowDown,
+  ArrowUp,
+  BadgeAlert,
+  CalendarClock,
+  CheckCircle2,
+  Cpu,
+  Film,
+  ListMusic,
+  Loader2,
+  Megaphone,
+  Monitor,
+  MonitorSmartphone,
+  Plus,
+  Radio,
+  RefreshCw,
+  RotateCcw,
+  Smartphone,
+  Tablet,
+  Trash2,
+  Zap,
+} from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
+import {
+  deleteScreen as apiDeleteScreen,
+  fetchPlaylistOptions,
+  sendRemoteCommand as apiSendRemoteCommand,
+  setScreenOverride,
+  updateScreen as apiUpdateScreen,
+  fetchAssignments,
+  addAssignment as apiAddAssignment,
+  removeAssignment as apiRemoveAssignment,
+  reorderAssignments as apiReorderAssignments,
+  fetchOverrideRules,
+  createOverrideRule as apiCreateOverrideRule,
+  deleteOverrideRule as apiDeleteOverrideRule,
+  checkOverrideConflicts as apiCheckConflicts,
+  type PlaylistOption,
+  type PlaylistAssignment,
+  type OverrideRule,
+  type OverrideConflict,
+} from '@/features/screens/api/screens-api';
+import {
+  fetchSchedules,
+  updateSchedule as apiUpdateSchedule,
+} from '@/features/schedules/api/schedules-api';
+import { readPageItems } from '@/features/api/page';
+import { ScreenFleetStatusBadge } from '@/features/screens/screen-fleet-status';
+import type { ClaimedScreenData } from '@/features/branches/use-player-pairing';
+import type { ScreenRow } from './useApiScreens';
+
+type ScheduleOpt = {
+  id: string;
+  screenId: string | null;
+  playlist: { id: string; name: string };
+};
+
+type TabKey = 'pairing' | 'content' | 'override' | 'ticker' | 'settings';
+
+type PairingProps = {
+  code: string;
+  setCode: (v: string) => void;
+  name: string;
+  setName: (v: string) => void;
+  busy: boolean;
+  error: string | null;
+  success: boolean;
+  claimedScreen: ClaimedScreenData | null;
+  claim: () => Promise<void>;
+  showProgressBanner: boolean;
+};
+
+type Props = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  screen: ScreenRow | null;
+  workspaceId: string;
+  locale: string;
+  onSaved: () => Promise<void>;
+  pairing: PairingProps;
+  isPairingMode: boolean;
+};
+
+const TABS: { key: TabKey; icon: typeof ListMusic }[] = [
+  { key: 'pairing', icon: Radio },
+  { key: 'content', icon: ListMusic },
+  { key: 'override', icon: Zap },
+  { key: 'ticker', icon: Megaphone },
+  { key: 'settings', icon: MonitorSmartphone },
+];
+
+function formatDateTime(iso: string | null, locale: string): string {
+  if (!iso) return '—';
+  try {
+    return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso));
+  } catch {
+    return iso;
+  }
+}
+
+export function ScreenSetupModal({
+  open,
+  onOpenChange,
+  screen,
+  workspaceId,
+  locale,
+  onSaved,
+  pairing,
+  isPairingMode,
+}: Props) {
+  const t = useTranslations('screenSetupModal');
+
+  const [activeTab, setActiveTab] = useState<TabKey>(isPairingMode ? 'pairing' : 'content');
+  const [playlists, setPlaylists] = useState<PlaylistOption[]>([]);
+  const [schedules, setSchedules] = useState<ScheduleOpt[]>([]);
+  const [playlistId, setPlaylistId] = useState('');
+  const [scheduleId, setScheduleId] = useState('');
+  const [tickerText, setTickerText] = useState('');
+  const [orientation, setOrientation] = useState<'AUTO' | 'LANDSCAPE' | 'PORTRAIT'>('AUTO');
+  const [overridePlId, setOverridePlId] = useState('');
+  const [overrideDuration, setOverrideDuration] = useState(480);
+  const [screenName, setScreenName] = useState('');
+  const [screenLocation, setScreenLocation] = useState('');
+  const [screenStatus, setScreenStatus] = useState<'ONLINE' | 'OFFLINE' | 'MAINTENANCE'>('ONLINE');
+  const [busy, setBusy] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [assignments, setAssignments] = useState<PlaylistAssignment[]>([]);
+  const [overrideRules, setOverrideRules] = useState<OverrideRule[]>([]);
+  const [newAssignmentPl, setNewAssignmentPl] = useState('');
+  const [newRulePl, setNewRulePl] = useState('');
+  const [newRuleRecurrence, setNewRuleRecurrence] = useState<'ONCE' | 'DAILY' | 'WEEKLY' | 'MONTHLY'>('ONCE');
+  const [newRuleStartDate, setNewRuleStartDate] = useState('');
+  const [newRuleEndDate, setNewRuleEndDate] = useState('');
+  const [newRuleStartTime, setNewRuleStartTime] = useState('00:00');
+  const [newRuleEndTime, setNewRuleEndTime] = useState('23:59');
+  const [newRuleDays, setNewRuleDays] = useState<number[]>([]);
+  const [conflicts, setConflicts] = useState<OverrideConflict[]>([]);
+  const [showConflictWarning, setShowConflictWarning] = useState(false);
+  const [pendingSettings, setPendingSettings] = useState<null | {
+    name: string;
+    location: string;
+    orientation: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
+    playlistId: string;
+    tickerText: string;
+    overridePlId: string;
+    overrideDuration: number;
+    scheduleId: string;
+  }>(null);
+
+  const effectiveScreen: ScreenRow | ClaimedScreenData | null = pairing.claimedScreen ?? screen;
+  const isPaired = Boolean(pairing.claimedScreen) || (!isPairingMode && screen);
+
+  const loadOptions = useCallback(async () => {
+    const [pls, schsRes] = await Promise.all([
+      fetchPlaylistOptions(workspaceId),
+      fetchSchedules(workspaceId),
+    ]);
+    setPlaylists(pls);
+    setSchedules(schsRes.ok ? await readPageItems<ScheduleOpt>(schsRes) : []);
+  }, [workspaceId]);
+
+  const loadAssignments = useCallback(async (screenId: string) => {
+    const data = await fetchAssignments(workspaceId, screenId);
+    setAssignments(data);
+  }, [workspaceId]);
+
+  const loadOverrideRules = useCallback(async (screenId: string) => {
+    const data = await fetchOverrideRules(workspaceId, screenId);
+    setOverrideRules(data);
+  }, [workspaceId]);
+
+  useEffect(() => {
+    if (!open) return;
+    setActiveTab(isPairingMode ? 'pairing' : 'content');
+    setDirty(false);
+    setConfirmDelete(false);
+    if (effectiveScreen) {
+      setPlaylistId(effectiveScreen.activePlaylistId ?? '');
+      setTickerText(effectiveScreen.playerTicker ?? '');
+      setOrientation(effectiveScreen.orientation ?? 'AUTO');
+      setOverridePlId(effectiveScreen.overridePlaylistId ?? '');
+      setScreenName(effectiveScreen.name);
+      setScreenLocation(effectiveScreen.location ?? '');
+      setScreenStatus((effectiveScreen as ScreenRow).status ?? 'OFFLINE');
+    }
+    void loadOptions();
+    if (effectiveScreen?.id) {
+      void loadAssignments(effectiveScreen.id);
+      void loadOverrideRules(effectiveScreen.id);
+    }
+  }, [open, effectiveScreen, loadOptions, loadAssignments, loadOverrideRules]);
+
+  useEffect(() => {
+    if (!open || !effectiveScreen) return;
+    const match = schedules.find((s) => s.screenId === effectiveScreen.id);
+    setScheduleId(match?.id ?? '');
+  }, [open, effectiveScreen, schedules]);
+
+  const markDirty = () => setDirty(true);
+
+  useEffect(() => {
+    if (!pairing.claimedScreen || !pendingSettings || !open) return;
+    const screen = pairing.claimedScreen;
+    void (async () => {
+      setBusy(true);
+      try {
+        const updates: Parameters<typeof apiUpdateScreen>[2] = {};
+        if (pendingSettings.name !== screen.name) updates.name = pendingSettings.name;
+        if (pendingSettings.location !== (screen.location ?? '')) updates.location = pendingSettings.location.trim() || null;
+        if (pendingSettings.orientation !== (screen.orientation ?? 'AUTO')) updates.orientation = pendingSettings.orientation;
+        if (pendingSettings.playlistId !== (screen.activePlaylistId ?? '')) updates.activePlaylistId = pendingSettings.playlistId || null;
+        if (pendingSettings.tickerText.trim() !== (screen.playerTicker ?? '')) updates.playerTicker = pendingSettings.tickerText.trim() || null;
+
+        const hasUpdates = Object.keys(updates).length > 0;
+        if (hasUpdates) {
+          await apiUpdateScreen(workspaceId, screen.id, updates);
+        }
+
+        if (pendingSettings.overridePlId) {
+          await setScreenOverride(workspaceId, screen.id, {
+            playlistId: pendingSettings.overridePlId,
+            durationMinutes: pendingSettings.overrideDuration,
+          });
+        }
+
+        if (pendingSettings.scheduleId) {
+          await apiUpdateSchedule(workspaceId, pendingSettings.scheduleId, { screenId: screen.id });
+        }
+
+        setPendingSettings(null);
+        setDirty(false);
+        toast.success(t('settingsAppliedAfterPairing'));
+        await onSaved();
+      } catch {
+        toast.error(t('saveFailed'));
+      } finally {
+        setBusy(false);
+      }
+    })();
+  }, [pairing.claimedScreen, pendingSettings, open, workspaceId, t, onSaved]);
+
+  const handleSyncContent = async () => {
+    if (!effectiveScreen) return;
+    setBusy(true);
+    try {
+      const res = await apiSendRemoteCommand(workspaceId, effectiveScreen.id, 'refresh_content');
+      if (!res.ok) { toast.error(t('syncFailed')); return; }
+      toast.success(t('syncSent'));
+    } finally { setBusy(false); }
+  };
+
+  const handleIdentify = async () => {
+    if (!effectiveScreen) return;
+    setBusy(true);
+    try {
+      const res = await apiSendRemoteCommand(workspaceId, effectiveScreen.id, 'identify');
+      if (!res.ok) { toast.error(t('identifyFailed')); return; }
+      toast.success(t('identifySent'));
+    } finally { setBusy(false); }
+  };
+
+  const handleRestart = async () => {
+    if (!effectiveScreen) return;
+    setBusy(true);
+    try {
+      const res = await apiSendRemoteCommand(workspaceId, effectiveScreen.id, 'restart');
+      if (!res.ok) { toast.error(t('restartFailed')); return; }
+      toast.success(t('restartSent'));
+    } finally { setBusy(false); }
+  };
+
+  const handleDelete = async () => {
+    if (!effectiveScreen) return;
+    setBusy(true);
+    try {
+      const res = await apiDeleteScreen(workspaceId, effectiveScreen.id);
+      if (!res.ok) { toast.error(t('deleteFailed')); return; }
+      toast.success(t('deleteOk'));
+      await onSaved();
+      onOpenChange(false);
+    } finally { setBusy(false); }
+  };
+
+  const handleAddAssignment = async () => {
+    if (!effectiveScreen || !newAssignmentPl) return;
+    setBusy(true);
+    try {
+      const res = await apiAddAssignment(workspaceId, effectiveScreen.id, newAssignmentPl);
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        toast.error(body?.message ?? t('assignmentAddFailed'));
+        return;
+      }
+      toast.success(t('assignmentAdded'));
+      setNewAssignmentPl('');
+      await loadAssignments(effectiveScreen.id);
+    } finally { setBusy(false); }
+  };
+
+  const handleRemoveAssignment = async (assignmentId: string) => {
+    if (!effectiveScreen) return;
+    setBusy(true);
+    try {
+      const res = await apiRemoveAssignment(workspaceId, effectiveScreen.id, assignmentId);
+      if (!res.ok) { toast.error(t('assignmentRemoveFailed')); return; }
+      toast.success(t('assignmentRemoved'));
+      await loadAssignments(effectiveScreen.id);
+    } finally { setBusy(false); }
+  };
+
+  const handleReorderAssignment = async (assignmentId: string, direction: 'up' | 'down') => {
+    if (!effectiveScreen) return;
+    const sorted = [...assignments].sort((a, b) => a.orderIndex - b.orderIndex);
+    const idx = sorted.findIndex((a) => a.id === assignmentId);
+    if (idx < 0) return;
+    if (direction === 'up' && idx === 0) return;
+    if (direction === 'down' && idx === sorted.length - 1) return;
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    const items = sorted.map((a, i) => ({ id: a.id, orderIndex: i }));
+    [items[idx], items[swapIdx]] = [items[swapIdx], items[idx]];
+    setBusy(true);
+    try {
+      await apiReorderAssignments(workspaceId, effectiveScreen.id, items);
+      await loadAssignments(effectiveScreen.id);
+    } finally { setBusy(false); }
+  };
+
+  const handleCheckConflicts = async () => {
+    if (!effectiveScreen || !newRulePl) return;
+    const result = await apiCheckConflicts(workspaceId, effectiveScreen.id, {
+      playlistId: newRulePl,
+      recurrence: newRuleRecurrence,
+      daysOfWeek: newRuleRecurrence === 'WEEKLY' ? newRuleDays : undefined,
+      startDate: newRuleRecurrence === 'ONCE' ? newRuleStartDate : undefined,
+      endDate: newRuleRecurrence === 'ONCE' ? newRuleEndDate : undefined,
+      startTime: newRuleStartTime,
+      endTime: newRuleEndTime,
+    });
+    setConflicts(result);
+    setShowConflictWarning(result.length > 0);
+    return result;
+  };
+
+  const handleCreateOverrideRule = async (force = false) => {
+    if (!effectiveScreen || !newRulePl) return;
+    if (!force) {
+      const detected = await handleCheckConflicts();
+      if (detected && detected.length > 0) {
+        setShowConflictWarning(true);
+        return;
+      }
+    }
+    setBusy(true);
+    try {
+      const res = await apiCreateOverrideRule(workspaceId, effectiveScreen.id, {
+        playlistId: newRulePl,
+        recurrence: newRuleRecurrence,
+        daysOfWeek: newRuleRecurrence === 'WEEKLY' ? newRuleDays : undefined,
+        startDate: newRuleRecurrence === 'ONCE' ? newRuleStartDate : undefined,
+        endDate: newRuleRecurrence === 'ONCE' ? newRuleEndDate : undefined,
+        startTime: newRuleStartTime,
+        endTime: newRuleEndTime,
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        if (body?.conflicts) {
+          setConflicts(body.conflicts);
+          setShowConflictWarning(true);
+          return;
+        }
+        toast.error(t('overrideRuleCreateFailed'));
+        return;
+      }
+      toast.success(t('overrideRuleCreated'));
+      setNewRulePl('');
+      setNewRuleStartDate('');
+      setNewRuleEndDate('');
+      setNewRuleDays([]);
+      setNewRuleStartTime('00:00');
+      setNewRuleEndTime('23:59');
+      setShowConflictWarning(false);
+      setConflicts([]);
+      await loadOverrideRules(effectiveScreen.id);
+    } finally { setBusy(false); }
+  };
+
+  const handleDeleteOverrideRule = async (ruleId: string) => {
+    if (!effectiveScreen) return;
+    setBusy(true);
+    try {
+      const res = await apiDeleteOverrideRule(workspaceId, effectiveScreen.id, ruleId);
+      if (!res.ok) { toast.error(t('overrideRuleDeleteFailed')); return; }
+      toast.success(t('overrideRuleDeleted'));
+      await loadOverrideRules(effectiveScreen.id);
+    } finally { setBusy(false); }
+  };
+
+  const handleSaveAll = async () => {
+    if (!effectiveScreen) {
+      setPendingSettings({
+        name: screenName,
+        location: screenLocation,
+        orientation,
+        playlistId,
+        tickerText,
+        overridePlId,
+        overrideDuration,
+        scheduleId,
+      });
+      setDirty(false);
+      toast.info(t('settingsWillApplyAfterPairing'));
+      return;
+    }
+    setBusy(true);
+    try {
+      const updates: Parameters<typeof apiUpdateScreen>[2] = {};
+      if (screenName !== effectiveScreen.name) updates.name = screenName;
+      if (screenLocation !== (effectiveScreen.location ?? '')) updates.location = screenLocation.trim() || null;
+      if (orientation !== (effectiveScreen.orientation ?? 'AUTO')) updates.orientation = orientation;
+      if (playlistId !== (effectiveScreen.activePlaylistId ?? '')) updates.activePlaylistId = playlistId || null;
+      if (tickerText.trim() !== (effectiveScreen.playerTicker ?? '')) updates.playerTicker = tickerText.trim() || null;
+      if (screenStatus !== ((effectiveScreen as ScreenRow).status ?? 'OFFLINE')) updates.status = screenStatus;
+
+      const hasUpdates = Object.keys(updates).length > 0;
+      if (hasUpdates) {
+        const res = await apiUpdateScreen(workspaceId, effectiveScreen.id, updates);
+        if (!res.ok) { toast.error(t('saveFailed')); return; }
+      }
+
+      if (overridePlId !== (effectiveScreen.overridePlaylistId ?? '')) {
+        const ovRes = await setScreenOverride(workspaceId, effectiveScreen.id, {
+          playlistId: overridePlId || null,
+          durationMinutes: overridePlId ? overrideDuration : undefined,
+        });
+        if (!ovRes.ok) { toast.error(t('overrideFailed')); return; }
+      }
+
+      const currentSchedule = schedules.find((s) => s.screenId === effectiveScreen.id);
+      if (scheduleId !== (currentSchedule?.id ?? '')) {
+        if (currentSchedule) {
+          await apiUpdateSchedule(workspaceId, currentSchedule.id, { screenId: null });
+        }
+        if (scheduleId) {
+          await apiUpdateSchedule(workspaceId, scheduleId, { screenId: effectiveScreen.id });
+        }
+      }
+
+      toast.success(t('saveOk'));
+      setDirty(false);
+      await onSaved();
+      onOpenChange(false);
+    } finally { setBusy(false); }
+  };
+
+  const resolutionWidth = (effectiveScreen as ScreenRow)?.resolutionWidth ?? (effectiveScreen as ClaimedScreenData)?.resolutionWidth;
+  const resolutionHeight = (effectiveScreen as ScreenRow)?.resolutionHeight ?? (effectiveScreen as ClaimedScreenData)?.resolutionHeight;
+  const playerPlatform = (effectiveScreen as ScreenRow)?.playerPlatform ?? (effectiveScreen as ClaimedScreenData)?.playerPlatform ?? null;
+  const serialNumber = effectiveScreen?.serialNumber ?? '';
+  const screenStatusValue = (effectiveScreen as ScreenRow)?.status ?? 'OFFLINE';
+  const lastSeenAt = (effectiveScreen as ScreenRow)?.lastSeenAt ?? null;
+  const overridePlaylistId = effectiveScreen?.overridePlaylistId ?? null;
+  const overrideExpiresAt = (effectiveScreen as ScreenRow)?.overrideExpiresAt ?? null;
+  const activePlaylist = effectiveScreen?.activePlaylist ?? null;
+  const isOfflineCacheMode = (effectiveScreen as ScreenRow)?.isOfflineCacheMode ?? false;
+
+  const is4K = resolutionWidth && resolutionHeight
+    ? resolutionWidth >= 3840 || resolutionHeight >= 2160
+    : false;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="flex h-[90vh] w-[95vw] max-w-5xl flex-col overflow-hidden rounded-2xl border-border p-0">
+        {/* Header */}
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-6 py-4">
+          <div className="min-w-0 flex-1">
+            {isPaired && effectiveScreen ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <h2 className="truncate text-lg font-semibold tracking-tight">{screenName || effectiveScreen.name}</h2>
+                  <ScreenFleetStatusBadge
+                    status={screenStatusValue as 'ONLINE' | 'OFFLINE' | 'MAINTENANCE'}
+                    lastSeenAt={lastSeenAt}
+                    locale={locale}
+                    tone="card"
+                  />
+                </div>
+                <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  <span className="font-mono">{serialNumber}</span>
+                  {resolutionWidth && resolutionHeight && (
+                    <span className="flex items-center gap-1">
+                      <Monitor className="h-3 w-3" />
+                      {resolutionWidth}×{resolutionHeight}
+                      {is4K && (
+                        <span className="ms-1 rounded bg-primary/15 px-1 py-0.5 text-[9px] font-bold text-primary">4K</span>
+                      )}
+                    </span>
+                  )}
+                  {playerPlatform && (
+                    <span className="flex items-center gap-1">
+                      <Cpu className="h-3 w-3" />
+                      {playerPlatform}
+                    </span>
+                  )}
+                  {overridePlaylistId && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                      <Zap className="h-3 w-3" />
+                      {t('overrideActive')}
+                    </span>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Radio className="h-5 w-5 text-primary" />
+                <h2 className="text-lg font-semibold tracking-tight">{t('pairNewDevice')}</h2>
+              </div>
+            )}
+          </div>
+          {isPaired && effectiveScreen && (
+            <div className="flex shrink-0 items-center gap-2">
+              <Button type="button" size="sm" variant="outline" className="rounded-xl" disabled={busy} onClick={() => void handleSyncContent()}>
+                <RefreshCw className="me-1.5 h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{t('syncNow')}</span>
+              </Button>
+              <Button type="button" size="sm" variant="outline" className="rounded-xl" disabled={busy} onClick={() => void handleIdentify()}>
+                <BadgeAlert className="me-1.5 h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{t('identify')}</span>
+              </Button>
+              <Button type="button" size="sm" variant="outline" className="rounded-xl" disabled={busy} onClick={() => void handleRestart()}>
+                <RotateCcw className="me-1.5 h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{t('restart')}</span>
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Success banner */}
+        {pairing.success && (
+          <div className="flex shrink-0 items-center gap-2 border-b border-emerald-400/30 bg-emerald-500/10 px-6 py-2.5 text-sm font-medium text-emerald-700 dark:text-emerald-400">
+            <CheckCircle2 className="h-4 w-4" />
+            {t('pairingSuccess')}
+          </div>
+        )}
+
+        {/* Tab bar - always visible */}
+        <div className="flex shrink-0 items-center gap-1 overflow-x-auto border-b border-border px-4">
+          {TABS.map(({ key, icon: Icon }) => {
+            const showBadge = key === 'pairing' && pairing.success;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setActiveTab(key)}
+                className={cn(
+                  'flex items-center gap-2 border-b-2 px-3 py-3 text-sm font-medium transition-colors whitespace-nowrap sm:px-4',
+                  activeTab === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                {t(`tab_${key}`)}
+                {showBadge && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Tab content - fixed height, scrollable */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+          {/* Pairing tab */}
+          {activeTab === 'pairing' && (
+            <div className="space-y-5">
+              {pairing.success && effectiveScreen ? (
+                <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/5 p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                    <CheckCircle2 className="h-4 w-4" />
+                    {t('pairingSuccess')}
+                  </div>
+                  <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
+                    <span><span className="font-medium text-foreground">{t('screenName')}: </span>{effectiveScreen.name}</span>
+                    <span><span className="font-medium text-foreground">{t('serialNumber')}: </span><span className="font-mono">{effectiveScreen.serialNumber}</span></span>
+                    {resolutionWidth && resolutionHeight && (
+                      <span><span className="font-medium text-foreground">{t('resolution')}: </span>{resolutionWidth}×{resolutionHeight}{is4K && <span className="ms-1 rounded bg-primary/15 px-1 text-[9px] font-bold text-primary">4K</span>}</span>
+                    )}
+                    {playerPlatform && (
+                      <span><span className="font-medium text-foreground">{t('playerPlatform')}: </span>{playerPlatform}</span>
+                    )}
+                    <span><span className="font-medium text-foreground">{t('status')}: </span>{screenStatusValue}</span>
+                    {lastSeenAt && (
+                      <span><span className="font-medium text-foreground">{t('lastSeen')}: </span>{formatDateTime(lastSeenAt, locale)}</span>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {pairing.showProgressBanner && (
+                    <p role="status" className="rounded-xl border border-primary/40 bg-primary/12 px-3 py-2 text-center text-xs font-medium leading-relaxed text-foreground">
+                      {t('pairingProgress')}
+                    </p>
+                  )}
+                  <p className="text-center text-sm leading-relaxed text-muted-foreground">
+                    {t('pairingDescription')}
+                  </p>
+                  {pairing.error && (
+                    <p className="rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-center text-sm text-destructive" role="alert">
+                      {pairing.error}
+                    </p>
+                  )}
+                  <div className="space-y-2">
+                    <p className="text-center text-xs font-medium text-muted-foreground">
+                      {t('pairingCodeLabel')}
+                    </p>
+                    <Input
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={6}
+                      placeholder={t('pairingCodePlaceholder')}
+                      value={pairing.code}
+                      onChange={(e) => pairing.setCode(e.target.value)}
+                      className="h-16 rounded-xl text-center font-mono text-3xl font-semibold tracking-[0.35em] text-foreground"
+                      aria-invalid={Boolean(pairing.error)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="pair-name">{t('pairingNameLabel')}</Label>
+                    <Input
+                      id="pair-name"
+                      value={pairing.name}
+                      onChange={(e) => pairing.setName(e.target.value)}
+                      placeholder={t('pairingNamePlaceholder')}
+                      className="rounded-xl"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && pairing.code.length === 6) void pairing.claim();
+                      }}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    className="h-12 w-full rounded-xl font-semibold"
+                    variant="cta"
+                    disabled={pairing.busy || pairing.code.length !== 6}
+                    onClick={() => void pairing.claim()}
+                  >
+                    {pairing.busy ? (
+                      <span className="inline-flex items-center justify-center gap-2">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        {t('pairing')}
+                      </span>
+                    ) : (
+                      <>
+                        <Radio className="me-2 h-5 w-5" />
+                        {t('pairDevice')}
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Content tab */}
+          {activeTab === 'content' && (
+            <div className="space-y-5">
+              <div className="rounded-xl border border-border bg-muted/30 p-4">
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  {t('currentStatus')}
+                </p>
+                <div className="flex items-center gap-2">
+                  {overridePlaylistId ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-bold text-amber-600 dark:text-amber-400">
+                      <Zap className="h-3 w-3" />
+                      {t('overrideActive')}
+                    </span>
+                  ) : playlistId ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                      <Film className="h-3 w-3" />
+                      {t('nowPlaying')}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">{t('noContent')}</span>
+                  )}
+                  {activePlaylist && (
+                    <span className="truncate text-sm font-medium text-foreground">
+                      {overridePlaylistId ? playlists.find((p) => p.id === overridePlaylistId)?.name ?? '—' : activePlaylist.name}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-sm font-semibold">
+                  <ListMusic className="h-4 w-4 text-primary" />
+                  {t('assignPlaylist')}
+                </Label>
+                <select
+                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
+                  value={playlistId}
+                  onChange={(e) => { setPlaylistId(e.target.value); markDirty(); }}
+                >
+                  <option value="">{t('noPlaylist')}</option>
+                  {playlists.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground">{t('assignPlaylistHint')}</p>
+              </div>
+
+              {/* Multi-playlist rotation */}
+              <div className="space-y-3 rounded-xl border border-border p-4">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2 text-sm font-semibold">
+                    <ListMusic className="h-4 w-4 text-primary" />
+                    {t('playlistRotation')}
+                  </Label>
+                  <span className="text-xs text-muted-foreground">{t('playlistRotationHint')}</span>
+                </div>
+
+                {assignments.length > 0 ? (
+                  <div className="space-y-2">
+                    {[...assignments].sort((a, b) => a.orderIndex - b.orderIndex).map((a, idx) => (
+                      <div key={a.id} className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-xs font-bold text-primary">{idx + 1}</span>
+                        <span className="flex-1 truncate text-sm font-medium">{a.playlist.name}</span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            disabled={busy || idx === 0}
+                            onClick={() => void handleReorderAssignment(a.id, 'up')}
+                            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+                          >
+                            <ArrowUp className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busy || idx === assignments.length - 1}
+                            onClick={() => void handleReorderAssignment(a.id, 'down')}
+                            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+                          >
+                            <ArrowDown className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => void handleRemoveAssignment(a.id)}
+                            className="rounded-md p-1 text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-xs text-muted-foreground py-2">{t('noAssignments')}</p>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <select
+                    className="h-10 flex-1 rounded-xl border border-border bg-background px-3 text-sm font-medium outline-none focus:border-primary/40"
+                    value={newAssignmentPl}
+                    onChange={(e) => setNewAssignmentPl(e.target.value)}
+                  >
+                    <option value="">{t('selectPlaylist')}</option>
+                    {playlists.filter((p) => !assignments.some((a) => a.playlistId === p.id)).map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="rounded-xl"
+                    disabled={busy || !newAssignmentPl || !effectiveScreen}
+                    onClick={() => void handleAddAssignment()}
+                  >
+                    <Plus className="me-1 h-4 w-4" />
+                    {t('addPlaylist')}
+                  </Button>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* Override tab */}
+          {activeTab === 'override' && (
+            <div className="space-y-6">
+              {/* Quick override section */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-primary" />
+                  <h3 className="text-sm font-semibold">{t('quickOverride')}</h3>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-muted-foreground">{t('overridePlaylist')}</Label>
+                <select
+                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
+                  value={overridePlId}
+                  onChange={(e) => { setOverridePlId(e.target.value); markDirty(); }}
+                >
+                  <option value="">{t('noOverride')}</option>
+                  {playlists.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground">{t('overrideHint')}</p>
+              </div>
+
+              {overridePlId && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">{t('overrideDuration')}</Label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {[
+                      { v: 30, label: t('dur30min') },
+                      { v: 60, label: t('dur1h') },
+                      { v: 240, label: t('dur4h') },
+                      { v: 480, label: t('dur8h') },
+                      { v: 1440, label: t('dur24h') },
+                    ].map(({ v, label }) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => { setOverrideDuration(v); markDirty(); }}
+                        className={cn(
+                          'rounded-xl border px-2 py-2.5 text-xs font-medium transition',
+                          overrideDuration === v ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground',
+                        )}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {overridePlaylistId && overrideExpiresAt && (
+                <div className="rounded-xl border border-amber-400/30 bg-amber-500/5 p-3 text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">{t('overrideExpiresAt')}: </span>
+                  {formatDateTime(overrideExpiresAt, locale)}
+                </div>
+              )}
+
+              {overridePlaylistId && !overrideExpiresAt && (
+                <div className="rounded-xl border border-amber-400/30 bg-amber-500/5 p-3 text-xs text-muted-foreground">
+                  {t('overrideCurrentlyActive')}
+                </div>
+              )}
+              </div>
+
+              {/* Schedule selector */}
+              <div className="space-y-2 rounded-xl border border-border p-4">
+                <Label className="flex items-center gap-2 text-sm font-semibold">
+                  <CalendarClock className="h-4 w-4 text-primary" />
+                  {t('scheduleFocus')}
+                </Label>
+                <select
+                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
+                  value={scheduleId}
+                  onChange={(e) => { setScheduleId(e.target.value); markDirty(); }}
+                >
+                  <option value="">{t('clearSchedule')}</option>
+                  {schedules.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.playlist?.name ?? s.id}
+                      {s.screenId === effectiveScreen?.id ? t('thisScreenSuffix') : ''}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground">{t('scheduleHint')}</p>
+              </div>
+
+              {/* Advanced override rules */}
+              <div className="space-y-3 rounded-xl border border-border p-4">
+                <Label className="flex items-center gap-2 text-sm font-semibold">
+                  <CalendarClock className="h-4 w-4 text-primary" />
+                  {t('advancedOverrideRules')}
+                </Label>
+
+                {overrideRules.length > 0 ? (
+                  <div className="space-y-2">
+                    {overrideRules.map((rule) => (
+                      <div key={rule.id} className="rounded-lg border border-border bg-background px-3 py-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate text-sm font-medium">{rule.playlist.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className={cn(
+                              'rounded-full px-2 py-0.5 text-[10px] font-bold',
+                              rule.enabled ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-muted text-muted-foreground',
+                            )}>
+                              {rule.enabled ? t('enabled') : t('disabled')}
+                            </span>
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => void handleDeleteOverrideRule(rule.id)}
+                              className="rounded-md p-1 text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                          <span className="font-medium text-foreground">{rule.recurrence}</span>
+                          <span>{rule.startTime} - {rule.endTime}</span>
+                          {rule.startDate && <span>{rule.startDate.slice(0,10)} → {rule.endDate?.slice(0,10) ?? '∞'}</span>}
+                          {rule.daysOfWeek.length > 0 && (
+                            <span>{rule.daysOfWeek.map((d) => ['Su','Mo','Tu','We','Th','Fr','Sa'][d]).join(', ')}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-xs text-muted-foreground py-2">{t('noOverrideRules')}</p>
+                )}
+
+                {/* New rule form */}
+                <div className="space-y-3 border-t border-border pt-3">
+                  <select
+                    className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium outline-none focus:border-primary/40"
+                    value={newRulePl}
+                    onChange={(e) => { setNewRulePl(e.target.value); setShowConflictWarning(false); }}
+                  >
+                    <option value="">{t('selectPlaylist')}</option>
+                    {playlists.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+
+                  <div className="grid grid-cols-4 gap-2">
+                    {(['ONCE', 'DAILY', 'WEEKLY', 'MONTHLY'] as const).map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => { setNewRuleRecurrence(r); setShowConflictWarning(false); }}
+                        className={cn(
+                          'rounded-xl border px-2 py-2 text-xs font-medium transition',
+                          newRuleRecurrence === r ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40',
+                        )}
+                      >
+                        {t(`recurrence${r}`)}
+                      </button>
+                    ))}
+                  </div>
+
+                  {newRuleRecurrence === 'WEEKLY' && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {['Su','Mo','Tu','We','Th','Fr','Sa'].map((day, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => {
+                            setNewRuleDays((prev) => prev.includes(i) ? prev.filter((d) => d !== i) : [...prev, i]);
+                            setShowConflictWarning(false);
+                          }}
+                          className={cn(
+                            'h-8 w-8 rounded-lg border text-xs font-medium transition',
+                            newRuleDays.includes(i) ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40',
+                          )}
+                        >
+                          {day}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {newRuleRecurrence === 'ONCE' && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">{t('startDate')}</Label>
+                        <Input type="date" value={newRuleStartDate} onChange={(e) => { setNewRuleStartDate(e.target.value); setShowConflictWarning(false); }} className="rounded-xl" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">{t('endDate')}</Label>
+                        <Input type="date" value={newRuleEndDate} onChange={(e) => { setNewRuleEndDate(e.target.value); setShowConflictWarning(false); }} className="rounded-xl" />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">{t('startTime')}</Label>
+                      <Input type="time" value={newRuleStartTime} onChange={(e) => { setNewRuleStartTime(e.target.value); setShowConflictWarning(false); }} className="rounded-xl" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">{t('endTime')}</Label>
+                      <Input type="time" value={newRuleEndTime} onChange={(e) => { setNewRuleEndTime(e.target.value); setShowConflictWarning(false); }} className="rounded-xl" />
+                    </div>
+                  </div>
+
+                  {showConflictWarning && conflicts.length > 0 && (
+                    <div className="rounded-xl border border-amber-400/40 bg-amber-500/10 p-3">
+                      <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">{t('conflictWarning')}</p>
+                      <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                        {conflicts.map((c, i) => (
+                          <li key={i}>• {c.playlistName}: {t(`conflict_${c.reason}`)}</li>
+                        ))}
+                      </ul>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="mt-2 rounded-xl"
+                        disabled={busy}
+                        onClick={() => void handleCreateOverrideRule(true)}
+                      >
+                        {t('proceedAnyway')}
+                      </Button>
+                    </div>
+                  )}
+
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="cta"
+                    className="w-full rounded-xl"
+                    disabled={busy || !newRulePl || !effectiveScreen}
+                    onClick={() => void handleCreateOverrideRule(false)}
+                  >
+                    <Plus className="me-1.5 h-4 w-4" />
+                    {t('addOverrideRule')}
+                  </Button>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+
+          {/* Ticker tab */}
+          {activeTab === 'ticker' && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-sm font-semibold">
+                  <Megaphone className="h-4 w-4 text-primary" />
+                  {t('tickerMessage')}
+                </Label>
+                <Input
+                  value={tickerText}
+                  onChange={(e) => { setTickerText(e.target.value); markDirty(); }}
+                  placeholder={t('tickerPlaceholder')}
+                  maxLength={200}
+                  className="rounded-xl"
+                />
+                <p className="text-xs text-muted-foreground">{t('tickerHint')}</p>
+              </div>
+              {effectiveScreen?.playerTicker && (
+                <div className="rounded-xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">{t('currentTicker')}: </span>
+                  {effectiveScreen.playerTicker}
+                </div>
+              )}
+
+            </div>
+          )}
+
+          {/* Settings tab */}
+          {activeTab === 'settings' && (
+            <div className="space-y-5">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">{t('screenName')}</Label>
+                  <Input value={screenName} onChange={(e) => { setScreenName(e.target.value); markDirty(); }} className="rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">{t('location')}</Label>
+                  <Input value={screenLocation} onChange={(e) => { setScreenLocation(e.target.value); markDirty(); }} placeholder={t('locationPlaceholder')} className="rounded-xl" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">{t('status')}</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { v: 'ONLINE', label: t('statusOnline') },
+                    { v: 'OFFLINE', label: t('statusOffline') },
+                    { v: 'MAINTENANCE', label: t('statusMaintenance') },
+                  ] as const).map(({ v, label }) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => { setScreenStatus(v); markDirty(); }}
+                      className={cn(
+                        'rounded-xl border px-3 py-2.5 text-sm font-medium transition',
+                        screenStatus === v ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground',
+                      )}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-sm font-semibold">
+                  <MonitorSmartphone className="h-4 w-4 text-primary" />
+                  {t('orientation')}
+                </Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { v: 'AUTO', label: t('orientationAuto'), icon: Monitor },
+                    { v: 'LANDSCAPE', label: t('orientationLandscape'), icon: Tablet },
+                    { v: 'PORTRAIT', label: t('orientationPortrait'), icon: Smartphone },
+                  ] as const).map(({ v, label, icon: Icon }) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => { setOrientation(v); markDirty(); }}
+                      className={cn(
+                        'flex flex-col items-center gap-2 rounded-xl border px-3 py-4 text-sm font-medium transition',
+                        orientation === v ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground',
+                      )}
+                    >
+                      <Icon className="h-6 w-6" />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">{t('orientationHint')}</p>
+              </div>
+
+              {/* Device info */}
+              {isPaired && effectiveScreen && (
+                <div className="rounded-xl border border-border bg-muted/20 p-4">
+                  <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                    {t('deviceInfo')}
+                  </p>
+                  <dl className="grid gap-3 text-xs sm:grid-cols-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <dt className="flex items-center gap-1.5 text-muted-foreground"><Cpu className="h-3.5 w-3.5" />{t('playerPlatform')}</dt>
+                      <dd className="font-medium text-foreground">{playerPlatform ?? '—'}</dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <dt className="flex items-center gap-1.5 text-muted-foreground"><Monitor className="h-3.5 w-3.5" />{t('resolution')}</dt>
+                      <dd className="font-medium text-foreground">
+                        {resolutionWidth && resolutionHeight ? `${resolutionWidth}×${resolutionHeight}` : '—'}
+                        {is4K && <span className="ms-1 rounded bg-primary/15 px-1 text-[9px] font-bold text-primary">4K</span>}
+                      </dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <dt className="text-muted-foreground">{t('lastSeen')}</dt>
+                      <dd className="font-medium text-foreground">{formatDateTime(lastSeenAt, locale)}</dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <dt className="text-muted-foreground">{t('offlineCacheMode')}</dt>
+                      <dd className="font-medium text-foreground">{isOfflineCacheMode ? t('yes') : t('no')}</dd>
+                    </div>
+                  </dl>
+                </div>
+              )}
+
+              {/* Delete screen */}
+              {isPaired && effectiveScreen && (
+                <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+                  {!confirmDelete ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-xl border-destructive/40 text-destructive hover:bg-destructive/10"
+                      disabled={busy}
+                      onClick={() => setConfirmDelete(true)}
+                    >
+                      <Trash2 className="me-2 h-4 w-4" />
+                      {t('deleteScreen')}
+                    </Button>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-sm font-medium text-destructive">{t('deleteConfirm')}</p>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          className="rounded-xl"
+                          disabled={busy}
+                          onClick={() => void handleDelete()}
+                        >
+                          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t('deleteYes')}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="rounded-xl"
+                          disabled={busy}
+                          onClick={() => setConfirmDelete(false)}
+                        >
+                          {t('deleteNo')}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border px-6 py-4">
+          <p className={cn('text-xs', dirty ? 'font-medium text-amber-600 dark:text-amber-400' : 'text-muted-foreground')}>
+            {dirty ? t('unsavedChanges') : t('allSaved')}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" className="rounded-xl" onClick={() => onOpenChange(false)}>
+              {t('close')}
+            </Button>
+            <Button type="button" variant="cta" className="rounded-xl font-semibold" disabled={busy || !dirty} onClick={() => void handleSaveAll()}>
+              {busy ? t('saving') : t('save')}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

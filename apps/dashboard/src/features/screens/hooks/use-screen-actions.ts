@@ -79,11 +79,13 @@ export function useScreenActions({
         toast.error(t('remoteFailed'));
         return;
       }
-      toast.success(
-        command === 'refresh_content' ? t('remoteRefreshOk') : t('remotePowerOk'),
-      );
       if (command === 'refresh_content') {
+        toast.success(t('syncContentOk'));
         bumpWorkspaceDataEpoch();
+      } else if (command === 'identify') {
+        toast.success(t('identifyOk'));
+      } else {
+        toast.success(t('remoteRefreshOk'));
       }
     },
     [workspaceId, t, bumpWorkspaceDataEpoch],

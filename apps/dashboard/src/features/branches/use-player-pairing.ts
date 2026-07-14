@@ -7,16 +7,36 @@ import { useApiErrorMessage } from '@/features/api/use-api-error-message';
 
 const SUCCESS_CLOSE_DELAY_MS = 2000;
 
+export type ClaimedScreenData = {
+  id: string;
+  name: string;
+  serialNumber: string;
+  status: string;
+  location?: string | null;
+  resolutionWidth?: number;
+  resolutionHeight?: number;
+  playerPlatform?: string | null;
+  orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
+  activePlaylistId?: string | null;
+  activePlaylist?: { id: string; name: string } | null;
+  overridePlaylistId?: string | null;
+  overrideExpiresAt?: string | null;
+  playerTicker?: string | null;
+  lastSeenAt?: string | null;
+  isOfflineCacheMode?: boolean;
+};
+
 export function usePlayerPairing(
   workspaceId: string,
   options: {
     canClaim: boolean;
     pairingActivityEpoch: number;
     onClaimed: () => Promise<void>;
+    autoClose?: boolean;
   },
 ) {
   const errorMessage = useApiErrorMessage();
-  const { canClaim, pairingActivityEpoch, onClaimed } = options;
+  const { canClaim, pairingActivityEpoch, onClaimed, autoClose = true } = options;
 
   const [isOpen, setIsOpen] = useState(false);
   const [code, setCodeRaw] = useState('');
@@ -24,6 +44,7 @@ export function usePlayerPairing(
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [claimedScreen, setClaimedScreen] = useState<ClaimedScreenData | null>(null);
 
   const baseEpochRef = useRef(0);
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -42,6 +63,7 @@ export function usePlayerPairing(
     setName('');
     setError(null);
     setSuccess(false);
+    setClaimedScreen(null);
   }, []);
 
   const open = useCallback(() => {
@@ -83,29 +105,28 @@ export function usePlayerPairing(
         body: JSON.stringify(body),
       });
       if (!res.ok) {
-        /**
-         * No branching on the failure: the message catalogue is keyed by the
-         * API's `code`, so screen-limit, wrong-code and lockout errors all
-         * resolve themselves. This used to sniff the server's English prose
-         * with `msg.includes('LIMIT_REACHED')`.
-         */
         setError(errorMessage(await readApiError(res)));
         return;
       }
+      const raw = (await res.json()) as { screen?: ClaimedScreenData; screenId?: string } & Partial<ClaimedScreenData>;
+      const data: ClaimedScreenData = raw.screen ?? (raw as ClaimedScreenData);
+      setClaimedScreen(data);
       void import('canvas-confetti').then((mod) => {
         mod.default({ particleCount: 140, spread: 72, origin: { y: 0.58 } });
       });
       setSuccess(true);
       await onClaimed();
-      clearSuccessTimer();
-      successTimerRef.current = setTimeout(() => {
-        successTimerRef.current = null;
-        close();
-      }, SUCCESS_CLOSE_DELAY_MS);
+      if (autoClose) {
+        clearSuccessTimer();
+        successTimerRef.current = setTimeout(() => {
+          successTimerRef.current = null;
+          close();
+        }, SUCCESS_CLOSE_DELAY_MS);
+      }
     } finally {
       setBusy(false);
     }
-  }, [workspaceId, canClaim, code, name, onClaimed, clearSuccessTimer, close, errorMessage]);
+  }, [workspaceId, canClaim, code, name, onClaimed, autoClose, clearSuccessTimer, close, errorMessage]);
 
   return {
     isOpen,
@@ -118,6 +139,7 @@ export function usePlayerPairing(
     busy,
     error,
     success,
+    claimedScreen,
     claim,
     showProgressBanner: isOpen && pairingActivityEpoch > baseEpochRef.current,
   };

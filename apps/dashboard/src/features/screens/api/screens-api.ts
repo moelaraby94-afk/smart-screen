@@ -23,6 +23,8 @@ export type ScreenUpdateInput = {
 
 export type RemoteCommand = 'identify' | 'refresh_content' | 'restart';
 
+export type ContentRemoteCommand = 'identify' | 'refresh_content';
+
 export async function fetchScreenById(
   workspaceId: string,
   screenId: string,
@@ -170,4 +172,190 @@ export async function setScreenOverride(
       body: JSON.stringify(data),
     },
   );
+}
+
+// ─── Playlist Assignments ───
+
+export type PlaylistAssignment = {
+  id: string;
+  screenId: string;
+  playlistId: string;
+  orderIndex: number;
+  playlist: { id: string; name: string; isPublished: boolean };
+};
+
+export async function fetchAssignments(
+  workspaceId: string,
+  screenId: string,
+): Promise<PlaylistAssignment[]> {
+  const res = await apiFetch(
+    `/screens/${encodeURIComponent(screenId)}/assignments?workspaceId=${encodeURIComponent(workspaceId)}`,
+  );
+  if (!res.ok) return [];
+  return (await res.json()) as PlaylistAssignment[];
+}
+
+export async function addAssignment(
+  workspaceId: string,
+  screenId: string,
+  playlistId: string,
+): Promise<Response> {
+  return apiFetch(
+    `/screens/${encodeURIComponent(screenId)}/assignments?workspaceId=${encodeURIComponent(workspaceId)}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playlistId }),
+    },
+  );
+}
+
+export async function removeAssignment(
+  workspaceId: string,
+  screenId: string,
+  assignmentId: string,
+): Promise<Response> {
+  return apiFetch(
+    `/screens/${encodeURIComponent(screenId)}/assignments/${encodeURIComponent(assignmentId)}?workspaceId=${encodeURIComponent(workspaceId)}`,
+    { method: 'DELETE' },
+  );
+}
+
+export async function reorderAssignments(
+  workspaceId: string,
+  screenId: string,
+  items: { id: string; orderIndex: number }[],
+): Promise<Response> {
+  return apiFetch(
+    `/screens/${encodeURIComponent(screenId)}/assignments/reorder?workspaceId=${encodeURIComponent(workspaceId)}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items }),
+    },
+  );
+}
+
+// ─── Override Rules ───
+
+export type OverrideRule = {
+  id: string;
+  workspaceId: string;
+  screenId: string;
+  playlistId: string;
+  recurrence: 'ONCE' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
+  daysOfWeek: number[];
+  daysOfMonth: number[];
+  startDate: string | null;
+  endDate: string | null;
+  startTime: string;
+  endTime: string;
+  enabled: boolean;
+  createdAt: string;
+  playlist: { id: string; name: string };
+};
+
+export type OverrideConflict = {
+  ruleId: string;
+  playlistName: string;
+  reason: string;
+};
+
+export async function fetchOverrideRules(
+  workspaceId: string,
+  screenId: string,
+): Promise<OverrideRule[]> {
+  const res = await apiFetch(
+    `/screens/${encodeURIComponent(screenId)}/override-rules?workspaceId=${encodeURIComponent(workspaceId)}`,
+  );
+  if (!res.ok) return [];
+  return (await res.json()) as OverrideRule[];
+}
+
+export async function createOverrideRule(
+  workspaceId: string,
+  screenId: string,
+  data: {
+    playlistId: string;
+    recurrence: string;
+    daysOfWeek?: number[];
+    daysOfMonth?: number[];
+    startDate?: string;
+    endDate?: string;
+    startTime: string;
+    endTime: string;
+    enabled?: boolean;
+  },
+): Promise<Response> {
+  return apiFetch(
+    `/screens/${encodeURIComponent(screenId)}/override-rules?workspaceId=${encodeURIComponent(workspaceId)}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    },
+  );
+}
+
+export async function updateOverrideRule(
+  workspaceId: string,
+  screenId: string,
+  ruleId: string,
+  data: Partial<{
+    playlistId: string;
+    recurrence: string;
+    daysOfWeek: number[];
+    daysOfMonth: number[];
+    startDate: string;
+    endDate: string;
+    startTime: string;
+    endTime: string;
+    enabled: boolean;
+  }>,
+): Promise<Response> {
+  return apiFetch(
+    `/screens/${encodeURIComponent(screenId)}/override-rules/${encodeURIComponent(ruleId)}?workspaceId=${encodeURIComponent(workspaceId)}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    },
+  );
+}
+
+export async function deleteOverrideRule(
+  workspaceId: string,
+  screenId: string,
+  ruleId: string,
+): Promise<Response> {
+  return apiFetch(
+    `/screens/${encodeURIComponent(screenId)}/override-rules/${encodeURIComponent(ruleId)}?workspaceId=${encodeURIComponent(workspaceId)}`,
+    { method: 'DELETE' },
+  );
+}
+
+export async function checkOverrideConflicts(
+  workspaceId: string,
+  screenId: string,
+  data: {
+    playlistId: string;
+    recurrence: string;
+    daysOfWeek?: number[];
+    daysOfMonth?: number[];
+    startDate?: string;
+    endDate?: string;
+    startTime: string;
+    endTime: string;
+  },
+): Promise<OverrideConflict[]> {
+  const res = await apiFetch(
+    `/screens/${encodeURIComponent(screenId)}/override-rules/check-conflicts?workspaceId=${encodeURIComponent(workspaceId)}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    },
+  );
+  if (!res.ok) return [];
+  return (await res.json()) as OverrideConflict[];
 }
