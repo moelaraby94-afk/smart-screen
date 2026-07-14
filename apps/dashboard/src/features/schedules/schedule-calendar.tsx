@@ -23,6 +23,8 @@ type ScheduleApi = {
   screenId: string | null;
   playlistId: string;
   daysOfWeek: number[];
+  recurrence?: string;
+  daysOfMonth?: number[];
   startTime: string;
   endTime: string;
   startDate: string | null;
@@ -571,8 +573,10 @@ export function ScheduleList({ schedules, dayShort, onDelete, t }: ScheduleListP
             <div>
               <p className="font-medium">{s.playlist.name}</p>
               <p className="text-xs text-muted-foreground">
-                {s.daysOfWeek.map((d) => dayShort(d)).join(', ')} · {s.startTime}–{s.endTime}{' '}
-                · P{s.priority}
+                {s.recurrence === 'MONTHLY'
+                  ? `${t('recurrenceMonthly')} · ${(s.daysOfMonth ?? []).join(', ')}`
+                  : s.daysOfWeek.map((d) => dayShort(d)).join(', ')}{' '}
+                · {s.startTime}–{s.endTime} · P{s.priority}
                 {s.screen ? ` · ${s.screen.name}` : ` · ${t('allScreens')}`}
               </p>
             </div>

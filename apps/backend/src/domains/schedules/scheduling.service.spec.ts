@@ -87,6 +87,8 @@ function makeSchedule(overrides: Partial<FakeSchedule> = {}): FakeSchedule {
     screenId: null,
     playlistId: 'playlist-sched',
     daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+    recurrence: 'WEEKLY',
+    daysOfMonth: [],
     startTime: '09:00',
     endTime: '17:00',
     startDate: null,
@@ -292,5 +294,33 @@ describe('SchedulingService (P1-T3)', () => {
       new Date('2026-07-14T12:00:00Z'),
     );
     expect(tuesday.source).toBe('default');
+  });
+
+  // ─── Test 7: MONTHLY recurrence matches on day-of-month ─────────────
+  it('matches on the configured day-of-month for MONTHLY recurrence', async () => {
+    const screen = makeScreen();
+    const schedule = makeSchedule({
+      recurrence: 'MONTHLY',
+      daysOfMonth: [14],
+      daysOfWeek: [],
+      startTime: '00:00',
+      endTime: '23:59',
+    });
+    const fake = createFakePrisma(screen, [schedule]);
+    service = new SchedulingService(fake as unknown as PrismaService);
+
+    // 2026-07-14 → day-of-month 14 → matches (even though it's a Tuesday, dow ignored)
+    const onDay = await service.resolveEffectivePlaylistId(
+      SCREEN_ID,
+      new Date('2026-07-14T12:00:00Z'),
+    );
+    expect(onDay.source).toBe('schedule');
+
+    // 2026-07-13 → day-of-month 13 → no match
+    const offDay = await service.resolveEffectivePlaylistId(
+      SCREEN_ID,
+      new Date('2026-07-13T12:00:00Z'),
+    );
+    expect(offDay.source).toBe('default');
   });
 });

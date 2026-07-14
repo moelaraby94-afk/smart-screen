@@ -41,6 +41,8 @@ type ScheduleApi = {
   screenId: string | null;
   playlistId: string;
   daysOfWeek: number[];
+  recurrence?: string;
+  daysOfMonth?: number[];
   startTime: string;
   endTime: string;
   startDate: string | null;

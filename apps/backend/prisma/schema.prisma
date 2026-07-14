@@ -791,6 +791,12 @@ model Schedule {
 
   daysOfWeek  Int[]
 
+  /// "WEEKLY" (matches daysOfWeek) or "MONTHLY" (matches daysOfMonth)
+  recurrence  String   @default("WEEKLY")
+
+  /// Days of month (1..31) used when recurrence = "MONTHLY"
+  daysOfMonth Int[]    @default([])
+
   startTime   String
 
   endTime     String

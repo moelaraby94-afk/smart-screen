@@ -55,6 +55,8 @@ export class SchedulesService {
         startTime: true,
         endTime: true,
         priority: true,
+        recurrence: true,
+        daysOfMonth: true,
       },
     });
     const pairs = this.scheduling.findOverlappingPairs(rows);
@@ -80,12 +82,27 @@ export class SchedulesService {
       dto.screenId ?? null,
     );
 
+    const recurrence = dto.recurrence ?? 'WEEKLY';
+    if (recurrence === 'MONTHLY') {
+      if (!dto.daysOfMonth || dto.daysOfMonth.length === 0) {
+        throw new BadRequestException(
+          'daysOfMonth is required for MONTHLY recurrence',
+        );
+      }
+    } else if (!dto.daysOfWeek || dto.daysOfWeek.length === 0) {
+      throw new BadRequestException(
+        'daysOfWeek is required for WEEKLY recurrence',
+      );
+    }
+
     const created = await this.prisma.schedule.create({
       data: {
         workspaceId: dto.workspaceId,
         playlistId: dto.playlistId,
         screenId: dto.screenId?.trim() ? dto.screenId.trim() : null,
         daysOfWeek: dto.daysOfWeek,
+        recurrence,
+        daysOfMonth: dto.daysOfMonth ?? [],
         startTime: dto.startTime,
         endTime: dto.endTime,
         startDate: dto.startDate ? new Date(dto.startDate) : null,
@@ -115,6 +132,21 @@ export class SchedulesService {
 
     await this.ensureRefs(workspaceId, nextPlaylistId, nextScreenId);
 
+    const nextRecurrence = dto.recurrence ?? existing.recurrence;
+    const nextDaysOfWeek = dto.daysOfWeek ?? existing.daysOfWeek;
+    const nextDaysOfMonth = dto.daysOfMonth ?? existing.daysOfMonth;
+    if (nextRecurrence === 'MONTHLY') {
+      if (nextDaysOfMonth.length === 0) {
+        throw new BadRequestException(
+          'daysOfMonth is required for MONTHLY recurrence',
+        );
+      }
+    } else if (nextDaysOfWeek.length === 0) {
+      throw new BadRequestException(
+        'daysOfWeek is required for WEEKLY recurrence',
+      );
+    }
+
     const updated = await this.prisma.schedule.update({
       where: { id },
       data: {
@@ -123,6 +155,8 @@ export class SchedulesService {
           ? { screenId: dto.screenId?.trim() ? dto.screenId.trim() : null }
           : {}),
         ...(dto.daysOfWeek !== undefined ? { daysOfWeek: dto.daysOfWeek } : {}),
+        ...(dto.recurrence !== undefined ? { recurrence: dto.recurrence } : {}),
+        ...(dto.daysOfMonth !== undefined ? { daysOfMonth: dto.daysOfMonth } : {}),
         ...(dto.startTime !== undefined ? { startTime: dto.startTime } : {}),
         ...(dto.endTime !== undefined ? { endTime: dto.endTime } : {}),
         ...(dto.startDate !== undefined

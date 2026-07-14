@@ -39,6 +39,8 @@ export function CreateScheduleForm({
   const [playlistId, setPlaylistId] = useState('');
   const [screenId, setScreenId] = useState('');
   const [days, setDays] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [recurrence, setRecurrence] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
+  const [daysOfMonth, setDaysOfMonth] = useState<number[]>([1]);
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
   const [priority, setPriority] = useState(10);
@@ -57,8 +59,15 @@ export function CreateScheduleForm({
     );
   };
 
+  const toggleDom = (d: number) => {
+    setDaysOfMonth((prev) =>
+      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort((a, b) => a - b),
+    );
+  };
+
   const submit = async () => {
-    if (!playlistId || days.length === 0) {
+    const hasDays = recurrence === 'MONTHLY' ? daysOfMonth.length > 0 : days.length > 0;
+    if (!playlistId || !hasDays) {
       toast.error(t('formInvalid'));
       return;
     }
@@ -68,7 +77,9 @@ export function CreateScheduleForm({
         workspaceId,
         playlistId,
         screenId: screenId || null,
-        daysOfWeek: days,
+        daysOfWeek: recurrence === 'MONTHLY' ? [] : days,
+        recurrence,
+        daysOfMonth: recurrence === 'MONTHLY' ? daysOfMonth : [],
         startTime,
         endTime,
         priority,
@@ -123,26 +134,73 @@ export function CreateScheduleForm({
           </select>
         </div>
         <div className="grid gap-2">
-          <Label>{t('fieldDays')}</Label>
-          <div className="flex flex-wrap gap-2">
-            {[0, 1, 2, 3, 4, 5, 6].map((d) => (
+          <Label>{t('fieldRecurrence')}</Label>
+          <div className="flex rounded-xl border border-border bg-background p-0.5">
+            {(['WEEKLY', 'MONTHLY'] as const).map((r) => (
               <button
-                key={d}
+                key={r}
                 type="button"
-                onClick={() => toggleDay(d)}
+                onClick={() => setRecurrence(r)}
+                aria-pressed={recurrence === r}
                 className={cn(
-                  'rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
-                  days.includes(d)
+                  'flex-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
+                  recurrence === r
                     ? 'bg-primary text-white shadow-sm'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80',
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
               >
-                {dayShort(d)}
+                {t(r === 'WEEKLY' ? 'recurrenceWeekly' : 'recurrenceMonthly')}
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-muted-foreground">{t('dayHint')}</p>
         </div>
+        {recurrence === 'WEEKLY' ? (
+          <div className="grid gap-2">
+            <Label>{t('fieldDays')}</Label>
+            <div className="flex flex-wrap gap-2">
+              {[0, 1, 2, 3, 4, 5, 6].map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => toggleDay(d)}
+                  aria-pressed={days.includes(d)}
+                  className={cn(
+                    'rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
+                    days.includes(d)
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80',
+                  )}
+                >
+                  {dayShort(d)}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground">{t('dayHint')}</p>
+          </div>
+        ) : (
+          <div className="grid gap-2">
+            <Label>{t('fieldDaysOfMonth')}</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => toggleDom(d)}
+                  aria-pressed={daysOfMonth.includes(d)}
+                  className={cn(
+                    'h-8 w-8 rounded-lg text-xs font-medium tabular-nums transition-colors',
+                    daysOfMonth.includes(d)
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80',
+                  )}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground">{t('dayOfMonthHint')}</p>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <div className="grid gap-2">
             <Label>{t('fieldStart')}</Label>

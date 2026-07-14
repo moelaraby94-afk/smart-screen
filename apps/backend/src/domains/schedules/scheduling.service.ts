@@ -20,11 +20,11 @@ function parseHHmm(s: string): number {
   return h * 60 + m;
 }
 
-/** Current minute-of-day and weekday (0=Sun..6=Sat) in `timeZone`. */
+/** Current minute-of-day, weekday (0=Sun..6=Sat) and day-of-month (1..31) in `timeZone`. */
 function nowInWorkspaceTz(
   at: Date,
   timeZone: string,
-): { minutes: number; dow: number } {
+): { minutes: number; dow: number; dom: number } {
   const timeStr = formatInTimeZone(at, timeZone, 'HH:mm');
   const [hh, mm] = timeStr.split(':').map((x) => parseInt(x, 10));
   const minutes = hh * 60 + mm;
@@ -32,7 +32,9 @@ function nowInWorkspaceTz(
   const dayName = formatInTimeZone(at, timeZone, 'EEEE', { locale: enUS });
   const dow = WEEKDAY_NAME_TO_DOW[dayName] ?? 0;
 
-  return { minutes, dow };
+  const dom = parseInt(formatInTimeZone(at, timeZone, 'd'), 10) || 1;
+
+  return { minutes, dow, dom };
 }
 
 function dateOnlyInTz(at: Date, timeZone: string): string {
@@ -113,10 +115,10 @@ export class SchedulingService {
       },
     });
 
-    const { minutes, dow } = nowInWorkspaceTz(at, tz);
+    const { minutes, dow, dom } = nowInWorkspaceTz(at, tz);
 
     const matching = schedules
-      .filter((s) => this.scheduleMatches(s, at, tz, minutes, dow))
+      .filter((s) => this.scheduleMatches(s, at, tz, minutes, dow, dom))
       .sort(
         (a, b) =>
           b.priority - a.priority || (a.updatedAt > b.updatedAt ? -1 : 1),
@@ -136,8 +138,13 @@ export class SchedulingService {
     timeZone: string,
     minutes: number,
     dow: number,
+    dom: number,
   ): boolean {
-    if (!s.daysOfWeek.includes(dow)) return false;
+    if (s.recurrence === 'MONTHLY') {
+      if (!s.daysOfMonth.includes(dom)) return false;
+    } else {
+      if (!s.daysOfWeek.includes(dow)) return false;
+    }
     if (!isDateInRange(at, timeZone, s.startDate, s.endDate)) return false;
 
     const startMin = parseHHmm(s.startTime);
@@ -156,6 +163,8 @@ export class SchedulingService {
       startTime: string;
       endTime: string;
       priority: number;
+      recurrence?: string;
+      daysOfMonth?: number[];
     }>,
   ): Array<[string, string]> {
     const overlaps: Array<[string, string]> = [];
@@ -172,7 +181,14 @@ export class SchedulingService {
         const x = list[i];
         const y = list[j];
         if (x.screenId !== y.screenId) continue;
-        const days = x.daysOfWeek.filter((d) => y.daysOfWeek.includes(d));
+        // Only schedules of the same recurrence type can overlap deterministically.
+        const xRec = x.recurrence ?? 'WEEKLY';
+        const yRec = y.recurrence ?? 'WEEKLY';
+        if (xRec !== yRec) continue;
+        const days =
+          xRec === 'MONTHLY'
+            ? (x.daysOfMonth ?? []).filter((d) => (y.daysOfMonth ?? []).includes(d))
+            : x.daysOfWeek.filter((d) => y.daysOfWeek.includes(d));
         if (days.length === 0) continue;
 
         const wx = window(x.startTime, x.endTime);

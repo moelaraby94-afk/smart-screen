@@ -5,6 +5,7 @@ import {
   IsArray,
   IsBoolean,
   IsDateString,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -26,13 +27,26 @@ export class UpdateScheduleDto {
 
   @IsOptional()
   @IsArray()
-  @ArrayMinSize(1)
+  @ArrayMinSize(0)
   @ArrayMaxSize(7)
   @IsInt({ each: true })
   @Min(0, { each: true })
   @Max(6, { each: true })
   @Type(() => Number)
   daysOfWeek?: number[];
+
+  @IsOptional()
+  @IsIn(['WEEKLY', 'MONTHLY'])
+  recurrence?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(31)
+  @IsInt({ each: true })
+  @Min(1, { each: true })
+  @Max(31, { each: true })
+  @Type(() => Number)
+  daysOfMonth?: number[];
 
   @IsOptional()
   @IsString()
