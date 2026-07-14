@@ -135,7 +135,7 @@ export function MediaGrid(props: MediaGridProps) {
             {allSelected && <Check className="h-4 w-4" />}
           </button>
           <p className="text-sm text-muted-foreground">
-            <span className="font-mono-nums text-foreground">{new Intl.NumberFormat(props.locale).format(props.items.length)}</span> {t('files')}
+            <span className="font-mono-nums text-foreground">{new Intl.NumberFormat(props.locale).format(props.items.length)}</span> {t('files', { count: props.items.length })}
           </p>
         </div>
         <div className="flex items-center gap-3">
