@@ -45,7 +45,6 @@ import {
 } from '@/features/screens/api/screens-api';
 import {
   fetchSchedules,
-  updateSchedule as apiUpdateSchedule,
   createSchedule as apiCreateSchedule,
   deleteSchedule as apiDeleteSchedule,
 } from '@/features/schedules/api/schedules-api';
@@ -58,6 +57,13 @@ type ScheduleOpt = {
   id: string;
   screenId: string | null;
   playlist: { id: string; name: string };
+  recurrence: string;
+  daysOfWeek: number[];
+  daysOfMonth: number[];
+  startTime: string;
+  endTime: string;
+  startDate: string | null;
+  endDate: string | null;
 };
 
 type TabKey = 'pairing' | 'content' | 'override' | 'ticker' | 'settings';
@@ -148,7 +154,6 @@ export function ScreenSetupModal({
     tickerText: string;
     overridePlId: string;
     overrideDuration: number;
-    scheduleId: string;
   }>(null);
 
   const effectiveScreen: ScreenRow | ClaimedScreenData | null = pairing.claimedScreen ?? screen;
@@ -219,10 +224,6 @@ export function ScreenSetupModal({
             playlistId: pendingSettings.overridePlId,
             durationMinutes: pendingSettings.overrideDuration,
           });
-        }
-
-        if (pendingSettings.scheduleId) {
-          await apiUpdateSchedule(workspaceId, pendingSettings.scheduleId, { screenId: screen.id });
         }
 
         setPendingSettings(null);
@@ -348,7 +349,11 @@ export function ScreenSetupModal({
         endDate: newSchedEndDate || null,
         enabled: true,
       });
-      if (!res.ok) { toast.error(t('scheduleCreateFailed')); return; }
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        toast.error(body?.message ?? t('scheduleCreateFailed'));
+        return;
+      }
       toast.success(t('scheduleCreated'));
       setNewSchedPl('');
       setNewSchedDays([]);
@@ -364,7 +369,11 @@ export function ScreenSetupModal({
     setBusy(true);
     try {
       const res = await apiDeleteSchedule(workspaceId, schedId);
-      if (!res.ok) { toast.error(t('scheduleDeleteFailed')); return; }
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        toast.error(body?.message ?? t('scheduleDeleteFailed'));
+        return;
+      }
       toast.success(t('scheduleDeleted'));
       if (scheduleId === schedId) { setScheduleId(''); markDirty(); }
       await loadOptions();
@@ -381,7 +390,6 @@ export function ScreenSetupModal({
         tickerText,
         overridePlId,
         overrideDuration,
-        scheduleId,
       });
       setDirty(false);
       toast.info(t('settingsWillApplyAfterPairing'));
@@ -409,16 +417,6 @@ export function ScreenSetupModal({
           durationMinutes: overridePlId ? overrideDuration : undefined,
         });
         if (!ovRes.ok) { toast.error(t('overrideFailed')); return; }
-      }
-
-      const currentSchedule = schedules.find((s) => s.screenId === effectiveScreen.id);
-      if (scheduleId !== (currentSchedule?.id ?? '')) {
-        if (currentSchedule) {
-          await apiUpdateSchedule(workspaceId, currentSchedule.id, { screenId: null });
-        }
-        if (scheduleId) {
-          await apiUpdateSchedule(workspaceId, scheduleId, { screenId: effectiveScreen.id });
-        }
       }
 
       toast.success(t('saveOk'));
@@ -821,7 +819,21 @@ export function ScreenSetupModal({
                   <div className="space-y-2">
                     {schedules.filter((s) => s.screenId === effectiveScreen?.id).map((s) => (
                       <div key={s.id} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2">
-                        <span className="truncate text-sm font-medium">{s.playlist?.name ?? s.id}</span>
+                        <div className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium">{s.playlist?.name ?? s.id}</span>
+                          <span className="block truncate text-[11px] text-muted-foreground">
+                            {s.recurrence === 'MONTHLY'
+                              ? `${t('recurrenceMONTHLY')} · ${s.daysOfMonth.map((d) => d).join(', ')}`
+                              : `${t('recurrenceWEEKLY')} · ${s.daysOfWeek.map((d) => ['Su','Mo','Tu','We','Th','Fr','Sa'][d] ?? '').join(' ')}`}
+                            {' · '}
+                            {s.startTime}–{s.endTime}
+                            {(s.startDate || s.endDate) && (
+                              <span className="ms-1 text-[10px]">
+                                ({s.startDate ? new Date(s.startDate).toLocaleDateString() : '…'} → {s.endDate ? new Date(s.endDate).toLocaleDateString() : '…'})
+                              </span>
+                            )}
+                          </span>
+                        </div>
                         <button
                           type="button"
                           disabled={busy}

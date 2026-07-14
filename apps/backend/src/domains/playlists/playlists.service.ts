@@ -510,21 +510,24 @@ export class PlaylistsService {
       where: {
         OR: [
           { activePlaylistId: playlistId },
-
           { overridePlaylistId: playlistId },
         ],
       },
-
       select: { id: true },
+    });
+
+    const assigned = await this.prisma.screenPlaylistAssignment.findMany({
+      where: { playlistId },
+      select: { screenId: true },
     });
 
     const scheduled = await this.prisma.schedule.findMany({
       where: { playlistId, enabled: true },
-
       select: { workspaceId: true, screenId: true },
     });
 
     const ids = new Set<string>(direct.map((d) => d.id));
+    for (const a of assigned) ids.add(a.screenId);
 
     const workspaceWide = new Set<string>();
 
@@ -536,7 +539,6 @@ export class PlaylistsService {
     for (const workspaceId of workspaceWide) {
       const inWs = await this.prisma.screen.findMany({
         where: { workspaceId },
-
         select: { id: true },
       });
 

@@ -141,24 +141,19 @@ export class SchedulingService {
       return { playlistId: best.playlistId, source: 'schedule' };
     }
 
-    // Playlist rotation: if assignments exist, pick one based on time-based round-robin
+    // Playlist rotation: if any published assignments exist, return 'rotation'
+    // buildRotationPayload in PlaylistsService merges all assigned playlists
+    // into one sequential list for the player.
     const assignments = await this.prisma.screenPlaylistAssignment.findMany({
       where: { screenId },
       orderBy: { orderIndex: 'asc' },
       include: { playlist: { select: { id: true, isPublished: true } } },
     });
 
-    const publishedAssignments = assignments.filter((a) => a.playlist.isPublished);
-    if (publishedAssignments.length > 0) {
-      // Time-based rotation: divide the day into equal slots, pick the assignment for the current slot
-      const currentMinutes = minutes;
-      const slotSize = Math.floor((24 * 60) / publishedAssignments.length);
-      const slotIndex = Math.min(
-        Math.floor(currentMinutes / slotSize),
-        publishedAssignments.length - 1,
-      );
+    const hasPublished = assignments.some((a) => a.playlist.isPublished);
+    if (hasPublished) {
       return {
-        playlistId: publishedAssignments[slotIndex].playlistId,
+        playlistId: assignments[0]!.playlistId,
         source: 'rotation',
       };
     }

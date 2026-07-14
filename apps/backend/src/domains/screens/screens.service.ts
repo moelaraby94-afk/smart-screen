@@ -412,7 +412,7 @@ export class ScreensService {
     const count = await this.prisma.screenPlaylistAssignment.count({
       where: { screenId },
     });
-    return this.prisma.screenPlaylistAssignment.create({
+    const created = await this.prisma.screenPlaylistAssignment.create({
       data: {
         screenId,
         playlistId: dto.playlistId,
@@ -422,6 +422,9 @@ export class ScreensService {
         playlist: { select: { id: true, name: true, isPublished: true } },
       },
     });
+
+    await this.playlistsService.emitPlaylistForScreen(screenId);
+    return created;
   }
 
   async removeAssignment(workspaceId: string, screenId: string, assignmentId: string) {
@@ -429,6 +432,7 @@ export class ScreensService {
     await this.prisma.screenPlaylistAssignment.delete({
       where: { id: assignmentId, screenId },
     });
+    await this.playlistsService.emitPlaylistForScreen(screenId);
   }
 
   async reorderAssignments(
@@ -445,233 +449,16 @@ export class ScreensService {
         }),
       ),
     );
-    return this.prisma.screenPlaylistAssignment.findMany({
+    const result = await this.prisma.screenPlaylistAssignment.findMany({
       where: { screenId },
       orderBy: { orderIndex: 'asc' },
       include: {
         playlist: { select: { id: true, name: true, isPublished: true } },
       },
     });
-  }
 
-  // ─── Override Rules (advanced scheduling) ───
-
-  async listOverrideRules(workspaceId: string, screenId: string) {
-    await this.assertScreenInWorkspace(workspaceId, screenId);
-    return this.prisma.screenOverrideRule.findMany({
-      where: { workspaceId, screenId },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        playlist: { select: { id: true, name: true } },
-      },
-    });
-  }
-
-  async createOverrideRule(workspaceId: string, screenId: string, dto: {
-    playlistId: string;
-    recurrence: string;
-    daysOfWeek?: number[];
-    daysOfMonth?: number[];
-    startDate?: string;
-    endDate?: string;
-    startTime: string;
-    endTime: string;
-    enabled?: boolean;
-  }) {
-    await this.assertScreenInWorkspace(workspaceId, screenId);
-
-    // Conflict detection
-    const conflicts = await this.detectOverrideConflicts(workspaceId, screenId, dto);
-    if (conflicts.length > 0) {
-      throw new BadRequestException({
-        message: 'Override conflict detected',
-        conflicts,
-      });
-    }
-
-    return this.prisma.screenOverrideRule.create({
-      data: {
-        workspaceId,
-        screenId,
-        playlistId: dto.playlistId,
-        recurrence: dto.recurrence,
-        daysOfWeek: dto.daysOfWeek ?? [],
-        daysOfMonth: dto.daysOfMonth ?? [],
-        startDate: dto.startDate ? new Date(dto.startDate) : null,
-        endDate: dto.endDate ? new Date(dto.endDate) : null,
-        startTime: dto.startTime,
-        endTime: dto.endTime,
-        enabled: dto.enabled ?? true,
-      },
-      include: {
-        playlist: { select: { id: true, name: true } },
-      },
-    });
-  }
-
-  async updateOverrideRule(
-    workspaceId: string,
-    screenId: string,
-    ruleId: string,
-    dto: Partial<{
-      playlistId: string;
-      recurrence: string;
-      daysOfWeek: number[];
-      daysOfMonth: number[];
-      startDate: string;
-      endDate: string;
-      startTime: string;
-      endTime: string;
-      enabled: boolean;
-    }>,
-  ) {
-    await this.assertScreenInWorkspace(workspaceId, screenId);
-    const existing = await this.prisma.screenOverrideRule.findFirst({
-      where: { id: ruleId, workspaceId, screenId },
-    });
-    if (!existing) throw new NotFoundException('Override rule not found');
-
-    return this.prisma.screenOverrideRule.update({
-      where: { id: ruleId },
-      data: {
-        ...(dto.playlistId !== undefined ? { playlistId: dto.playlistId } : {}),
-        ...(dto.recurrence !== undefined ? { recurrence: dto.recurrence } : {}),
-        ...(dto.daysOfWeek !== undefined ? { daysOfWeek: dto.daysOfWeek } : {}),
-        ...(dto.daysOfMonth !== undefined ? { daysOfMonth: dto.daysOfMonth } : {}),
-        ...(dto.startDate !== undefined ? { startDate: dto.startDate ? new Date(dto.startDate) : null } : {}),
-        ...(dto.endDate !== undefined ? { endDate: dto.endDate ? new Date(dto.endDate) : null } : {}),
-        ...(dto.startTime !== undefined ? { startTime: dto.startTime } : {}),
-        ...(dto.endTime !== undefined ? { endTime: dto.endTime } : {}),
-        ...(dto.enabled !== undefined ? { enabled: dto.enabled } : {}),
-      },
-      include: {
-        playlist: { select: { id: true, name: true } },
-      },
-    });
-  }
-
-  async deleteOverrideRule(workspaceId: string, screenId: string, ruleId: string) {
-    await this.assertScreenInWorkspace(workspaceId, screenId);
-    await this.prisma.screenOverrideRule.delete({
-      where: { id: ruleId },
-    });
-  }
-
-  async checkOverrideConflicts(workspaceId: string, screenId: string, dto: {
-    playlistId: string;
-    recurrence: string;
-    daysOfWeek?: number[];
-    daysOfMonth?: number[];
-    startDate?: string;
-    endDate?: string;
-    startTime: string;
-    endTime: string;
-  }) {
-    await this.assertScreenInWorkspace(workspaceId, screenId);
-    return this.detectOverrideConflicts(workspaceId, screenId, dto);
-  }
-
-  private async detectOverrideConflicts(
-    workspaceId: string,
-    screenId: string,
-    dto: {
-      playlistId: string;
-      recurrence: string;
-      daysOfWeek?: number[];
-      daysOfMonth?: number[];
-      startDate?: string;
-      endDate?: string;
-      startTime: string;
-      endTime: string;
-    },
-  ): Promise<{ ruleId: string; playlistName: string; reason: string }[]> {
-    const existingRules = await this.prisma.screenOverrideRule.findMany({
-      where: { workspaceId, screenId, enabled: true },
-      include: { playlist: { select: { id: true, name: true } } },
-    });
-
-    const conflicts: { ruleId: string; playlistName: string; reason: string }[] = [];
-
-    for (const rule of existingRules) {
-      // Same playlist warning
-      if (rule.playlistId === dto.playlistId) {
-        conflicts.push({
-          ruleId: rule.id,
-          playlistName: rule.playlist.name,
-          reason: 'SAME_PLAYLIST',
-        });
-        continue;
-      }
-
-      // Time overlap detection
-      const timeOverlap = this.checkTimeOverlap(rule, dto);
-      if (timeOverlap) {
-        conflicts.push({
-          ruleId: rule.id,
-          playlistName: rule.playlist.name,
-          reason: timeOverlap,
-        });
-      }
-    }
-
-    return conflicts;
-  }
-
-  private checkTimeOverlap(
-    existing: {
-      recurrence: string;
-      daysOfWeek: number[];
-      daysOfMonth: number[];
-      startDate: Date | null;
-      endDate: Date | null;
-      startTime: string;
-      endTime: string;
-    },
-    incoming: {
-      recurrence: string;
-      daysOfWeek?: number[];
-      daysOfMonth?: number[];
-      startDate?: string;
-      endDate?: string;
-      startTime: string;
-      endTime: string;
-    },
-  ): string | null {
-    // Check time window overlap (simplified: same time window = conflict)
-    const exStart = existing.startTime;
-    const exEnd = existing.endTime;
-    const inStart = incoming.startTime;
-    const inEnd = incoming.endTime;
-
-    // Time overlap check
-    if (inStart < exEnd && inEnd > exStart) {
-      // Check day overlap
-      if (existing.recurrence === 'DAILY' || incoming.recurrence === 'DAILY') {
-        return 'TIME_OVERLAP_DAILY';
-      }
-
-      if (existing.recurrence === 'WEEKLY' || incoming.recurrence === 'WEEKLY') {
-        const exDays = existing.daysOfWeek.length ? existing.daysOfWeek : [0, 1, 2, 3, 4, 5, 6];
-        const inDays = incoming.daysOfWeek?.length ? incoming.daysOfWeek : [0, 1, 2, 3, 4, 5, 6];
-        if (exDays.some((d) => inDays.includes(d))) {
-          return 'TIME_OVERLAP_WEEKLY';
-        }
-      }
-
-      if (existing.recurrence === 'ONCE' || incoming.recurrence === 'ONCE') {
-        // For ONCE, check date range overlap
-        const exStartD = existing.startDate ? new Date(existing.startDate).getTime() : 0;
-        const exEndD = existing.endDate ? new Date(existing.endDate).getTime() : Infinity;
-        const inStartD = incoming.startDate ? new Date(incoming.startDate).getTime() : 0;
-        const inEndD = incoming.endDate ? new Date(incoming.endDate).getTime() : Infinity;
-
-        if (inStartD <= exEndD && inEndD >= exStartD) {
-          return 'TIME_OVERLAP_ONCE';
-        }
-      }
-    }
-
-    return null;
+    await this.playlistsService.emitPlaylistForScreen(screenId);
+    return result;
   }
 
   private async assertScreenInWorkspace(workspaceId: string, screenId: string): Promise<void> {
