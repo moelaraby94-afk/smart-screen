@@ -125,7 +125,6 @@ export function ScreenSetupModal({
   const [playlists, setPlaylists] = useState<PlaylistOption[]>([]);
   const [schedules, setSchedules] = useState<ScheduleOpt[]>([]);
   const [playlistId, setPlaylistId] = useState('');
-  const [scheduleId, setScheduleId] = useState('');
   const [tickerText, setTickerText] = useState('');
   const [orientation, setOrientation] = useState<'AUTO' | 'LANDSCAPE' | 'PORTRAIT'>('AUTO');
   const [overridePlId, setOverridePlId] = useState('');
@@ -192,12 +191,6 @@ export function ScreenSetupModal({
       void loadAssignments(effectiveScreen.id);
     }
   }, [open, effectiveScreen, loadOptions, loadAssignments]);
-
-  useEffect(() => {
-    if (!open || !effectiveScreen) return;
-    const match = schedules.find((s) => s.screenId === effectiveScreen.id);
-    setScheduleId(match?.id ?? '');
-  }, [open, effectiveScreen, schedules]);
 
   const markDirty = () => setDirty(true);
 
@@ -375,7 +368,6 @@ export function ScreenSetupModal({
         return;
       }
       toast.success(t('scheduleDeleted'));
-      if (scheduleId === schedId) { setScheduleId(''); markDirty(); }
       await loadOptions();
     } finally { setBusy(false); }
   };
