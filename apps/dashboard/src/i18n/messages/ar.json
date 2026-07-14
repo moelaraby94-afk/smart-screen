@@ -72,7 +72,11 @@
     "schedulingSection": "الجدولة",
     "managementSection": "الإدارة",
     "toolsSection": "الأدوات",
-    "resourcesSection": "الموارد"
+    "resourcesSection": "الموارد",
+    "fleetSection": "الأسطول",
+    "contentSection": "المحتوى",
+    "playbackSection": "التشغيل",
+    "insightsSection": "الرؤى"
   },
   "shell": {
     "kicker": {

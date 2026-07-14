@@ -72,7 +72,11 @@
     "schedulingSection": "Scheduling",
     "managementSection": "Management",
     "toolsSection": "Tools",
-    "resourcesSection": "Resources"
+    "resourcesSection": "Resources",
+    "fleetSection": "Fleet",
+    "contentSection": "Content",
+    "playbackSection": "Playback",
+    "insightsSection": "Insights"
   },
   "shell": {
     "kicker": {

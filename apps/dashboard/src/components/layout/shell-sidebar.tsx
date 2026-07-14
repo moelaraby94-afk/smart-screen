@@ -51,27 +51,33 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const STROKE = 1.6;
 
-const CLIENT_NAV = [
+const OVERVIEW_NAV = [
   { key: 'overview', hrefKey: 'overview' as const, icon: LayoutDashboard },
+] as const;
+
+const FLEET_NAV = [
   { key: 'screens', hrefKey: 'screens' as const, icon: Monitor },
+  { key: 'emergency', hrefKey: 'emergency' as const, icon: AlertTriangle },
+] as const;
+
+const CONTENT_NAV = [
   { key: 'media', hrefKey: 'media' as const, icon: FolderOpen },
   { key: 'studio', hrefKey: 'studio' as const, icon: Clapperboard },
-] as const;
-
-const MANAGEMENT_NAV = [
   { key: 'templates', hrefKey: 'templates' as const, icon: LayoutTemplate },
-  { key: 'team', hrefKey: 'team' as const, icon: Users },
 ] as const;
 
-const SCHEDULING_NAV = [
+const PLAYBACK_NAV = [
   { key: 'playlists', hrefKey: 'playlists' as const, icon: Clapperboard },
   { key: 'schedules', hrefKey: 'schedules' as const, icon: CalendarClock },
 ] as const;
 
-const TOOLS_NAV = [
+const INSIGHTS_NAV = [
   { key: 'analytics', hrefKey: 'analytics' as const, icon: Activity },
   { key: 'ai', hrefKey: 'ai' as const, icon: Sparkles },
-  { key: 'emergency', hrefKey: 'emergency' as const, icon: AlertTriangle },
+] as const;
+
+const MANAGEMENT_NAV = [
+  { key: 'team', hrefKey: 'team' as const, icon: Users },
 ] as const;
 
 const CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE = new Set<
@@ -81,10 +87,12 @@ const CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE = new Set<
 function hrefFor(
   locale: string,
   hrefKey:
-    | (typeof CLIENT_NAV)[number]['hrefKey']
+    | (typeof OVERVIEW_NAV)[number]['hrefKey']
+    | (typeof FLEET_NAV)[number]['hrefKey']
+    | (typeof CONTENT_NAV)[number]['hrefKey']
+    | (typeof PLAYBACK_NAV)[number]['hrefKey']
+    | (typeof INSIGHTS_NAV)[number]['hrefKey']
     | (typeof MANAGEMENT_NAV)[number]['hrefKey']
-    | (typeof SCHEDULING_NAV)[number]['hrefKey']
-    | (typeof TOOLS_NAV)[number]['hrefKey']
     | 'overview'
     | 'adminHome'
     | 'adminCustomers'
@@ -456,11 +464,127 @@ export function ShellSidebar({
             </>
           ) : (
             <>
-              {CLIENT_NAV.map((item) => {
+              {OVERVIEW_NAV.map((item) => {
+                const href = hrefFor(navLocale, item.hrefKey);
+                const active = isOverviewPath(pathname, navLocale);
+                return (
+                  <NavItem
+                    key={item.key}
+                    href={href as Route}
+                    label={t(item.key)}
+                    active={active}
+                    icon={item.icon}
+                    onClick={(e) => {
+                      if (isLoading) {
+                        e.preventDefault();
+                        return;
+                      }
+                      if (
+                        isAuthenticated &&
+                        !workspaceId &&
+                        !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has(item.hrefKey)
+                      ) {
+                        e.preventDefault();
+                        toast.error(t('selectWorkspaceToast'));
+                      }
+                    }}
+                  />
+                );
+              })}
+
+              <SectionLabel>{t('fleetSection')}</SectionLabel>
+              {FLEET_NAV.map((item) => {
+                const href = hrefFor(navLocale, item.hrefKey);
+                const active = Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
+                return (
+                  <NavItem
+                    key={item.key}
+                    href={href as Route}
+                    label={t(item.key)}
+                    active={active}
+                    icon={item.icon}
+                    onClick={(e) => {
+                      if (isLoading) {
+                        e.preventDefault();
+                        return;
+                      }
+                      if (
+                        isAuthenticated &&
+                        !workspaceId &&
+                        !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has(item.hrefKey)
+                      ) {
+                        e.preventDefault();
+                        toast.error(t('selectWorkspaceToast'));
+                      }
+                    }}
+                  />
+                );
+              })}
+
+              <SectionLabel>{t('contentSection')}</SectionLabel>
+              {CONTENT_NAV.map((item) => {
+                const href = hrefFor(navLocale, item.hrefKey);
+                const active = Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
+                return (
+                  <NavItem
+                    key={item.key}
+                    href={href as Route}
+                    label={t(item.key)}
+                    active={active}
+                    icon={item.icon}
+                    onClick={(e) => {
+                      if (isLoading) {
+                        e.preventDefault();
+                        return;
+                      }
+                      if (
+                        isAuthenticated &&
+                        !workspaceId &&
+                        !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has(item.hrefKey)
+                      ) {
+                        e.preventDefault();
+                        toast.error(t('selectWorkspaceToast'));
+                      }
+                    }}
+                  />
+                );
+              })}
+
+              <SectionLabel>{t('playbackSection')}</SectionLabel>
+              {PLAYBACK_NAV.map((item) => {
+                const href = hrefFor(navLocale, item.hrefKey);
+                const active = Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
+                return (
+                  <NavItem
+                    key={item.key}
+                    href={href as Route}
+                    label={t(item.key)}
+                    active={active}
+                    icon={item.icon}
+                    onClick={(e) => {
+                      if (isLoading) {
+                        e.preventDefault();
+                        return;
+                      }
+                      if (
+                        isAuthenticated &&
+                        !workspaceId &&
+                        !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has(item.hrefKey)
+                      ) {
+                        e.preventDefault();
+                        toast.error(t('selectWorkspaceToast'));
+                      }
+                    }}
+                  />
+                );
+              })}
+
+              <SectionLabel>{t('insightsSection')}</SectionLabel>
+              {INSIGHTS_NAV.map((item) => {
                 const href = hrefFor(navLocale, item.hrefKey);
                 const active =
-                  item.hrefKey === 'overview'
-                    ? isOverviewPath(pathname, navLocale)
+                  item.hrefKey === 'analytics'
+                    ? Boolean(pathname?.startsWith(`/${navLocale}/analytics`))
                     : Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
                 return (
                   <NavItem
@@ -515,69 +639,6 @@ export function ShellSidebar({
                   />
                 );
               })}
-
-              <SectionLabel>{t('schedulingSection')}</SectionLabel>
-              {SCHEDULING_NAV.map((item) => {
-                const href = hrefFor(navLocale, item.hrefKey);
-                const active = Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
-                return (
-                  <NavItem
-                    key={item.key}
-                    href={href as Route}
-                    label={t(item.key)}
-                    active={active}
-                    icon={item.icon}
-                    onClick={(e) => {
-                      if (isLoading) {
-                        e.preventDefault();
-                        return;
-                      }
-                      if (
-                        isAuthenticated &&
-                        !workspaceId &&
-                        !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has(item.hrefKey)
-                      ) {
-                        e.preventDefault();
-                        toast.error(t('selectWorkspaceToast'));
-                      }
-                    }}
-                  />
-                );
-              })}
-
-              <SectionLabel>{t('toolsSection')}</SectionLabel>
-              {TOOLS_NAV.map((item) => {
-                const href = hrefFor(navLocale, item.hrefKey);
-                const active =
-                  item.hrefKey === 'analytics'
-                    ? Boolean(pathname?.startsWith(`/${navLocale}/analytics`))
-                    : Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
-                return (
-                  <NavItem
-                    key={item.key}
-                    href={href as Route}
-                    label={t(item.key)}
-                    active={active}
-                    icon={item.icon}
-                    onClick={(e) => {
-                      if (isLoading) {
-                        e.preventDefault();
-                        return;
-                      }
-                      if (
-                        isAuthenticated &&
-                        !workspaceId &&
-                        !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has(item.hrefKey)
-                      ) {
-                        e.preventDefault();
-                        toast.error(t('selectWorkspaceToast'));
-                      }
-                    }}
-                  />
-                );
-              })}
-
-              <SectionLabel>{t('accountSection')}</SectionLabel>
               <NavItem
                 href={`/${navLocale}/settings/billing` as Route}
                 label={t('billing')}
@@ -587,7 +648,7 @@ export function ShellSidebar({
               <NavItem
                 href={`/${navLocale}/settings/profile` as Route}
                 label={t('settings')}
-                active={Boolean(pathname?.startsWith(`/${navLocale}/settings/profile`))}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/settings/profile`)) || Boolean(pathname?.startsWith(`/${navLocale}/settings/workspace`))}
                 icon={Settings}
               />
 
