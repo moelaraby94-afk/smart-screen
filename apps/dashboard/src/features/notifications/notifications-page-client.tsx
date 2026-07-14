@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import type { Route } from 'next';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   Monitor,
@@ -12,6 +14,8 @@ import {
   UserPlus,
   CheckCircle,
   Bell,
+  Trash2,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -36,15 +40,28 @@ const iconForType = (type: string) => {
   }
 };
 
+const TYPE_CATEGORY_MAP: Record<string, string> = {
+  screen_offline: 'screen',
+  screen_online: 'screen',
+  upload_complete: 'upload',
+  subscription_updated: 'subscription',
+  schedule_changed: 'schedule',
+  pairing_started: 'pairing',
+};
+
+type FilterType = 'all' | 'unread' | 'screen' | 'upload' | 'subscription' | 'schedule' | 'pairing';
+
 export function NotificationsPageClient() {
   const t = useTranslations('notifications');
   const tPage = useTranslations('notifications.page');
-  const { notifications, unreadCount, markAllRead } = useNotifications();
-  const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const router = useRouter();
+  const { notifications, unreadCount, markAllRead, removeNotification, clearAll } = useNotifications();
+  const [filter, setFilter] = useState<FilterType>('all');
 
   const filtered = useMemo(() => {
+    if (filter === 'all') return notifications;
     if (filter === 'unread') return notifications.filter((n) => !n.read);
-    return notifications;
+    return notifications.filter((n) => TYPE_CATEGORY_MAP[n.type] === filter);
   }, [notifications, filter]);
 
   const formatTime = (ts: number) => {
@@ -60,40 +77,45 @@ export function NotificationsPageClient() {
     Notification.requestPermission();
   };
 
+  const handleNotificationClick = (link?: string | null) => {
+    if (link) router.push(link as Route);
+  };
+
+  const filterButtons: { label: string; value: FilterType }[] = [
+    { label: tPage('filterAll'), value: 'all' },
+    { label: tPage('filterUnread'), value: 'unread' },
+    { label: tPage('filterScreen'), value: 'screen' },
+    { label: tPage('filterUpload'), value: 'upload' },
+    { label: tPage('filterSubscription'), value: 'subscription' },
+    { label: tPage('filterSchedule'), value: 'schedule' },
+    { label: tPage('filterPairing'), value: 'pairing' },
+  ];
+
   return (
     <div className="space-y-4">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex rounded-lg border border-border bg-card p-0.5">
-          <button
-            type="button"
-            onClick={() => setFilter('all')}
-            className={cn(
-              'rounded-md px-3 py-1.5 text-xs font-medium transition',
-              filter === 'all'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            {tPage('filterAll')}
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilter('unread')}
-            className={cn(
-              'rounded-md px-3 py-1.5 text-xs font-medium transition',
-              filter === 'unread'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            {tPage('filterUnread')}
-            {unreadCount > 0 && (
-              <span className="ms-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </button>
+        <div className="flex flex-wrap rounded-lg border border-border bg-card p-0.5">
+          {filterButtons.map((btn) => (
+            <button
+              key={btn.value}
+              type="button"
+              onClick={() => setFilter(btn.value)}
+              className={cn(
+                'rounded-md px-3 py-1.5 text-xs font-medium transition',
+                filter === btn.value
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {btn.label}
+              {btn.value === 'unread' && unreadCount > 0 && (
+                <span className="ms-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
 
         <Button
@@ -107,6 +129,19 @@ export function NotificationsPageClient() {
           <CheckCircle className="me-1.5 h-3.5 w-3.5" />
           {tPage('markAllRead')}
         </Button>
+
+        {notifications.length > 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="rounded-lg text-destructive hover:text-destructive"
+            onClick={clearAll}
+          >
+            <Trash2 className="me-1.5 h-3.5 w-3.5" />
+            {tPage('clearAll')}
+          </Button>
+        )}
 
         {typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default' && (
           <Button
@@ -126,7 +161,19 @@ export function NotificationsPageClient() {
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center">
           <Bell className="mb-3 h-8 w-8 text-muted-foreground/50" />
-          <p className="text-sm text-muted-foreground">{tPage('empty')}</p>
+          <p className="text-sm text-muted-foreground">
+            {notifications.length === 0 ? tPage('empty') : tPage('noFilterResults')}
+          </p>
+          {notifications.length > 0 && filter !== 'all' && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4 rounded-xl"
+              onClick={() => setFilter('all')}
+            >
+              {tPage('clearFilter')}
+            </Button>
+          )}
         </div>
       ) : (
         <div className="space-y-2">
@@ -137,11 +184,13 @@ export function NotificationsPageClient() {
                 key={n.id}
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.02 * i, duration: 0.25 }}
+                transition={{ delay: Math.min(0.02 * i, 0.2), duration: 0.25 }}
                 className={cn(
-                  'flex items-start gap-3 rounded-xl border border-border bg-card px-4 py-3',
+                  'group flex items-start gap-3 rounded-xl border border-border bg-card px-4 py-3',
                   !n.read && 'ring-1 ring-primary/20',
+                  n.link && 'cursor-pointer hover:border-primary/30',
                 )}
+                onClick={() => handleNotificationClick(n.link)}
               >
                 <span
                   className={cn(
@@ -155,9 +204,22 @@ export function NotificationsPageClient() {
                   <p className="text-sm font-medium leading-tight text-foreground">{n.message}</p>
                   <p className="text-xs text-muted-foreground">{formatTime(n.timestamp)}</p>
                 </div>
-                {!n.read && (
-                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                )}
+                <div className="flex items-center gap-2">
+                  {!n.read && (
+                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                  )}
+                  <button
+                    type="button"
+                    className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-muted-foreground opacity-0 transition hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeNotification(n.id);
+                    }}
+                    aria-label={tPage('deleteOne')}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </motion.div>
             );
           })}

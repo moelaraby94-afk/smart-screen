@@ -10,6 +10,15 @@ import {
   Clapperboard,
   Search,
   X,
+  LayoutDashboard,
+  AlertTriangle,
+  FolderOpen,
+  LayoutTemplate,
+  CalendarClock,
+  Activity,
+  Sparkles,
+  Users,
+  type LucideIcon,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { fetchScreens } from '@/features/screens/api/screens-api';
@@ -24,8 +33,15 @@ type SearchResult = {
   id: string;
   label: string;
   sublabel: string;
-  type: 'screen' | 'playlist' | 'media';
+  type: 'screen' | 'playlist' | 'media' | 'command';
   href: string;
+};
+
+type NavCommand = {
+  id: string;
+  labelKey: string;
+  href: string;
+  icon: LucideIcon;
 };
 
 type PlaylistSummary = {
@@ -36,6 +52,7 @@ type PlaylistSummary = {
 
 export function GlobalSearch() {
   const t = useTranslations('globalSearch');
+  const tNav = useTranslations('nav');
   const locale = useLocale();
   const { workspaceId } = useWorkspace();
   const [open, setOpen] = useState(false);
@@ -92,11 +109,41 @@ export function GlobalSearch() {
     if (open) void loadAll();
   }, [open, loadAll]);
 
+  const navCommands = useMemo<NavCommand[]>(() => {
+    const cmds: NavCommand[] = [
+      { id: 'nav-overview', labelKey: 'nav.overview', href: `/${locale}/overview`, icon: LayoutDashboard },
+      { id: 'nav-screens', labelKey: 'nav.screens', href: `/${locale}/screens`, icon: Monitor },
+      { id: 'nav-emergency', labelKey: 'nav.emergency', href: `/${locale}/emergency`, icon: AlertTriangle },
+      { id: 'nav-media', labelKey: 'nav.media', href: `/${locale}/media`, icon: FolderOpen },
+      { id: 'nav-studio', labelKey: 'nav.studio', href: `/${locale}/studio`, icon: Clapperboard },
+      { id: 'nav-templates', labelKey: 'nav.templates', href: `/${locale}/templates`, icon: LayoutTemplate },
+      { id: 'nav-playlists', labelKey: 'nav.playlists', href: `/${locale}/playlists`, icon: Clapperboard },
+      { id: 'nav-schedules', labelKey: 'nav.schedules', href: `/${locale}/schedules`, icon: CalendarClock },
+      { id: 'nav-analytics', labelKey: 'nav.analytics', href: `/${locale}/analytics`, icon: Activity },
+      { id: 'nav-ai', labelKey: 'nav.ai', href: `/${locale}/ai`, icon: Sparkles },
+      { id: 'nav-team', labelKey: 'nav.team', href: `/${locale}/team`, icon: Users },
+    ];
+    return cmds;
+  }, [locale]);
+
   const results = useMemo<SearchResult[]>(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
 
     const matched: SearchResult[] = [];
+
+    for (const cmd of navCommands) {
+      const label = tNav(cmd.labelKey).toLowerCase();
+      if (label.includes(q)) {
+        matched.push({
+          id: cmd.id,
+          label: tNav(cmd.labelKey),
+          sublabel: t('goTo'),
+          type: 'command',
+          href: cmd.href,
+        });
+      }
+    }
 
     for (const s of screens) {
       if (
@@ -139,7 +186,7 @@ export function GlobalSearch() {
     }
 
     return matched.slice(0, 12);
-  }, [query, screens, playlists, media, locale, t]);
+  }, [query, screens, playlists, media, locale, t, tNav, navCommands]);
 
   useEffect(() => {
     setActiveIndex(0);
@@ -162,6 +209,7 @@ export function GlobalSearch() {
   const iconForType = (type: SearchResult['type']) => {
     if (type === 'screen') return <Monitor className="h-4 w-4 text-primary" />;
     if (type === 'playlist') return <Clapperboard className="h-4 w-4 text-primary" />;
+    if (type === 'command') return <Search className="h-4 w-4 text-primary" />;
     return <ImageIcon className="h-4 w-4 text-primary" />;
   };
 
@@ -239,8 +287,27 @@ export function GlobalSearch() {
                       {t('loading')}
                     </div>
                   ) : query.trim() === '' ? (
-                    <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                      {t('startTyping')}
+                    <div className="py-2">
+                      <p className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        {t('quickNav')}
+                      </p>
+                      <ul>
+                        {navCommands.map((cmd) => (
+                          <li key={cmd.id}>
+                            <Link
+                              href={cmd.href as Route}
+                              onClick={() => setOpen(false)}
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/80 transition-colors hover:bg-muted/40"
+                            >
+                              <cmd.icon className="h-4 w-4 text-primary" />
+                              <span className="flex-1 truncate font-medium">{tNav(cmd.labelKey)}</span>
+                              <span className="shrink-0 rounded-md border border-border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                {t('command')}
+                              </span>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   ) : results.length === 0 ? (
                     <div className="px-4 py-8 text-center text-sm text-muted-foreground">

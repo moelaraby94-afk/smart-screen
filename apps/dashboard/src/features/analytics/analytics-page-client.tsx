@@ -22,6 +22,11 @@ import { useWorkspace } from '@/features/workspace/workspace-context';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { CardGridSkeleton, TableSkeleton } from '@/components/ui/skeleton-patterns';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Monitor } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import type { Route } from 'next';
 
 function formatUptime(sec: number): string {
   if (sec < 60) return `${Math.floor(sec)}s`;
@@ -58,6 +63,7 @@ export function AnalyticsPageClient() {
   const t = useTranslations('analyticsPage');
   const tAnalytics = useTranslations('screenAnalytics');
   const locale = useLocale();
+  const router = useRouter();
   const { workspaceId } = useWorkspace();
   const [data, setData] = useState<ScreenAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -115,18 +121,38 @@ export function AnalyticsPageClient() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <div className="space-y-6" aria-busy="true" aria-live="polite">
+        <CardGridSkeleton count={4} />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="h-5 w-32 animate-pulse rounded bg-muted" />
+            <div className="mt-4 h-3 w-full animate-pulse rounded bg-muted" />
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="h-5 w-32 animate-pulse rounded bg-muted" />
+            <div className="mt-4 space-y-2">
+              <div className="h-3 w-full animate-pulse rounded bg-muted" />
+              <div className="h-3 w-full animate-pulse rounded bg-muted" />
+              <div className="h-3 w-full animate-pulse rounded bg-muted" />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <TableSkeleton rows={5} cols={6} />
+        </div>
       </div>
     );
   }
 
   if (!data || data.total === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center">
-        <BarChart3 className="mb-3 h-8 w-8 text-muted-foreground/50" />
-        <p className="text-sm text-muted-foreground">{t('empty')}</p>
-      </div>
+      <EmptyState
+        icon={Monitor}
+        title={t('empty')}
+        description={t('emptyDescription')}
+        actionLabel={t('emptyCta')}
+        onAction={() => router.push(`/${locale}/screens` as Route)}
+      />
     );
   }
 
@@ -333,7 +359,7 @@ export function AnalyticsPageClient() {
                       <span className="inline-flex items-center gap-1.5">
                         <span className={cn('h-2 w-2 rounded-full', STATUS_COLORS[s.status])} />
                         <span className={cn('text-xs font-semibold', STATUS_TEXT[s.status])}>
-                          {s.status}
+                          {tAnalytics('status' + s.status.charAt(0) + s.status.slice(1).toLowerCase())}
                         </span>
                       </span>
                     </td>

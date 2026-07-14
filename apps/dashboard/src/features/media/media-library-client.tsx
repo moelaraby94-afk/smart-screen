@@ -91,6 +91,7 @@ export function MediaLibraryClient() {
   const [savingExpiry, setSavingExpiry] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('newest');
   const [mediaPage, setMediaPage] = useState(1);
   const [mediaTotalPages, setMediaTotalPages] = useState(1);
   const [mediaTotal, setMediaTotal] = useState(0);
@@ -378,7 +379,7 @@ export function MediaLibraryClient() {
   const filteredItems = useMemo(
     () => {
       const q = searchQuery.trim().toLowerCase();
-      return items.filter((m) => {
+      const filtered = items.filter((m) => {
         if (selectedFolderId !== 'all' && (m.folderId ?? null) !== selectedFolderId) return false;
         if (typeFilter === 'image' && !m.mimeType.startsWith('image/')) return false;
         if (typeFilter === 'video' && !m.mimeType.startsWith('video/')) return false;
@@ -387,8 +388,23 @@ export function MediaLibraryClient() {
         }
         return true;
       });
+      const sorted = [...filtered];
+      sorted.sort((a, b) => {
+        switch (sortBy) {
+          case 'name':
+            return a.originalName.localeCompare(b.originalName);
+          case 'oldest':
+            return a.createdAt.localeCompare(b.createdAt);
+          case 'largest':
+            return b.sizeBytes - a.sizeBytes;
+          case 'newest':
+          default:
+            return b.createdAt.localeCompare(a.createdAt);
+        }
+      });
+      return sorted;
     },
-    [items, selectedFolderId, searchQuery, typeFilter],
+    [items, selectedFolderId, searchQuery, typeFilter, sortBy],
   );
 
   const openAddToPlaylist = async (item: MediaItem) => {
@@ -580,6 +596,17 @@ export function MediaLibraryClient() {
             <option value="image">{t('filterImages')}</option>
             <option value="video">{t('filterVideos')}</option>
           </select>
+          <select
+            className="h-10 rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            aria-label={t('sortBy')}
+          >
+            <option value="newest">{t('sortNewest')}</option>
+            <option value="oldest">{t('sortOldest')}</option>
+            <option value="name">{t('sortName')}</option>
+            <option value="largest">{t('sortLargest')}</option>
+          </select>
         </div>
       )}
 
@@ -595,7 +622,7 @@ export function MediaLibraryClient() {
         <input {...getInputProps()} />
 
         {loading ? (
-          <div className="flex flex-1 items-center justify-center py-24 text-muted-foreground">
+          <div className="flex flex-1 items-center justify-center py-24 text-muted-foreground" aria-busy="true" aria-live="polite">
             {t('loading')}
           </div>
         ) : items.length === 0 ? (

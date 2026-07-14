@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Monitor, Plus, Search, Trash2, CheckSquare, Radio } from 'lucide-react';
+import { Monitor, Plus, Search, Trash2, CheckSquare, Radio, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScreenActions } from '@/features/screens/hooks/use-screen-actions';
 import { Button } from '@/components/ui/button';
@@ -134,13 +134,14 @@ export function ScreensClient({ locale }: Props) {
   const [quickScreen, setQuickScreen] = useState<ScreenRow | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('name');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bulkPlaylistId, setBulkPlaylistId] = useState<string>('');
 
   const filteredScreens = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return screens.filter((s) => {
+    const filtered = screens.filter((s) => {
       if (statusFilter !== 'all' && s.status !== statusFilter) return false;
       if (q) {
         return (
@@ -151,7 +152,23 @@ export function ScreensClient({ locale }: Props) {
       }
       return true;
     });
-  }, [screens, searchQuery, statusFilter]);
+    const sorted = [...filtered];
+    sorted.sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'status':
+          return a.status.localeCompare(b.status);
+        case 'serial':
+          return a.serialNumber.localeCompare(b.serialNumber);
+        case 'lastSeen':
+          return (b.lastSeenAt ?? '').localeCompare(a.lastSeenAt ?? '');
+        default:
+          return 0;
+      }
+    });
+    return sorted;
+  }, [screens, searchQuery, statusFilter, sortBy]);
 
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -226,6 +243,29 @@ export function ScreensClient({ locale }: Props) {
     setQuickScreen(s);
     setQuickOpen(true);
   };
+
+  const exportCsv = useCallback(() => {
+    if (!filteredScreens.length) return;
+    const headers = ['Name', 'Serial', 'Status', 'Location', 'Playlist', 'Last Seen'];
+    const rows = filteredScreens.map((s) => [
+      s.name,
+      s.serialNumber,
+      s.status,
+      s.location ?? '',
+      s.activePlaylist?.name ?? '',
+      s.lastSeenAt ?? '',
+    ]);
+    const csv = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `screens-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [filteredScreens]);
 
   if (!workspaceId) {
     return (
@@ -302,6 +342,17 @@ export function ScreensClient({ locale }: Props) {
             <option value="OFFLINE">{t('filterOffline')}</option>
             <option value="MAINTENANCE">{t('filterMaintenance')}</option>
           </select>
+          <select
+            className="h-10 rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            aria-label={t('sortBy')}
+          >
+            <option value="name">{t('sortName')}</option>
+            <option value="status">{t('sortStatus')}</option>
+            <option value="serial">{t('sortSerial')}</option>
+            <option value="lastSeen">{t('sortLastSeen')}</option>
+          </select>
           {canAssignPlayback && (
             <Button
               variant="outline"
@@ -313,6 +364,16 @@ export function ScreensClient({ locale }: Props) {
               {t('selectAll')}
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-xl"
+            disabled={!filteredScreens.length}
+            onClick={exportCsv}
+          >
+            <Download className="me-1.5 h-4 w-4" />
+            {t('exportCsv')}
+          </Button>
         </div>
       )}
 
@@ -365,7 +426,9 @@ export function ScreensClient({ locale }: Props) {
       )}
 
       {isLoading ? (
-        <CardGridSkeleton />
+        <div aria-busy="true" aria-live="polite">
+          <CardGridSkeleton />
+        </div>
       ) : screens.length === 0 ? (
         <div className="vc-card-surface flex flex-col items-center gap-4 rounded-2xl py-16">
           <Monitor className="h-12 w-12 text-muted-foreground/40" />

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   DragDropContext,
   type DropResult,
@@ -65,9 +65,29 @@ export function PlaylistStudioClient() {
   const [cloning, setCloning] = useState(false);
   const [cloneTargetWs, setCloneTargetWs] = useState('');
   const [mediaSearch, setMediaSearch] = useState('');
+  const [playlistSort, setPlaylistSort] = useState<string>('name');
   const [undoStack, setUndoStack] = useState<Row[][]>([]);
   const [redoStack, setRedoStack] = useState<Row[][]>([]);
   const skipHistoryRef = useRef(false);
+
+  const sortedPlaylists = useMemo(
+    () => {
+      const sorted = [...playlists];
+      sorted.sort((a, b) => {
+        switch (playlistSort) {
+          case 'items':
+            return b._count.items - a._count.items;
+          case 'screens':
+            return (b._count.screensInGroup ?? 0) - (a._count.screensInGroup ?? 0);
+          case 'name':
+          default:
+            return a.name.localeCompare(b.name);
+        }
+      });
+      return sorted;
+    },
+    [playlists, playlistSort],
+  );
 
   const loadLibrary = useCallback(async () => {
     if (!workspaceId) return;
@@ -418,11 +438,21 @@ export function PlaylistStudioClient() {
               onChange={(e) => setPlaylistId(e.target.value)}
             >
               <option value="">{t('selectOption')}</option>
-              {playlists.map((p) => (
+              {sortedPlaylists.map((p) => (
                 <option key={p.id} value={p.id}>
                   {t('playlistItems', { name: p.name, count: p._count.items, screens: p._count.screensInGroup ?? 0 })}
                 </option>
               ))}
+            </select>
+            <select
+              className="h-11 rounded-2xl border border-border bg-card px-3 text-sm text-foreground outline-none"
+              value={playlistSort}
+              onChange={(e) => setPlaylistSort(e.target.value)}
+              aria-label={t('sortBy')}
+            >
+              <option value="name">{t('sortName')}</option>
+              <option value="items">{t('sortItems')}</option>
+              <option value="screens">{t('sortScreens')}</option>
             </select>
           </div>
           <div className="flex flex-1 flex-wrap gap-3">

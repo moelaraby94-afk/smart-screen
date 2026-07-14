@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { CalendarClock, Play, Plus, CalendarDays, Calendar, List, LayoutDashboard } from 'lucide-react';
+import { CalendarClock, Play, Plus, CalendarDays, Calendar, List, LayoutDashboard, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -65,6 +65,28 @@ export function SchedulesClient({ locale }: { locale: string }) {
   const [loading, setLoading] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
   const [viewMode, setViewMode] = useState<'calendar' | 'timeline' | 'list'>('calendar');
+  const [sortBy, setSortBy] = useState<string>('priority');
+
+  const sortedSchedules = useMemo(
+    () => {
+      const sorted = [...schedules];
+      sorted.sort((a, b) => {
+        switch (sortBy) {
+          case 'playlist':
+            return a.playlist.name.localeCompare(b.playlist.name);
+          case 'screen':
+            return (a.screen?.name ?? '').localeCompare(b.screen?.name ?? '');
+          case 'time':
+            return a.startTime.localeCompare(b.startTime);
+          case 'priority':
+          default:
+            return b.priority - a.priority;
+        }
+      });
+      return sorted;
+    },
+    [schedules, sortBy],
+  );
 
   const overlapIds = useMemo(() => {
     const s = new Set<string>();
@@ -250,6 +272,17 @@ export function SchedulesClient({ locale }: { locale: string }) {
                 <List className="h-4 w-4" />
               </button>
             </div>
+            <select
+              className="h-9 rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              aria-label={t('sortBy')}
+            >
+              <option value="priority">{t('sortPriority')}</option>
+              <option value="time">{t('sortTime')}</option>
+              <option value="playlist">{t('sortPlaylist')}</option>
+              <option value="screen">{t('sortScreen')}</option>
+            </select>
           <Dialog open={openCreate} onOpenChange={setOpenCreate}>
             <DialogTrigger asChild>
               <Button className="rounded-xl font-semibold" variant="cta">
@@ -360,10 +393,10 @@ export function SchedulesClient({ locale }: { locale: string }) {
           onAction={() => setOpenCreate(true)}
         />
       ) : viewMode === 'timeline' ? (
-        <SchedulesTimelineView schedules={schedules} dayLabels={dayLabels} />
+        <SchedulesTimelineView schedules={sortedSchedules} dayLabels={dayLabels} />
       ) : viewMode === 'list' ? (
         <ScheduleList
-          schedules={schedules}
+          schedules={sortedSchedules}
           dayShort={dayShort}
           onDelete={(id) => void onDeleteSchedule(id)}
           t={t}
@@ -371,7 +404,7 @@ export function SchedulesClient({ locale }: { locale: string }) {
       ) : (
         <>
           <ScheduleCalendar
-            schedules={schedules}
+            schedules={sortedSchedules}
             overlapIds={overlapIds}
             loading={loading}
             locale={locale}
@@ -379,9 +412,9 @@ export function SchedulesClient({ locale }: { locale: string }) {
             dragRef={dragRef}
             onDragStart={() => setDragActive(true)}
           />
-          {!loading && schedules.length > 0 ? (
+          {!loading && sortedSchedules.length > 0 ? (
             <ScheduleList
-              schedules={schedules}
+              schedules={sortedSchedules}
               dayShort={dayShort}
               onDelete={(id) => void onDeleteSchedule(id)}
               t={t}
