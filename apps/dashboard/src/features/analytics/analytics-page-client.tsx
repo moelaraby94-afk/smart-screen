@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
 import {
   Activity,
@@ -25,16 +25,17 @@ function formatUptime(sec: number): string {
   return `${(sec / 3600).toFixed(1)}h`;
 }
 
-function formatRelative(iso: string | null): string {
+function formatRelative(iso: string | null, locale: string): string {
   if (!iso) return '—';
   const diff = Date.now() - new Date(iso).getTime();
   const sec = Math.floor(diff / 1000);
-  if (sec < 60) return `${sec}s ago`;
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+  if (sec < 60) return rtf.format(-sec, 'second');
   const min = Math.floor(sec / 60);
-  if (min < 60) return `${min}m ago`;
+  if (min < 60) return rtf.format(-min, 'minute');
   const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  return `${Math.floor(hr / 24)}d ago`;
+  if (hr < 24) return rtf.format(-hr, 'hour');
+  return rtf.format(-Math.floor(hr / 24), 'day');
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -52,6 +53,7 @@ const STATUS_TEXT: Record<string, string> = {
 export function AnalyticsPageClient() {
   const t = useTranslations('analyticsPage');
   const tAnalytics = useTranslations('screenAnalytics');
+  const locale = useLocale();
   const { workspaceId } = useWorkspace();
   const [data, setData] = useState<ScreenAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -135,11 +137,11 @@ export function AnalyticsPageClient() {
           <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" />
-              <span>{tAnalytics('newestSeen')}: {formatRelative(data.newestSeen)}</span>
+              <span>{tAnalytics('newestSeen')}: {formatRelative(data.newestSeen, locale)}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" />
-              <span>{tAnalytics('oldestSeen')}: {formatRelative(data.oldestSeen)}</span>
+              <span>{tAnalytics('oldestSeen')}: {formatRelative(data.oldestSeen, locale)}</span>
             </div>
           </div>
         </div>
@@ -274,7 +276,7 @@ export function AnalyticsPageClient() {
                       </span>
                     ) : '—'}
                   </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">{formatRelative(s.lastSeenAt)}</td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">{formatRelative(s.lastSeenAt, locale)}</td>
                   <td className="px-4 py-3 text-xs font-medium text-foreground">
                     {s.uptimeSec > 0 ? formatUptime(s.uptimeSec) : '—'}
                   </td>
