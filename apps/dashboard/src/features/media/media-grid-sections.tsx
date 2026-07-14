@@ -1,8 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, Download, Film, Folder, FolderPlus, ImageIcon, Info, ListPlus, Pencil, Trash2, X, Zap } from 'lucide-react';
+import { Check, Download, Film, Folder, FolderPlus, ImageIcon, Info, ListPlus, Pencil, Trash2, X, Zap, LayoutGrid, Table as TableIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { MediaPreviewImage, MediaPreviewVideo } from '@/features/media/media-preview-components';
@@ -115,6 +116,7 @@ type MediaGridProps = {
 
 export function MediaGrid(props: MediaGridProps) {
   const t = useTranslations('mediaClient');
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const allSelected = props.selectedIds.size > 0 && props.selectedIds.size === props.filteredItems.length;
 
   return (
@@ -164,12 +166,111 @@ export function MediaGrid(props: MediaGridProps) {
               </button>
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground">
-              {props.isDragActive ? t('releaseToAdd') : t('dropMore')}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">
+                {props.isDragActive ? t('releaseToAdd') : t('dropMore')}
+              </p>
+              <div className="flex items-center rounded-lg border border-border bg-card p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('cards')}
+                  className={cn(
+                    'flex h-7 w-7 items-center justify-center rounded-md transition',
+                    viewMode === 'cards' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+                  )}
+                  aria-label={t('viewCards')}
+                  aria-pressed={viewMode === 'cards'}
+                >
+                  <LayoutGrid className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('table')}
+                  className={cn(
+                    'flex h-7 w-7 items-center justify-center rounded-md transition',
+                    viewMode === 'table' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+                  )}
+                  aria-label={t('viewTable')}
+                  aria-pressed={viewMode === 'table'}
+                >
+                  <TableIcon className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>
+      {viewMode === 'table' ? (
+        <div className="overflow-x-auto rounded-2xl border border-border">
+          <table className="w-full text-sm">
+            <thead className="vc-table-head-surface">
+              <tr>
+                <th className="w-10 px-4 py-3" />
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colName')}</th>
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colType')}</th>
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colSize')}</th>
+                {props.scope === 'branch' && <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colFolder')}</th>}
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colCreated')}</th>
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colActions')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {props.filteredItems.map((m) => (
+                <tr key={m.id} className="vc-table-row border-t">
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => props.onToggleSelect(m.id)}
+                      className={cn(
+                        'flex h-5 w-5 items-center justify-center rounded border-2 transition',
+                        props.selectedIds.has(m.id)
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border text-transparent hover:border-primary',
+                      )}
+                      aria-label={t('select')}
+                    >
+                      <Check className="h-3 w-3" />
+                    </button>
+                  </td>
+                  <td className="max-w-[200px] truncate px-4 py-3 font-medium text-foreground">{m.originalName}</td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                      {m.mimeType.startsWith('video/') ? <Film className="h-3.5 w-3.5" /> : <ImageIcon className="h-3.5 w-3.5" />}
+                      {m.mimeType.startsWith('video/') ? t('video') : t('image')}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 font-mono-nums text-muted-foreground">{new Intl.NumberFormat(props.locale, { maximumFractionDigits: 2 }).format(m.sizeBytes / 1024 / 1024)} MB</td>
+                  {props.scope === 'branch' && (
+                    <td className="px-4 py-3 text-muted-foreground">{m.folderName ?? t('noFolder')}</td>
+                  )}
+                  <td className="px-4 py-3 font-mono-nums text-xs text-muted-foreground">{new Date(m.createdAt).toLocaleDateString(props.locale)}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1">
+                      <QuickPublishDialog media={m}>
+                        <button type="button" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={t('quickPublish')}>
+                          <Zap className="h-4 w-4" />
+                        </button>
+                      </QuickPublishDialog>
+                      <a href={m.publicUrl} download={m.originalName} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={t('download')}>
+                        <Download className="h-4 w-4" />
+                      </a>
+                      <button type="button" onClick={() => props.onAddToPlaylist(m)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={t('addToPlaylist')}>
+                        <ListPlus className="h-4 w-4" />
+                      </button>
+                      <button type="button" onClick={() => props.onInfo(m)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={t('info')}>
+                        <Info className="h-4 w-4" />
+                      </button>
+                      <button type="button" onClick={() => props.onDelete(m)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive" aria-label={t('delete')}>
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <AnimatePresence mode="popLayout">
           {props.filteredItems.map((m, i) => (
@@ -301,6 +402,7 @@ export function MediaGrid(props: MediaGridProps) {
           ))}
         </AnimatePresence>
       </div>
+      )}
     </div>
   );
 }
