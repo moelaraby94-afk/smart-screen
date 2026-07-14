@@ -2,10 +2,11 @@
 
 import { useTranslations } from 'next-intl';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, Download, Film, Folder, FolderPlus, ImageIcon, Info, ListPlus, Pencil, Trash2, X } from 'lucide-react';
+import { Check, Download, Film, Folder, FolderPlus, ImageIcon, Info, ListPlus, Pencil, Trash2, X, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { MediaPreviewImage, MediaPreviewVideo } from '@/features/media/media-preview-components';
+import { QuickPublishDialog } from '@/features/playlists/quick-publish-dialog';
 import type { MediaItem } from '@/features/media/media-library-client';
 
 export type MediaFolder = {
@@ -212,6 +213,16 @@ export function MediaGrid(props: MediaGridProps) {
                   {m.mimeType.startsWith('video/') ? t('video') : t('image')}
                 </div>
                 <div className="absolute end-2 top-2 flex gap-1.5 opacity-0 transition group-hover:opacity-100">
+                  <QuickPublishDialog media={m}>
+                    <button
+                      type="button"
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/55 text-white shadow-lg backdrop-blur transition hover:bg-primary/90"
+                      aria-label={t('quickPublish')}
+                    >
+                      <Zap className="h-4 w-4" />
+                    </button>
+                  </QuickPublishDialog>
                   <a
                     href={m.publicUrl}
                     download={m.originalName}
