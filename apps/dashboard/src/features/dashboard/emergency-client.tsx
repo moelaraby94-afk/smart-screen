@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { useApiScreens, type ScreenRow } from '@/features/screens/useApiScreens';
 import { setScreenOverride } from '@/features/screens/api/screens-api';
+import { ensureEmergencyOverlayPlaylist } from '@/features/dashboard/emergency-overlay';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { toast } from 'sonner';
 
@@ -18,7 +19,7 @@ const templateIds = ['fire', 'weather', 'maintenance', 'lockdown'] as const;
 export function EmergencyClient() {
   const t = useTranslations('emergencyPage');
   const { workspaceId, workspaces } = useWorkspace();
-  const { screens, isLoading } = useApiScreens(workspaceId);
+  const { screens, isLoading, reload } = useApiScreens(workspaceId);
   const { toastResponseError } = useApiErrorToast();
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [message, setMessage] = useState('');
@@ -54,22 +55,39 @@ export function EmergencyClient() {
   };
 
   const handleActivate = useCallback(async () => {
-    if (!workspaceId || !selectedScreenId || !message.trim()) return;
+    if (!workspaceId || !message.trim()) return;
+    // Empty selection = broadcast to every screen in the workspace.
+    const targets = selectedScreenId ? [selectedScreenId] : screens.map((s) => s.id);
+    if (targets.length === 0) return;
     setActivating(true);
-    const res = await setScreenOverride(workspaceId, selectedScreenId, {
-      playlistId: null,
-      durationMinutes: parseInt(effectiveDuration) || 30,
-    });
-    if (res.ok) {
-      toast.success(t('activated'));
-      setMessage('');
-      setSelectedScreenId('');
-      setSelectedTemplate(null);
-    } else {
-      await toastResponseError(res);
+    try {
+      // Render the message as a full-screen overlay canvas and force it on the
+      // target screens via the override mechanism (see emergency-overlay.ts).
+      const playlistId = await ensureEmergencyOverlayPlaylist(workspaceId, message.trim());
+      const results = await Promise.all(
+        targets.map((id) =>
+          setScreenOverride(workspaceId, id, {
+            playlistId,
+            durationMinutes: parseInt(effectiveDuration) || 30,
+          }),
+        ),
+      );
+      const failed = results.find((r) => !r.ok);
+      if (failed) {
+        await toastResponseError(failed);
+      } else {
+        toast.success(t('activated'));
+        setMessage('');
+        setSelectedScreenId('');
+        setSelectedTemplate(null);
+        await reload();
+      }
+    } catch {
+      toast.error(t('activationFailed'));
+    } finally {
+      setActivating(false);
     }
-    setActivating(false);
-  }, [workspaceId, selectedScreenId, message, effectiveDuration, toastResponseError]);
+  }, [workspaceId, selectedScreenId, screens, message, effectiveDuration, toastResponseError, reload, t]);
 
   const handleCancelOverride = useCallback(async (screenId: string) => {
     if (!workspaceId) return;
@@ -79,10 +97,11 @@ export function EmergencyClient() {
     });
     if (res.ok) {
       toast.success(t('cancelled'));
+      await reload();
     } else {
       await toastResponseError(res);
     }
-  }, [workspaceId, toastResponseError]);
+  }, [workspaceId, toastResponseError, reload, t]);
 
   return (
     <div className="space-y-6">
@@ -171,7 +190,7 @@ export function EmergencyClient() {
               )}
             </div>
 
-            <Button variant="destructive" className="w-full" disabled={!message.trim() || !selectedScreenId || activating || !canEdit} onClick={handleActivate}>
+            <Button variant="destructive" className="w-full" disabled={!message.trim() || screens.length === 0 || activating || !canEdit} onClick={handleActivate}>
               {activating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
               {t('activateBtn')}
             </Button>

@@ -2397,6 +2397,7 @@
     "activeAlerts": "Active & Recent Alerts",
     "noAlerts": "No active alerts",
     "activated": "Emergency override activated",
+    "activationFailed": "Could not activate the emergency broadcast. Please try again.",
     "cancelled": "Override cancelled",
     "activeBadge": "active",
     "cancelOverride": "Cancel override",

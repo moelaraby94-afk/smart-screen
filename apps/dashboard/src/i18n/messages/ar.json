@@ -2397,6 +2397,7 @@
     "activeAlerts": "التنبيهات النشطة والحديثة",
     "noAlerts": "لا توجد تنبيهات نشطة",
     "activated": "تم تفعيل تجاوز الطوارئ",
+    "activationFailed": "تعذّر تفعيل بثّ الطوارئ. حاول مرة أخرى.",
     "cancelled": "تم إلغاء التجاوز",
     "activeBadge": "نشط",
     "cancelOverride": "إلغاء التجاوز",
