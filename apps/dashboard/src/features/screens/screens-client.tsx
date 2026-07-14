@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Monitor, Plus, Search, Trash2, CheckSquare, Radio, Download } from 'lucide-react';
+import { Monitor, Plus, Search, Trash2, CheckSquare, Radio, Download, LayoutGrid, Table as TableIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScreenActions } from '@/features/screens/hooks/use-screen-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 import { CardGridSkeleton } from '@/components/ui/skeleton-patterns';
 import { UsageIndicator } from '@/components/usage-indicator';
 import {
@@ -27,6 +28,7 @@ import { ScreenQuickEditPanel } from '@/features/screens/screen-quick-edit-panel
 import { useApiScreens, type ScreenRow } from './useApiScreens';
 import { useScreenRealtime } from './useScreenRealtime';
 import { ScreenVisualCard } from '@/features/screens/screen-visual-card';
+import { ScreenFleetStatusBadge } from '@/features/screens/screen-fleet-status';
 import { ScreenAnalyticsPanel } from '@/features/screens/screen-analytics-panel';
 import {
   CreateScreenDialogContent,
@@ -135,6 +137,7 @@ export function ScreensClient({ locale }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name');
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bulkPlaylistId, setBulkPlaylistId] = useState<string>('');
@@ -374,6 +377,32 @@ export function ScreensClient({ locale }: Props) {
             <Download className="me-1.5 h-4 w-4" />
             {t('exportCsv')}
           </Button>
+          <div className="flex items-center rounded-xl border border-border bg-card p-0.5">
+            <button
+              type="button"
+              onClick={() => setViewMode('cards')}
+              className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-lg transition',
+                viewMode === 'cards' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+              )}
+              aria-label={t('viewCards')}
+              aria-pressed={viewMode === 'cards'}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('table')}
+              className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-lg transition',
+                viewMode === 'table' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+              )}
+              aria-label={t('viewTable')}
+              aria-pressed={viewMode === 'table'}
+            >
+              <TableIcon className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       )}
 
@@ -451,6 +480,66 @@ export function ScreensClient({ locale }: Props) {
           <p className="max-w-md text-center text-sm text-muted-foreground">
             {t('noResultsDesc')}
           </p>
+        </div>
+      ) : viewMode === 'table' ? (
+        <div className="overflow-x-auto rounded-2xl border border-border">
+          <table className="w-full text-sm">
+            <thead className="vc-table-head-surface">
+              <tr className="text-start">
+                {canAssignPlayback && <th className="w-10 px-4 py-3" />}
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colName')}</th>
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colSerial')}</th>
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colStatus')}</th>
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colLocation')}</th>
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colPlaylist')}</th>
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colLastSeen')}</th>
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colActions')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredScreens.map((screen) => (
+                <tr key={screen.id} className="vc-table-row border-t">
+                  {canAssignPlayback && (
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleSelect(screen.id)}
+                        className={cn(
+                          'flex h-5 w-5 items-center justify-center rounded border-2 transition',
+                          selectedIds.has(screen.id)
+                            ? 'border-primary bg-primary text-primary-foreground'
+                            : 'border-border text-transparent hover:border-primary',
+                        )}
+                        aria-label={t('selectScreenAria', { name: screen.name })}
+                      >
+                        <CheckSquare className="h-3 w-3" />
+                      </button>
+                    </td>
+                  )}
+                  <td className="cursor-pointer px-4 py-3 font-medium text-foreground" onClick={() => openQuick(screen)}>{screen.name}</td>
+                  <td className="px-4 py-3 font-mono-nums text-muted-foreground">{screen.serialNumber}</td>
+                  <td className="px-4 py-3">
+                    <ScreenFleetStatusBadge status={screen.status} lastSeenAt={screen.lastSeenAt} locale={locale} tone="card" />
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">{screen.location ?? '—'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{screen.activePlaylist?.name ?? '—'}</td>
+                  <td className="px-4 py-3 font-mono-nums text-xs text-muted-foreground">{screen.lastSeenAt ? new Date(screen.lastSeenAt).toLocaleString(locale) : '—'}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => openQuick(screen)}
+                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        aria-label={t('quickEdit')}
+                      >
+                        <Monitor className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
