@@ -560,8 +560,8 @@ W0 (تأكيد)
 | T3.5 دمج Proof of Play → Analytics | ✅ | نقل بحث+CSV+جدول + redirect + حذف client · `f9ca57a` |
 | T3.6 دمج Billing + T3.7 تبويب Settings | ✅ (T-D+T-E) | نقل plan selection + redirect + حذف client · `1feb132` + tabs `e947786` |
 | T3.8 إعادة هيكلة أقسام السايدبار | ✅ | 7 أقسام (Overview/Fleet/Content/Playback/Insights/Management/Resources) · `94752ee` |
-| W9 تشريح صفحة + سطح تحكّم | ⬜ | ListShell / palette / saved views |
-| W4/W6 طبقة عرضية + a11y | ⬜ | skeleton/empty/sort/export/confirm |
+| W9 تشريح صفحة + سطح تحكّم | ✅ (جزئي) | Command Palette (quick-nav + command matching) · `66c8399` |
+| W4/W6 طبقة عرضية + a11y | ✅ | sort في Media/Playlists/Schedules + CSV في Screens + empty CTA + aria-busy · `66c8399` |
 | T5 موديل (Quick Publish) · W7 فيتشرز | ⬜ | لاحق |
 
 ---
