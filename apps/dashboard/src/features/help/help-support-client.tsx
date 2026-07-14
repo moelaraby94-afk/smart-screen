@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
 import {
   BookOpen,
@@ -32,6 +32,7 @@ type GuideItem = {
 
 export function HelpSupportClient() {
   const t = useTranslations('helpPage');
+  const locale = useLocale();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const faqs: FaqItem[] = [
@@ -48,37 +49,37 @@ export function HelpSupportClient() {
       icon: Monitor,
       title: t('guides.screens'),
       description: t('guides.screensDesc'),
-      href: '/screens',
+      href: `/${locale}/screens`,
     },
     {
       icon: ImageIcon,
       title: t('guides.media'),
       description: t('guides.mediaDesc'),
-      href: '/media',
+      href: `/${locale}/media`,
     },
     {
       icon: Clapperboard,
       title: t('guides.playlists'),
       description: t('guides.playlistsDesc'),
-      href: '/playlists',
+      href: `/${locale}/playlists`,
     },
     {
       icon: CalendarClock,
       title: t('guides.schedules'),
       description: t('guides.schedulesDesc'),
-      href: '/schedules',
+      href: `/${locale}/schedules`,
     },
     {
       icon: Users,
       title: t('guides.team'),
       description: t('guides.teamDesc'),
-      href: '/team',
+      href: `/${locale}/team`,
     },
     {
       icon: BookOpen,
       title: t('guides.studio'),
       description: t('guides.studioDesc'),
-      href: '/studio',
+      href: `/${locale}/studio`,
     },
   ];
 

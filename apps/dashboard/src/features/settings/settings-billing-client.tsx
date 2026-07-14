@@ -164,7 +164,7 @@ export function SettingsBillingClient() {
                   type="button"
                   variant="outline"
                   className="rounded-xl"
-                  onClick={() => window.location.href = '/en/billing'}
+                  onClick={() => { window.location.href = `/${locale}/billing`; }}
                 >
                   {t('retentionUpgrade')}
                 </Button>
