@@ -16,7 +16,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useNotifications } from './notification-provider';
-import { markAllNotificationsRead } from './notifications-api';
 
 const iconForType = (type: string) => {
   switch (type) {
@@ -40,7 +39,7 @@ const iconForType = (type: string) => {
 export function NotificationsPageClient() {
   const t = useTranslations('notifications');
   const tPage = useTranslations('notifications.page');
-  const { notifications, unreadCount } = useNotifications();
+  const { notifications, unreadCount, markAllRead } = useNotifications();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
   const filtered = useMemo(() => {
@@ -54,11 +53,6 @@ export function NotificationsPageClient() {
     if (diff < 3_600_000) return t('minutesAgo', { n: Math.floor(diff / 60_000) });
     if (diff < 86_400_000) return t('hoursAgo', { n: Math.floor(diff / 3_600_000) });
     return new Date(ts).toLocaleDateString();
-  };
-
-  const handleMarkAllRead = () => {
-    void markAllNotificationsRead();
-    window.location.reload();
   };
 
   const enableBrowserNotifications = () => {
@@ -108,7 +102,7 @@ export function NotificationsPageClient() {
           size="sm"
           className="rounded-lg"
           disabled={unreadCount === 0}
-          onClick={handleMarkAllRead}
+          onClick={markAllRead}
         >
           <CheckCircle className="me-1.5 h-3.5 w-3.5" />
           {tPage('markAllRead')}
