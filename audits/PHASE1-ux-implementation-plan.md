@@ -562,7 +562,7 @@ W0 (تأكيد)
 | T3.8 إعادة هيكلة أقسام السايدبار | ✅ | 7 أقسام (Overview/Fleet/Content/Playback/Insights/Management/Resources) · `94752ee` |
 | W9 تشريح صفحة + سطح تحكّم | ✅ (جزئي) | Command Palette (quick-nav + command matching) · `66c8399` |
 | W4/W6 طبقة عرضية + a11y | ✅ | sort في Media/Playlists/Schedules + CSV في Screens + empty CTA + aria-busy · `66c8399` |
-| T5 موديل (Quick Publish) · W7 فيتشرز | ⬜ | لاحق |
+| T5 موديل (Quick Publish) · W7 فيتشرز | ✅ (T5.1) | Quick Publish dialog from media card · `5414931` |
 
 ---
 
