@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { SettingsProfileClient } from '@/features/settings/settings-profile-client';
+import { SettingsTabs } from '@/features/settings/settings-tabs';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -17,6 +18,7 @@ export default async function SettingsProfilePage({ params }: Props) {
           {t('profileDescription')}
         </p>
       </header>
+      <SettingsTabs />
       <SettingsProfileClient />
     </main>
   );

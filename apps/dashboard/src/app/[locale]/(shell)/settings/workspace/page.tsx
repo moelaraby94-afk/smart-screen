@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { WorkspaceSettingsClient } from '@/features/settings/workspace-settings-client';
+import { SettingsTabs } from '@/features/settings/settings-tabs';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -17,6 +18,7 @@ export default async function WorkspaceSettingsPage({ params }: Props) {
           {t('workspaceDescription')}
         </p>
       </header>
+      <SettingsTabs />
       <WorkspaceSettingsClient />
     </main>
   );

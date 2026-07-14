@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { SettingsBillingClient } from '@/features/settings/settings-billing-client';
+import { SettingsTabs } from '@/features/settings/settings-tabs';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -17,6 +18,7 @@ export default async function SettingsBillingPage({ params }: Props) {
           {t('billingDescription')}
         </p>
       </header>
+      <SettingsTabs />
       <SettingsBillingClient />
     </main>
   );
