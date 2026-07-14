@@ -554,7 +554,7 @@ W0 (تأكيد)
 | T1.4/T1.5 locale: فواتير + مساعدة (B4/B5) | ✅ | روابط من useLocale · `27973aa` |
 | T1.7 Analytics: وقت نسبي محلّي (B7) | ✅ | Intl.RelativeTimeFormat · `5d5fefb` |
 | B6 expiry الميت في Content | ✅ | حُلّ بدمج Content→Media |
-| T2.1–T2.3 ربط المبني | ⬜ (T-G done) | GlobalSearch / OverviewMetrics / Skeleton — T-G: 419 سطر ميت محذوف · `16e34e9` |
+| T2.1–T2.3 ربط المبني | ✅ | GlobalSearch مفعّل · OverviewMetrics محذوف · Skeleton · `407376a`+`6a2a25b`+`cac32bd` |
 | T3.1 دمج Displays → Screens | ✅ | redirect-only + حذف client · `a9520d6` |
 | T3.4 دمج Campaigns → Schedules | ✅ | نقل Timeline + view toggle + redirect + حذف client · `33c0c62` |
 | T3.5 دمج Proof of Play → Analytics | ✅ | نقل بحث+CSV+جدول + redirect + حذف client · `f9ca57a` |
