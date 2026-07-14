@@ -545,7 +545,7 @@ W0 (تأكيد)
 | المهمة | الحالة | ملاحظة / SHA |
 |---|---|---|
 | T0.1 تأكيد الأساس الأخضر | ✅ | i18n + typecheck + build خضراء قبل أي تغيير |
-| T3.2 دمج Content → Media | ✅ | redirect + حذف مكوّن ميت + تنظيف سايدبار · `add9dd4` |
+| T3.2 دمج Content → Media | ✅ | redirect + حذف مكوّن ميت + تنظيف سايدبار + table view toggle · `add9dd4`+`87f82b2` |
 | T3.3 دمج Display Groups → Playlists | ✅ | نقل عدّاد الشاشات + redirect + حذف · `add9dd4` |
 | W8.1a توحيد الاسم (Smart Screen/شاشة ذكية) | ✅ | كل الواجهة + metadata + branding · `294e68a` |
 | W8.1b توحيد المصطلح (Workspace/مساحة عمل) | ✅ | 93 en + 98 ar، تأنيث نحوي صحيح · `7d32f2e` |
@@ -555,7 +555,7 @@ W0 (تأكيد)
 | T1.7 Analytics: وقت نسبي محلّي (B7) | ✅ | Intl.RelativeTimeFormat · `5d5fefb` |
 | B6 expiry الميت في Content | ✅ | حُلّ بدمج Content→Media |
 | T2.1–T2.3 ربط المبني | ✅ | GlobalSearch مفعّل · OverviewMetrics محذوف · Skeleton · `407376a`+`6a2a25b`+`cac32bd` |
-| T3.1 دمج Displays → Screens | ✅ | redirect-only + حذف client · `a9520d6` |
+| T3.1 دمج Displays → Screens | ✅ | redirect + حذف client + table view toggle · `a9520d6`+`8fa2d64` |
 | T3.4 دمج Campaigns → Schedules | ✅ | نقل Timeline + view toggle + redirect + حذف client · `33c0c62` |
 | T3.5 دمج Proof of Play → Analytics | ✅ | نقل بحث+CSV+جدول + redirect + حذف client · `f9ca57a` |
 | T3.6 دمج Billing + T3.7 تبويب Settings | ✅ (T-D+T-E) | نقل plan selection + redirect + حذف client · `1feb132` + tabs `e947786` |
