@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
-import { LayoutTemplate, Search, Eye, Loader2, Trash2, Plus, Sparkles } from 'lucide-react';
+import { LayoutTemplate, Search, Eye, Trash2, Plus, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
+import { CardGridSkeleton } from '@/components/ui/skeleton-patterns';
 import { useLocale, useTranslations } from 'next-intl';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { apiFetch } from '@/features/auth/session';
@@ -144,9 +145,7 @@ export function TemplatesClient() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
+        <CardGridSkeleton />
       ) : filtered.length === 0 ? (
         <EmptyState icon={LayoutTemplate} title={t('noTemplates')} description={t('noTemplatesDesc')} />
       ) : (

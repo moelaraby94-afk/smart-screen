@@ -12,6 +12,7 @@ import { useApiScreens, type ScreenRow } from '@/features/screens/useApiScreens'
 import { setScreenOverride } from '@/features/screens/api/screens-api';
 import { ensureEmergencyOverlayPlaylist } from '@/features/dashboard/emergency-overlay';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
+import { ListSkeleton } from '@/components/ui/skeleton-patterns';
 import { toast } from 'sonner';
 
 const templateIds = ['fire', 'weather', 'maintenance', 'lockdown'] as const;
@@ -206,9 +207,7 @@ export function EmergencyClient() {
           </CardHeader>
           <CardContent className="space-y-3">
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
+              <ListSkeleton count={3} />
             ) : overriddenScreens.length === 0 ? (
               <div className="py-8 text-center">
                 <Shield className="mx-auto h-10 w-10 text-muted-foreground/50" />

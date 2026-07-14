@@ -31,6 +31,7 @@ import { ScreenFleetStatusBadge } from '@/features/screens/screen-fleet-status';
 import { type ScreenRow } from '@/features/screens/useApiScreens';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
+import { CardGridSkeleton, ListSkeleton } from '@/components/ui/skeleton-patterns';
 import { computeOnlineByPlaylistId, type BranchScreenStats } from '@/features/branches/branch-stats';
 import type { BranchPlaylistRow } from '@/features/branches/use-branch-playlists';
 
@@ -153,9 +154,7 @@ export function BranchPlaylistsSection(props: PlaylistsSectionProps) {
             {t('addPlaylist')}
           </button>
         </div>
-        <div className="flex justify-center py-16">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        </div>
+        <ListSkeleton count={4} />
       </section>
     );
   }
@@ -338,9 +337,7 @@ export function BranchScreensSection(props: ScreensSectionProps) {
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">{t('screensSub')}</p>
         </div>
-        <div className="flex justify-center py-16">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        </div>
+        <CardGridSkeleton />
       </section>
     );
   }
@@ -481,9 +478,7 @@ export function BranchMediaSection({ mediaItems, isLoading }: MediaSectionProps)
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">{t('mediaSub')}</p>
         </div>
-        <div className="flex justify-center py-16">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        </div>
+        <ListSkeleton count={4} />
       </section>
     );
   }

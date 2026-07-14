@@ -6,13 +6,14 @@ import type { Route } from 'next';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Loader2, Monitor, PenLine } from 'lucide-react';
+import { Monitor, PenLine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { fetchPlaylistDetail as apiFetchPlaylistDetail } from '@/features/branches/branches-api';
 import { CreateScreenDialog } from '@/features/branches/create-screen-dialog';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { ScreenQuickEditPanel } from '@/features/screens/screen-quick-edit-panel';
 import { useApiScreens, type ScreenRow } from '@/features/screens/useApiScreens';
+import { CardGridSkeleton } from '@/components/ui/skeleton-patterns';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
 
@@ -125,9 +126,7 @@ export function PlaylistScreensClient({ locale }: Props) {
       </header>
 
       {isLoading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        </div>
+        <CardGridSkeleton />
       ) : screens.length === 0 ? (
         <div className="vc-card-surface rounded-2xl border border-dashed border-border p-10 text-center">
           <Monitor className="mx-auto h-10 w-10 text-muted-foreground" strokeWidth={ICON_STROKE} />

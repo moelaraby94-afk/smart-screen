@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useScreenActions } from '@/features/screens/hooks/use-screen-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CardGridSkeleton } from '@/components/ui/skeleton-patterns';
 import { UsageIndicator } from '@/components/usage-indicator';
 import {
   Dialog,
@@ -364,7 +365,7 @@ export function ScreensClient({ locale }: Props) {
       )}
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">{t('loading')}</p>
+        <CardGridSkeleton />
       ) : screens.length === 0 ? (
         <div className="vc-card-surface flex flex-col items-center gap-4 rounded-2xl py-16">
           <Monitor className="h-12 w-12 text-muted-foreground/40" />
