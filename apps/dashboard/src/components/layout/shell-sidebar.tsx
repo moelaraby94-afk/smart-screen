@@ -54,7 +54,6 @@ const STROKE = 1.6;
 const CLIENT_NAV = [
   { key: 'overview', hrefKey: 'overview' as const, icon: LayoutDashboard },
   { key: 'screens', hrefKey: 'screens' as const, icon: Monitor },
-  { key: 'displays', hrefKey: 'displays' as const, icon: Monitor },
   { key: 'media', hrefKey: 'media' as const, icon: FolderOpen },
   { key: 'studio', hrefKey: 'studio' as const, icon: Clapperboard },
 ] as const;
@@ -77,7 +76,7 @@ const TOOLS_NAV = [
 
 const CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE = new Set<
   string
->(['overview', 'screens', 'displays', 'media', 'studio', 'templates', 'team', 'playlists', 'schedules', 'ai', 'analytics', 'emergency', 'help', 'apiDocs', 'notifications', 'auditLog']);
+>(['overview', 'screens', 'media', 'studio', 'templates', 'team', 'playlists', 'schedules', 'ai', 'analytics', 'emergency', 'help', 'apiDocs', 'notifications', 'auditLog']);
 
 function hrefFor(
   locale: string,
@@ -106,7 +105,6 @@ function hrefFor(
     | 'team'
     | 'screens'
     | 'studio'
-    | 'displays'
     | 'displayGroups'
     | 'content'
     | 'templates'
@@ -133,7 +131,6 @@ function hrefFor(
   if (hrefKey === 'team') return `/${locale}/team`;
   if (hrefKey === 'screens') return `/${locale}/screens`;
   if (hrefKey === 'studio') return `/${locale}/studio`;
-  if (hrefKey === 'displays') return `/${locale}/displays`;
   if (hrefKey === 'displayGroups') return `/${locale}/displays/groups`;
   if (hrefKey === 'content') return `/${locale}/content`;
   if (hrefKey === 'templates') return `/${locale}/templates`;
