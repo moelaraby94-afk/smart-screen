@@ -12,12 +12,14 @@ import { ErrorCode } from '../errors/error-codes';
 import { PrismaService } from '../prisma/prisma.service';
 import { ROLES_KEY } from './roles.decorator';
 import { JwtUser } from './current-user.decorator';
+import { AccountContextHelper } from './account-context.helper';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly prisma: PrismaService,
+    private readonly accountContext: AccountContextHelper,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -53,29 +55,27 @@ export class RolesGuard implements CanActivate {
       );
     }
 
-    const membership = await this.prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId,
-          userId: user.sub,
-        },
-      },
-      select: { role: true },
-    });
+    // Check AccountMember (account-wide or workspace-scoped) first
+    const ctx = await this.accountContext.resolveForWorkspace(
+      user.sub,
+      workspaceId,
+    );
 
-    if (!membership)
-      throw DomainException.forbidden(
-        ErrorCode.NO_WORKSPACE_ACCESS,
-        'No workspace membership found',
-      );
-    if (!requiredRoles.includes(membership.role)) {
-      throw DomainException.forbidden(
-        ErrorCode.INSUFFICIENT_WORKSPACE_ROLE,
-        'Insufficient workspace role',
-        { requiredRoles, actualRole: membership.role },
-      );
+    if (ctx) {
+      if (!requiredRoles.includes(ctx.role)) {
+        throw DomainException.forbidden(
+          ErrorCode.INSUFFICIENT_WORKSPACE_ROLE,
+          'Insufficient workspace role',
+          { requiredRoles, actualRole: ctx.role },
+        );
+      }
+      return true;
     }
 
-    return true;
+    // No access at all
+    throw DomainException.forbidden(
+      ErrorCode.NO_WORKSPACE_ACCESS,
+      'No workspace membership found',
+    );
   }
 }

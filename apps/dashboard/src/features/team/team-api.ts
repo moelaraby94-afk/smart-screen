@@ -72,3 +72,63 @@ export async function acceptInvite(token: string): Promise<Response> {
     body: JSON.stringify({ token }),
   });
 }
+
+// ─── Account-level member management ──────────────────────────────
+
+export async function fetchAccountMembers(): Promise<Response> {
+  return apiFetch('/workspaces/account/members');
+}
+
+export async function fetchAccountWorkspaces(): Promise<Response> {
+  return apiFetch('/workspaces/account/workspaces');
+}
+
+export async function createAccountMember(dto: {
+  email: string;
+  fullName: string;
+  password: string;
+  role: string;
+  phone?: string;
+  country?: string;
+  city?: string;
+  workspaceScopes?: Array<{ workspaceId: string; role: string }>;
+}): Promise<Response> {
+  return apiFetch('/workspaces/account/members', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(dto),
+  });
+}
+
+export async function addAccountMember(
+  userId: string,
+  role: string,
+  workspaceScopes?: Array<{ workspaceId: string; role: string }>,
+): Promise<Response> {
+  return apiFetch('/workspaces/account/members/add', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, role, workspaceScopes }),
+  });
+}
+
+export async function updateAccountMemberRole(
+  membershipId: string,
+  role: string,
+): Promise<Response> {
+  return apiFetch(
+    `/workspaces/account/members/${membershipId}/role`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role }),
+    },
+  );
+}
+
+export async function removeAccountMember(membershipId: string): Promise<Response> {
+  return apiFetch(
+    `/workspaces/account/members/${membershipId}`,
+    { method: 'DELETE' },
+  );
+}

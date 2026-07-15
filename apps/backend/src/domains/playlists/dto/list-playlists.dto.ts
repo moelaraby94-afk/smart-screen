@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 import { PaginationQueryDto } from '../../../common/pagination/pagination-query.dto';
 
 /**
@@ -8,6 +8,10 @@ import { PaginationQueryDto } from '../../../common/pagination/pagination-query.
  */
 export class ListPlaylistsDto extends PaginationQueryDto {
   @IsString()
-  @IsNotEmpty()
-  workspaceId!: string;
+  @IsOptional()
+  workspaceId?: string;
+
+  @IsString()
+  @IsOptional()
+  groupId?: string;
 }

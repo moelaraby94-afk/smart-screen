@@ -21,41 +21,47 @@ export type MediaFolder = {
   _count: { medias: number };
 };
 
-export async function fetchMedia(workspaceId: string): Promise<MediaItem[]> {
-  const res = await apiFetch(`/media?workspaceId=${encodeURIComponent(workspaceId)}`);
+export async function fetchMedia(workspaceId?: string): Promise<MediaItem[]> {
+  const qs = workspaceId ? `?workspaceId=${encodeURIComponent(workspaceId)}` : '';
+  const res = await apiFetch(`/media${qs}`);
   if (!res.ok) return [];
   return readPageItems<MediaItem>(res);
 }
 
 export async function fetchMediaPage(
-  workspaceId: string,
+  workspaceId: string | undefined,
   page: number,
   limit = 24,
 ): Promise<{ items: MediaItem[]; total: number; totalPages: number }> {
+  const wsQs = workspaceId ? `workspaceId=${encodeURIComponent(workspaceId)}&` : '';
   const res = await apiFetch(
-    `/media?workspaceId=${encodeURIComponent(workspaceId)}&page=${page}&limit=${limit}`,
+    `/media?${wsQs}page=${page}&limit=${limit}`,
   );
   if (!res.ok) return { items: [], total: 0, totalPages: 0 };
   const data = await readPage<MediaItem>(res);
   return { items: data.items, total: data.total, totalPages: data.totalPages };
 }
 
-export async function fetchMediaFolders(workspaceId: string): Promise<MediaFolder[]> {
-  const res = await apiFetch(`/media/folders/list?workspaceId=${encodeURIComponent(workspaceId)}`);
+export async function fetchMediaFolders(workspaceId?: string): Promise<MediaFolder[]> {
+  const qs = workspaceId ? `?workspaceId=${encodeURIComponent(workspaceId)}` : '';
+  const res = await apiFetch(`/media/folders/list${qs}`);
   if (!res.ok) return [];
   return readPageItems<MediaFolder>(res);
 }
 
 export async function uploadMedia(
-  workspaceId: string,
+  workspaceId: string | null,
   file: File,
   folderId?: string,
 ): Promise<Response> {
   const form = new FormData();
   form.append('file', file);
-  const folderQ = folderId ? `&folderId=${encodeURIComponent(folderId)}` : '';
+  const params = new URLSearchParams();
+  if (workspaceId) params.set('workspaceId', workspaceId);
+  if (folderId) params.set('folderId', folderId);
+  const qs = params.toString();
   return apiFetch(
-    `/media/upload?workspaceId=${encodeURIComponent(workspaceId)}${folderQ}`,
+    `/media/upload${qs ? `?${qs}` : ''}`,
     { method: 'POST', body: form },
   );
 }
@@ -70,32 +76,36 @@ export async function deleteMedia(
 }
 
 export async function createFolder(
-  workspaceId: string,
+  workspaceId: string | null,
   name: string,
 ): Promise<Response> {
-  return apiFetch(`/media/folders?workspaceId=${encodeURIComponent(workspaceId)}`, {
+  const qs = workspaceId ? `?workspaceId=${encodeURIComponent(workspaceId)}` : '';
+  return apiFetch(`/media/folders${qs}`, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name }),
   });
 }
 
 export async function renameFolder(
-  workspaceId: string,
+  workspaceId: string | null,
   folderId: string,
   name: string,
 ): Promise<Response> {
+  const qs = workspaceId ? `?workspaceId=${encodeURIComponent(workspaceId)}` : '';
   return apiFetch(
-    `/media/folders/${encodeURIComponent(folderId)}?workspaceId=${encodeURIComponent(workspaceId)}`,
-    { method: 'PATCH', body: JSON.stringify({ name }) },
+    `/media/folders/${encodeURIComponent(folderId)}${qs}`,
+    { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) },
   );
 }
 
 export async function deleteFolder(
-  workspaceId: string,
+  workspaceId: string | null,
   folderId: string,
 ): Promise<Response> {
+  const qs = workspaceId ? `?workspaceId=${encodeURIComponent(workspaceId)}` : '';
   return apiFetch(
-    `/media/folders/${encodeURIComponent(folderId)}?workspaceId=${encodeURIComponent(workspaceId)}`,
+    `/media/folders/${encodeURIComponent(folderId)}${qs}`,
     { method: 'DELETE' },
   );
 }

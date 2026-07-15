@@ -1,11 +1,15 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreatePlaylistDto {
   @IsString()
-  @IsNotEmpty()
-  workspaceId!: string;
+  @IsOptional()
+  workspaceId?: string;
 
   @IsString()
   @IsNotEmpty()
   name!: string;
+
+  @IsString()
+  @IsOptional()
+  groupId?: string | null;
 }

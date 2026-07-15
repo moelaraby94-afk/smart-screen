@@ -123,7 +123,8 @@ export class MediaService {
   }
 
   async saveUploadedFile(params: {
-    workspaceId: string;
+    ownerId: string;
+    workspaceId: string | null;
     buffer: Buffer;
     originalName: string;
     mimeType: string;
@@ -171,9 +172,11 @@ export class MediaService {
       );
     }
 
+    const wsId = params.workspaceId ?? '_account';
+
     if (params.folderId) {
       const folder = await this.prisma.mediaFolder.findFirst({
-        where: { id: params.folderId, workspaceId: params.workspaceId },
+        where: { id: params.folderId, ownerId: params.ownerId },
         select: { id: true },
       });
       if (!folder) {
@@ -181,10 +184,10 @@ export class MediaService {
       }
     }
 
-    const dir = this.ensureUploadDir(params.workspaceId);
+    const dir = this.ensureUploadDir(wsId);
     const ext = `.${detected.ext}`;
     const fileName = `${randomUUID()}${ext}`;
-    const relativePath = join(params.workspaceId, fileName).replace(/\\/g, '/');
+    const relativePath = join(wsId, fileName).replace(/\\/g, '/');
     const absolutePath = join(dir, fileName);
 
     /**
@@ -204,14 +207,17 @@ export class MediaService {
     let created: Awaited<ReturnType<typeof this.prisma.media.create>>;
     try {
       created = await this.prisma.$transaction(async (tx) => {
-        await this.assertWithinStorageQuotaTx(
-          tx,
-          params.workspaceId,
-          sizeBytes,
-        );
+        if (params.workspaceId) {
+          await this.assertWithinStorageQuotaTx(
+            tx,
+            params.workspaceId,
+            sizeBytes,
+          );
+        }
         return tx.media.create({
           data: {
-            workspaceId: params.workspaceId,
+            ownerId: params.ownerId,
+            workspaceId: params.workspaceId ?? undefined,
             fileName,
             originalName: params.originalName,
             // Store the sniffed, verified type — not the client-supplied header.
@@ -241,9 +247,11 @@ export class MediaService {
       throw err;
     }
 
-    this.heartbeat.emitUploadComplete(params.workspaceId, {
-      fileName: params.originalName,
-    });
+    if (params.workspaceId) {
+      this.heartbeat.emitUploadComplete(params.workspaceId, {
+        fileName: params.originalName,
+      });
+    }
 
     return created;
   }
@@ -254,9 +262,10 @@ export class MediaService {
     });
   }
 
-  async list(query: ListMediaDto) {
+  async list(ownerId: string, query: ListMediaDto) {
     const where: Prisma.MediaWhereInput = {
-      workspaceId: query.workspaceId,
+      ownerId,
+      ...(query.workspaceId ? { workspaceId: query.workspaceId } : {}),
       ...(query.folderId ? { folderId: query.folderId } : {}),
     };
     const [items, total] = await Promise.all([
@@ -283,14 +292,16 @@ export class MediaService {
    * `arr.length` and `arr.reduce((a, m) => a + m.sizeBytes, 0)` in the browser —
    * a full table scan over the wire to render two numbers.
    */
-  async stats(workspaceId: string): Promise<{
+  async stats(ownerId: string, workspaceId?: string): Promise<{
     count: number;
     storageBytes: number;
   }> {
+    const where: Prisma.MediaWhereInput = { ownerId };
+    if (workspaceId) where.workspaceId = workspaceId;
     const [count, aggregate] = await Promise.all([
-      this.prisma.media.count({ where: { workspaceId } }),
+      this.prisma.media.count({ where }),
       this.prisma.media.aggregate({
-        where: { workspaceId },
+        where,
         _sum: { sizeBytes: true },
       }),
     ]);
@@ -359,6 +370,7 @@ export class MediaService {
         );
         return tx.media.create({
           data: {
+            ownerId: media.ownerId,
             workspaceId: params.targetWorkspaceId,
             fileName,
             originalName: media.originalName,
@@ -416,9 +428,11 @@ export class MediaService {
     }
   }
 
-  async listFolders(workspaceId: string) {
+  async listFolders(ownerId: string, workspaceId?: string) {
+    const where: { ownerId: string; workspaceId?: string } = { ownerId };
+    if (workspaceId) where.workspaceId = workspaceId;
     return this.prisma.mediaFolder.findMany({
-      where: { workspaceId },
+      where,
       orderBy: { createdAt: 'asc' },
       select: {
         id: true,
@@ -429,13 +443,13 @@ export class MediaService {
     });
   }
 
-  async createFolder(workspaceId: string, name: string) {
+  async createFolder(ownerId: string, workspaceId: string | null, name: string) {
     const trimmed = name.trim();
     if (trimmed.length < 2) {
       throw new BadRequestException('Folder name is too short');
     }
     return this.prisma.mediaFolder.create({
-      data: { workspaceId, name: trimmed },
+      data: { ownerId, workspaceId: workspaceId ?? undefined, name: trimmed },
       select: {
         id: true,
         name: true,
@@ -445,13 +459,15 @@ export class MediaService {
     });
   }
 
-  async renameFolder(workspaceId: string, folderId: string, name: string) {
+  async renameFolder(ownerId: string, workspaceId: string | null, folderId: string, name: string) {
     const trimmed = name.trim();
     if (trimmed.length < 2) {
       throw new BadRequestException('Folder name is too short');
     }
+    const where: { id: string; ownerId: string; workspaceId?: string } = { id: folderId, ownerId };
+    if (workspaceId) where.workspaceId = workspaceId;
     const folder = await this.prisma.mediaFolder.findFirst({
-      where: { id: folderId, workspaceId },
+      where,
       select: { id: true },
     });
     if (!folder) throw new NotFoundException('Folder not found');
@@ -467,14 +483,18 @@ export class MediaService {
     });
   }
 
-  async deleteFolder(workspaceId: string, folderId: string) {
+  async deleteFolder(ownerId: string, workspaceId: string | null, folderId: string) {
+    const where: { id: string; ownerId: string; workspaceId?: string } = { id: folderId, ownerId };
+    if (workspaceId) where.workspaceId = workspaceId;
     const folder = await this.prisma.mediaFolder.findFirst({
-      where: { id: folderId, workspaceId },
+      where,
       select: { id: true },
     });
     if (!folder) throw new NotFoundException('Folder not found');
+    const mediaWhere: { folderId: string; ownerId: string; workspaceId?: string } = { folderId, ownerId };
+    if (workspaceId) mediaWhere.workspaceId = workspaceId;
     await this.prisma.media.updateMany({
-      where: { workspaceId, folderId },
+      where: mediaWhere,
       data: { folderId: null },
     });
     await this.prisma.mediaFolder.delete({ where: { id: folderId } });
@@ -526,7 +546,7 @@ export class MediaService {
 
   toResponse(media: {
     id: string;
-    workspaceId: string;
+    workspaceId: string | null;
     fileName: string;
     originalName: string;
     mimeType: string;

@@ -11,6 +11,7 @@ import {
   skipFor,
 } from '../../common/pagination/pagination-query.dto';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { AccountContextHelper } from '../../common/auth/account-context.helper';
 
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
 
@@ -37,16 +38,20 @@ export class PlaylistsService {
     private readonly canvasesService: CanvasesService,
 
     private readonly scheduling: SchedulingService,
+
+    private readonly accountContext: AccountContextHelper,
   ) {}
 
-  async create(workspaceId: string, name: string) {
+  async create(ownerId: string, workspaceId: string | null, name: string, groupId?: string | null) {
     return this.prisma.playlist.create({
-      data: { workspaceId, name },
+      data: { ownerId, workspaceId: workspaceId ?? undefined, name, groupId: groupId ?? undefined },
     });
   }
 
-  async list(workspaceId: string, query: PaginationQueryDto) {
-    const where = { workspaceId };
+  async list(ownerId: string, workspaceId: string | undefined, query: PaginationQueryDto & { groupId?: string }) {
+    const where: { ownerId: string; workspaceId?: string; groupId?: string } = { ownerId };
+    if (workspaceId) where.workspaceId = workspaceId;
+    if (query.groupId) where.groupId = query.groupId;
     const [items, total] = await Promise.all([
       this.prisma.playlist.findMany({
         where,
@@ -266,6 +271,7 @@ export class PlaylistsService {
     const created = await this.prisma.$transaction(async (tx) => {
       const nu = await tx.playlist.create({
         data: {
+          ownerId: pl.ownerId,
           workspaceId,
           name: this.makeDuplicatePlaylistName(pl.name),
           isPublished: false,
@@ -344,6 +350,7 @@ export class PlaylistsService {
     const created = await this.prisma.$transaction(async (tx) => {
       const nu = await tx.playlist.create({
         data: {
+          ownerId: pl.ownerId,
           workspaceId: targetWorkspaceId,
           name: this.makeClonedPlaylistName(pl.name),
           isPublished: false,
@@ -572,7 +579,7 @@ export class PlaylistsService {
     return {
       id: playlist.id,
 
-      workspaceId: playlist.workspaceId,
+      workspaceId: playlist.workspaceId ?? null,
 
       name: playlist.name,
 
@@ -751,5 +758,75 @@ export class PlaylistsService {
         throw new Error('Invalid playlist item: missing media and canvas');
       }),
     };
+  }
+
+  // ─── Playlist Groups (account-level) ──────────────────────────────
+
+  async listGroups(ownerId: string) {
+    const effectiveOwnerId = await this.accountContext.resolveOwnerId(ownerId);
+    return this.prisma.playlistGroup.findMany({
+      where: { ownerId: effectiveOwnerId },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: { select: { playlists: true } },
+      },
+    });
+  }
+
+  async createGroup(ownerId: string, name: string) {
+    const effectiveOwnerId = await this.accountContext.resolveOwnerId(ownerId);
+    const trimmed = name.trim();
+    if (trimmed.length < 2) {
+      throw new BadRequestException('Group name is too short');
+    }
+    return this.prisma.playlistGroup.create({
+      data: { ownerId: effectiveOwnerId, name: trimmed },
+      select: {
+        id: true,
+        name: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: { select: { playlists: true } },
+      },
+    });
+  }
+
+  async renameGroup(ownerId: string, groupId: string, name: string) {
+    const effectiveOwnerId = await this.accountContext.resolveOwnerId(ownerId);
+    const trimmed = name.trim();
+    if (trimmed.length < 2) {
+      throw new BadRequestException('Group name is too short');
+    }
+    const group = await this.prisma.playlistGroup.findFirst({
+      where: { id: groupId, ownerId: effectiveOwnerId },
+      select: { id: true },
+    });
+    if (!group) throw new NotFoundException('Playlist group not found');
+    return this.prisma.playlistGroup.update({
+      where: { id: groupId },
+      data: { name: trimmed },
+      select: {
+        id: true,
+        name: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: { select: { playlists: true } },
+      },
+    });
+  }
+
+  async deleteGroup(ownerId: string, groupId: string) {
+    const effectiveOwnerId = await this.accountContext.resolveOwnerId(ownerId);
+    const group = await this.prisma.playlistGroup.findFirst({
+      where: { id: groupId, ownerId: effectiveOwnerId },
+      select: { id: true },
+    });
+    if (!group) throw new NotFoundException('Playlist group not found');
+    // Playlists in this group get groupId = null (SetNull in schema)
+    await this.prisma.playlistGroup.delete({ where: { id: groupId } });
   }
 }

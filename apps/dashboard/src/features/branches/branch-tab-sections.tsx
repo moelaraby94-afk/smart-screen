@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import type { Route } from 'next';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
 import {
   Clapperboard,
   Copy,
+  FolderTree,
   Image as ImageIcon,
   Loader2,
   Monitor,
@@ -16,6 +17,7 @@ import {
   Power,
   Radio,
   Trash2,
+  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,6 +35,8 @@ import { cn } from '@/lib/utils';
 import { CardGridSkeleton, ListSkeleton } from '@/components/ui/skeleton-patterns';
 import { type BranchScreenStats } from '@/features/branches/branch-stats';
 import type { BranchPlaylistRow } from '@/features/branches/use-branch-playlists';
+import { useWorkspace } from '@/features/workspace/workspace-context';
+import { useWorkspaceStats } from '@/features/workspace/use-workspace-stats';
 
 type StatsSectionProps = {
   stats: BranchScreenStats;
@@ -41,39 +45,97 @@ type StatsSectionProps = {
 
 export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
   const t = useTranslations('branchDetail');
+  const tWs = useTranslations('workspaceSettings');
+  const locale = useLocale();
+  const { workspaceId, workspaces } = useWorkspace();
+  const wsCounts = useWorkspaceStats(workspaceId, 0);
+  const branch = workspaces.find((w) => w.id === workspaceId);
+
+  const statCards = [
+    {
+      label: t('statTotal'),
+      value: loading ? '…' : String(stats.total),
+      icon: Monitor,
+      accent: 'from-primary/20 to-primary/5',
+    },
+    {
+      label: t('statOnline'),
+      value: loading ? '…' : String(stats.online),
+      icon: Radio,
+      accent: 'from-emerald-950/50 to-emerald-900/30',
+    },
+    {
+      label: t('statInactive'),
+      value: loading ? '…' : String(stats.inactive),
+      icon: Power,
+      accent: 'from-rose-500/15 to-muted',
+      sub: loading
+        ? undefined
+        : t('inactiveDetail', {
+            offline: stats.offline,
+            maintenance: stats.maintenance,
+          }),
+    },
+    {
+      label: t('statPlaylists'),
+      value: String(wsCounts.playlists),
+      icon: Clapperboard,
+      accent: 'from-blue-500/15 to-blue-900/10',
+    },
+    {
+      label: t('statMedia'),
+      value: String(wsCounts.media),
+      icon: ImageIcon,
+      accent: 'from-purple-500/15 to-purple-900/10',
+    },
+  ];
 
   return (
     <section className="space-y-4">
-      <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
-        {t('statsTitle')}
-      </h2>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {[
-          {
-            label: t('statTotal'),
-            value: loading ? '…' : String(stats.total),
-            icon: Monitor,
-            accent: 'from-primary/20 to-primary/5',
-          },
-          {
-            label: t('statOnline'),
-            value: loading ? '…' : String(stats.online),
-            icon: Radio,
-            accent: 'from-emerald-950/50 to-emerald-900/30',
-          },
-          {
-            label: t('statInactive'),
-            value: loading ? '…' : String(stats.inactive),
-            icon: Power,
-            accent: 'from-rose-500/15 to-muted',
-            sub: loading
-              ? undefined
-              : t('inactiveDetail', {
-                  offline: stats.offline,
-                  maintenance: stats.maintenance,
-                }),
-          },
-        ].map((item, i) => (
+      {/* Workspace overview card */}
+      {branch && (
+        <div className="vc-card-surface flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+              <FolderTree className="h-6 w-6 text-primary" strokeWidth={ICON_STROKE} />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-foreground">{branch.name}</h3>
+              <div className="mt-0.5 flex items-center gap-2">
+                <span className={cn(
+                  'rounded-full px-2.5 py-0.5 text-[11px] font-medium',
+                  branch.isPaused
+                    ? 'bg-amber-500/15 text-amber-600'
+                    : 'bg-emerald-500/15 text-emerald-600',
+                )}>
+                  {branch.isPaused ? tWs('statusPaused') : tWs('statusActive')}
+                </span>
+                {branch.role && (
+                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">
+                    {branch.role}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="sm" className="rounded-xl">
+              <Link href={`/${locale}/settings/workspace` as Route}>
+                {t('settingsLink')}
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-xl">
+              <Link href={`/${locale}/team` as Route}>
+                <Users className="me-1.5 h-3.5 w-3.5" />
+                {t('teamLink')}
+              </Link>
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        {statCards.map((item, i) => (
           <motion.div
             key={item.label}
             initial={{ opacity: 0, y: 10 }}

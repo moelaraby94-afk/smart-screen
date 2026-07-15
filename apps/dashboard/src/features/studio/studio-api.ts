@@ -38,8 +38,12 @@ export async function createCanvas(
 }
 
 // ─── Playlists ────────────────────────────────────────────────────
-export async function fetchPlaylists(workspaceId: string): Promise<Response> {
-  return apiFetch(`/playlists?workspaceId=${encodeURIComponent(workspaceId)}`);
+export async function fetchPlaylists(workspaceId?: string, groupId?: string): Promise<Response> {
+  const params = new URLSearchParams();
+  if (workspaceId) params.set('workspaceId', workspaceId);
+  if (groupId) params.set('groupId', groupId);
+  const qs = params.toString();
+  return apiFetch(`/playlists${qs ? `?${qs}` : ''}`);
 }
 
 export async function fetchPlaylistDetail(
@@ -52,12 +56,14 @@ export async function fetchPlaylistDetail(
 }
 
 export async function createPlaylist(
-  workspaceId: string,
+  workspaceId: string | null,
   name: string,
+  groupId?: string | null,
 ): Promise<Response> {
   return apiFetch('/playlists', {
     method: 'POST',
-    body: JSON.stringify({ workspaceId, name }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ workspaceId: workspaceId ?? undefined, name, groupId: groupId ?? undefined }),
   });
 }
 
@@ -89,4 +95,31 @@ export async function updatePlaylistMeta(
       body: JSON.stringify(data),
     },
   );
+}
+
+// ─── Playlist Groups (account-level) ──────────────────────────────
+export async function fetchPlaylistGroups(): Promise<Response> {
+  return apiFetch('/playlists/groups');
+}
+
+export async function createPlaylistGroup(name: string): Promise<Response> {
+  return apiFetch('/playlists/groups', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+}
+
+export async function renamePlaylistGroup(groupId: string, name: string): Promise<Response> {
+  return apiFetch(`/playlists/groups/${groupId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+}
+
+export async function deletePlaylistGroup(groupId: string): Promise<Response> {
+  return apiFetch(`/playlists/groups/${groupId}`, {
+    method: 'DELETE',
+  });
 }

@@ -18,6 +18,10 @@ import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/auth/roles.guard';
 import { Roles } from '../../common/auth/roles.decorator';
+import {
+  CurrentUser,
+  type JwtUser,
+} from '../../common/auth/current-user.decorator';
 import { FolderNameDto } from './dto/folder-name.dto';
 import { ListMediaDto } from './dto/list-media.dto';
 import { MediaStatsQueryDto } from './dto/media-stats-query.dto';
@@ -41,17 +45,16 @@ export class MediaController {
   )
   async upload(
     @UploadedFile() file: Express.Multer.File,
-    @Query('workspaceId') workspaceId: string,
+    @CurrentUser() user: JwtUser,
+    @Query('workspaceId') workspaceId?: string,
     @Query('folderId') folderId?: string,
   ) {
-    if (!workspaceId) {
-      throw new BadRequestException('workspaceId is required');
-    }
     if (!file) {
       throw new BadRequestException('file is required');
     }
     const created = await this.mediaService.saveUploadedFile({
-      workspaceId,
+      ownerId: user.sub,
+      workspaceId: workspaceId ?? null,
       buffer: file.buffer,
       originalName: file.originalname,
       mimeType: file.mimetype,
@@ -63,15 +66,15 @@ export class MediaController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get()
-  list(@Query() query: ListMediaDto) {
-    return this.mediaService.list(query);
+  list(@Query() query: ListMediaDto, @CurrentUser() user: JwtUser) {
+    return this.mediaService.list(user.sub, query);
   }
 
   /** Counted in the database so clients never download the library to total it. */
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get('stats')
-  stats(@Query() query: MediaStatsQueryDto) {
-    return this.mediaService.stats(query.workspaceId);
+  stats(@Query() query: MediaStatsQueryDto, @CurrentUser() user: JwtUser) {
+    return this.mediaService.stats(user.sub, query.workspaceId);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
@@ -85,42 +88,39 @@ export class MediaController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get('folders/list')
-  listFolders(@Query('workspaceId') workspaceId: string) {
-    if (!workspaceId) {
-      throw new BadRequestException('workspaceId is required');
-    }
-    return this.mediaService.listFolders(workspaceId);
+  listFolders(@CurrentUser() user: JwtUser, @Query('workspaceId') workspaceId?: string) {
+    return this.mediaService.listFolders(user.sub, workspaceId);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
   @Post('folders')
   createFolder(
-    @Query('workspaceId') workspaceId: string,
     @Body() dto: FolderNameDto,
+    @CurrentUser() user: JwtUser,
+    @Query('workspaceId') workspaceId?: string,
   ) {
-    if (!workspaceId) throw new BadRequestException('workspaceId is required');
-    return this.mediaService.createFolder(workspaceId, dto.name);
+    return this.mediaService.createFolder(user.sub, workspaceId ?? null, dto.name);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
   @Patch('folders/:id')
   renameFolder(
     @Param('id') id: string,
-    @Query('workspaceId') workspaceId: string,
     @Body() dto: FolderNameDto,
+    @CurrentUser() user: JwtUser,
+    @Query('workspaceId') workspaceId?: string,
   ) {
-    if (!workspaceId) throw new BadRequestException('workspaceId is required');
-    return this.mediaService.renameFolder(workspaceId, id, dto.name);
+    return this.mediaService.renameFolder(user.sub, workspaceId ?? null, id, dto.name);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
   @Delete('folders/:id')
   deleteFolder(
     @Param('id') id: string,
-    @Query('workspaceId') workspaceId: string,
+    @CurrentUser() user: JwtUser,
+    @Query('workspaceId') workspaceId?: string,
   ) {
-    if (!workspaceId) throw new BadRequestException('workspaceId is required');
-    return this.mediaService.deleteFolder(workspaceId, id);
+    return this.mediaService.deleteFolder(user.sub, workspaceId ?? null, id);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)

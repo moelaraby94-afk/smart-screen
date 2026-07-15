@@ -24,6 +24,9 @@ import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
 import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
+import { CreateAccountMemberDto } from './dto/create-account-member.dto';
+import { AddAccountMemberDto } from './dto/add-account-member.dto';
+import { UpdateAccountMemberRoleDto } from './dto/update-account-member-role.dto';
 import { WorkspacesService } from './workspaces.service';
 import type { Request } from 'express';
 
@@ -45,6 +48,59 @@ export class WorkspacesController {
   bootstrapDemo(@CurrentUser() user: JwtUser) {
     return this.workspaces.bootstrapDemo(user.sub);
   }
+
+  // ─── Account-level member endpoints (must be before :workspaceId routes) ───
+
+  @UseGuards(JwtAuthGuard)
+  @Get('account/members')
+  listAccountMembers(@CurrentUser() user: JwtUser) {
+    return this.workspaces.listAccountMembers(user.sub);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('account/workspaces')
+  listAccountWorkspaces(@CurrentUser() user: JwtUser) {
+    return this.workspaces.listAccountWorkspaces(user.sub);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('account/members')
+  createAccountMember(
+    @CurrentUser() user: JwtUser,
+    @Body() dto: CreateAccountMemberDto,
+  ) {
+    return this.workspaces.createAccountMember(user.sub, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('account/members/add')
+  addAccountMember(
+    @CurrentUser() user: JwtUser,
+    @Body() dto: AddAccountMemberDto,
+  ) {
+    return this.workspaces.addAccountMember(user.sub, dto.userId, dto.role, dto.workspaceScopes);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('account/members/:membershipId/role')
+  updateAccountMemberRole(
+    @Param('membershipId') membershipId: string,
+    @CurrentUser() user: JwtUser,
+    @Body() dto: UpdateAccountMemberRoleDto,
+  ) {
+    return this.workspaces.updateAccountMemberRole(user.sub, membershipId, dto.role);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('account/members/:membershipId')
+  removeAccountMember(
+    @Param('membershipId') membershipId: string,
+    @CurrentUser() user: JwtUser,
+  ) {
+    return this.workspaces.removeAccountMember(user.sub, membershipId);
+  }
+
+  // ─── Workspace-level routes ──────────────────────────────────────
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.OWNER, UserRole.ADMIN)

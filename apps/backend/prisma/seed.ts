@@ -226,6 +226,7 @@ async function main() {
     const relativePath = join(wsId, fileName).replace(/\\/g, '/');
     const row = await prisma.media.create({
       data: {
+        ownerId: admin2.id,
         workspaceId: wsId,
         fileName,
         originalName: isPng
@@ -261,6 +262,7 @@ async function main() {
 
   const playlist = await prisma.playlist.create({
     data: {
+      ownerId: admin2.id,
       workspaceId: wsId,
       name: PLAYLIST_NAME,
       isPublished: true,

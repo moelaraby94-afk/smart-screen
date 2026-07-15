@@ -6,7 +6,7 @@ import {
   type DropResult,
 } from '@hello-pangea/dnd';
 import { motion } from 'framer-motion';
-import { Plus, Save, ListVideo, Eye, EyeOff, Play, Copy, FolderInput, Undo2, Redo2, Search } from 'lucide-react';
+import { Plus, Save, ListVideo, Eye, EyeOff, Play, Copy, FolderInput, Undo2, Redo2, Search, FolderPlus, Trash2, Pencil } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,10 @@ import {
   createPlaylist as apiCreatePlaylist,
   updatePlaylistItems as apiUpdatePlaylistItems,
   updatePlaylistMeta as apiUpdatePlaylistMeta,
+  fetchPlaylistGroups as apiFetchPlaylistGroups,
+  createPlaylistGroup as apiCreatePlaylistGroup,
+  renamePlaylistGroup as apiRenamePlaylistGroup,
+  deletePlaylistGroup as apiDeletePlaylistGroup,
 } from '@/features/studio/studio-api';
 import { fetchMedia } from '@/features/media/api/media-api';
 import { apiFetch } from '@/features/auth/session';
@@ -41,7 +45,15 @@ type PlaylistSummary = {
   id: string;
   name: string;
   isPublished: boolean;
+  workspaceId?: string | null;
+  groupId?: string | null;
   _count: { items: number; screensInGroup?: number };
+};
+
+type PlaylistGroup = {
+  id: string;
+  name: string;
+  _count: { playlists: number };
 };
 
 export function PlaylistStudioClient() {
@@ -70,6 +82,14 @@ export function PlaylistStudioClient() {
   const [redoStack, setRedoStack] = useState<Row[][]>([]);
   const skipHistoryRef = useRef(false);
 
+  // Account-level state
+  const [groups, setGroups] = useState<PlaylistGroup[]>([]);
+  const [filterWorkspaceId, setFilterWorkspaceId] = useState<string>('');
+  const [filterGroupId, setFilterGroupId] = useState<string>('');
+  const [newGroupName, setNewGroupName] = useState('');
+  const [renamingGroupId, setRenamingGroupId] = useState<string | null>(null);
+  const [renameGroupValue, setRenameGroupValue] = useState('');
+
   const sortedPlaylists = useMemo(
     () => {
       const sorted = [...playlists];
@@ -96,10 +116,16 @@ export function PlaylistStudioClient() {
   }, [workspaceId]);
 
   const loadPlaylists = useCallback(async () => {
-    if (!workspaceId) return;
-    const res = await apiFetchPlaylists(workspaceId);
+    const wsId = filterWorkspaceId || undefined;
+    const grpId = filterGroupId || undefined;
+    const res = await apiFetchPlaylists(wsId, grpId);
     if (res.ok) setPlaylists(await readPageItems<PlaylistSummary>(res));
-  }, [workspaceId]);
+  }, [filterWorkspaceId, filterGroupId]);
+
+  const loadGroups = useCallback(async () => {
+    const res = await apiFetchPlaylistGroups();
+    if (res.ok) setGroups(await res.json());
+  }, []);
 
   const loadCanvasLibrary = useCallback(async () => {
     if (!workspaceId) return;
@@ -156,9 +182,10 @@ export function PlaylistStudioClient() {
       await loadLibrary();
       await loadPlaylists();
       await loadCanvasLibrary();
+      await loadGroups();
       setLoading(false);
     })();
-  }, [workspaceId, loadLibrary, loadPlaylists, loadCanvasLibrary]);
+  }, [workspaceId, loadLibrary, loadPlaylists, loadCanvasLibrary, loadGroups]);
 
   useEffect(() => {
     if (playlistId) void loadPlaylistDetail(playlistId);
@@ -166,8 +193,10 @@ export function PlaylistStudioClient() {
   }, [playlistId, loadPlaylistDetail]);
 
   const createPlaylist = async () => {
-    if (!workspaceId || !newName.trim()) return;
-    const res = await apiCreatePlaylist(workspaceId, newName.trim());
+    if (!newName.trim()) return;
+    const wsId = filterWorkspaceId || workspaceId || null;
+    const grpId = filterGroupId || null;
+    const res = await apiCreatePlaylist(wsId, newName.trim(), grpId);
     if (!res.ok) {
       toast.error(t('couldNotCreatePlaylist'));
       return;
@@ -178,6 +207,43 @@ export function PlaylistStudioClient() {
     await loadPlaylists();
     bumpWorkspaceDataEpoch();
     setPlaylistId(created.id);
+  };
+
+  const handleCreateGroup = async () => {
+    if (!newGroupName.trim()) return;
+    const res = await apiCreatePlaylistGroup(newGroupName.trim());
+    if (!res.ok) {
+      toast.error(t('couldNotCreateGroup'));
+      return;
+    }
+    toast.success(t('groupCreated'));
+    setNewGroupName('');
+    await loadGroups();
+  };
+
+  const handleRenameGroup = async (groupId: string) => {
+    if (!renameGroupValue.trim()) return;
+    const res = await apiRenamePlaylistGroup(groupId, renameGroupValue.trim());
+    if (!res.ok) {
+      toast.error(t('couldNotRenameGroup'));
+      return;
+    }
+    toast.success(t('groupRenamed'));
+    setRenamingGroupId(null);
+    setRenameGroupValue('');
+    await loadGroups();
+  };
+
+  const handleDeleteGroup = async (groupId: string) => {
+    const res = await apiDeletePlaylistGroup(groupId);
+    if (!res.ok) {
+      toast.error(t('couldNotDeleteGroup'));
+      return;
+    }
+    toast.success(t('groupDeleted'));
+    if (filterGroupId === groupId) setFilterGroupId('');
+    await loadGroups();
+    await loadPlaylists();
   };
 
   const pushHistory = useCallback((prev: Row[]) => {
@@ -422,6 +488,92 @@ export function PlaylistStudioClient() {
 
   return (
     <div className="space-y-10">
+      {/* Workspace & Group Filters */}
+      <div className="flex flex-wrap items-end gap-4">
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">{t('filterByWorkspace')}</Label>
+          <select
+            className="h-10 rounded-xl border border-border bg-card px-3 text-sm"
+            value={filterWorkspaceId}
+            onChange={(e) => setFilterWorkspaceId(e.target.value)}
+          >
+            <option value="">{t('allWorkspaces')}</option>
+            {workspaces.map((w) => (
+              <option key={w.id} value={w.id}>{w.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">{t('filterByGroup')}</Label>
+          <select
+            className="h-10 rounded-xl border border-border bg-card px-3 text-sm"
+            value={filterGroupId}
+            onChange={(e) => setFilterGroupId(e.target.value)}
+          >
+            <option value="">{t('allGroups')}</option>
+            {groups.map((g) => (
+              <option key={g.id} value={g.id}>{g.name} ({g._count.playlists})</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Group Management */}
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border/60 bg-muted/20 p-4">
+        <Input
+          placeholder={t('newGroupPlaceholder')}
+          value={newGroupName}
+          onChange={(e) => setNewGroupName(e.target.value)}
+          className="max-w-xs rounded-xl"
+          onKeyDown={(e) => { if (e.key === 'Enter') void handleCreateGroup(); }}
+        />
+        <Button variant="outline" className="rounded-xl" onClick={() => void handleCreateGroup()}>
+          <FolderPlus className="mr-2 h-4 w-4" />
+          {t('createGroup')}
+        </Button>
+        {groups.map((g) => (
+          <div key={g.id} className="flex items-center gap-1 rounded-lg border border-border/40 bg-card px-2 py-1">
+            {renamingGroupId === g.id ? (
+              <>
+                <Input
+                  value={renameGroupValue}
+                  onChange={(e) => setRenameGroupValue(e.target.value)}
+                  className="h-8 w-32 rounded-md text-sm"
+                  autoFocus
+                  onKeyDown={(e) => { if (e.key === 'Enter') void handleRenameGroup(g.id); }}
+                />
+                <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => void handleRenameGroup(g.id)}>
+                  <Save className="h-3 w-3" />
+                </Button>
+                <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => { setRenamingGroupId(null); setRenameGroupValue(''); }}>
+                  ✕
+                </Button>
+              </>
+            ) : (
+              <>
+                <span className="text-sm font-medium">{g.name}</span>
+                <span className="text-xs text-muted-foreground">({g._count.playlists})</span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-1"
+                  onClick={() => { setRenamingGroupId(g.id); setRenameGroupValue(g.name); }}
+                >
+                  <Pencil className="h-3 w-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-1 text-destructive"
+                  onClick={() => void handleDeleteGroup(g.id)}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
       <motion.div
         className="vc-glass vc-card-surface rounded-3xl p-6 sm:p-8"
         initial={{ opacity: 0, y: 8 }}

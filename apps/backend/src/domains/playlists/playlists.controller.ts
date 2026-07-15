@@ -30,10 +30,47 @@ import { PlaylistsService } from './playlists.service';
 export class PlaylistsController {
   constructor(private readonly playlistsService: PlaylistsService) {}
 
+  // ─── Playlist Groups (account-level, no workspaceId needed) ───────
+  // Must be before :id routes to avoid route conflicts.
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
+  @Get('groups')
+  listGroups(@CurrentUser() user: JwtUser) {
+    return this.playlistsService.listGroups(user.sub);
+  }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
+  @Post('groups')
+  createGroup(@Body() body: { name: string }, @CurrentUser() user: JwtUser) {
+    return this.playlistsService.createGroup(user.sub, body.name);
+  }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
+  @Patch('groups/:groupId')
+  renameGroup(
+    @Param('groupId') groupId: string,
+    @Body() body: { name: string },
+    @CurrentUser() user: JwtUser,
+  ) {
+    return this.playlistsService.renameGroup(user.sub, groupId, body.name);
+  }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN)
+  @HttpCode(204)
+  @Delete('groups/:groupId')
+  async deleteGroup(
+    @Param('groupId') groupId: string,
+    @CurrentUser() user: JwtUser,
+  ): Promise<void> {
+    await this.playlistsService.deleteGroup(user.sub, groupId);
+  }
+
+  // ─── Playlist CRUD ─────────────────────────────────────────────────
+
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get()
-  list(@Query() query: ListPlaylistsDto) {
-    return this.playlistsService.list(query.workspaceId, query);
+  list(@Query() query: ListPlaylistsDto, @CurrentUser() user: JwtUser) {
+    return this.playlistsService.list(user.sub, query.workspaceId, query);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
@@ -44,8 +81,8 @@ export class PlaylistsController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
   @Post()
-  create(@Body() dto: CreatePlaylistDto) {
-    return this.playlistsService.create(dto.workspaceId, dto.name);
+  create(@Body() dto: CreatePlaylistDto, @CurrentUser() user: JwtUser) {
+    return this.playlistsService.create(user.sub, dto.workspaceId ?? null, dto.name, dto.groupId ?? null);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)

@@ -247,6 +247,18 @@ model User {
 
   refreshTokens     RefreshToken[]
 
+  ownedPlaylists      Playlist[]       @relation("OwnedPlaylists")
+
+  ownedMedia          Media[]          @relation("OwnedMedia")
+
+  ownedMediaFolders   MediaFolder[]    @relation("OwnedMediaFolders")
+
+  ownedPlaylistGroups PlaylistGroup[]  @relation("OwnedPlaylistGroups")
+
+  accountOwnership    AccountMember[]  @relation("AccountOwnership")
+
+  accountMemberships  AccountMember[]  @relation("AccountMembership")
+
 }
 
 
@@ -314,14 +326,14 @@ model Workspace {
 
   canvases      Canvas[]
 
-  medias        Media[]
-  mediaFolders  MediaFolder[]
+  medias        Media[]          @relation("MediaWorkspace")
+  mediaFolders  MediaFolder[]    @relation("MediaFolderWorkspace")
   /// Deprecated: not used by the app. Displays pair via ScreenPairingSession (6-digit flow) only.
   pairingCodes  WorkspacePairingCode[]
 
   screenPairingSessions ScreenPairingSession[]
 
-  playlists     Playlist[]
+  playlists     Playlist[]       @relation("PlaylistWorkspace")
 
   schedules     Schedule[]
 
@@ -342,6 +354,8 @@ model Workspace {
   prayerConfig  PrayerConfig?
 
   ramadanConfig RamadanConfig?
+
+  accountMemberScopes AccountMemberWorkspaceScope[]
 
 }
 
@@ -656,7 +670,9 @@ model Media {
 
   id            String         @id @default(cuid())
 
-  workspaceId   String
+  ownerId       String
+
+  workspaceId   String?
 
   fileName      String
 
@@ -676,30 +692,46 @@ model Media {
   /// Optional expiry date. When set, media is auto-deleted after this date.
   expiresAt     DateTime?
 
-  workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  owner         User           @relation("OwnedMedia", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  workspace     Workspace?     @relation("MediaWorkspace", fields: [workspaceId], references: [id], onDelete: SetNull)
+
   folder        MediaFolder?   @relation(fields: [folderId], references: [id], onDelete: SetNull)
 
   playlistItems PlaylistItem[]
 
 
 
+  @@index([ownerId, createdAt])
+  @@index([ownerId, folderId, createdAt])
   @@index([workspaceId, createdAt])
-  @@index([workspaceId, folderId, createdAt])
 
 }
 
 model MediaFolder {
+
   id          String   @id @default(cuid())
-  workspaceId String
+
+  ownerId     String
+
+  workspaceId String?
+
   name        String
+
   createdAt   DateTime @default(now())
+
   updatedAt   DateTime @updatedAt
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  owner     User       @relation("OwnedMediaFolders", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  workspace Workspace? @relation("MediaFolderWorkspace", fields: [workspaceId], references: [id], onDelete: SetNull)
+
   medias    Media[]
 
-  @@unique([workspaceId, name])
-  @@index([workspaceId, createdAt])
+  @@unique([ownerId, name])
+
+  @@index([ownerId, createdAt])
+
 }
 
 /// Deprecated: legacy table kept for DB compatibility. Pairing is `ScreenPairingSession` only.
@@ -723,7 +755,11 @@ model Playlist {
 
   id              String         @id @default(cuid())
 
-  workspaceId     String
+  ownerId         String
+
+  workspaceId     String?
+
+  groupId         String?
 
   name            String
 
@@ -733,7 +769,11 @@ model Playlist {
 
   updatedAt       DateTime       @updatedAt
 
-  workspace       Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  owner           User           @relation("OwnedPlaylists", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  workspace       Workspace?     @relation("PlaylistWorkspace", fields: [workspaceId], references: [id], onDelete: SetNull)
+
+  group           PlaylistGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
 
   items           PlaylistItem[]
 
@@ -748,6 +788,10 @@ model Playlist {
   overrideRuleScreens ScreenOverrideRule[]
 
   schedules       Schedule[]
+
+  @@index([ownerId, updatedAt])
+
+  @@index([workspaceId])
 
 }
 
@@ -1270,5 +1314,85 @@ model RamadanConfig {
   createdAt       DateTime @default(now())
 
   updatedAt       DateTime @updatedAt
+
+}
+
+
+
+/// Playlist grouping for account-level playlist organization
+
+model PlaylistGroup {
+
+  id          String    @id @default(cuid())
+
+  ownerId     String
+
+  name        String
+
+  createdAt   DateTime  @default(now())
+
+  updatedAt   DateTime  @updatedAt
+
+  owner       User      @relation("OwnedPlaylistGroups", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  playlists   Playlist[]
+
+  @@unique([ownerId, name])
+
+}
+
+
+
+/// Account-level membership (sees all workspaces + all playlists/media owned by the account).
+/// If workspaceScopes is empty → account-wide access with `role`.
+/// If workspaceScopes has entries → access only to those workspaces with per-scope roles.
+
+model AccountMember {
+
+  id          String   @id @default(cuid())
+
+  ownerId     String
+
+  userId      String
+
+  role        UserRole @default(VIEWER)
+
+  createdAt   DateTime @default(now())
+
+  owner       User     @relation("AccountOwnership", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  user        User     @relation("AccountMembership", fields: [userId], references: [id], onDelete: Cascade)
+
+  workspaceScopes AccountMemberWorkspaceScope[]
+
+  @@unique([ownerId, userId])
+
+}
+
+
+
+/// Optional per-workspace role override for an account member.
+/// When present, the member can only access the listed workspaces.
+/// The role on each scope can differ from the account-level role.
+
+model AccountMemberWorkspaceScope {
+
+  id              String   @id @default(cuid())
+
+  accountMemberId String
+
+  workspaceId     String
+
+  role            UserRole @default(VIEWER)
+
+  createdAt       DateTime @default(now())
+
+  accountMember   AccountMember @relation(fields: [accountMemberId], references: [id], onDelete: Cascade)
+
+  workspace       Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([accountMemberId, workspaceId])
+
+  @@index([workspaceId])
 
 }
