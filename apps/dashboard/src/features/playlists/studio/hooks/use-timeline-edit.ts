@@ -11,7 +11,6 @@ type UseTimelineEditParams = {
   playlistMeta: PlaylistLocalMeta;
   selectedZoneId: string | null;
   playlistId: string;
-  library: Row['kind'] extends 'media' ? Array<{ id: string }> : never;
   skipHistoryRef: React.MutableRefObject<boolean>;
 };
 

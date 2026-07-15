@@ -36,8 +36,8 @@ export function usePlaylistData(
   filterWorkspaceId: string,
   filterGroupId: string,
   setRows: React.Dispatch<React.SetStateAction<Row[]>>,
-  setUndoStack: React.Dispatch<React.SetStateAction<Row[][]>>,
-  setRedoStack: React.Dispatch<React.SetStateAction<Row[][]>>,
+  setUndoStack: React.Dispatch<React.SetStateAction<Row[][]>> | null,
+  setRedoStack: React.Dispatch<React.SetStateAction<Row[][]>> | null,
   skipHistoryRef: React.MutableRefObject<boolean>,
 ): UsePlaylistDataReturn {
   const [library, setLibrary] = useState<MediaItem[]>([]);
@@ -112,8 +112,8 @@ export function usePlaylistData(
         return null;
       });
       skipHistoryRef.current = true;
-      setUndoStack([]);
-      setRedoStack([]);
+      setUndoStack?.([]);
+      setRedoStack?.([]);
       setRows(mapped.filter((r): r is Row => r !== null));
     },
     [workspaceId, setRows, setUndoStack, setRedoStack, skipHistoryRef],

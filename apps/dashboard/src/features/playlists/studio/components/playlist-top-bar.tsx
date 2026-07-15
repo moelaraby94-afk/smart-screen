@@ -6,6 +6,7 @@ import {
   Redo2, Save, Undo2, MonitorPlay,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -181,7 +182,7 @@ export function PlaylistTopBar({
             {isPublished ? t('unpublish') : t('publish')}
           </Button>
         ) : !isPublished ? (
-          <Button variant="outline" size="sm" className="rounded-lg" onClick={() => { /* submit for review */ }}>
+          <Button variant="outline" size="sm" className="rounded-lg" onClick={() => toast.info(t('submittedForReview'))}>
             <Eye className="me-1.5 h-4 w-4" />
             {t('submitForReview')}
           </Button>

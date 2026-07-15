@@ -30,7 +30,7 @@ type UsePlaylistActionsReturn = {
   cloning: boolean;
   createPlaylist: (name: string) => Promise<void>;
   savePlaylist: (playlistId: string, rows: Row[]) => Promise<void>;
-  togglePublish: (playlistId: string) => Promise<void>;
+  togglePublish: (playlistId: string, currentIsPublished: boolean) => Promise<void>;
   duplicatePlaylist: (playlistId: string) => Promise<void>;
   duplicatePlaylistById: (id: string) => Promise<void>;
   cloneToWorkspace: (playlistId: string, targetWs: string) => Promise<void>;
@@ -111,12 +111,12 @@ export function usePlaylistActions({
   );
 
   const togglePublish = useCallback(
-    async (playlistId: string) => {
+    async (playlistId: string, currentIsPublished: boolean) => {
       if (!workspaceId || !playlistId) return;
       setTogglingPublish(true);
       try {
         const res = await apiUpdatePlaylistMeta(workspaceId, playlistId, {
-          isPublished: true,
+          isPublished: !currentIsPublished,
         });
         if (!res.ok) {
           toast.error(t('publishFailed'));
@@ -127,7 +127,7 @@ export function usePlaylistActions({
             p.id === playlistId ? { ...p, isPublished: !p.isPublished } : p,
           ),
         );
-        toast.success(t('published'));
+        toast.success(currentIsPublished ? t('unpublished') : t('published'));
         bumpWorkspaceDataEpoch();
       } finally {
         setTogglingPublish(false);
