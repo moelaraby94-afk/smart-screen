@@ -80,6 +80,10 @@ services:
       # this with your real domain(s), e.g.:
       #   ALLOWED_ORIGINS=https://app.example.com,https://admin.example.com
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      # How the browser reaches the backend's /media-files/ static route.
+      # Without this, buildPublicUrl() falls back to http://localhost:PORT (3000 inside the container),
+      # which is the dashboard from the host's perspective — so every media URL 404s.
+      MEDIA_PUBLIC_BASE_URL: ${MEDIA_PUBLIC_BASE_URL:-http://localhost:4000}
     healthcheck:
       test:
         [
