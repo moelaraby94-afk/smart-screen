@@ -18,11 +18,13 @@ import {
   type InsightsPayload,
 } from '@/features/dashboard/home-dashboard-types';
 import {
-  WorkspaceSummarySection,
+  WorkspaceCardsSection,
   TotalsSection,
-  BranchCardsSection,
 } from '@/features/dashboard/home-dashboard-sections';
 import { RecentActivityFeed } from '@/features/dashboard/recent-activity-feed';
+import { QuickActionsSection } from '@/features/dashboard/quick-actions-section';
+import { ScreenHealthSection } from '@/features/dashboard/screen-health-section';
+import { SubscriptionSummarySection } from '@/features/dashboard/subscription-summary-section';
 import { OnboardingProgressWidget } from '@/features/onboarding/onboarding-progress-widget';
 import { PrayerTimesWidget } from '@/features/islamic/prayer-times-widget';
 import { HijriDateWidget } from '@/features/islamic/hijri-date-widget';
@@ -36,7 +38,6 @@ export function ClientHomeDashboard() {
   const router = useRouter();
   const { toastResponseError } = useApiErrorToast();
   const {
-    workspaceId,
     workspaces,
     setWorkspaceId,
     isSuperAdmin,
@@ -45,10 +46,10 @@ export function ClientHomeDashboard() {
 
   const [insights, setInsights] = useState<InsightsPayload | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedBranch, setSelectedBranch] = useState<InsightsBranch | null>(null);
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameValue, setRenameValue] = useState('');
   const [renameBusy, setRenameBusy] = useState(false);
+  const [renameTarget, setRenameTarget] = useState<InsightsBranch | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<InsightsBranch | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [pauseBusyId, setPauseBusyId] = useState<string | null>(null);
@@ -77,16 +78,6 @@ export function ClientHomeDashboard() {
     void load();
   }, [load]);
 
-  const currentWsRow = useMemo(
-    () => insights?.branches.find((b) => b.workspaceId === workspaceId) ?? null,
-    [insights, workspaceId],
-  );
-
-  const currentWsName = useMemo(
-    () => workspaces.find((w) => w.id === workspaceId)?.name ?? '',
-    [workspaces, workspaceId],
-  );
-
   const daysRemaining = useMemo(() => {
     if (!insights) return null;
     const end = insights.account.subscriptionEndDate;
@@ -99,18 +90,19 @@ export function ClientHomeDashboard() {
     (wsId: string) => {
       setWorkspaceId(wsId);
       const locale = typeof window !== 'undefined' ? document.documentElement.lang || 'en' : 'en';
-      router.push(`/${locale}/branches/${wsId}` as never as Route);
+      router.push(`/${locale}/branches` as never as Route);
     },
     [setWorkspaceId, router],
   );
 
   const onRename = useCallback((row: InsightsBranch) => {
+    setRenameTarget(row);
     setRenameValue(row.name);
     setRenameOpen(true);
   }, []);
 
   const submitRename = useCallback(async () => {
-    if (!selectedBranch) return;
+    if (!renameTarget) return;
     const name = renameValue.trim();
     if (name.length < 2) {
       toast.error(t('toastNameMin'));
@@ -118,13 +110,14 @@ export function ClientHomeDashboard() {
     }
     setRenameBusy(true);
     try {
-      const res = await updateWorkspace(selectedBranch.workspaceId, { name });
+      const res = await updateWorkspace(renameTarget.workspaceId, { name });
       if (!res.ok) {
         await toastResponseError(res);
         return;
       }
       toast.success(t('toastRenamed'));
       setRenameOpen(false);
+      setRenameTarget(null);
       bumpWorkspaceDataEpoch();
       await load();
     } catch {
@@ -132,7 +125,7 @@ export function ClientHomeDashboard() {
     } finally {
       setRenameBusy(false);
     }
-  }, [selectedBranch, renameValue, t, toastResponseError, bumpWorkspaceDataEpoch, load]);
+  }, [renameTarget, renameValue, t, toastResponseError, bumpWorkspaceDataEpoch, load]);
 
   const onTogglePause = useCallback(
     async (row: InsightsBranch) => {
@@ -227,21 +220,10 @@ export function ClientHomeDashboard() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <OnboardingProgressWidget />
-      <div className="grid gap-4 md:grid-cols-[1fr_auto]">
-        <PrayerTimesWidget />
-        <HijriDateWidget />
-      </div>
 
-      {currentWsRow ? (
-        <WorkspaceSummarySection
-          currentWsRow={currentWsRow}
-          currentWsName={currentWsName}
-          loading={loading}
-          locale={typeof window !== 'undefined' ? document.documentElement.lang || 'en' : 'en'}
-        />
-      ) : null}
+      <QuickActionsSection />
 
       <TotalsSection
         totals={insights.totals}
@@ -249,16 +231,12 @@ export function ClientHomeDashboard() {
         daysRemaining={daysRemaining}
       />
 
-      <RecentActivityFeed />
-
-      <BranchCardsSection
+      <WorkspaceCardsSection
         branches={insights.branches}
         workspaces={workspaces}
         loading={loading}
         locale={typeof window !== 'undefined' ? document.documentElement.lang || 'en' : 'en'}
         isSuperAdmin={isSuperAdmin}
-        selectedBranch={selectedBranch}
-        setSelectedBranch={setSelectedBranch}
         pauseBusyId={pauseBusyId}
         onOpenBranch={onOpenBranch}
         onRename={onRename}
@@ -267,6 +245,18 @@ export function ClientHomeDashboard() {
         seedDemoBusyId={seedDemoBusyId}
         onDelete={onDelete}
       />
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ScreenHealthSection />
+        <RecentActivityFeed />
+      </div>
+
+      <SubscriptionSummarySection />
+
+      <div className="grid gap-4 md:grid-cols-[1fr_auto]">
+        <PrayerTimesWidget />
+        <HijriDateWidget />
+      </div>
 
       <RenameBranchDialog
         open={renameOpen}

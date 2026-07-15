@@ -12,13 +12,17 @@ import {
   PenLine,
   Trash2,
   CopyPlus,
+  Wand2,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import type { MediaItem } from '@/features/media/media-library-client';
 import type { CanvasSummary } from './playlist-library-panels';
+import {
+  type TransitionType,
+  TRANSITIONS,
+} from '@/features/playlists/playlist-transitions';
 
 export type Row =
   | {
@@ -27,6 +31,8 @@ export type Row =
       mediaId: string;
       durationSec: number;
       media: MediaItem;
+      transition?: TransitionType;
+      zoneName?: string | null;
     }
   | {
       clientId: string;
@@ -34,6 +40,8 @@ export type Row =
       canvasId: string;
       durationSec: number;
       canvas: CanvasSummary;
+      transition?: TransitionType;
+      zoneName?: string | null;
     };
 
 type PlaylistTimelineProps = {
@@ -42,6 +50,8 @@ type PlaylistTimelineProps = {
   onRemoveRow: (clientId: string) => void;
   onMoveRow: (index: number, delta: -1 | 1) => void;
   onDuplicateRow: (clientId: string) => void;
+  onUpdateTransition: (clientId: string, transition: TransitionType) => void;
+  defaultTransition: TransitionType;
 };
 
 export function PlaylistTimeline({
@@ -50,13 +60,16 @@ export function PlaylistTimeline({
   onRemoveRow,
   onMoveRow,
   onDuplicateRow,
+  onUpdateTransition,
+  defaultTransition,
 }: PlaylistTimelineProps) {
   const t = useTranslations('playlistStudioClient');
+  const locale = useLocale();
 
   return (
-    <div className="rounded-2xl border-2 border-dashed border-border bg-muted/20 p-1 shadow-inner">
-      <div className="flex items-center gap-2 border-b border-border/50 px-5 py-4">
-        <Layers className="h-5 w-5 text-primary" />
+    <div className="flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/40">
+      <div className="flex items-center gap-2 border-b border-border/40 px-4 py-3">
+        <Layers className="h-4 w-4 text-primary" />
         <h3 className="text-sm font-semibold tracking-tight text-foreground">
           {t('programTimeline')}
         </h3>
@@ -69,129 +82,159 @@ export function PlaylistTimeline({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className="min-h-[min(60vh,560px)] space-y-2 p-4"
+            className="min-h-[min(50vh,480px)] space-y-2 p-3"
           >
-            {rows.map((row, index) => (
-              <Draggable key={row.clientId} draggableId={row.clientId} index={index}>
-                {(p) => (
-                  <div
-                    ref={p.innerRef}
-                    {...p.draggableProps}
-                    className="rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-primary/30 hover:shadow-md"
-                  >
-                    <div className="flex items-start gap-3">
-                      <button
-                        type="button"
-                        className="mt-1 text-muted-foreground"
-                        {...p.dragHandleProps}
-                      >
-                        <GripVertical className="h-4 w-4" />
-                      </button>
-                      <div className="relative h-12 w-20 shrink-0 overflow-hidden rounded-lg bg-muted">
-                        {row.kind === 'media' ? (
-                          row.media.mimeType.startsWith('image/') ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              alt={row.media.originalName}
-                              src={row.media.publicUrl}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <video
-                              src={row.media.publicUrl}
-                              className="h-full w-full object-cover"
-                              muted
-                              playsInline
-                            />
-                          )
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center bg-muted">
-                            <PenLine className="h-6 w-6 text-primary" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1 space-y-2">
-                        <p className="truncate text-[15px] font-semibold text-foreground">
-                          {row.kind === 'media'
-                            ? row.media.originalName
-                            : row.canvas.name}
-                        </p>
-                        <p className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
-                          {row.kind === 'media' ? t('media') : t('canvas')}
-                        </p>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <div className="flex flex-col gap-1">
-                            <Label className="text-xs">{t('durationSec')}</Label>
-                            {row.kind === 'media' &&
+            {rows.length === 0 && !provided.placeholder ? (
+              <div className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border/40 py-12">
+                <Layers className="h-8 w-8 text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground">{t('dragHereHint')}</p>
+              </div>
+            ) : (
+              rows.map((row, index) => {
+                const rowTransition = row.transition ?? defaultTransition;
+                return (
+                <Draggable key={row.clientId} draggableId={row.clientId} index={index}>
+                  {(p) => (
+                    <div
+                      ref={p.innerRef}
+                      {...p.draggableProps}
+                      className="rounded-xl border border-border/60 bg-background p-3 transition hover:border-primary/30 hover:shadow-sm"
+                    >
+                      <div className="flex items-center gap-3">
+                        {/* Drag handle + index */}
+                        <div className="flex shrink-0 items-center gap-1">
+                          <button
+                            type="button"
+                            className="text-muted-foreground/60 hover:text-foreground"
+                            {...p.dragHandleProps}
+                          >
+                            <GripVertical className="h-4 w-4" />
+                          </button>
+                          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-muted text-[10px] font-bold text-muted-foreground">
+                            {index + 1}
+                          </span>
+                        </div>
+
+                        {/* Thumbnail */}
+                        <div className="relative h-11 w-16 shrink-0 overflow-hidden rounded-lg bg-muted">
+                          {row.kind === 'media' ? (
                             row.media.mimeType.startsWith('image/') ? (
-                              <p className="max-w-[14rem] text-[11px] leading-snug text-muted-foreground">
-                                {t('imageDurationHint')}
-                              </p>
-                            ) : null}
-                          </div>
-                          <Input
-                            type="number"
-                            min={1}
-                            className="h-9 w-24 rounded-lg font-mono-nums"
-                            value={row.durationSec}
-                            onChange={(e) =>
-                              onUpdateDuration(row.clientId, Number(e.target.value) || 1)
-                            }
-                          />
-                          <div className="ms-auto flex items-center gap-1">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              className="h-9 w-9 shrink-0 rounded-lg"
-                              disabled={index === 0}
-                              title={t('moveUp')}
-                              aria-label={t('moveUp')}
-                              onClick={() => onMoveRow(index, -1)}
-                            >
-                              <ChevronUp className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              className="h-9 w-9 shrink-0 rounded-lg"
-                              disabled={index >= rows.length - 1}
-                              title={t('moveDown')}
-                              aria-label={t('moveDown')}
-                              onClick={() => onMoveRow(index, 1)}
-                            >
-                              <ChevronDown className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="text-muted-foreground hover:bg-muted/40"
-                              title={t('duplicateItem')}
-                              aria-label={t('duplicateItem')}
-                              onClick={() => onDuplicateRow(row.clientId)}
-                            >
-                              <CopyPlus className="mr-1 h-4 w-4" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="text-red-500 hover:bg-red-500/10 hover:text-red-600"
-                              onClick={() => onRemoveRow(row.clientId)}
-                            >
-                              <Trash2 className="mr-1 h-4 w-4" />
-                              {t('delete')}
-                            </Button>
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img alt={row.media.originalName} src={row.media.publicUrl} className="h-full w-full object-cover" />
+                            ) : (
+                              <video src={row.media.publicUrl} className="h-full w-full object-cover" muted playsInline />
+                            )
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-primary/10">
+                              <PenLine className="h-5 w-5 text-primary" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Info + controls */}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-foreground">
+                            {row.kind === 'media' ? row.media.originalName : row.canvas.name}
+                          </p>
+                          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                            <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                              {row.kind === 'media' ? t('media') : t('canvas')}
+                            </span>
+
+                            {/* Duration */}
+                            <div className="flex items-center gap-1">
+                              <Input
+                                type="number"
+                                min={1}
+                                className="h-7 w-16 rounded-md border-border/60 bg-background px-2 text-xs font-mono-nums"
+                                value={row.durationSec}
+                                onChange={(e) => onUpdateDuration(row.clientId, Number(e.target.value) || 1)}
+                              />
+                              <span className="text-[10px] text-muted-foreground">s</span>
+                            </div>
+
+                            {/* Transition */}
+                            <div className="flex items-center gap-1">
+                              <Wand2 className="h-3 w-3 text-primary/60" />
+                              <select
+                                className="h-7 rounded-md border border-border/60 bg-background px-1.5 text-[11px] outline-none focus:border-primary/40"
+                                value={rowTransition}
+                                onChange={(e) => onUpdateTransition(row.clientId, e.target.value as TransitionType)}
+                                aria-label={t('transitionLabel')}
+                                title={t('transitionLabel')}
+                              >
+                                {TRANSITIONS.map((tr) => (
+                                  <option key={tr.id} value={tr.id}>
+                                    {locale === 'ar' ? tr.nameAr : tr.nameEn}
+                                  </option>
+                                ))}
+                              </select>
+                              {row.transition && (
+                                <button
+                                  type="button"
+                                  className="text-[10px] text-muted-foreground hover:text-primary"
+                                  onClick={() => onUpdateTransition(row.clientId, defaultTransition)}
+                                  title={t('resetTransition')}
+                                >
+                                  ↺
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Actions */}
+                            <div className="ms-auto flex items-center gap-0.5">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 rounded-md"
+                                disabled={index === 0}
+                                title={t('moveUp')}
+                                onClick={() => onMoveRow(index, -1)}
+                              >
+                                <ChevronUp className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 rounded-md"
+                                disabled={index >= rows.length - 1}
+                                title={t('moveDown')}
+                                onClick={() => onMoveRow(index, 1)}
+                              >
+                                <ChevronDown className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 rounded-md text-muted-foreground hover:text-primary"
+                                title={t('duplicateItem')}
+                                onClick={() => onDuplicateRow(row.clientId)}
+                              >
+                                <CopyPlus className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 rounded-md text-red-500 hover:bg-red-500/10 hover:text-red-600"
+                                title={t('delete')}
+                                onClick={() => onRemoveRow(row.clientId)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </Draggable>
-            ))}
+                  )}
+                </Draggable>
+                );
+              })
+            )}
             {provided.placeholder}
           </div>
         )}

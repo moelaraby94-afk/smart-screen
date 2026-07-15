@@ -1,14 +1,11 @@
-import { BranchDetailClient } from '@/features/branches/branch-detail-client';
+import { redirect } from 'next/navigation';
+import type { Route } from 'next';
 
 type Props = {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: string; workspaceId: string }>;
 };
 
-export default async function BranchPage({ params }: Props) {
+export default async function LegacyBranchRedirect({ params }: Props) {
   const { locale } = await params;
-  return (
-    <main>
-      <BranchDetailClient locale={locale} />
-    </main>
-  );
+  redirect(`/${locale}/branches` as Route);
 }

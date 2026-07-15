@@ -44,12 +44,23 @@ export class RolesGuard implements CanActivate {
     }
 
     const workspaceId =
-      request.params.workspaceId ??
-      request.query.workspaceId ??
-      request.body.workspaceId ??
-      request.headers['x-workspace-id'];
+      request.params?.workspaceId ??
+      request.query?.workspaceId ??
+      request.body?.workspaceId ??
+      request.headers?.['x-workspace-id'];
 
     if (!workspaceId) {
+      // Account-level routes (e.g. playlist groups) don't require workspaceId.
+      // Verify the user has a valid account membership with a required role.
+      const ownerId = await this.accountContext.resolveOwnerId(user.sub);
+      if (ownerId === user.sub) return true;
+      const accountMember = await this.prisma.accountMember.findUnique({
+        where: { ownerId_userId: { ownerId, userId: user.sub } },
+        select: { role: true },
+      });
+      if (accountMember && requiredRoles.includes(accountMember.role)) {
+        return true;
+      }
       throw new BadRequestException(
         'workspaceId is required for role-protected workspace routes.',
       );

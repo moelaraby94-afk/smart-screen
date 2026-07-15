@@ -111,8 +111,11 @@ export function WorkspaceSwitcher() {
                       event.preventDefault();
                       setWorkspaceId(workspace.id);
                       bumpWorkspaceDataEpoch();
-                      router.push(`/${locale}/branches/${workspace.id}` as Route);
-                      router.refresh();
+                      const onBranchesPage = pathname?.includes(`/${locale}/branches`);
+                      if (!onBranchesPage) {
+                        router.push(`/${locale}/branches` as Route);
+                        router.refresh();
+                      }
                       setMenuOpen(false);
                     }}
                   >

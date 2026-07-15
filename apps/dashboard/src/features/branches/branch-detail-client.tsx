@@ -32,13 +32,14 @@ import { BranchReviewSection } from '@/features/branches/branch-review-section';
 
 type Props = {
   locale: string;
+  workspaceIdOverride?: string;
 };
 
-export function BranchDetailClient({ locale }: Props) {
+export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
   const t = useTranslations('branchDetail');
   const { toastResponseError } = useApiErrorToast();
   const params = useParams();
-  const workspaceIdParam = typeof params.workspaceId === 'string' ? params.workspaceId : '';
+  const workspaceIdParam = workspaceIdOverride ?? (typeof params.workspaceId === 'string' ? params.workspaceId : '');
   const {
     workspaces,
     setWorkspaceId,
@@ -120,14 +121,14 @@ export function BranchDetailClient({ locale }: Props) {
   );
 
   useLayoutEffect(() => {
-    if (!setHeaderInset) return;
+    if (!setHeaderInset || workspaceIdOverride) return;
     if (!branch) {
       setHeaderInset(null);
       return;
     }
     setHeaderInset(branchHeaderToolbar);
     return () => setHeaderInset(null);
-  }, [setHeaderInset, branch, branchHeaderToolbar]);
+  }, [setHeaderInset, branch, branchHeaderToolbar, workspaceIdOverride]);
 
   const onlineByPlaylistId = useMemo(() => computeOnlineByPlaylistId(screens), [screens]);
   const stats = useMemo(() => computeBranchScreenStats(screens), [screens]);

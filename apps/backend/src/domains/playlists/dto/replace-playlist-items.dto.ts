@@ -27,6 +27,10 @@ export class PlaylistItemInputDto {
   @Min(0)
   @Type(() => Number)
   orderIndex?: number;
+
+  @IsOptional()
+  @IsString()
+  zoneName?: string;
 }
 
 export class ReplacePlaylistItemsDto {

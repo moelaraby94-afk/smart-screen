@@ -60,11 +60,26 @@ export class PlaylistsService {
         take: query.limit,
         include: {
           _count: { select: { items: true, screensInGroup: true } },
+          items: {
+            orderBy: { orderIndex: 'asc' },
+            take: 1,
+            include: {
+              media: true,
+              canvas: { select: { id: true, name: true, width: true, height: true } },
+            },
+          },
         },
       }),
       this.prisma.playlist.count({ where }),
     ]);
-    return buildPage(items, total, query);
+    const serialized = items.map((p) => ({
+      ...p,
+      items: p.items.map((item) => ({
+        ...item,
+        media: item.media ? this.mediaService.toResponse(item.media) : null,
+      })),
+    }));
+    return buildPage(serialized as any, total, query);
   }
 
   async getOne(workspaceId: string, id: string) {
@@ -186,6 +201,8 @@ export class PlaylistsService {
             orderIndex: index,
 
             durationSec: item.durationSec,
+
+            zoneName: item.zoneName ?? null,
           })),
         });
       }
@@ -285,6 +302,7 @@ export class PlaylistsService {
             canvasId: item.canvasId,
             orderIndex: item.orderIndex,
             durationSec: item.durationSec,
+            zoneName: item.zoneName,
           })),
         });
       }
@@ -293,10 +311,26 @@ export class PlaylistsService {
 
     const row = await this.prisma.playlist.findFirst({
       where: { id: created.id },
-      include: { _count: { select: { items: true, screensInGroup: true } } },
+      include: {
+        _count: { select: { items: true, screensInGroup: true } },
+        items: {
+          orderBy: { orderIndex: 'asc' },
+          take: 1,
+          include: {
+            media: true,
+            canvas: { select: { id: true, name: true, width: true, height: true } },
+          },
+        },
+      },
     });
     if (!row) throw new NotFoundException('Playlist not found');
-    return row;
+    return {
+      ...row,
+      items: row.items.map((item) => ({
+        ...item,
+        media: item.media ? this.mediaService.toResponse(item.media) : null,
+      })),
+    };
   }
 
   /**
@@ -375,6 +409,7 @@ export class PlaylistsService {
             canvasId: canvasId ?? null,
             orderIndex: item.orderIndex,
             durationSec: item.durationSec,
+            zoneName: item.zoneName,
           },
         });
       }
@@ -383,10 +418,26 @@ export class PlaylistsService {
 
     const row = await this.prisma.playlist.findFirst({
       where: { id: created.id },
-      include: { _count: { select: { items: true, screensInGroup: true } } },
+      include: {
+        _count: { select: { items: true, screensInGroup: true } },
+        items: {
+          orderBy: { orderIndex: 'asc' },
+          take: 1,
+          include: {
+            media: true,
+            canvas: { select: { id: true, name: true, width: true, height: true } },
+          },
+        },
+      },
     });
     if (!row) throw new NotFoundException('Playlist not found');
-    return row;
+    return {
+      ...row,
+      items: row.items.map((item) => ({
+        ...item,
+        media: item.media ? this.mediaService.toResponse(item.media) : null,
+      })),
+    };
   }
 
   private makeDuplicatePlaylistName(name: string): string {
@@ -602,6 +653,8 @@ export class PlaylistsService {
       orderIndex: item.orderIndex,
 
       durationSec: item.durationSec,
+
+      zoneName: item.zoneName ?? null,
     };
 
     if (item.mediaId && item.media) {
@@ -671,6 +724,7 @@ export class PlaylistsService {
       kind: 'media' | 'canvas';
       orderIndex: number;
       durationSec: number;
+      zoneName?: string | null;
       media?: ReturnType<MediaService['toResponse']>;
       canvas?: ReturnType<CanvasesService['toCompiledPayload']>;
     }> = [];
@@ -682,6 +736,7 @@ export class PlaylistsService {
             kind: 'media' as const,
             orderIndex: globalOrder++,
             durationSec: item.durationSec,
+            zoneName: item.zoneName,
             media: this.mediaService.toResponse(item.media),
           });
         } else if (item.canvasId && item.canvas) {
@@ -689,6 +744,7 @@ export class PlaylistsService {
             kind: 'canvas' as const,
             orderIndex: globalOrder++,
             durationSec: item.durationSec,
+            zoneName: item.zoneName,
             canvas: this.canvasesService.toCompiledPayload(item.canvas),
           });
         }
@@ -739,6 +795,8 @@ export class PlaylistsService {
 
             durationSec: item.durationSec,
 
+            zoneName: item.zoneName ?? null,
+
             media: this.mediaService.toResponse(item.media),
           };
         }
@@ -750,6 +808,8 @@ export class PlaylistsService {
             orderIndex: item.orderIndex,
 
             durationSec: item.durationSec,
+
+            zoneName: item.zoneName ?? null,
 
             canvas: this.canvasesService.toCompiledPayload(item.canvas),
           };

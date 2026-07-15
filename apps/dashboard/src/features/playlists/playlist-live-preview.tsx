@@ -2,24 +2,40 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Pause, Play, X, ChevronLeft, ChevronRight, Wand2 } from 'lucide-react';
+import { Pause, Play, ChevronLeft, ChevronRight, Wand2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import type { Row } from '@/features/playlists/playlist-timeline';
 import {
   type TransitionType,
+  type PlaylistOrientation,
   getMotionVariant,
 } from '@/features/playlists/playlist-transitions';
+import { cn } from '@/lib/utils';
 
 type Props = {
-  open: boolean;
-  onClose: () => void;
   rows: Row[];
   defaultTransition: TransitionType;
   transitionDuration?: number;
+  orientation: PlaylistOrientation;
+  layoutType: 'single' | 'multi_zone';
+  className?: string;
 };
 
-export function PlaylistPreviewOverlay({ open, onClose, rows, defaultTransition, transitionDuration = 0.6 }: Props) {
+const ORIENTATION_ASPECT: Record<PlaylistOrientation, string> = {
+  landscape: '16 / 9',
+  portrait: '9 / 16',
+  square: '1 / 1',
+};
+
+export function PlaylistLivePreview({
+  rows,
+  defaultTransition,
+  transitionDuration = 0.6,
+  orientation,
+  layoutType,
+  className,
+}: Props) {
   const t = useTranslations('playlistStudioClient');
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(true);
@@ -29,13 +45,14 @@ export function PlaylistPreviewOverlay({ open, onClose, rows, defaultTransition,
   const current = rows[index];
 
   useEffect(() => {
-    if (!open) {
+    if (rows.length === 0) {
       setIndex(0);
-      setPlaying(true);
-      setDirection(1);
       return;
     }
-  }, [open]);
+    if (index >= rows.length) {
+      setIndex(0);
+    }
+  }, [rows, index]);
 
   const goNext = () => {
     setDirection(1);
@@ -48,7 +65,7 @@ export function PlaylistPreviewOverlay({ open, onClose, rows, defaultTransition,
   };
 
   useEffect(() => {
-    if (!open || !playing || rows.length === 0) return;
+    if (!playing || rows.length === 0) return;
     const dur = (rows[index]?.durationSec ?? 5) * 1000;
     timerRef.current = setTimeout(() => {
       goNext();
@@ -56,58 +73,49 @@ export function PlaylistPreviewOverlay({ open, onClose, rows, defaultTransition,
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [open, playing, index, rows]);
-
-  if (!open) return null;
+  }, [playing, index, rows]);
 
   const currentTransition = current?.transition ?? defaultTransition;
   const variant = getMotionVariant(currentTransition, transitionDuration);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black/95 backdrop-blur-md">
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-3 text-white">
-          <span className="text-sm font-semibold">
-            {t('previewMode')} — {index + 1} / {rows.length}
-          </span>
-          {current && (
-            <span className="text-xs text-white/60">
-              {current.kind === 'media' ? current.media.originalName : current.canvas.name}
-              {' · '}
-              {current.durationSec}s
+    <div className={cn('flex flex-col gap-3', className)}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-foreground">{t('preview')}</span>
+          {rows.length > 0 && (
+            <span className="text-xs text-muted-foreground">
+              {index + 1} / {rows.length}
             </span>
           )}
-          <span className="flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-white/70">
-            <Wand2 className="h-3 w-3" />
-            {currentTransition}
-          </span>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-white hover:bg-white/10"
-            onClick={() => setPlaying((p) => !p)}
-          >
-            {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-white hover:bg-white/10"
-            onClick={onClose}
-          >
-            <X className="h-4 w-4" />
-            {t('exitPreview')}
-          </Button>
-        </div>
+        {rows.length > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+              <Wand2 className="h-3 w-3" />
+              {currentTransition}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2"
+              onClick={() => setPlaying((p) => !p)}
+            >
+              {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Stage */}
-      <div className="relative flex flex-1 items-center justify-center overflow-hidden">
+      <div
+        className="relative overflow-hidden rounded-2xl border-2 border-border bg-black shadow-lg"
+        style={{ aspectRatio: ORIENTATION_ASPECT[orientation] }}
+      >
         {rows.length === 0 ? (
-          <p className="text-white/60">{t('previewEmpty')}</p>
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-white/30">
+            <Play className="h-8 w-8" strokeWidth={1.5} />
+            <p className="text-xs">{t('previewEmpty')}</p>
+          </div>
         ) : current ? (
           <AnimatePresence mode="popLayout" custom={direction}>
             <motion.div
@@ -138,46 +146,41 @@ export function PlaylistPreviewOverlay({ open, onClose, rows, defaultTransition,
                   />
                 )
               ) : (
-                <div className="flex flex-col items-center gap-4 text-white/80">
-                  <div className="flex h-32 w-32 items-center justify-center rounded-2xl border border-white/20 bg-white/5">
-                    <span className="text-3xl font-bold">{current.canvas.name.charAt(0)}</span>
+                <div className="flex flex-col items-center gap-3 text-white/70">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-white/20 bg-white/5">
+                    <span className="text-2xl font-bold">{current.canvas.name.charAt(0)}</span>
                   </div>
-                  <p className="text-lg font-semibold">{current.canvas.name}</p>
-                  <p className="text-xs text-white/50">{t('canvasPreviewPlaceholder')}</p>
+                  <p className="text-sm font-semibold">{current.canvas.name}</p>
                 </div>
               )}
             </motion.div>
           </AnimatePresence>
         ) : null}
 
-        {/* Navigation arrows */}
         {rows.length > 1 && (
           <>
             <Button
               variant="ghost"
               size="icon"
-              className="absolute start-4 text-white hover:bg-white/10"
-              aria-label={t('prevItem')}
+              className="absolute start-2 top-1/2 -translate-y-1/2 h-8 w-8 text-white hover:bg-white/10"
               onClick={goPrev}
             >
-              <ChevronLeft className="h-6 w-6" />
+              <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="absolute end-4 text-white hover:bg-white/10"
-              aria-label={t('nextItem')}
+              className="absolute end-2 top-1/2 -translate-y-1/2 h-8 w-8 text-white hover:bg-white/10"
               onClick={goNext}
             >
-              <ChevronRight className="h-6 w-6" />
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </>
         )}
       </div>
 
-      {/* Progress dots */}
-      {rows.length > 0 && (
-        <div className="flex justify-center gap-1.5 px-6 py-4">
+      {rows.length > 1 && (
+        <div className="flex flex-wrap justify-center gap-1.5">
           {rows.map((r, i) => (
             <button
               key={r.clientId}
@@ -186,9 +189,10 @@ export function PlaylistPreviewOverlay({ open, onClose, rows, defaultTransition,
                 setDirection(i > index ? 1 : -1);
                 setIndex(i);
               }}
-              className={`h-2 rounded-full transition-all ${
-                i === index ? 'w-8 bg-white' : 'w-2 bg-white/30 hover:bg-white/50'
-              }`}
+              className={cn(
+                'h-1.5 rounded-full transition-all',
+                i === index ? 'w-6 bg-primary' : 'w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/50',
+              )}
               aria-label={`Slide ${i + 1}`}
             />
           ))}

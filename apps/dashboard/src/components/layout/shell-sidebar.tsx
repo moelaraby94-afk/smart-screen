@@ -40,6 +40,7 @@ import { setStoredAccessToken } from '@/features/auth/session';
 import { logout as apiLogout } from '@/features/auth/auth-api';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useWorkspace } from '@/features/workspace/workspace-context';
 
 /* ═══════════════════════════════════════════════════════════════
    Nimbus Rail v2 — Professional SaaS sidebar
@@ -326,6 +327,7 @@ export function ShellSidebar({
   const pathnameActive = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme !== 'light';
+  const { workspaces } = useWorkspace();
 
   return (
     <aside
@@ -460,181 +462,191 @@ export function ShellSidebar({
             </>
           ) : (
             <>
-              {OVERVIEW_NAV.map((item) => {
-                const href = hrefFor(navLocale, item.hrefKey);
-                const active = isOverviewPath(pathname, navLocale);
-                return (
-                  <NavItem
-                    key={item.key}
-                    href={href as Route}
-                    label={t(item.key)}
-                    active={active}
-                    icon={item.icon}
-                    onClick={(e) => {
-                      if (isLoading) {
-                        e.preventDefault();
-                        return;
-                      }
-                      if (
-                        isAuthenticated &&
-                        !workspaceId &&
-                        !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has(item.hrefKey)
-                      ) {
-                        e.preventDefault();
-                        toast.error(t('selectWorkspaceToast'));
-                      }
-                    }}
-                  />
-                );
-              })}
+              {/* ── Flat nav: overview → workspaces → screens → playlists → media → rest ── */}
+              <NavItem
+                href={hrefFor(navLocale, 'overview') as Route}
+                label={t('overview')}
+                active={isOverviewPath(pathname, navLocale)}
+                icon={LayoutDashboard}
+                onClick={(e) => {
+                  if (isLoading) { e.preventDefault(); return; }
+                }}
+              />
 
-              <SectionLabel>{t('fleetSection')}</SectionLabel>
-              {FLEET_NAV.map((item) => {
-                const href = hrefFor(navLocale, item.hrefKey);
-                const active = Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
-                return (
-                  <NavItem
-                    key={item.key}
-                    href={href as Route}
-                    label={t(item.key)}
-                    active={active}
-                    icon={item.icon}
-                    onClick={(e) => {
-                      if (isLoading) {
-                        e.preventDefault();
-                        return;
-                      }
-                      if (
-                        isAuthenticated &&
-                        !workspaceId &&
-                        !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has(item.hrefKey)
-                      ) {
-                        e.preventDefault();
-                        toast.error(t('selectWorkspaceToast'));
-                      }
-                    }}
-                  />
-                );
-              })}
+              {/* Workspaces with count badge */}
+              <Link
+                href={`/${navLocale}/branches` as Route}
+                aria-current={pathname?.startsWith(`/${navLocale}/branches`) ? 'page' : undefined}
+                className={cn(
+                  'group relative flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 text-[13px]',
+                  'transition-all duration-200 ease-out',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30',
+                  pathname?.startsWith(`/${navLocale}/branches`)
+                    ? 'bg-primary/8 text-foreground'
+                    : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+                )}
+              >
+                {pathname?.startsWith(`/${navLocale}/branches`) ? (
+                  <span className="absolute inset-inline-start-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary transition-all duration-200" />
+                ) : null}
+                <Building2
+                  className={cn(
+                    'h-5 w-5 shrink-0 transition-all duration-200',
+                    pathname?.startsWith(`/${navLocale}/branches`) ? 'text-primary' : 'text-muted-foreground/70 group-hover:text-foreground group-hover:scale-105',
+                  )}
+                  strokeWidth={STROKE}
+                />
+                <span className={cn(
+                  'min-w-0 flex-1 truncate transition-all duration-200',
+                  pathname?.startsWith(`/${navLocale}/branches`) ? 'font-semibold' : 'font-medium',
+                )}>
+                  {t('branches')}
+                </span>
+                {workspaces.length > 0 && (
+                  <span className={cn(
+                    'shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums transition-colors duration-200',
+                    pathname?.startsWith(`/${navLocale}/branches`)
+                      ? 'bg-primary/15 text-primary'
+                      : 'bg-muted text-muted-foreground/50',
+                  )}>
+                    {workspaces.length}
+                  </span>
+                )}
+              </Link>
 
-              <SectionLabel>{t('contentSection')}</SectionLabel>
-              {CONTENT_NAV.map((item) => {
-                const href = hrefFor(navLocale, item.hrefKey);
-                const active = Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
-                return (
-                  <NavItem
-                    key={item.key}
-                    href={href as Route}
-                    label={t(item.key)}
-                    active={active}
-                    icon={item.icon}
-                    onClick={(e) => {
-                      if (isLoading) {
-                        e.preventDefault();
-                        return;
-                      }
-                      if (
-                        isAuthenticated &&
-                        !workspaceId &&
-                        !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has(item.hrefKey)
-                      ) {
-                        e.preventDefault();
-                        toast.error(t('selectWorkspaceToast'));
-                      }
-                    }}
-                  />
-                );
-              })}
+              <NavItem
+                href={hrefFor(navLocale, 'screens') as Route}
+                label={t('screens')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/screens`))}
+                icon={Monitor}
+                count={counts.screens}
+                onClick={(e) => {
+                  if (isLoading) { e.preventDefault(); return; }
+                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('screens')) {
+                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
+                  }
+                }}
+              />
 
-              <SectionLabel>{t('playbackSection')}</SectionLabel>
-              {PLAYBACK_NAV.map((item) => {
-                const href = hrefFor(navLocale, item.hrefKey);
-                const active = Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
-                return (
-                  <NavItem
-                    key={item.key}
-                    href={href as Route}
-                    label={t(item.key)}
-                    active={active}
-                    icon={item.icon}
-                    onClick={(e) => {
-                      if (isLoading) {
-                        e.preventDefault();
-                        return;
-                      }
-                      if (
-                        isAuthenticated &&
-                        !workspaceId &&
-                        !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has(item.hrefKey)
-                      ) {
-                        e.preventDefault();
-                        toast.error(t('selectWorkspaceToast'));
-                      }
-                    }}
-                  />
-                );
-              })}
+              <NavItem
+                href={hrefFor(navLocale, 'playlists') as Route}
+                label={t('playlists')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/playlists`))}
+                icon={Clapperboard}
+                count={counts.playlists}
+                onClick={(e) => {
+                  if (isLoading) { e.preventDefault(); return; }
+                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('playlists')) {
+                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
+                  }
+                }}
+              />
 
-              <SectionLabel>{t('insightsSection')}</SectionLabel>
-              {INSIGHTS_NAV.map((item) => {
-                const href = hrefFor(navLocale, item.hrefKey);
-                const active =
-                  item.hrefKey === 'analytics'
-                    ? Boolean(pathname?.startsWith(`/${navLocale}/analytics`))
-                    : Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
-                return (
-                  <NavItem
-                    key={item.key}
-                    href={href as Route}
-                    label={t(item.key)}
-                    active={active}
-                    icon={item.icon}
-                    onClick={(e) => {
-                      if (isLoading) {
-                        e.preventDefault();
-                        return;
-                      }
-                      if (
-                        isAuthenticated &&
-                        !workspaceId &&
-                        !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has(item.hrefKey)
-                      ) {
-                        e.preventDefault();
-                        toast.error(t('selectWorkspaceToast'));
-                      }
-                    }}
-                  />
-                );
-              })}
+              <NavItem
+                href={hrefFor(navLocale, 'media') as Route}
+                label={t('media')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/media`))}
+                icon={FolderOpen}
+                count={counts.media}
+                onClick={(e) => {
+                  if (isLoading) { e.preventDefault(); return; }
+                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('media')) {
+                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
+                  }
+                }}
+              />
 
-              <SectionLabel>{t('managementSection')}</SectionLabel>
-              {MANAGEMENT_NAV.map((item) => {
-                const href = hrefFor(navLocale, item.hrefKey);
-                const active = Boolean(pathname?.startsWith(`/${navLocale}/${item.hrefKey}`));
-                return (
-                  <NavItem
-                    key={item.key}
-                    href={href as Route}
-                    label={t(item.key)}
-                    active={active}
-                    icon={item.icon}
-                    onClick={(e) => {
-                      if (isLoading) {
-                        e.preventDefault();
-                        return;
-                      }
-                      if (
-                        isAuthenticated &&
-                        !workspaceId &&
-                        !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has(item.hrefKey)
-                      ) {
-                        e.preventDefault();
-                        toast.error(t('selectWorkspaceToast'));
-                      }
-                    }}
-                  />
-                );
-              })}
+              <NavItem
+                href={hrefFor(navLocale, 'studio') as Route}
+                label={t('studio')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/studio`))}
+                icon={Clapperboard}
+                onClick={(e) => {
+                  if (isLoading) { e.preventDefault(); return; }
+                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('studio')) {
+                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
+                  }
+                }}
+              />
+
+              <NavItem
+                href={hrefFor(navLocale, 'templates') as Route}
+                label={t('templates')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/templates`))}
+                icon={LayoutTemplate}
+                onClick={(e) => {
+                  if (isLoading) { e.preventDefault(); return; }
+                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('templates')) {
+                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
+                  }
+                }}
+              />
+
+              <NavItem
+                href={hrefFor(navLocale, 'schedules') as Route}
+                label={t('schedules')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/schedules`))}
+                icon={CalendarClock}
+                onClick={(e) => {
+                  if (isLoading) { e.preventDefault(); return; }
+                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('schedules')) {
+                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
+                  }
+                }}
+              />
+
+              <NavItem
+                href={hrefFor(navLocale, 'emergency') as Route}
+                label={t('emergency')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/emergency`))}
+                icon={AlertTriangle}
+                onClick={(e) => {
+                  if (isLoading) { e.preventDefault(); return; }
+                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('emergency')) {
+                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
+                  }
+                }}
+              />
+
+              <NavItem
+                href={hrefFor(navLocale, 'analytics') as Route}
+                label={t('analytics')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/analytics`))}
+                icon={Activity}
+                onClick={(e) => {
+                  if (isLoading) { e.preventDefault(); return; }
+                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('analytics')) {
+                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
+                  }
+                }}
+              />
+
+              <NavItem
+                href={hrefFor(navLocale, 'ai') as Route}
+                label={t('ai')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/ai`))}
+                icon={Sparkles}
+                onClick={(e) => {
+                  if (isLoading) { e.preventDefault(); return; }
+                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('ai')) {
+                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
+                  }
+                }}
+              />
+
+              <NavItem
+                href={hrefFor(navLocale, 'team') as Route}
+                label={t('team')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/team`))}
+                icon={Users}
+                onClick={(e) => {
+                  if (isLoading) { e.preventDefault(); return; }
+                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('team')) {
+                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
+                  }
+                }}
+              />
+
               <NavItem
                 href={`/${navLocale}/settings/billing` as Route}
                 label={t('billing')}
@@ -648,7 +660,6 @@ export function ShellSidebar({
                 icon={Settings}
               />
 
-              <SectionLabel>{t('resourcesSection')}</SectionLabel>
               <NavItem
                 href={hrefFor(navLocale, 'notifications') as Route}
                 label={t('notifications')}

@@ -813,6 +813,9 @@ model PlaylistItem {
 
   durationSec Int      @default(10)
 
+  /// Zone name for multi-zone layouts (null = single/full-screen)
+  zoneName   String?
+
   createdAt   DateTime @default(now())
 
   playlist    Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)

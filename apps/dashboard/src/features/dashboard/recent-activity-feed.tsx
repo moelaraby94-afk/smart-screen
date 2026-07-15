@@ -77,77 +77,79 @@ export function RecentActivityFeed() {
 
   return (
     <motion.section
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
-      className="vc-card-surface rounded-xl border border-border bg-card p-6 sm:p-8"
+      transition={{ duration: 0.3 }}
+      className="rounded-xl border border-border bg-card p-4"
     >
-      <div className="mb-5 flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
-          <ActivityIcon className="h-5 w-5 text-primary" strokeWidth={ICON_STROKE} />
+      <div className="mb-3 flex items-center gap-2">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+          <ActivityIcon className="h-3.5 w-3.5 text-primary" strokeWidth={ICON_STROKE} />
         </div>
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight text-foreground">
+        <div className="flex-1">
+          <h2 className="text-sm font-bold tracking-tight text-foreground">
             {t('title')}
           </h2>
-          <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
+          <p className="text-[11px] text-muted-foreground">{t('subtitle')}</p>
         </div>
       </div>
 
       {loading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-3 rounded-xl border border-border/50 bg-muted/20 p-3"
-            >
-              <Skeleton className="h-9 w-9 shrink-0 rounded-lg" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-3 w-1/3" />
+        <div className="space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-2.5 rounded-lg px-2 py-2">
+              <Skeleton className="h-7 w-7 shrink-0 rounded-full" />
+              <div className="flex-1 space-y-1.5">
+                <Skeleton className="h-2.5 w-1/3" />
                 <Skeleton className="h-2 w-1/4" />
               </div>
             </div>
           ))}
         </div>
       ) : items.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">
-          {t('empty')}
-        </p>
+        <div className="flex items-center justify-center gap-2 py-6 text-center">
+          <ActivityIcon className="h-4 w-4 text-muted-foreground/40" strokeWidth={ICON_STROKE} />
+          <p className="text-xs text-muted-foreground">{t('empty')}</p>
+        </div>
       ) : (
-        <ul className="space-y-2">
-          {items.map((item, i) => {
-            const Icon = typeIcon[item.type] ?? ActivityIcon;
-            return (
-              <motion.li
-                key={`${item.type}-${item.id}`}
-                initial={{ opacity: 0, x: -8 * dir }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.03 * i, duration: 0.25 }}
-                className="flex items-center gap-3 rounded-xl border border-border/50 bg-muted/20 p-3"
-              >
-                <div
-                  className={cn(
-                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
-                    typeColor[item.type] ?? 'bg-muted text-muted-foreground',
-                  )}
+        <div className="relative max-h-[280px] overflow-y-auto pr-1">
+          {/* Timeline line */}
+          <div className="absolute inset-y-0 start-[14px] w-px bg-border" />
+          <ul className="space-y-0.5">
+            {items.map((item, i) => {
+              const Icon = typeIcon[item.type] ?? ActivityIcon;
+              return (
+                <motion.li
+                  key={`${item.type}-${item.id}`}
+                  initial={{ opacity: 0, x: -6 * dir }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.02 * i, duration: 0.2 }}
+                  className="relative flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted/30"
                 >
-                  <Icon className="h-4 w-4" strokeWidth={ICON_STROKE} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {item.title}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {t(`type.${item.type}`, { fallback: item.type })} · {item.subtitle}
-                  </p>
-                </div>
-                <time className="shrink-0 font-mono-nums text-xs text-muted-foreground">
-                  {fmtDate(item.timestamp)}
-                </time>
-              </motion.li>
-            );
-          })}
-        </ul>
+                  <div
+                    className={cn(
+                      'relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ring-[3px] ring-card',
+                      typeColor[item.type] ?? 'bg-muted text-muted-foreground',
+                    )}
+                  >
+                    <Icon className="h-3 w-3" strokeWidth={ICON_STROKE} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-medium text-foreground">
+                      {item.title}
+                    </p>
+                    <p className="truncate text-[10px] text-muted-foreground">
+                      {t(`type.${item.type}`, { fallback: item.type })} · {item.subtitle}
+                    </p>
+                  </div>
+                  <time className="shrink-0 font-mono text-[10px] text-muted-foreground">
+                    {fmtDate(item.timestamp)}
+                  </time>
+                </motion.li>
+              );
+            })}
+          </ul>
+        </div>
       )}
     </motion.section>
   );

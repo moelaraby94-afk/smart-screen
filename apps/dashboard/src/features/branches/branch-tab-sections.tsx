@@ -5,10 +5,14 @@ import type { Route } from 'next';
 import { useTranslations, useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
 import {
+  CalendarClock,
   Clapperboard,
   Copy,
   FolderTree,
+  HardDrive,
   Image as ImageIcon,
+  LayoutGrid,
+  Link2,
   Loader2,
   Monitor,
   MoreVertical,
@@ -16,8 +20,10 @@ import {
   Plus,
   Power,
   Radio,
+  Settings,
   Trash2,
   Users,
+  Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -51,124 +57,260 @@ export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
   const wsCounts = useWorkspaceStats(workspaceId, 0);
   const branch = workspaces.find((w) => w.id === workspaceId);
 
+  const onlinePct = stats.total > 0 ? Math.round((stats.online / stats.total) * 100) : 0;
+  const inactivePct = stats.total > 0 ? Math.round((stats.inactive / stats.total) * 100) : 0;
+
   const statCards = [
     {
       label: t('statTotal'),
       value: loading ? '…' : String(stats.total),
       icon: Monitor,
-      accent: 'from-primary/20 to-primary/5',
+      accent: 'from-violet-600/20 to-violet-900/5',
+      iconBg: 'bg-violet-500/15 text-violet-400',
     },
     {
       label: t('statOnline'),
       value: loading ? '…' : String(stats.online),
       icon: Radio,
-      accent: 'from-emerald-950/50 to-emerald-900/30',
+      accent: 'from-emerald-600/20 to-emerald-900/5',
+      iconBg: 'bg-emerald-500/15 text-emerald-400',
+      progress: onlinePct,
     },
     {
       label: t('statInactive'),
       value: loading ? '…' : String(stats.inactive),
       icon: Power,
-      accent: 'from-rose-500/15 to-muted',
+      accent: 'from-rose-600/20 to-rose-900/5',
+      iconBg: 'bg-rose-500/15 text-rose-400',
       sub: loading
         ? undefined
         : t('inactiveDetail', {
             offline: stats.offline,
             maintenance: stats.maintenance,
           }),
+      progress: inactivePct,
     },
     {
       label: t('statPlaylists'),
       value: String(wsCounts.playlists),
       icon: Clapperboard,
-      accent: 'from-blue-500/15 to-blue-900/10',
+      accent: 'from-blue-600/20 to-blue-900/5',
+      iconBg: 'bg-blue-500/15 text-blue-400',
     },
     {
       label: t('statMedia'),
       value: String(wsCounts.media),
       icon: ImageIcon,
-      accent: 'from-purple-500/15 to-purple-900/10',
+      accent: 'from-amber-600/20 to-amber-900/5',
+      iconBg: 'bg-amber-500/15 text-amber-400',
     },
   ];
 
+  const quickActions = [
+    { label: t('quickNewScreen'), href: `/${locale}/screens` as Route, icon: Monitor, color: 'text-violet-400 bg-violet-500/10' },
+    { label: t('quickNewPlaylist'), href: `/${locale}/studio` as Route, icon: Clapperboard, color: 'text-blue-400 bg-blue-500/10' },
+    { label: t('quickUploadMedia'), href: `/${locale}/media` as Route, icon: ImageIcon, color: 'text-amber-400 bg-amber-500/10' },
+    { label: t('quickLinkDisplay'), href: `/${locale}/screens` as Route, icon: Link2, color: 'text-emerald-400 bg-emerald-500/10' },
+    { label: t('quickSchedule'), href: `/${locale}/schedules` as Route, icon: CalendarClock, color: 'text-cyan-400 bg-cyan-500/10' },
+    { label: t('quickTeam'), href: `/${locale}/team` as Route, icon: Users, color: 'text-pink-400 bg-pink-500/10' },
+  ];
+
   return (
-    <section className="space-y-4">
-      {/* Workspace overview card */}
+    <section className="space-y-6">
+      {/* ── Hero workspace card ── */}
       {branch && (
-        <div className="vc-card-surface flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
-              <FolderTree className="h-6 w-6 text-primary" strokeWidth={ICON_STROKE} />
-            </div>
-            <div>
-              <h3 className="text-base font-semibold text-foreground">{branch.name}</h3>
-              <div className="mt-0.5 flex items-center gap-2">
-                <span className={cn(
-                  'rounded-full px-2.5 py-0.5 text-[11px] font-medium',
-                  branch.isPaused
-                    ? 'bg-amber-500/15 text-amber-600'
-                    : 'bg-emerald-500/15 text-emerald-600',
-                )}>
-                  {branch.isPaused ? tWs('statusPaused') : tWs('statusActive')}
-                </span>
-                {branch.role && (
-                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">
-                    {branch.role}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-primary/5 p-6 lg:p-8"
+        >
+          <div className="pointer-events-none absolute -end-12 -top-12 h-48 w-48 rounded-full bg-primary/8 blur-3xl" />
+          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+                <FolderTree className="h-8 w-8 text-primary" strokeWidth={ICON_STROKE} />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold tracking-tight text-foreground lg:text-2xl">{branch.name}</h2>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className={cn(
+                    'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold',
+                    branch.isPaused
+                      ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                      : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+                  )}>
+                    <span className={cn('h-1.5 w-1.5 rounded-full', branch.isPaused ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse')} />
+                    {branch.isPaused ? tWs('statusPaused') : tWs('statusActive')}
                   </span>
-                )}
+                  {branch.role && (
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                      {branch.role}
+                    </span>
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    {t('workspaceIdLabel', { id: branch.id.slice(0, 8) })}
+                  </span>
+                </div>
               </div>
             </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button asChild variant="outline" size="sm" className="rounded-xl gap-2">
+                <Link href={`/${locale}/settings/workspace` as Route}>
+                  <Settings className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
+                  {t('settingsLink')}
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm" className="rounded-xl gap-2">
+                <Link href={`/${locale}/team` as Route}>
+                  <Users className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
+                  {t('teamLink')}
+                </Link>
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button asChild variant="outline" size="sm" className="rounded-xl">
-              <Link href={`/${locale}/settings/workspace` as Route}>
-                {t('settingsLink')}
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="sm" className="rounded-xl">
-              <Link href={`/${locale}/team` as Route}>
-                <Users className="me-1.5 h-3.5 w-3.5" />
-                {t('teamLink')}
-              </Link>
-            </Button>
-          </div>
-        </div>
+        </motion.div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      {/* ── Stat cards ── */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {statCards.map((item, i) => (
           <motion.div
             key={item.label}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.04 * i, duration: 0.35 }}
-            className={cn(
-              'vc-card-surface relative overflow-hidden rounded-2xl border border-border p-5',
-            )}
+            transition={{ delay: 0.05 * i, duration: 0.35 }}
+            className="group relative overflow-hidden rounded-2xl border border-border bg-card p-4 transition-all duration-200 hover:border-primary/30 hover:shadow-lg"
           >
-            <div
-              className={cn(
-                'pointer-events-none absolute inset-0 bg-gradient-to-br opacity-90',
-                item.accent,
-              )}
-            />
-            <div className="relative flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/70">
+            <div className={cn('pointer-events-none absolute inset-0 bg-gradient-to-br opacity-60', item.accent)} />
+            <div className="relative flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                   {item.label}
                 </p>
-                <p className="mt-2 font-mono text-2xl font-bold tabular-nums text-white">
+                <p className="mt-1.5 font-mono text-2xl font-bold tabular-nums text-foreground">
                   {item.value}
                 </p>
                 {'sub' in item && item.sub ? (
-                  <p className="mt-1 text-[11px] text-white/55">{item.sub}</p>
+                  <p className="mt-0.5 text-[10px] text-muted-foreground">{item.sub}</p>
+                ) : null}
+                {'progress' in item && typeof item.progress === 'number' && item.progress >= 0 ? (
+                  <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-muted/50">
+                    <div
+                      className={cn(
+                        'h-full rounded-full transition-all duration-500',
+                        item.progress > 60 ? 'bg-emerald-500' : item.progress > 30 ? 'bg-amber-500' : 'bg-rose-500',
+                      )}
+                      style={{ width: `${item.progress}%` }}
+                    />
+                  </div>
                 ) : null}
               </div>
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
-                <item.icon className="h-5 w-5 text-primary" strokeWidth={ICON_STROKE} />
+              <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', item.iconBg)}>
+                <item.icon className="h-5 w-5" strokeWidth={ICON_STROKE} />
               </div>
             </div>
           </motion.div>
         ))}
+      </div>
+
+      {/* ── Quick actions grid ── */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {quickActions.map((action, i) => (
+          <motion.div
+            key={action.label}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.04 * i, duration: 0.3 }}
+          >
+            <Link
+              href={action.href}
+              className="group flex flex-col items-center gap-2.5 rounded-2xl border border-border bg-card p-4 text-center transition-all duration-200 hover:border-primary/30 hover:bg-primary/[0.03] hover:shadow-md"
+            >
+              <div className={cn('flex h-11 w-11 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-110', action.color)}>
+                <action.icon className="h-5 w-5" strokeWidth={ICON_STROKE} />
+              </div>
+              <span className="text-xs font-semibold text-foreground">{action.label}</span>
+            </Link>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* ── Screen health + workspace info ── */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* Screen health bar */}
+        <div className="rounded-2xl border border-border bg-card p-5 lg:col-span-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-foreground">{t('screenHealthTitle')}</h3>
+            <span className="text-xs text-muted-foreground">
+              {loading ? '…' : t('screenHealthSummary', { online: stats.online, total: stats.total })}
+            </span>
+          </div>
+          {loading ? (
+            <div className="mt-4 h-3 w-full animate-pulse rounded-full bg-muted" />
+          ) : stats.total > 0 ? (
+            <>
+              <div className="mt-4 flex h-3 w-full overflow-hidden rounded-full bg-muted/50">
+                <div className="bg-emerald-500 transition-all duration-500" style={{ width: `${onlinePct}%` }} />
+                <div className="bg-rose-500/70 transition-all duration-500" style={{ width: `${inactivePct}%` }} />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-4 text-xs">
+                <span className="flex items-center gap-1.5 text-muted-foreground">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  {t('statOnline')}: <span className="font-bold text-foreground">{stats.online}</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-muted-foreground">
+                  <span className="h-2 w-2 rounded-full bg-rose-500/70" />
+                  {t('statInactive')}: <span className="font-bold text-foreground">{stats.inactive}</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-muted-foreground">
+                  <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+                  {t('offlineLabel')}: <span className="font-bold text-foreground">{stats.offline}</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-muted-foreground">
+                  <span className="h-2 w-2 rounded-full bg-amber-500/70" />
+                  {t('maintenanceLabel')}: <span className="font-bold text-foreground">{stats.maintenance}</span>
+                </span>
+              </div>
+            </>
+          ) : (
+            <p className="mt-4 text-sm text-muted-foreground">{t('noScreensForHealth')}</p>
+          )}
+        </div>
+
+        {/* Storage & resources */}
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <h3 className="text-sm font-bold text-foreground">{t('resourcesTitle')}</h3>
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
+                <Clapperboard className="h-4 w-4" strokeWidth={ICON_STROKE} />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">{t('statPlaylists')}</p>
+                <p className="font-mono text-lg font-bold text-foreground">{wsCounts.playlists}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400">
+                <ImageIcon className="h-4 w-4" strokeWidth={ICON_STROKE} />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">{t('statMedia')}</p>
+                <p className="font-mono text-lg font-bold text-foreground">{wsCounts.media}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-500/10 text-violet-400">
+                <HardDrive className="h-4 w-4" strokeWidth={ICON_STROKE} />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">{t('storageUsed')}</p>
+                <p className="font-mono text-lg font-bold text-foreground">{t('storageCalculating')}</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
