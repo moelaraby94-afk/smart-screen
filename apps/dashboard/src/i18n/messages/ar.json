@@ -2274,7 +2274,20 @@
     "pageDescription": "أنشئ قوائم من مكتبة الوسائط، وحدد المدد، وأعد الترتيب. الحفظ يزامن الشاشات المرتبطة فوراً.",
     "pause": "إيقاف",
     "play": "تشغيل",
-    "dragHereHint": "اسحب الوسائط أو تصاميم الكانفاس إلى هنا"
+    "dragHereHint": "اسحب الوسائط أو تصاميم الكانفاس إلى هنا",
+    "searchPlaylists": "بحث في القوائم…",
+    "totalPlaylists": "الكل",
+    "publishedPlaylists": "منشور",
+    "draftPlaylists": "مسودات",
+    "mediaTab": "الوسائط",
+    "canvasTab": "كانفاس",
+    "recent": "الأخيرة",
+    "groups": "المجموعات",
+    "inspector": "الإعدادات",
+    "saved": "تم الحفظ",
+    "unsavedChanges": "تغييرات غير محفوظة",
+    "noItemSelected": "لم يتم اختيار عنصر",
+    "assignScreens": "تعيين شاشات"
   },
   "playlistWizard": {
     "createPlaylist": "إنشاء قائمة تشغيل جديدة",

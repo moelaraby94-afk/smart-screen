@@ -2274,7 +2274,20 @@
     "pageDescription": "Create playlists from your media library, set durations, and reorder. Saving syncs connected screens instantly.",
     "pause": "Pause",
     "play": "Play",
-    "dragHereHint": "Drag media or canvas designs here"
+    "dragHereHint": "Drag media or canvas designs here",
+    "searchPlaylists": "Search playlists…",
+    "totalPlaylists": "Total",
+    "publishedPlaylists": "Published",
+    "draftPlaylists": "Drafts",
+    "mediaTab": "Media",
+    "canvasTab": "Canvas",
+    "recent": "Recent",
+    "groups": "Groups",
+    "inspector": "Settings",
+    "saved": "Saved",
+    "unsavedChanges": "Unsaved changes",
+    "noItemSelected": "No item selected",
+    "assignScreens": "Assign screens"
   },
   "playlistWizard": {
     "createPlaylist": "Create new playlist",
