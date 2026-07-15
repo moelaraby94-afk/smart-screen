@@ -22,6 +22,7 @@ import {
   Tablet,
   Trash2,
   Zap,
+  Sparkles,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -43,6 +44,8 @@ import {
   type PlaylistOption,
   type PlaylistAssignment,
 } from '@/features/screens/api/screens-api';
+import { createPlaylist as apiCreatePlaylist } from '@/features/studio/studio-api';
+import { PlaylistCreateWizard } from '@/features/playlists/playlist-create-wizard';
 import {
   fetchSchedules,
   createSchedule as apiCreateSchedule,
@@ -147,6 +150,7 @@ export function ScreenSetupModal({
   const [assignments, setAssignments] = useState<PlaylistAssignment[]>([]);
   const [newAssignmentPl, setNewAssignmentPl] = useState('');
   const [newSchedPl, setNewSchedPl] = useState('');
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [newSchedRecurrence, setNewSchedRecurrence] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
   const [newSchedDays, setNewSchedDays] = useState<number[]>([]);
   const [newSchedDaysOfMonth, setNewSchedDaysOfMonth] = useState<number[]>([]);
@@ -293,6 +297,26 @@ export function ScreenSetupModal({
       setNewAssignmentPl('');
       await loadAssignments(effectiveScreen.id);
     } finally { setBusy(false); }
+  };
+
+  const handleWizardCreate = async (data: {
+    name: string;
+    orientation: string;
+    layoutType: string;
+    templateId?: string;
+    zonePresetId?: string;
+    defaultTransition: string;
+  }) => {
+    const res = await apiCreatePlaylist(workspaceId || null, data.name);
+    if (!res.ok) {
+      toast.error(t('wizardCreateFailed'));
+      return;
+    }
+    const created = (await res.json()) as { id: string };
+    toast.success(t('wizardCreateSuccess'));
+    const pls = await fetchPlaylistOptions(workspaceId);
+    setPlaylists(pls);
+    setNewAssignmentPl(created.id);
   };
 
   const handleRemoveAssignment = async (assignmentId: string) => {
@@ -728,7 +752,18 @@ export function ScreenSetupModal({
                     type="button"
                     size="sm"
                     variant="outline"
-                    className="rounded-xl"
+                    className="rounded-xl shrink-0"
+                    disabled={busy}
+                    onClick={() => setWizardOpen(true)}
+                  >
+                    <Sparkles className="me-1 h-4 w-4" />
+                    {t('newPlaylist')}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="rounded-xl shrink-0"
                     disabled={busy || !newAssignmentPl || !effectiveScreen}
                     onClick={() => void handleAddAssignment()}
                   >
@@ -1146,6 +1181,12 @@ export function ScreenSetupModal({
           </div>
         </div>
       </DialogContent>
+
+      <PlaylistCreateWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onCreate={(data) => void handleWizardCreate(data)}
+      />
     </Dialog>
   );
 }

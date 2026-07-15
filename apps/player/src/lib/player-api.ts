@@ -81,10 +81,11 @@ export async function startPlayerPairingSession(body?: {
   const secret = body?.kioskSecret?.trim();
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (secret) headers['x-player-secret'] = secret;
+  const { kioskSecret: _omit, ...payload } = body ?? {};
   const res = await fetch(`${getApiBaseUrl()}/player/pairing/sessions`, {
     method: 'POST',
     headers,
-    body: JSON.stringify(body ?? {}),
+    body: JSON.stringify(payload),
     cache: 'no-store',
   });
   if (!res.ok) {
