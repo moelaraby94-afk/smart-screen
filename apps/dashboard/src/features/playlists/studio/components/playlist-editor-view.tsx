@@ -2,7 +2,7 @@
 
 import { DragDropContext } from '@hello-pangea/dnd';
 import { useTranslations } from 'next-intl';
-import { Clock, Layers } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { PlaylistTopBar } from './playlist-top-bar';
 import { MediaLibrary } from './media-library';
@@ -11,7 +11,7 @@ import { PlaylistZonePreview, type Zone } from '@/features/playlists/playlist-zo
 import { PlaylistTimeline, type Row } from '@/features/playlists/playlist-timeline';
 import type { DropResult } from '@hello-pangea/dnd';
 import type { PlaylistLocalMeta, TransitionType, PlaylistOrientation } from '@/features/playlists/playlist-transitions';
-import type { ZonePreset, SelectionContext, SaveState, PlaylistSummary } from '../types';
+import type { ZonePreset, SelectionContext, SaveState } from '../types';
 import type { MediaItem } from '@/features/media/media-library-client';
 import type { CanvasSummary } from '@/features/playlists/playlist-library-panels';
 import type { WorkspaceSummary } from '@/features/workspace/workspace-context';

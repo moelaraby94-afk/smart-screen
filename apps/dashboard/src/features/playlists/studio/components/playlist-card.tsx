@@ -3,9 +3,8 @@
 import { motion } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
 import {
-  Eye, MoreVertical, Pencil, Copy, Trash2, Monitor, Smartphone, Square, PenLine, Layers,
+  Eye, MoreVertical, Pencil, Copy, Trash2, Monitor, Smartphone, Square, PenLine,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
