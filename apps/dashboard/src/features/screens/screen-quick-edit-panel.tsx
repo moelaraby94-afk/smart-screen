@@ -263,7 +263,7 @@ export function ScreenQuickEditPanel({
           >
             <div className="flex items-start justify-between gap-3 border-b border-white/10 px-6 py-5">
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {t('quickEdit')}
                 </p>
                 <h2 className="mt-1 truncate text-lg font-semibold tracking-tight">{screen.name}</h2>
@@ -279,7 +279,7 @@ export function ScreenQuickEditPanel({
                 type="button"
                 size="icon"
                 variant="ghost"
-                className="shrink-0 rounded-xl"
+                className="shrink-0 rounded-lg"
                 aria-label={t('closePanel')}
                 onClick={() => onOpenChange(false)}
               >
@@ -288,18 +288,18 @@ export function ScreenQuickEditPanel({
             </div>
 
             <div className="flex-1 space-y-8 overflow-y-auto px-6 py-6">
-              <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+              <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {t('contentStatus')}
                 </p>
                 <div className="flex items-center gap-2">
                   {screen.overridePlaylistId ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-bold text-amber-600 dark:text-amber-400">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-warning/40 bg-warning/10 px-2.5 py-1 text-xs font-bold text-warning">
                       <Zap className="h-3 w-3" />
                       {t('overrideActiveBadge')}
                     </span>
                   ) : screen.activePlaylistId ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-success/40 bg-success/10 px-2.5 py-1 text-xs font-bold text-success">
                       <Film className="h-3 w-3" />
                       {t('nowPlaying')}
                     </span>
@@ -319,7 +319,7 @@ export function ScreenQuickEditPanel({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="rounded-xl text-xs"
+                    className="rounded-lg text-xs"
                     disabled={busy}
                     onClick={() => void handleSyncContent()}
                   >
@@ -330,7 +330,7 @@ export function ScreenQuickEditPanel({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="rounded-xl text-xs"
+                    className="rounded-lg text-xs"
                     disabled={busy}
                     onClick={() => void handleIdentify()}
                   >
@@ -346,7 +346,7 @@ export function ScreenQuickEditPanel({
                   {t('activePlaylist')}
                 </Label>
                 <select
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none ring-0 focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
+                  className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm font-medium outline-none ring-0 focus:border-primary/40 focus:ring-2 focus:ring-ring/20"
                   value={playlistId}
                   disabled={busy}
                   aria-label={t('activePlaylist')}
@@ -363,7 +363,7 @@ export function ScreenQuickEditPanel({
                     </option>
                   ))}
                 </select>
-                <p className="text-[12px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {t('activePlaylistHint')}
                 </p>
               </div>
@@ -374,7 +374,7 @@ export function ScreenQuickEditPanel({
                   {t('scheduleFocus')}
                 </Label>
                 <select
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
+                  className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm font-medium outline-none focus:border-primary/40 focus:ring-2 focus:ring-ring/20"
                   value={scheduleId}
                   disabled={busy}
                   aria-label={t('scheduleFocus')}
@@ -392,7 +392,7 @@ export function ScreenQuickEditPanel({
                     </option>
                   ))}
                 </select>
-                <p className="text-[12px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {t('scheduleFocusHint')}
                 </p>
               </div>
@@ -403,7 +403,7 @@ export function ScreenQuickEditPanel({
                   {t('overrideLabel')}
                 </Label>
                 <select
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none ring-0 focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
+                  className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm font-medium outline-none ring-0 focus:border-primary/40 focus:ring-2 focus:ring-ring/20"
                   value={overridePlId}
                   disabled={busy}
                   aria-label={t('overrideLabel')}
@@ -424,7 +424,7 @@ export function ScreenQuickEditPanel({
                 {overridePlId ? (
                   <>
                     <select
-                      className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none ring-0 focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
+                      className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm font-medium outline-none ring-0 focus:border-primary/40 focus:ring-2 focus:ring-ring/20"
                       value={String(overrideDuration)}
                       disabled={busy}
                       aria-label={t('overrideDuration')}
@@ -443,7 +443,7 @@ export function ScreenQuickEditPanel({
                     <Button
                       type="button"
                       variant="outline"
-                      className="rounded-xl text-sm"
+                      className="rounded-lg text-sm"
                       disabled={busy}
                       onClick={() => {
                         setOverridePlId('');
@@ -454,7 +454,7 @@ export function ScreenQuickEditPanel({
                     </Button>
                   </>
                 ) : null}
-                <p className="text-[12px] text-muted-foreground">{t('overrideHint')}</p>
+                <p className="text-xs text-muted-foreground">{t('overrideHint')}</p>
               </div>
 
               <div className="space-y-2">
@@ -468,13 +468,13 @@ export function ScreenQuickEditPanel({
                   placeholder={t('tickerPlaceholder')}
                   maxLength={200}
                   disabled={busy}
-                  className="rounded-xl"
+                  className="rounded-lg"
                 />
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"
                     variant="cta"
-                    className="rounded-xl text-sm"
+                    className="rounded-lg text-sm"
                     disabled={busy || !tickerText.trim()}
                     onClick={() => void applyTicker()}
                   >
@@ -483,7 +483,7 @@ export function ScreenQuickEditPanel({
                   <Button
                     type="button"
                     variant="outline"
-                    className="rounded-xl text-sm"
+                    className="rounded-lg text-sm"
                     disabled={busy || !tickerText}
                     onClick={() => {
                       setTickerText('');
@@ -493,7 +493,7 @@ export function ScreenQuickEditPanel({
                     {t('tickerClear')}
                   </Button>
                 </div>
-                <p className="text-[12px] text-muted-foreground">{t('tickerHint')}</p>
+                <p className="text-xs text-muted-foreground">{t('tickerHint')}</p>
               </div>
 
               <div className="space-y-2">
@@ -506,12 +506,12 @@ export function ScreenQuickEditPanel({
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder={t('locationPlaceholder')}
                   disabled={busy}
-                  className="rounded-xl"
+                  className="rounded-lg"
                 />
                 <Button
                   type="button"
                   variant="outline"
-                  className="rounded-xl text-sm"
+                  className="rounded-lg text-sm"
                   disabled={busy}
                   onClick={() => void applyLocation()}
                 >
@@ -525,7 +525,7 @@ export function ScreenQuickEditPanel({
                   {t('orientationLabel')}
                 </Label>
                 <select
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none ring-0 focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
+                  className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm font-medium outline-none ring-0 focus:border-primary/40 focus:ring-2 focus:ring-ring/20"
                   value={orientation}
                   disabled={busy}
                   onChange={(e) => {
@@ -537,14 +537,14 @@ export function ScreenQuickEditPanel({
                   <option value="LANDSCAPE">{t('orientationLandscape')}</option>
                   <option value="PORTRAIT">{t('orientationPortrait')}</option>
                 </select>
-                <p className="text-[12px] text-muted-foreground">{t('orientationHint')}</p>
+                <p className="text-xs text-muted-foreground">{t('orientationHint')}</p>
               </div>
 
               <div className="flex flex-col gap-2 border-t border-white/10 pt-6">
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-11 w-full rounded-2xl border-white/20"
+                  className="h-9 w-full rounded-lg border-white/20"
                   onClick={() => {
                     onEditScreen();
                     onOpenChange(false);
@@ -555,7 +555,7 @@ export function ScreenQuickEditPanel({
                 <Button
                   type="button"
                   variant="ghost"
-                  className="h-11 w-full rounded-xl text-primary hover:bg-primary/10"
+                  className="h-9 w-full rounded-lg text-primary hover:bg-primary/10"
                   asChild
                 >
                   <Link href={`/${locale}/schedules` as Route}>{t('openScheduleEngine')}</Link>

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import { CreditCard, Calendar, Users, Monitor } from 'lucide-react';
+import { CreditCard, Calendar, Users } from 'lucide-react';
 import { apiFetch } from '@/features/auth/session';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
@@ -58,9 +58,9 @@ export function SubscriptionSummarySection() {
 
   const statusColor =
     data?.currentPlan.workspaceStatus === 'ACTIVE' || data?.currentPlan.userSubscriptionStatus === 'ACTIVE'
-      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+      ? 'bg-success/10 text-success'
       : data?.currentPlan.workspaceStatus === 'TRIALING' || data?.currentPlan.userSubscriptionStatus === 'TRIALING'
-        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+        ? 'bg-primary/10 text-primary'
         : 'bg-muted text-muted-foreground';
 
   return (
@@ -68,7 +68,9 @@ export function SubscriptionSummarySection() {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="rounded-xl border border-border bg-card p-4"
+      className="rounded-lg border border-border bg-card p-4"
+      role="region"
+      aria-label={t('title')}
     >
       <div className="mb-3 flex items-center gap-2">
         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
@@ -76,10 +78,10 @@ export function SubscriptionSummarySection() {
         </div>
         <div className="flex-1">
           <h2 className="text-sm font-bold tracking-tight text-foreground">{t('title')}</h2>
-          <p className="text-[11px] text-muted-foreground">{t('subtitle')}</p>
+          <p className="text-xs text-muted-foreground">{t('subtitle')}</p>
         </div>
         {data && (
-          <span className={cn('rounded px-2 py-0.5 text-[9px] font-bold uppercase', statusColor)}>
+          <span className={cn('rounded px-2 py-0.5 text-xs font-bold uppercase', statusColor)}>
             {data.currentPlan.workspaceStatus ?? data.currentPlan.userSubscriptionStatus}
           </span>
         )}
@@ -101,7 +103,7 @@ export function SubscriptionSummarySection() {
           <div className="rounded-lg border border-border p-3">
             <div className="flex items-center gap-1.5">
               <CreditCard className="h-3 w-3 text-muted-foreground" strokeWidth={ICON_STROKE} />
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                 {t('plan')}
               </p>
             </div>
@@ -114,7 +116,7 @@ export function SubscriptionSummarySection() {
           <div className="rounded-lg border border-border p-3">
             <div className="flex items-center gap-1.5">
               <Users className="h-3 w-3 text-muted-foreground" strokeWidth={ICON_STROKE} />
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                 {t('seats')}
               </p>
             </div>
@@ -127,7 +129,7 @@ export function SubscriptionSummarySection() {
           <div className="rounded-lg border border-border p-3">
             <div className="flex items-center gap-1.5">
               <Calendar className="h-3 w-3 text-muted-foreground" strokeWidth={ICON_STROKE} />
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                 {t('renewsOn')}
               </p>
             </div>
@@ -136,8 +138,8 @@ export function SubscriptionSummarySection() {
             </p>
             {daysLeft != null && (
               <p className={cn(
-                'mt-0.5 text-[10px] font-semibold',
-                daysLeft <= 7 ? 'text-rose-500' : 'text-muted-foreground',
+                'mt-0.5 text-xs font-semibold',
+                daysLeft <= 7 ? 'text-destructive' : 'text-muted-foreground',
               )}>
                 {t('daysLeft', { count: daysLeft })}
               </p>

@@ -14,13 +14,13 @@ export default async function LoginPage({ params }: Props) {
   const tLegal = await getTranslations({ locale, namespace: 'legal' });
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-muted/30">
+    <div className="relative flex min-h-screen items-center justify-center bg-muted/20 px-4">
       <div className="absolute end-4 top-4">
         <LanguageSwitcher />
       </div>
 
-      <div className="w-full max-w-md p-8">
-        <div className="rounded-xl border border-border bg-card p-8 shadow-sm">
+      <div className="w-full max-w-[400px] p-8">
+        <div className="rounded-lg border border-border bg-card p-8 shadow-sm">
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('brand')}</h1>
             <p className="mt-1 text-sm text-muted-foreground">{t('description')}</p>

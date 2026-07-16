@@ -105,11 +105,11 @@ export function EmergencyClient() {
   }, [workspaceId, toastResponseError, reload, t]);
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-4">
+    <div className="space-y-6" role="region" aria-label={t('title')}>
+      <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
         <div className="flex items-center gap-3">
-          <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-2">
-            <AlertTriangle className="h-5 w-5 text-red-600" />
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-2">
+            <AlertTriangle className="h-5 w-5 text-destructive" />
           </div>
           <div>
             <p className="font-semibold text-foreground">{t('warningTitle')}</p>
@@ -150,14 +150,14 @@ export function EmergencyClient() {
                 value={message}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}
                 aria-label={t('customMessage')}
-                className="flex min-h-[80px] w-full rounded-2xl border border-border bg-card px-4 py-2 text-[15px] text-foreground outline-none transition placeholder:text-muted-foreground/80 focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
+                className="flex min-h-[80px] w-full rounded-lg border border-border bg-card px-4 py-2 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/80 focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
               />
             </div>
 
             <div>
               <p className="mb-2 text-sm font-medium">{t('scope')}</p>
               <select
-                className="flex h-11 w-full rounded-2xl border border-border bg-card px-4 py-2 text-[15px] outline-none"
+                className="flex h-9 w-full rounded-lg border border-border bg-card px-4 py-2 text-sm outline-none"
                 value={selectedScreenId}
                 onChange={(e) => setSelectedScreenId(e.target.value)}
                 aria-label={t('scope')}
@@ -169,7 +169,7 @@ export function EmergencyClient() {
             <div>
               <p className="mb-2 text-sm font-medium">{t('duration')}</p>
               <select
-                className="flex h-11 w-full rounded-2xl border border-border bg-card px-4 py-2 text-[15px] outline-none transition focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
+                className="flex h-9 w-full rounded-lg border border-border bg-card px-4 py-2 text-sm outline-none transition focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
                 value={durationPreset}
                 onChange={(e) => setDurationPreset(e.target.value)}
                 aria-label={t('duration')}

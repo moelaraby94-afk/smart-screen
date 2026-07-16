@@ -145,7 +145,7 @@ export function InspectorPanel({
                         key={i}
                         className={cn(
                           'absolute border',
-                          selectedZoneId === z.name ? 'border-primary bg-primary/30' : 'border-emerald-500/50 bg-emerald-500/15',
+                          selectedZoneId === z.name ? 'border-primary bg-primary/30' : 'border-success/50 bg-success/15',
                         )}
                         style={{
                           left: `${(z.x / presetW) * 100}%`,
@@ -164,7 +164,7 @@ export function InspectorPanel({
                         onClick={() => setSelectedZoneId(z.name)}
                         className={cn(
                           'rounded-md px-2 py-0.5 text-[11px] font-medium transition',
-                          selectedZoneId === z.name ? 'bg-primary text-white' : 'bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 dark:text-emerald-400',
+                          selectedZoneId === z.name ? 'bg-primary text-primary-foreground' : 'bg-success/15 text-success hover:bg-success/25',
                         )}
                       >
                         {z.name}

@@ -112,9 +112,9 @@ export function RamadanSettingsPanel({
   }
 
   return (
-    <div className="vc-card-surface rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
+    <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
       <div className="flex items-center gap-2.5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 ring-1 ring-ring/20">
           <Moon className="h-[18px] w-[18px] text-emerald-600" strokeWidth={ICON_STROKE} />
         </div>
         <div>
@@ -125,7 +125,7 @@ export function RamadanSettingsPanel({
 
       <div className="mt-6 space-y-5">
         {/* Enable toggle */}
-        <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-card p-4">
           <div>
             <p className="text-sm font-medium text-foreground">{t('enableRamadan')}</p>
             <p className="text-xs text-muted-foreground">{t('enableHint')}</p>
@@ -154,7 +154,7 @@ export function RamadanSettingsPanel({
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="rounded-xl"
+              className="rounded-lg"
             />
             <p className="text-xs text-muted-foreground">{t('startDateHint')}</p>
           </div>
@@ -164,7 +164,7 @@ export function RamadanSettingsPanel({
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="rounded-xl"
+              className="rounded-lg"
             />
             <p className="text-xs text-muted-foreground">{t('endDateHint')}</p>
           </div>
@@ -178,7 +178,7 @@ export function RamadanSettingsPanel({
               {t('iftarPlaylist')}
             </Label>
             <select
-              className="h-10 w-full rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+              className="h-9 w-full rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
               value={iftarPlaylistId}
               onChange={(e) => setIftarPlaylistId(e.target.value)}
             >
@@ -195,7 +195,7 @@ export function RamadanSettingsPanel({
               {t('suhoorPlaylist')}
             </Label>
             <select
-              className="h-10 w-full rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+              className="h-9 w-full rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
               value={suhoorPlaylistId}
               onChange={(e) => setSuhoorPlaylistId(e.target.value)}
             >
@@ -218,7 +218,7 @@ export function RamadanSettingsPanel({
               max={120}
               value={iftarBuffer}
               onChange={(e) => setIftarBuffer(Number(e.target.value))}
-              className="rounded-xl"
+              className="rounded-lg"
             />
             <p className="text-xs text-muted-foreground">{t('bufferHint')}</p>
           </div>
@@ -230,7 +230,7 @@ export function RamadanSettingsPanel({
               max={120}
               value={suhoorBuffer}
               onChange={(e) => setSuhoorBuffer(Number(e.target.value))}
-              className="rounded-xl"
+              className="rounded-lg"
             />
             <p className="text-xs text-muted-foreground">{t('bufferHint')}</p>
           </div>
@@ -238,7 +238,7 @@ export function RamadanSettingsPanel({
 
         {/* Display options */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card p-3">
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-card p-3">
             <div>
               <p className="text-sm font-medium text-foreground">{t('showHijriDate')}</p>
               <p className="text-xs text-muted-foreground">{t('showHijriHint')}</p>
@@ -258,7 +258,7 @@ export function RamadanSettingsPanel({
               />
             </button>
           </div>
-          <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card p-3">
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-card p-3">
             <div>
               <p className="text-sm font-medium text-foreground">{t('showPrayerTimes')}</p>
               <p className="text-xs text-muted-foreground">{t('showPrayerHint')}</p>
@@ -282,7 +282,7 @@ export function RamadanSettingsPanel({
 
         <Button
           type="button"
-          className="rounded-xl font-semibold"
+          className="rounded-lg font-semibold"
           variant="cta"
           disabled={saving}
           onClick={() => void save()}

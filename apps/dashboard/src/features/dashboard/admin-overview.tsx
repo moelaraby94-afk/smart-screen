@@ -152,13 +152,13 @@ export function AdminOverview({ locale }: Props) {
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="vc-card-surface overflow-hidden rounded-2xl border border-border bg-card"
+        className="vc-card-surface overflow-hidden rounded-lg border border-border bg-card"
       >
-        <div className="border-b border-border/60 px-8 py-10 sm:px-10 sm:py-12">
+        <div className="border-b border-border px-8 py-10 sm:px-10 sm:py-12">
           <p className="vc-page-kicker text-muted-foreground">{t('kicker')}</p>
           <h1 className="vc-page-title mt-2 max-w-3xl">{t('title')}</h1>
           <p className="vc-page-desc mt-4 max-w-2xl">{t('description')}</p>
-          <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+          <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-primary">
             <Activity className="h-3.5 w-3.5" />
             {t('superAdmin')}
           </div>
@@ -174,7 +174,7 @@ export function AdminOverview({ locale }: Props) {
       ) : null}
 
       {stats ? (
-        <p className="rounded-2xl border border-dashed border-amber-500/35 bg-amber-500/[0.08] px-4 py-3 text-sm text-amber-950 dark:text-amber-100/90">
+        <p className="rounded-lg border border-dashed border-amber-500/35 bg-amber-500/[0.08] px-4 py-3 text-sm text-amber-950 dark:text-amber-100/90">
           {t('revenueDisclaimer')}
         </p>
       ) : null}
@@ -185,13 +185,13 @@ export function AdminOverview({ locale }: Props) {
             <Link
               key={c.label}
               href={c.href as Route}
-              className="block outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-2xl"
+              className="block outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg"
             >
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05 * i, duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
-                className="vc-card-surface group relative h-full overflow-hidden rounded-2xl border border-border p-7 transition hover:border-primary/30 hover:shadow-md"
+                className="vc-card-surface group relative h-full overflow-hidden rounded-lg border border-border p-7 transition hover:border-primary/30 hover:shadow-md"
               >
                 <div className="absolute -end-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl transition group-hover:bg-primary/15" />
                 <div className="relative flex items-start justify-between gap-4">
@@ -203,7 +203,7 @@ export function AdminOverview({ locale }: Props) {
                     <p className="mt-2 text-sm text-muted-foreground">{c.sub}</p>
                   </div>
                   <div
-                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${c.accent} shadow-lg transition group-hover:brightness-105`}
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${c.accent} shadow-lg transition group-hover:brightness-105`}
                   >
                     <c.icon className={`h-6 w-6 ${c.iconText}`} strokeWidth={1.75} />
                   </div>
@@ -219,7 +219,7 @@ export function AdminOverview({ locale }: Props) {
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="vc-card-surface relative overflow-hidden rounded-2xl border border-border p-7"
+            className="vc-card-surface relative overflow-hidden rounded-lg border border-border p-7"
           >
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
@@ -261,7 +261,7 @@ export function AdminOverview({ locale }: Props) {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.06 }}
-            className="vc-card-surface flex flex-col justify-between gap-4 rounded-2xl border border-border bg-muted/15 p-7"
+            className="vc-card-surface flex flex-col justify-between gap-4 rounded-lg border border-border bg-muted/15 p-7"
           >
             <div>
               <p className="text-sm font-semibold text-foreground">{t('healthPanel.title')}</p>

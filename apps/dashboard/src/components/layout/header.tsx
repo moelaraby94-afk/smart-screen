@@ -75,7 +75,7 @@ export function ShellHeader({
       {kicker ? (
         <p
           className={cn(
-            'text-[11px] font-semibold uppercase tracking-[0.16em]',
+            'text-xs font-semibold uppercase tracking-wide',
             'text-muted-foreground',
           )}
         >
@@ -84,7 +84,7 @@ export function ShellHeader({
       ) : null}
       <p
         className={cn(
-          'shell-header-title w-full truncate text-[15px] font-bold leading-tight tracking-tight sm:text-[17px]',
+          'shell-header-title w-full truncate text-sm font-bold leading-tight tracking-tight sm:text-base',
           headerInset && 'max-w-[10rem] sm:max-w-[14rem] lg:max-w-[18rem]',
           'text-foreground',
         )}
@@ -133,11 +133,11 @@ export function ShellHeader({
   return (
     <header
       className={cn(
-        'relative sticky top-0 z-[55] flex min-h-[52px] shrink-0 flex-col',
+        'relative sticky top-0 z-sticky flex min-h-[56px] shrink-0 flex-col',
         'border-b border-border bg-background/80 backdrop-blur-md',
       )}
     >
-      <div className="relative z-[3] mx-auto flex min-h-[52px] w-full max-w-[1600px] items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-10">
+      <div className="relative z-[3] mx-auto flex min-h-[56px] w-full max-w-[1600px] items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-10">
         <div className="flex shrink-0 items-center lg:hidden">
           {menuBtn}
         </div>

@@ -67,7 +67,7 @@ export function FolderSection(props: FolderSectionProps) {
             <button type="button" onClick={() => props.onRenameFolder(folder.id, folder.name)} className="rounded p-1 text-muted-foreground hover:text-foreground">
               <Pencil className="h-3.5 w-3.5" />
             </button>
-            <button type="button" onClick={() => props.onDeleteFolder(folder.id)} className="rounded p-1 text-muted-foreground hover:text-red-500">
+            <button type="button" onClick={() => props.onDeleteFolder(folder.id)} className="rounded p-1 text-muted-foreground hover:text-destructive">
               <Trash2 className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -271,7 +271,7 @@ export function MediaGrid(props: MediaGridProps) {
           </table>
         </div>
       ) : (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
         <AnimatePresence mode="popLayout">
           {props.filteredItems.map((m, i) => (
             <motion.div
@@ -282,6 +282,8 @@ export function MediaGrid(props: MediaGridProps) {
               exit={{ opacity: 0, scale: 0.96 }}
               transition={{ delay: i * 0.02, duration: 0.25 }}
               className="ngl-media-tile group relative overflow-hidden rounded-2xl"
+              role="img"
+              aria-label={`${m.originalName}, ${m.mimeType.startsWith('video/') ? t('video') : t('image')}, ${new Intl.NumberFormat(props.locale, { maximumFractionDigits: 2 }).format(m.sizeBytes / 1024 / 1024)} MB`}
             >
               <div className="relative aspect-[4/3] bg-black/80">
                 <button
@@ -361,7 +363,7 @@ export function MediaGrid(props: MediaGridProps) {
                       e.stopPropagation();
                       props.onDelete(m);
                     }}
-                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/55 text-white shadow-lg backdrop-blur transition hover:bg-red-600/90"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/55 text-white shadow-lg backdrop-blur transition hover:bg-destructive/90"
                     aria-label={t('delete')}
                   >
                     <Trash2 className="h-4 w-4" />

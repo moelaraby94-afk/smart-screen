@@ -147,7 +147,7 @@ export function FeatureFlagsClient() {
                     onClick={() => void handleToggle(ws.workspaceId, mod.module, mod.enabled)}
                     className={`flex items-center justify-between gap-2 rounded-xl border p-3 text-sm transition disabled:opacity-50 ${
                       mod.enabled
-                        ? 'border-emerald-500/30 bg-emerald-500/5'
+                        ? 'border-success/30 bg-success/5'
                         : 'border-border bg-muted/30'
                     }`}
                   >
@@ -157,7 +157,7 @@ export function FeatureFlagsClient() {
                     {isToggling ? (
                       <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                     ) : mod.enabled ? (
-                      <ToggleRight className="h-5 w-5 text-emerald-600" strokeWidth={ICON_STROKE} />
+                      <ToggleRight className="h-5 w-5 text-success" strokeWidth={ICON_STROKE} />
                     ) : (
                       <ToggleLeft className="h-5 w-5 text-muted-foreground" strokeWidth={ICON_STROKE} />
                     )}

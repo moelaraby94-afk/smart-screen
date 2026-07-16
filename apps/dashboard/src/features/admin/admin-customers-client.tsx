@@ -101,7 +101,7 @@ function statusPill(
     return (
       <span
         className={cn(
-          'inline-flex items-center justify-center rounded-full border border-red-500/35 bg-red-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-red-200',
+          'inline-flex items-center justify-center rounded-full border border-destructive/35 bg-destructive/10 px-2.5 py-0.5 text-[11px] font-semibold text-destructive',
           lab,
         )}
       >
@@ -113,7 +113,7 @@ function statusPill(
     return (
       <span
         className={cn(
-          'inline-flex items-center justify-center rounded-full border border-amber-500/40 bg-amber-500/12 px-2.5 py-0.5 text-[11px] font-semibold text-amber-100',
+          'inline-flex items-center justify-center rounded-full border border-warning/40 bg-warning/12 px-2.5 py-0.5 text-[11px] font-semibold text-warning',
           lab,
         )}
       >
@@ -124,7 +124,7 @@ function statusPill(
   return (
     <span
       className={cn(
-        'inline-flex items-center justify-center rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-100',
+        'inline-flex items-center justify-center rounded-full border border-success/35 bg-success/10 px-2.5 py-0.5 text-[11px] font-semibold text-success',
         lab,
       )}
     >
@@ -625,7 +625,7 @@ export function AdminCustomersClient() {
 
                           onClick={() => setSuspendTarget(u)}
 
-                          className="text-red-400 focus:text-red-300"
+                          className="text-destructive focus:text-destructive"
 
                         >
 
@@ -696,7 +696,7 @@ export function AdminCustomersClient() {
 
             <Button
 
-              className="rounded-2xl bg-red-600 hover:bg-red-600/90"
+              className="rounded-2xl bg-destructive hover:bg-destructive/90"
 
               onClick={() => void confirmSuspend()}
 

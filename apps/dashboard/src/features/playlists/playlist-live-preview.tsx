@@ -33,7 +33,7 @@ export function PlaylistLivePreview({
   defaultTransition,
   transitionDuration = 0.6,
   orientation,
-  layoutType,
+  layoutType: _layoutType,
   className,
 }: Props) {
   const t = useTranslations('playlistStudioClient');

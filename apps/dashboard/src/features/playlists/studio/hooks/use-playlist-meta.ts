@@ -4,7 +4,6 @@ import { useCallback, useState } from 'react';
 import {
   type PlaylistLocalMeta,
   DEFAULT_PLAYLIST_META,
-  loadPlaylistMeta,
   savePlaylistMeta,
 } from '@/features/playlists/playlist-transitions';
 

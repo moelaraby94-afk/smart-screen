@@ -379,6 +379,19 @@ export class PairingService {
 
         await this.assertWithinScreenLimitTx(tx, workspaceId);
 
+        if (dto.playlistGroupId) {
+          const pl = await tx.playlist.findFirst({
+            where: { id: dto.playlistGroupId, workspaceId },
+            select: { id: true },
+          });
+          if (!pl) {
+            throw DomainException.badRequest(
+              ErrorCode.BAD_REQUEST,
+              'Playlist not found in workspace',
+            );
+          }
+        }
+
         const serialNumber = await this.makeUniqueSerialTx(tx);
         const screenName =
           dto.name?.trim() || `Screen ${serialNumber.slice(-6).toUpperCase()}`;
@@ -396,6 +409,7 @@ export class PairingService {
             resolutionWidth: session.resolutionWidth,
             resolutionHeight: session.resolutionHeight,
             pairingSecretHash,
+            ...(dto.playlistGroupId ? { playlistGroupId: dto.playlistGroupId } : {}),
           },
           select: {
             id: true,

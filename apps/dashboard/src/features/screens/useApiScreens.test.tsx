@@ -76,13 +76,14 @@ describe('useApiScreens', () => {
     });
   });
 
-  it('returns empty array on non-ok response', async () => {
+  it('returns empty array and isError on non-ok response', async () => {
     mockApiFetch.mockResolvedValue(mockResponse({}, false));
 
     const { result } = renderHookWithIsolatedCache(() => useApiScreens('ws-1'));
 
     await waitFor(() => {
       expect(result.current.screens).toEqual([]);
+      expect(result.current.isError).toBe(true);
     });
   });
 

@@ -139,7 +139,11 @@ export function useShellHeaderMeta(pathname: string | null): ShellHeaderMeta {
       pageTitle = t('pageTitles.studio');
     } else if (rest[0] === 'playlists') {
       pageTitle = t('pageTitles.playlists');
+    } else if (rest[0] === 'content') {
+      pageTitle = t('pageTitles.content');
     } else if (rest[0] === 'schedules') {
+      pageTitle = t('pageTitles.schedules');
+    } else if (rest[0] === 'scheduling') {
       pageTitle = t('pageTitles.schedules');
     } else if (rest[0] === 'team') {
       pageTitle = t('pageTitles.team');
@@ -176,11 +180,13 @@ export function useShellHeaderMeta(pathname: string | null): ShellHeaderMeta {
     }
 
     const clientMainWithBack = new Set([
+      'content',
       'media',
       'screens',
       'studio',
       'playlists',
       'schedules',
+      'scheduling',
       'team',
       'templates',
       'ai',

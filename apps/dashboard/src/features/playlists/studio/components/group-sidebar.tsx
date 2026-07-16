@@ -109,7 +109,7 @@ export function GroupSidebar({
                 </button>
                 <button
                   type="button"
-                  className="shrink-0 text-muted-foreground/60 hover:text-red-500"
+                  className="shrink-0 text-muted-foreground/60 hover:text-destructive"
                   onClick={() => void onDeleteGroup(g.id)}
                 >
                   <Trash2 className="h-3 w-3" />

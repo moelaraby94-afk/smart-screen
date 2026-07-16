@@ -124,7 +124,7 @@ export function TwoFactorSettings() {
     <div className="vc-card-surface rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
       <div className="flex items-center gap-3">
         {enabled ? (
-          <ShieldCheck className="h-6 w-6 text-emerald-500" />
+          <ShieldCheck className="h-6 w-6 text-success" />
         ) : (
           <ShieldOff className="h-6 w-6 text-muted-foreground" />
         )}
@@ -138,7 +138,7 @@ export function TwoFactorSettings() {
         <span
           className={`rounded-full px-3 py-1 text-xs font-medium ${
             enabled
-              ? 'bg-emerald-500/15 text-emerald-600'
+              ? 'bg-success/15 text-success'
               : 'bg-muted text-muted-foreground'
           }`}
         >
@@ -214,9 +214,9 @@ export function TwoFactorSettings() {
 
       {/* Backup codes display */}
       {backupCodes && (
-        <div className="mt-6 space-y-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+        <div className="mt-6 space-y-3 rounded-xl border border-warning/30 bg-warning/5 p-4">
           <div className="flex items-center justify-between">
-            <Label className="text-amber-700 dark:text-amber-400">{t('backupCodes')}</Label>
+            <Label className="text-warning">{t('backupCodes')}</Label>
             <Button
               type="button"
               variant="ghost"
@@ -229,12 +229,12 @@ export function TwoFactorSettings() {
           </div>
           <div className="grid grid-cols-2 gap-1 font-mono text-sm sm:grid-cols-4">
             {backupCodes.map((code) => (
-              <span key={code} className="rounded bg-amber-500/10 px-2 py-1 text-center">
+              <span key={code} className="rounded bg-warning/10 px-2 py-1 text-center">
                 {code}
               </span>
             ))}
           </div>
-          <p className="text-xs text-amber-700 dark:text-amber-400">{t('backupCodesHint')}</p>
+          <p className="text-xs text-warning">{t('backupCodesHint')}</p>
         </div>
       )}
 

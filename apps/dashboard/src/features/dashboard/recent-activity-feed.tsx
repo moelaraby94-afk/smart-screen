@@ -34,11 +34,11 @@ const typeIcon: Record<string, typeof MonitorSmartphone> = {
 };
 
 const typeColor: Record<string, string> = {
-  screen: 'bg-blue-500/10 text-blue-500',
-  media: 'bg-purple-500/10 text-purple-500',
-  playlist: 'bg-green-500/10 text-green-500',
-  schedule: 'bg-orange-500/10 text-orange-500',
-  invite: 'bg-pink-500/10 text-pink-500',
+  screen: 'bg-primary/10 text-primary',
+  media: 'bg-warning/10 text-warning',
+  playlist: 'bg-success/10 text-success',
+  schedule: 'bg-primary/10 text-primary',
+  invite: 'bg-destructive/10 text-destructive',
 };
 
 export function RecentActivityFeed() {
@@ -80,7 +80,9 @@ export function RecentActivityFeed() {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="rounded-xl border border-border bg-card p-4"
+      className="rounded-lg border border-border bg-card p-4"
+      role="region"
+      aria-label={t('title')}
     >
       <div className="mb-3 flex items-center gap-2">
         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
@@ -90,7 +92,7 @@ export function RecentActivityFeed() {
           <h2 className="text-sm font-bold tracking-tight text-foreground">
             {t('title')}
           </h2>
-          <p className="text-[11px] text-muted-foreground">{t('subtitle')}</p>
+          <p className="text-xs text-muted-foreground">{t('subtitle')}</p>
         </div>
       </div>
 
@@ -138,11 +140,11 @@ export function RecentActivityFeed() {
                     <p className="truncate text-xs font-medium text-foreground">
                       {item.title}
                     </p>
-                    <p className="truncate text-[10px] text-muted-foreground">
+                    <p className="truncate text-xs text-muted-foreground">
                       {t(`type.${item.type}`, { fallback: item.type })} · {item.subtitle}
                     </p>
                   </div>
-                  <time className="shrink-0 font-mono text-[10px] text-muted-foreground">
+                  <time className="shrink-0 font-mono text-xs text-muted-foreground">
                     {fmtDate(item.timestamp)}
                   </time>
                 </motion.li>

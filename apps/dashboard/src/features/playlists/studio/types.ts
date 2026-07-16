@@ -11,6 +11,8 @@ export type PlaylistSummary = {
   isPublished: boolean;
   workspaceId?: string | null;
   groupId?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
   _count: { items: number; screensInGroup?: number };
   items?: Array<{
     kind?: string;

@@ -193,7 +193,7 @@ export function WorkspaceSettingsClient() {
             )}
             {isPaused ? t('resume') : t('pause')}
           </Button>
-          <span className={`rounded-full px-3 py-1 text-xs font-medium ${isPaused ? 'bg-amber-500/15 text-amber-600' : 'bg-emerald-500/15 text-emerald-600'}`}>
+          <span className={`rounded-full px-3 py-1 text-xs font-medium ${isPaused ? 'bg-warning/15 text-warning' : 'bg-success/15 text-success'}`}>
             {isPaused ? t('statusPaused') : t('statusActive')}
           </span>
         </div>

@@ -28,10 +28,14 @@ import { SubscriptionSummarySection } from '@/features/dashboard/subscription-su
 import { OnboardingProgressWidget } from '@/features/onboarding/onboarding-progress-widget';
 import { PrayerTimesWidget } from '@/features/islamic/prayer-times-widget';
 import { HijriDateWidget } from '@/features/islamic/hijri-date-widget';
+import { ActiveContentWidget } from '@/features/dashboard/active-content-widget';
+import { OnboardingCard } from '@/features/dashboard/onboarding-card';
 import {
   RenameBranchDialog,
   DeleteBranchDialog,
 } from '@/features/dashboard/home-dashboard-dialogs';
+import { Button } from '@/components/ui/button';
+import { CardGridSkeleton } from '@/components/ui/skeleton-patterns';
 
 export function ClientHomeDashboard() {
   const t = useTranslations('clientHome');
@@ -198,65 +202,88 @@ export function ClientHomeDashboard() {
 
   if (loading && !insights) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-muted-foreground">{t('loading')}</p>
+      <div className="space-y-6" aria-busy="true" aria-live="polite">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-16 rounded-lg border border-border bg-card" />
+          ))}
+        </div>
+        <CardGridSkeleton count={6} />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="h-48 rounded-lg border border-border bg-card" />
+          <div className="h-48 rounded-lg border border-border bg-card" />
+        </div>
       </div>
     );
   }
 
   if (!insights) {
     return (
-      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 px-4 text-center">
+      <div
+        className="flex min-h-[40vh] flex-col items-center justify-center gap-3 px-4 text-center"
+        role="alert"
+      >
         <p className="text-sm font-medium text-muted-foreground">{t('loadFailed')}</p>
-        <button
+        <Button
           type="button"
-          className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
+          variant="outline"
           onClick={() => void load()}
         >
           {t('retry')}
-        </button>
+        </Button>
       </div>
     );
   }
 
+  const totalScreens = insights?.totals.screens ?? 0;
+
   return (
-    <div className="space-y-6">
-      <OnboardingProgressWidget />
+    <div className="space-y-6" role="region" aria-label={t('dashboardAria')}>
+      {totalScreens === 0 ? (
+        <OnboardingCard />
+      ) : (
+        <>
+          <OnboardingProgressWidget />
 
-      <QuickActionsSection />
+          <QuickActionsSection />
 
-      <TotalsSection
-        totals={insights.totals}
-        loading={loading}
-        daysRemaining={daysRemaining}
-      />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <ScreenHealthSection />
+            <RecentActivityFeed />
+            <div className="lg:col-span-1">
+              <SubscriptionSummarySection />
+            </div>
+          </div>
 
-      <WorkspaceCardsSection
-        branches={insights.branches}
-        workspaces={workspaces}
-        loading={loading}
-        locale={typeof window !== 'undefined' ? document.documentElement.lang || 'en' : 'en'}
-        isSuperAdmin={isSuperAdmin}
-        pauseBusyId={pauseBusyId}
-        onOpenBranch={onOpenBranch}
-        onRename={onRename}
-        onTogglePause={onTogglePause}
-        onSeedDemo={onSeedDemo}
-        seedDemoBusyId={seedDemoBusyId}
-        onDelete={onDelete}
-      />
+          <ActiveContentWidget />
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ScreenHealthSection />
-        <RecentActivityFeed />
-      </div>
+          <TotalsSection
+            totals={insights.totals}
+            loading={loading}
+            daysRemaining={daysRemaining}
+          />
 
-      <SubscriptionSummarySection />
+          <WorkspaceCardsSection
+            branches={insights.branches}
+            workspaces={workspaces}
+            loading={loading}
+            locale={typeof window !== 'undefined' ? document.documentElement.lang || 'en' : 'en'}
+            isSuperAdmin={isSuperAdmin}
+            pauseBusyId={pauseBusyId}
+            onOpenBranch={onOpenBranch}
+            onRename={onRename}
+            onTogglePause={onTogglePause}
+            onSeedDemo={onSeedDemo}
+            seedDemoBusyId={seedDemoBusyId}
+            onDelete={onDelete}
+          />
 
-      <div className="grid gap-4 md:grid-cols-[1fr_auto]">
-        <PrayerTimesWidget />
-        <HijriDateWidget />
-      </div>
+          <div className="grid gap-4 md:grid-cols-[1fr_auto]">
+            <PrayerTimesWidget />
+            <HijriDateWidget />
+          </div>
+        </>
+      )}
 
       <RenameBranchDialog
         open={renameOpen}

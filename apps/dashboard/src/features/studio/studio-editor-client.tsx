@@ -3,12 +3,15 @@
 import { motion } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AlertCircle,
   ArrowRight,
   Circle as CircleIcon,
   History,
   LayoutTemplate,
+  Loader2,
   Maximize,
   Minus,
+  MonitorOff,
   Plus,
   QrCode,
   RotateCcw,
@@ -19,6 +22,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { useTranslations, useLocale } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -122,6 +126,10 @@ export function StudioEditorClient() {
   const panStartRef = useRef({ x: 0, y: 0, ox: 0, oy: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 960, h: 540 });
+  const [splashVisible, setSplashVisible] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [viewportWidth, setViewportWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1280);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -134,6 +142,19 @@ export function StudioEditorClient() {
     return () => ro.disconnect();
   }, []);
 
+  // Splash screen timer — hides after 2s
+  useEffect(() => {
+    const timer = setTimeout(() => setSplashVisible(false), 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Viewport width tracking for responsive guards
+  useEffect(() => {
+    const onResize = () => setViewportWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   const loadLibrary = useCallback(async () => {
     if (!workspaceId) return;
     const items = await fetchMedia(workspaceId);
@@ -142,21 +163,30 @@ export function StudioEditorClient() {
 
   const loadCanvases = useCallback(async () => {
     if (!workspaceId) return;
-    const res = await apiFetchCanvases(workspaceId);
-    if (res.ok) setCanvases(await readPageItems<CanvasDto>(res));
+    try {
+      const res = await apiFetchCanvases(workspaceId);
+      if (res.ok) setCanvases(await readPageItems<CanvasDto>(res));
+      else setLoadError(true);
+    } catch {
+      setLoadError(true);
+    }
   }, [workspaceId]);
 
   const loadCanvas = useCallback(
     async (id: string) => {
       if (!workspaceId || !id) return;
-      const res = await apiFetchCanvas(workspaceId, id);
-      if (!res.ok) return;
-      const c = (await res.json()) as CanvasDto;
-      setName(c.name);
-      setDw(c.width);
-      setDh(c.height);
-      setLayout(parseLayout(c.layoutData));
-      setSelectedId(null);
+      try {
+        const res = await apiFetchCanvas(workspaceId, id);
+        if (!res.ok) { setLoadError(true); return; }
+        const c = (await res.json()) as CanvasDto;
+        setName(c.name);
+        setDw(c.width);
+        setDh(c.height);
+        setLayout(parseLayout(c.layoutData));
+        setSelectedId(null);
+      } catch {
+        setLoadError(true);
+      }
     },
     [workspaceId],
   );
@@ -235,6 +265,10 @@ export function StudioEditorClient() {
 
   const toggleVisibility = (id: string, visible: boolean) => {
     updateObject(id, { opacity: visible ? 1 : 0 });
+  };
+
+  const toggleLock = (id: string, locked: boolean) => {
+    updateObject(id, { locked });
   };
 
   const save = async (silent = false) => {
@@ -553,6 +587,15 @@ export function StudioEditorClient() {
         removeObject(selectedId);
       } else if (e.key === 'Escape') {
         setSelectedId(null);
+      } else if (selectedId && (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        e.preventDefault();
+        const step = e.shiftKey ? 10 : 1;
+        const obj = layout.objects.find((o) => o.id === selectedId);
+        if (!obj) return;
+        if (e.key === 'ArrowUp') updateObject(selectedId, { y: obj.y - step });
+        else if (e.key === 'ArrowDown') updateObject(selectedId, { y: obj.y + step });
+        else if (e.key === 'ArrowLeft') updateObject(selectedId, { x: obj.x - step });
+        else if (e.key === 'ArrowRight') updateObject(selectedId, { x: obj.x + step });
       }
     };
     window.addEventListener('keydown', handler);
@@ -564,8 +607,54 @@ export function StudioEditorClient() {
     return <p className="text-muted-foreground">{t('needWorkspace')}</p>;
   }
 
+  // Mobile guard — Studio is desktop-only
+  if (viewportWidth < 768) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-2xl border border-border p-8 text-center">
+        <MonitorOff className="h-12 w-12 text-muted-foreground" />
+        <div className="space-y-1">
+          <p className="text-base font-semibold">{t('mobileNotSupported')}</p>
+          <p className="max-w-sm text-sm text-muted-foreground">{t('mobileNotSupportedDesc')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Load error state
+  if (loadError) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-2xl border border-border p-8 text-center">
+        <AlertCircle className="h-12 w-12 text-destructive" />
+        <div className="space-y-1">
+          <p className="text-base font-semibold">{t('loadErrorTitle')}</p>
+          <p className="max-w-sm text-sm text-muted-foreground">{t('loadErrorDesc')}</p>
+        </div>
+        <Button variant="outline" onClick={() => { setLoadError(false); void loadCanvases(); }}>
+          {t('retry')}
+        </Button>
+      </div>
+    );
+  }
+
+  // Splash screen during initial load
+  if (splashVisible) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-2xl border border-border p-8">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">{t('loadingStudio')}</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" role="toolbar" aria-label={t('title')}>
+      {/* Tablet warning */}
+      {viewportWidth >= 768 && viewportWidth < 1024 && (
+        <div className="flex items-center gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-600 dark:text-yellow-400">
+          <AlertCircle className="h-5 w-5 shrink-0" />
+          <p>{t('tabletWarning')}</p>
+        </div>
+      )}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -618,7 +707,7 @@ export function StudioEditorClient() {
               <History className="mr-2 h-4 w-4" />
               {t('history')}
             </Button>
-            <Button type="button" variant="cta" disabled={!canvasId || saving} onClick={() => { void save(); takeSnapshot(); }}>
+            <Button type="button" variant="cta" disabled={!canvasId || saving} aria-busy={saving} onClick={() => { void save(); takeSnapshot(); }}>
               <Save className="mr-2 h-4 w-4" />
               {saving ? t('saving') : t('save')}
             </Button>
@@ -836,7 +925,9 @@ export function StudioEditorClient() {
 
           <motion.div
             layout
-            className="relative overflow-hidden rounded-3xl border border-cyan-500/15 bg-gradient-to-b from-zinc-950/90 to-black shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+            role="application"
+            aria-label={t('canvasArea')}
+            className="relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-b from-zinc-950/90 to-black shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
             style={{ minHeight: 420, cursor: isPanning ? 'grabbing' : 'default' }}
             onMouseDown={(e) => {
               if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
@@ -879,6 +970,11 @@ export function StudioEditorClient() {
               containerRef={containerRef}
               dropHint={t('dropHint')}
             />
+            {layout.objects.length === 0 && (
+              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/30">
+                <p className="text-sm font-medium">{t('emptyCanvasHint')}</p>
+              </div>
+            )}
             <p className="pointer-events-none absolute bottom-3 start-4 text-[11px] font-medium uppercase tracking-[0.2em] text-white/35">
               {t('dropHint')}
             </p>
@@ -924,13 +1020,14 @@ export function StudioEditorClient() {
           <StudioMediaStrip library={library} />
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4" role="region" aria-label={t('properties')}>
           <StudioLayersPanel
             objects={layout.objects}
             selectedId={selectedId}
             onSelect={setSelectedId}
             onReorder={reorderObject}
             onToggleVisibility={toggleVisibility}
+            onToggleLock={toggleLock}
           />
           <StudioPropertiesPanel
             selected={selected}
@@ -940,6 +1037,22 @@ export function StudioEditorClient() {
           />
         </div>
       </div>
+
+      {/* Unsaved changes dialog */}
+      <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('unsavedChangesTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('unsavedChangesDesc')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { void save().then(() => { setShowUnsavedDialog(false); }); }}>
+              {t('save')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -1,6 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import type { Route } from 'next';
+import { useLocale } from 'next-intl';
 import {
   ArrowDown,
   ArrowUp,
@@ -80,7 +83,7 @@ type PairingProps = {
   error: string | null;
   success: boolean;
   claimedScreen: ClaimedScreenData | null;
-  claim: () => Promise<void>;
+  claim: (playlistGroupId?: string) => Promise<void>;
   showProgressBanner: boolean;
 };
 
@@ -133,7 +136,14 @@ export function ScreenSetupModal({
   isPairingMode,
 }: Props) {
   const t = useTranslations('screenSetupModal');
+  const activeLocale = useLocale();
+  const router = useRouter();
 
+  const [wizardStep, setWizardStep] = useState(1);
+  const autoAdvanceRef = useRef(false);
+  const [wizardBranch, setWizardBranch] = useState<string>('');
+  const [wizardNameError, setWizardNameError] = useState<string | null>(null);
+  const [branchOptions, setBranchOptions] = useState<{ id: string; name: string }[]>([]);
   const [activeTab, setActiveTab] = useState<TabKey>(isPairingMode ? 'pairing' : 'content');
   const [playlists, setPlaylists] = useState<PlaylistOption[]>([]);
   const [schedules, setSchedules] = useState<ScheduleOpt[]>([]);
@@ -176,6 +186,7 @@ export function ScreenSetupModal({
       fetchSchedules(workspaceId),
     ]);
     setPlaylists(pls);
+    setBranchOptions(pls.map((p) => ({ id: p.id, name: p.name })));
     setSchedules(schsRes.ok ? await readPageItems<ScheduleOpt>(schsRes) : []);
   }, [workspaceId]);
 
@@ -187,6 +198,10 @@ export function ScreenSetupModal({
   useEffect(() => {
     if (!open) return;
     setActiveTab(isPairingMode ? 'pairing' : 'content');
+    setWizardStep(1);
+    autoAdvanceRef.current = false;
+    setWizardBranch('');
+    setWizardNameError(null);
     setDirty(false);
     setConfirmDelete(false);
     if (effectiveScreen) {
@@ -201,7 +216,17 @@ export function ScreenSetupModal({
     if (effectiveScreen?.id) {
       void loadAssignments(effectiveScreen.id);
     }
-  }, [open, effectiveScreen, loadOptions, loadAssignments]);
+  }, [open, isPairingMode, effectiveScreen, loadOptions, loadAssignments]);
+
+  useEffect(() => {
+    if (isPairingMode && wizardStep === 1 && pairing.code.length === 6 && !autoAdvanceRef.current) {
+      autoAdvanceRef.current = true;
+      setWizardStep(2);
+    }
+    if (pairing.code.length < 6) {
+      autoAdvanceRef.current = false;
+    }
+  }, [isPairingMode, wizardStep, pairing.code.length]);
 
   const markDirty = () => setDirty(true);
 
@@ -219,14 +244,16 @@ export function ScreenSetupModal({
 
         const hasUpdates = Object.keys(updates).length > 0;
         if (hasUpdates) {
-          await apiUpdateScreen(workspaceId, screen.id, updates);
+          const res = await apiUpdateScreen(workspaceId, screen.id, updates);
+          if (!res.ok) throw new Error('update failed');
         }
 
         if (pendingSettings.overridePlId) {
-          await setScreenOverride(workspaceId, screen.id, {
+          const overrideRes = await setScreenOverride(workspaceId, screen.id, {
             playlistId: pendingSettings.overridePlId,
             durationMinutes: pendingSettings.overrideDuration,
           });
+          if (!overrideRes.ok) throw new Error('override failed');
         }
 
         setPendingSettings(null);
@@ -457,7 +484,6 @@ export function ScreenSetupModal({
   const lastSeenAt = (effectiveScreen as ScreenRow)?.lastSeenAt ?? null;
   const overridePlaylistId = effectiveScreen?.overridePlaylistId ?? null;
   const overrideExpiresAt = (effectiveScreen as ScreenRow)?.overrideExpiresAt ?? null;
-  const activePlaylist = effectiveScreen?.activePlaylist ?? null;
   const isOfflineCacheMode = (effectiveScreen as ScreenRow)?.isOfflineCacheMode ?? false;
 
   const is4K = resolutionWidth && resolutionHeight
@@ -466,7 +492,7 @@ export function ScreenSetupModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[90vh] w-[95vw] max-w-5xl flex-col overflow-hidden rounded-2xl border-border p-0">
+      <DialogContent className="flex h-[90vh] w-[95vw] max-w-5xl flex-col overflow-hidden rounded-lg border-border p-0">
         {/* Header */}
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-6 py-4">
           <div className="min-w-0 flex-1">
@@ -488,7 +514,7 @@ export function ScreenSetupModal({
                       <Monitor className="h-3 w-3" />
                       {resolutionWidth}×{resolutionHeight}
                       {is4K && (
-                        <span className="ms-1 rounded bg-primary/15 px-1 py-0.5 text-[9px] font-bold text-primary">4K</span>
+                        <span className="ms-1 rounded bg-primary/15 px-1 py-0.5 text-xs font-bold text-primary">4K</span>
                       )}
                     </span>
                   )}
@@ -499,7 +525,7 @@ export function ScreenSetupModal({
                     </span>
                   )}
                   {overridePlaylistId && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning/10 px-2 py-0.5 text-xs font-bold text-warning">
                       <Zap className="h-3 w-3" />
                       {t('overrideActive')}
                     </span>
@@ -515,15 +541,15 @@ export function ScreenSetupModal({
           </div>
           {isPaired && effectiveScreen && (
             <div className="flex shrink-0 items-center gap-2">
-              <Button type="button" size="sm" variant="outline" className="rounded-xl" disabled={busy} onClick={() => void handleSyncContent()}>
+              <Button type="button" size="sm" variant="outline" className="rounded-lg" disabled={busy} onClick={() => void handleSyncContent()}>
                 <RefreshCw className="me-1.5 h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t('syncNow')}</span>
               </Button>
-              <Button type="button" size="sm" variant="outline" className="rounded-xl" disabled={busy} onClick={() => void handleIdentify()}>
+              <Button type="button" size="sm" variant="outline" className="rounded-lg" disabled={busy} onClick={() => void handleIdentify()}>
                 <BadgeAlert className="me-1.5 h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t('identify')}</span>
               </Button>
-              <Button type="button" size="sm" variant="outline" className="rounded-xl" disabled={busy} onClick={() => void handleRestart()}>
+              <Button type="button" size="sm" variant="outline" className="rounded-lg" disabled={busy} onClick={() => void handleRestart()}>
                 <RotateCcw className="me-1.5 h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t('restart')}</span>
               </Button>
@@ -533,7 +559,7 @@ export function ScreenSetupModal({
 
         {/* Success banner */}
         {pairing.success && (
-          <div className="flex shrink-0 items-center gap-2 border-b border-emerald-400/30 bg-emerald-500/10 px-6 py-2.5 text-sm font-medium text-emerald-700 dark:text-emerald-400">
+          <div className="flex shrink-0 items-center gap-2 border-b border-success/30 bg-success/10 px-6 py-2.5 text-sm font-medium text-success">
             <CheckCircle2 className="h-4 w-4" />
             {t('pairingSuccess')}
           </div>
@@ -555,7 +581,7 @@ export function ScreenSetupModal({
               >
                 <Icon className="h-4 w-4" />
                 {t(`tab_${key}`)}
-                {showBadge && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                {showBadge && <CheckCircle2 className="h-3.5 w-3.5 text-success" />}
               </button>
             );
           })}
@@ -563,92 +589,256 @@ export function ScreenSetupModal({
 
         {/* Tab content - fixed height, scrollable */}
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-          {/* Pairing tab */}
+          {/* Pairing tab — 3-step wizard */}
           {activeTab === 'pairing' && (
             <div className="space-y-5">
               {pairing.success && effectiveScreen ? (
-                <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/5 p-4 space-y-3">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-                    <CheckCircle2 className="h-4 w-4" />
-                    {t('pairingSuccess')}
+                /* Success state with post-pairing CTAs */
+                <div className="space-y-4">
+                  <div className="flex flex-col items-center gap-3 py-4 text-center">
+                    <CheckCircle2 className="h-16 w-16 text-success" strokeWidth={1.5} />
+                    <h3 className="text-lg font-semibold text-foreground">{t('wizardSuccessTitle')}</h3>
+                    <p className="max-w-sm text-sm text-muted-foreground">{t('wizardSuccessDesc')}</p>
                   </div>
-                  <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
+                  <div className="grid gap-2 rounded-lg border border-border bg-muted/30 p-4 text-xs text-muted-foreground sm:grid-cols-2">
                     <span><span className="font-medium text-foreground">{t('screenName')}: </span>{effectiveScreen.name}</span>
                     <span><span className="font-medium text-foreground">{t('serialNumber')}: </span><span className="font-mono">{effectiveScreen.serialNumber}</span></span>
                     {resolutionWidth && resolutionHeight && (
-                      <span><span className="font-medium text-foreground">{t('resolution')}: </span>{resolutionWidth}×{resolutionHeight}{is4K && <span className="ms-1 rounded bg-primary/15 px-1 text-[9px] font-bold text-primary">4K</span>}</span>
+                      <span><span className="font-medium text-foreground">{t('resolution')}: </span>{resolutionWidth}×{resolutionHeight}{is4K && <span className="ms-1 rounded bg-primary/15 px-1 text-xs font-bold text-primary">4K</span>}</span>
                     )}
                     {playerPlatform && (
                       <span><span className="font-medium text-foreground">{t('playerPlatform')}: </span>{playerPlatform}</span>
                     )}
-                    <span><span className="font-medium text-foreground">{t('status')}: </span>{screenStatusValue}</span>
-                    {lastSeenAt && (
-                      <span><span className="font-medium text-foreground">{t('lastSeen')}: </span>{formatDateTime(lastSeenAt, locale)}</span>
-                    )}
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+                    <Button
+                      variant="cta"
+                      className="rounded-lg font-semibold"
+                      onClick={() => {
+                        onOpenChange(false);
+                        router.push(`/${activeLocale}/content` as Route);
+                      }}
+                    >
+                      {t('wizardAssignContent')}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="rounded-lg"
+                      onClick={() => {
+                        onOpenChange(false);
+                        router.push(`/${activeLocale}/screens` as Route);
+                      }}
+                    >
+                      {t('wizardBackToScreens')}
+                    </Button>
                   </div>
                 </div>
               ) : (
                 <>
-                  {pairing.showProgressBanner && (
-                    <p role="status" className="rounded-xl border border-primary/40 bg-primary/12 px-3 py-2 text-center text-xs font-medium leading-relaxed text-foreground">
-                      {t('pairingProgress')}
-                    </p>
-                  )}
-                  <p className="text-center text-sm leading-relaxed text-muted-foreground">
-                    {t('pairingDescription')}
+                  {/* Step indicator */}
+                  <div className="flex items-center justify-center gap-2" role="list" aria-label={t('wizardStepIndicator', { current: wizardStep, total: 3 })}>
+                    {[1, 2, 3].map((s) => (
+                      <div key={s} className="flex items-center gap-2" role="listitem">
+                        <div
+                          className={cn(
+                            'flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors',
+                            s === wizardStep && 'bg-primary text-primary-foreground',
+                            s < wizardStep && 'bg-success text-success-foreground',
+                            s > wizardStep && 'bg-muted text-muted-foreground',
+                          )}
+                          aria-current={s === wizardStep ? 'step' : undefined}
+                          aria-label={t('wizardStepIndicator', { current: s, total: 3 })}
+                        >
+                          {s < wizardStep ? <CheckCircle2 className="h-4 w-4" /> : s}
+                        </div>
+                        {s < 3 && (
+                          <div className={cn('h-0.5 w-8 rounded-full', s < wizardStep ? 'bg-success' : 'bg-border')} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-center text-xs font-medium text-muted-foreground" aria-live="polite">
+                    {t('wizardStepIndicator', { current: wizardStep, total: 3 })}
                   </p>
-                  {pairing.error && (
-                    <p className="rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-center text-sm text-destructive" role="alert">
-                      {pairing.error}
-                    </p>
+
+                  {/* Step 1: Pairing code */}
+                  {wizardStep === 1 && (
+                    <div className="space-y-4">
+                      <p className="text-center text-sm leading-relaxed text-muted-foreground">
+                        {t('wizardCodeHelp')}
+                      </p>
+                      {pairing.showProgressBanner && (
+                        <p role="status" className="rounded-lg border border-primary/40 bg-primary/12 px-3 py-2 text-center text-xs font-medium leading-relaxed text-foreground">
+                          {t('pairingProgress')}
+                        </p>
+                      )}
+                      {pairing.error && (
+                        <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-center text-sm text-destructive" role="alert" aria-live="assertive">
+                          {pairing.error}
+                        </p>
+                      )}
+                      <div className="space-y-2">
+                        <Label htmlFor="pair-code" className="text-center text-xs font-medium text-muted-foreground">
+                          {t('pairingCodeLabel')}
+                        </Label>
+                        <Input
+                          id="pair-code"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          maxLength={6}
+                          placeholder={t('pairingCodePlaceholder')}
+                          value={pairing.code}
+                          onChange={(e) => {
+                            pairing.setCode(e.target.value);
+                          }}
+                          className="h-16 rounded-lg text-center font-mono text-3xl font-semibold tracking-[0.35em] text-foreground"
+                          aria-invalid={Boolean(pairing.error)}
+                          aria-label={t('pairingCodeLabel')}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && pairing.code.length === 6) {
+                              setWizardStep(2);
+                            }
+                          }}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        className="h-12 w-full rounded-lg font-semibold"
+                        variant="cta"
+                        disabled={pairing.code.length !== 6}
+                        onClick={() => setWizardStep(2)}
+                      >
+                        {t('wizardNext')}
+                      </Button>
+                    </div>
                   )}
-                  <div className="space-y-2">
-                    <p className="text-center text-xs font-medium text-muted-foreground">
-                      {t('pairingCodeLabel')}
-                    </p>
-                    <Input
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      maxLength={6}
-                      placeholder={t('pairingCodePlaceholder')}
-                      value={pairing.code}
-                      onChange={(e) => pairing.setCode(e.target.value)}
-                      className="h-16 rounded-xl text-center font-mono text-3xl font-semibold tracking-[0.35em] text-foreground"
-                      aria-invalid={Boolean(pairing.error)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="pair-name">{t('pairingNameLabel')}</Label>
-                    <Input
-                      id="pair-name"
-                      value={pairing.name}
-                      onChange={(e) => pairing.setName(e.target.value)}
-                      placeholder={t('pairingNamePlaceholder')}
-                      className="rounded-xl"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && pairing.code.length === 6) void pairing.claim();
-                      }}
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    className="h-12 w-full rounded-xl font-semibold"
-                    variant="cta"
-                    disabled={pairing.busy || pairing.code.length !== 6}
-                    onClick={() => void pairing.claim()}
-                  >
-                    {pairing.busy ? (
-                      <span className="inline-flex items-center justify-center gap-2">
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                        {t('pairing')}
-                      </span>
-                    ) : (
-                      <>
-                        <Radio className="me-2 h-5 w-5" />
-                        {t('pairDevice')}
-                      </>
-                    )}
-                  </Button>
+
+                  {/* Step 2: Screen name */}
+                  {wizardStep === 2 && (
+                    <div className="space-y-4">
+                      <p className="text-center text-sm leading-relaxed text-muted-foreground">
+                        {t('wizardNameHelp')}
+                      </p>
+                      {wizardNameError && (
+                        <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-center text-sm text-destructive" role="alert" aria-live="assertive">
+                          {wizardNameError}
+                        </p>
+                      )}
+                      <div className="space-y-2">
+                        <Label htmlFor="pair-name">{t('screenName')}</Label>
+                        <Input
+                          id="pair-name"
+                          value={pairing.name}
+                          onChange={(e) => {
+                            pairing.setName(e.target.value);
+                            setWizardNameError(null);
+                          }}
+                          placeholder={t('wizardNameSuggestion')}
+                          className="rounded-lg"
+                          aria-label={t('screenName')}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const trimmed = pairing.name.trim();
+                              if (trimmed.length < 2 || trimmed.length > 50) {
+                                setWizardNameError(t('wizardNameError'));
+                                return;
+                              }
+                              setWizardStep(3);
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-12 flex-1 rounded-lg"
+                          onClick={() => setWizardStep(1)}
+                        >
+                          {t('wizardBack')}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="cta"
+                          className="h-12 flex-1 rounded-lg font-semibold"
+                          onClick={() => {
+                            const trimmed = pairing.name.trim();
+                            if (trimmed.length < 2 || trimmed.length > 50) {
+                              setWizardNameError(t('wizardNameError'));
+                              return;
+                            }
+                            setWizardStep(3);
+                          }}
+                        >
+                          {t('wizardNext')}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 3: Branch (optional) */}
+                  {wizardStep === 3 && (
+                    <div className="space-y-4">
+                      <p className="text-center text-sm leading-relaxed text-muted-foreground">
+                        {t('wizardBranchHelp')}
+                      </p>
+                      <div className="space-y-2">
+                        <Label htmlFor="pair-branch">{t('wizardStep3')}</Label>
+                        <select
+                          id="pair-branch"
+                          className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-medium outline-none focus:border-primary/40 focus:ring-2 focus:ring-ring/20"
+                          value={wizardBranch}
+                          onChange={(e) => setWizardBranch(e.target.value)}
+                          aria-label={t('wizardStep3')}
+                        >
+                          <option value="">{t('wizardBranchNone')}</option>
+                          {branchOptions.map((b) => (
+                            <option key={b.id} value={b.id}>{b.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-12 flex-1 rounded-lg"
+                          onClick={() => setWizardStep(2)}
+                        >
+                          {t('wizardBack')}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="h-12 rounded-lg"
+                          onClick={() => void pairing.claim(wizardBranch || undefined)}
+                          disabled={pairing.busy}
+                        >
+                          {t('wizardSkip')}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="cta"
+                          className="h-12 flex-1 rounded-lg font-semibold"
+                          disabled={pairing.busy || pairing.code.length !== 6}
+                          onClick={() => void pairing.claim(wizardBranch || undefined)}
+                        >
+                          {pairing.busy ? (
+                            <span className="inline-flex items-center justify-center gap-2">
+                              <Loader2 className="h-5 w-5 animate-spin" />
+                              {t('wizardPairingBusy')}
+                            </span>
+                          ) : (
+                            <>
+                              <Radio className="me-2 h-5 w-5" />
+                              {t('wizardPairScreen')}
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -657,23 +847,23 @@ export function ScreenSetupModal({
           {/* Content tab */}
           {activeTab === 'content' && (
             <div className="space-y-5">
-              <div className="rounded-xl border border-border bg-muted/30 p-4">
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+              <div className="rounded-lg border border-border bg-muted/30 p-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {t('currentStatus')}
                 </p>
                 <div className="flex items-center gap-2">
                   {overridePlaylistId ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-bold text-amber-600 dark:text-amber-400">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-warning/40 bg-warning/10 px-2.5 py-1 text-xs font-bold text-warning">
                       <Zap className="h-3 w-3" />
                       {t('overrideActive')}
                     </span>
                   ) : assignments.length > 0 ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-success/40 bg-success/10 px-2.5 py-1 text-xs font-bold text-success">
                       <Film className="h-3 w-3" />
                       {t('rotationActive')}
                     </span>
                   ) : (effectiveScreen as ScreenRow)?.activePlaylistId ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-success/40 bg-success/10 px-2.5 py-1 text-xs font-bold text-success">
                       <Film className="h-3 w-3" />
                       {t('nowPlaying')}
                     </span>
@@ -689,7 +879,7 @@ export function ScreenSetupModal({
               </div>
 
               {/* Playlist rotation - primary content system */}
-              <div className="space-y-3 rounded-xl border border-border p-4">
+              <div className="space-y-3 rounded-lg border border-border p-4">
                 <div className="flex items-center justify-between">
                   <Label className="flex items-center gap-2 text-sm font-semibold">
                     <ListMusic className="h-4 w-4 text-primary" />
@@ -739,7 +929,7 @@ export function ScreenSetupModal({
 
                 <div className="flex items-center gap-2">
                   <select
-                    className="h-10 flex-1 rounded-xl border border-border bg-background px-3 text-sm font-medium outline-none focus:border-primary/40"
+                    className="h-9 flex-1 rounded-lg border border-border bg-background px-3 text-sm font-medium outline-none focus:border-primary/40"
                     value={newAssignmentPl}
                     onChange={(e) => setNewAssignmentPl(e.target.value)}
                   >
@@ -752,7 +942,7 @@ export function ScreenSetupModal({
                     type="button"
                     size="sm"
                     variant="outline"
-                    className="rounded-xl shrink-0"
+                    className="rounded-lg shrink-0"
                     disabled={busy}
                     onClick={() => setWizardOpen(true)}
                   >
@@ -763,7 +953,7 @@ export function ScreenSetupModal({
                     type="button"
                     size="sm"
                     variant="outline"
-                    className="rounded-xl shrink-0"
+                    className="rounded-lg shrink-0"
                     disabled={busy || !newAssignmentPl || !effectiveScreen}
                     onClick={() => void handleAddAssignment()}
                   >
@@ -788,7 +978,7 @@ export function ScreenSetupModal({
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-muted-foreground">{t('overridePlaylist')}</Label>
                 <select
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px] font-medium outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
+                  className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm font-medium outline-none focus:border-primary/40"
                   value={overridePlId}
                   onChange={(e) => { setOverridePlId(e.target.value); markDirty(); }}
                 >
@@ -816,7 +1006,7 @@ export function ScreenSetupModal({
                         type="button"
                         onClick={() => { setOverrideDuration(v); markDirty(); }}
                         className={cn(
-                          'rounded-xl border px-2 py-2.5 text-xs font-medium transition',
+                          'rounded-lg border px-2 py-2.5 text-xs font-medium transition',
                           overrideDuration === v ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground',
                         )}
                       >
@@ -828,14 +1018,14 @@ export function ScreenSetupModal({
               )}
 
               {overridePlaylistId && overrideExpiresAt && (
-                <div className="rounded-xl border border-amber-400/30 bg-amber-500/5 p-3 text-xs text-muted-foreground">
+                <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs text-muted-foreground">
                   <span className="font-semibold text-foreground">{t('overrideExpiresAt')}: </span>
                   {formatDateTime(overrideExpiresAt, locale)}
                 </div>
               )}
 
               {overridePlaylistId && !overrideExpiresAt && (
-                <div className="rounded-xl border border-amber-400/30 bg-amber-500/5 p-3 text-xs text-muted-foreground">
+                <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs text-muted-foreground">
                   {t('overrideCurrentlyActive')}
                 </div>
               )}
@@ -848,7 +1038,7 @@ export function ScreenSetupModal({
           {activeTab === 'schedule' && (
             <div className="space-y-4">
               {/* Schedule management */}
-              <div className="space-y-3 rounded-xl border border-border p-4">
+              <div className="space-y-3 rounded-lg border border-border p-4">
                 <Label className="flex items-center gap-2 text-sm font-semibold">
                   <CalendarClock className="h-4 w-4 text-primary" />
                   {t('scheduleFocus')}
@@ -861,14 +1051,14 @@ export function ScreenSetupModal({
                       <div key={s.id} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2">
                         <div className="min-w-0 flex-1">
                           <span className="block truncate text-sm font-medium">{s.playlist?.name ?? s.id}</span>
-                          <span className="block truncate text-[11px] text-muted-foreground">
+                          <span className="block truncate text-xs text-muted-foreground">
                             {s.recurrence === 'MONTHLY'
                               ? `${t('recurrenceMONTHLY')} · ${s.daysOfMonth.map((d) => d).join(', ')}`
                               : `${t('recurrenceWEEKLY')} · ${s.daysOfWeek.map((d) => getWeekdayShortLabels(locale)[d] ?? '').join(' ')}`}
                             {' · '}
                             {s.startTime}–{s.endTime}
                             {(s.startDate || s.endDate) && (
-                              <span className="ms-1 text-[10px]">
+                              <span className="ms-1 text-xs">
                                 ({s.startDate ? new Date(s.startDate).toLocaleDateString(locale) : '…'} → {s.endDate ? new Date(s.endDate).toLocaleDateString(locale) : '…'})
                               </span>
                             )}
@@ -892,7 +1082,7 @@ export function ScreenSetupModal({
                 {/* New schedule form */}
                 <div className="space-y-3 border-t border-border pt-3">
                   <select
-                    className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium outline-none focus:border-primary/40"
+                    className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm font-medium outline-none focus:border-primary/40"
                     value={newSchedPl}
                     onChange={(e) => setNewSchedPl(e.target.value)}
                   >
@@ -909,7 +1099,7 @@ export function ScreenSetupModal({
                         type="button"
                         onClick={() => { setNewSchedRecurrence(r); setNewSchedDays([]); setNewSchedDaysOfMonth([]); }}
                         className={cn(
-                          'rounded-xl border px-2 py-2 text-xs font-medium transition',
+                          'rounded-lg border px-2 py-2 text-xs font-medium transition',
                           newSchedRecurrence === r ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40',
                         )}
                       >
@@ -948,7 +1138,7 @@ export function ScreenSetupModal({
                             setNewSchedDaysOfMonth((prev) => prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]);
                           }}
                           className={cn(
-                            'h-7 w-7 rounded-lg border text-[10px] font-medium transition',
+                            'h-7 w-7 rounded-lg border text-xs font-medium transition',
                             newSchedDaysOfMonth.includes(day) ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40',
                           )}
                         >
@@ -961,22 +1151,22 @@ export function ScreenSetupModal({
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">{t('startTime')}</Label>
-                      <Input type="time" value={newSchedStartTime} onChange={(e) => setNewSchedStartTime(e.target.value)} className="rounded-xl" />
+                      <Input type="time" value={newSchedStartTime} onChange={(e) => setNewSchedStartTime(e.target.value)} className="rounded-lg" />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">{t('endTime')}</Label>
-                      <Input type="time" value={newSchedEndTime} onChange={(e) => setNewSchedEndTime(e.target.value)} className="rounded-xl" />
+                      <Input type="time" value={newSchedEndTime} onChange={(e) => setNewSchedEndTime(e.target.value)} className="rounded-lg" />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">{t('startDateOptional')}</Label>
-                      <Input type="date" value={newSchedStartDate} onChange={(e) => setNewSchedStartDate(e.target.value)} className="rounded-xl" />
+                      <Input type="date" value={newSchedStartDate} onChange={(e) => setNewSchedStartDate(e.target.value)} className="rounded-lg" />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">{t('endDateOptional')}</Label>
-                      <Input type="date" value={newSchedEndDate} onChange={(e) => setNewSchedEndDate(e.target.value)} className="rounded-xl" />
+                      <Input type="date" value={newSchedEndDate} onChange={(e) => setNewSchedEndDate(e.target.value)} className="rounded-lg" />
                     </div>
                   </div>
 
@@ -984,7 +1174,7 @@ export function ScreenSetupModal({
                     type="button"
                     size="sm"
                     variant="cta"
-                    className="w-full rounded-xl"
+                    className="w-full rounded-lg"
                     disabled={busy || !newSchedPl || !effectiveScreen}
                     onClick={() => void handleCreateSchedule()}
                   >
@@ -1011,12 +1201,12 @@ export function ScreenSetupModal({
                   onChange={(e) => { setTickerText(e.target.value); markDirty(); }}
                   placeholder={t('tickerPlaceholder')}
                   maxLength={200}
-                  className="rounded-xl"
+                  className="rounded-lg"
                 />
                 <p className="text-xs text-muted-foreground">{t('tickerHint')}</p>
               </div>
               {effectiveScreen?.playerTicker && (
-                <div className="rounded-xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+                <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
                   <span className="font-semibold text-foreground">{t('currentTicker')}: </span>
                   {effectiveScreen.playerTicker}
                 </div>
@@ -1031,11 +1221,11 @@ export function ScreenSetupModal({
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold">{t('screenName')}</Label>
-                  <Input value={screenName} onChange={(e) => { setScreenName(e.target.value); markDirty(); }} className="rounded-xl" />
+                  <Input value={screenName} onChange={(e) => { setScreenName(e.target.value); markDirty(); }} className="rounded-lg" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold">{t('location')}</Label>
-                  <Input value={screenLocation} onChange={(e) => { setScreenLocation(e.target.value); markDirty(); }} placeholder={t('locationPlaceholder')} className="rounded-xl" />
+                  <Input value={screenLocation} onChange={(e) => { setScreenLocation(e.target.value); markDirty(); }} placeholder={t('locationPlaceholder')} className="rounded-lg" />
                 </div>
               </div>
 
@@ -1052,7 +1242,7 @@ export function ScreenSetupModal({
                       type="button"
                       onClick={() => { setScreenStatus(v); markDirty(); }}
                       className={cn(
-                        'rounded-xl border px-3 py-2.5 text-sm font-medium transition',
+                        'rounded-lg border px-3 py-2.5 text-sm font-medium transition',
                         screenStatus === v ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground',
                       )}
                     >
@@ -1078,7 +1268,7 @@ export function ScreenSetupModal({
                       type="button"
                       onClick={() => { setOrientation(v); markDirty(); }}
                       className={cn(
-                        'flex flex-col items-center gap-2 rounded-xl border px-3 py-4 text-sm font-medium transition',
+                        'flex flex-col items-center gap-2 rounded-lg border px-3 py-4 text-sm font-medium transition',
                         orientation === v ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground',
                       )}
                     >
@@ -1092,8 +1282,8 @@ export function ScreenSetupModal({
 
               {/* Device info */}
               {isPaired && effectiveScreen && (
-                <div className="rounded-xl border border-border bg-muted/20 p-4">
-                  <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                <div className="rounded-lg border border-border bg-muted/20 p-4">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t('deviceInfo')}
                   </p>
                   <dl className="grid gap-3 text-xs sm:grid-cols-2">
@@ -1105,7 +1295,7 @@ export function ScreenSetupModal({
                       <dt className="flex items-center gap-1.5 text-muted-foreground"><Monitor className="h-3.5 w-3.5" />{t('resolution')}</dt>
                       <dd className="font-medium text-foreground">
                         {resolutionWidth && resolutionHeight ? `${resolutionWidth}×${resolutionHeight}` : '—'}
-                        {is4K && <span className="ms-1 rounded bg-primary/15 px-1 text-[9px] font-bold text-primary">4K</span>}
+                        {is4K && <span className="ms-1 rounded bg-primary/15 px-1 text-xs font-bold text-primary">4K</span>}
                       </dd>
                     </div>
                     <div className="flex items-center justify-between gap-2">
@@ -1122,12 +1312,12 @@ export function ScreenSetupModal({
 
               {/* Delete screen */}
               {isPaired && effectiveScreen && (
-                <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+                <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
                   {!confirmDelete ? (
                     <Button
                       type="button"
                       variant="outline"
-                      className="rounded-xl border-destructive/40 text-destructive hover:bg-destructive/10"
+                      className="rounded-lg border-destructive/40 text-destructive hover:bg-destructive/10"
                       disabled={busy}
                       onClick={() => setConfirmDelete(true)}
                     >
@@ -1141,7 +1331,7 @@ export function ScreenSetupModal({
                         <Button
                           type="button"
                           variant="destructive"
-                          className="rounded-xl"
+                          className="rounded-lg"
                           disabled={busy}
                           onClick={() => void handleDelete()}
                         >
@@ -1150,7 +1340,7 @@ export function ScreenSetupModal({
                         <Button
                           type="button"
                           variant="outline"
-                          className="rounded-xl"
+                          className="rounded-lg"
                           disabled={busy}
                           onClick={() => setConfirmDelete(false)}
                         >
@@ -1168,14 +1358,14 @@ export function ScreenSetupModal({
 
         {/* Footer */}
         <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border px-6 py-4">
-          <p className={cn('text-xs', dirty ? 'font-medium text-amber-600 dark:text-amber-400' : 'text-muted-foreground')}>
+          <p className={cn('text-xs', dirty ? 'font-medium text-warning' : 'text-muted-foreground')}>
             {dirty ? t('unsavedChanges') : t('allSaved')}
           </p>
           <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" className="rounded-xl" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" className="rounded-lg" onClick={() => onOpenChange(false)}>
               {t('close')}
             </Button>
-            <Button type="button" variant="cta" className="rounded-xl font-semibold" disabled={busy || !dirty} onClick={() => void handleSaveAll()}>
+            <Button type="button" variant="cta" className="rounded-lg font-semibold" disabled={busy || !dirty} onClick={() => void handleSaveAll()}>
               {busy ? t('saving') : t('save')}
             </Button>
           </div>

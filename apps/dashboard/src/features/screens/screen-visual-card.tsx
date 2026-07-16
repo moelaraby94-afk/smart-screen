@@ -11,6 +11,8 @@ import {
   Zap,
   BadgeAlert,
   Trash2,
+  ListMusic,
+  FolderTree,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -42,6 +44,7 @@ export function ScreenVisualCard({
   onEdit,
   onDelete,
   onRemote,
+  onAssignContent,
   playlists,
   canAssignPlayback,
   assignPlaylistBusy,
@@ -57,12 +60,13 @@ export function ScreenVisualCard({
   onEdit: (s: ScreenRow) => void;
   onDelete: (id: string) => void;
   onRemote: (id: string, c: 'refresh_content' | 'identify') => void;
+  onAssignContent: (s: ScreenRow) => void;
   playlists: PlaylistOption[];
   canAssignPlayback: boolean;
   assignPlaylistBusy: boolean;
   onAssignPlaybackPlaylist: (screenId: string, playlistId: string | null) => Promise<void>;
   selected?: boolean;
-  onToggleSelect?: (id: string) => void;
+  onToggleSelect?: (id: string, shiftKey: boolean) => void;
 }) {
   const t = useTranslations('screensClient');
   const { previewUrl, loading, previewRev } = useScreenActivePreview(
@@ -70,6 +74,10 @@ export function ScreenVisualCard({
     workspaceId,
   );
   const reach = deriveFleetReachability(screen.status, screen.lastSeenAt);
+  const statusText = reach === 'online' ? t('fleetStatus.online')
+    : reach === 'stale' ? t('fleetStatus.stale')
+    : reach === 'maintenance' ? t('fleetStatus.maintenance')
+    : t('fleetStatus.offline');
 
   return (
     <motion.article
@@ -78,8 +86,14 @@ export function ScreenVisualCard({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay: index * 0.04, type: 'spring', stiffness: 420, damping: 28 }}
       whileHover={{ scale: 1.015, y: -2 }}
+      role="button"
+      tabIndex={0}
+      aria-label={`${screen.name}, ${statusText}`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') onCardClick(screen);
+      }}
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-2xl',
+        'group relative flex flex-col overflow-hidden rounded-lg',
         'border border-border bg-card shadow-sm',
         'transition-colors duration-200 hover:border-primary/30 hover:shadow-md',
         reach === 'online' && 'ngl-screen-card-live',
@@ -87,12 +101,12 @@ export function ScreenVisualCard({
       )}
     >
       {onToggleSelect && (
-        <div className="absolute end-2 top-2 z-10">
+        <div className="absolute start-2 top-2 z-10">
           <Checkbox
             checked={selected ?? false}
-            onCheckedChange={() => onToggleSelect(screen.id)}
-            onClick={(e) => e.stopPropagation()}
-            aria-label={t('selectScreen')}
+            onCheckedChange={() => onToggleSelect(screen.id, false)}
+            onClick={(e) => { e.stopPropagation(); if (e.shiftKey) { onToggleSelect(screen.id, true); } }}
+            aria-label={t('selectScreenAria', { name: screen.name })}
           />
         </div>
       )}
@@ -129,9 +143,15 @@ export function ScreenVisualCard({
           </div>
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent p-4 pt-10">
             <p className="truncate text-base font-semibold text-white drop-shadow-md">{screen.name}</p>
-            <p className="font-mono text-[11px] text-white/70">{screen.serialNumber}</p>
-            {(screen.location || (screen.resolutionWidth && screen.resolutionHeight)) && (
-              <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-white/60">
+            <p className="font-mono text-xs text-white/70">{screen.serialNumber}</p>
+            {(screen.playlistGroup?.name || screen.location || (screen.resolutionWidth && screen.resolutionHeight)) && (
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-white/60">
+                {screen.playlistGroup?.name && (
+                  <span className="inline-flex items-center gap-1">
+                    <FolderTree className="h-3 w-3" strokeWidth={1.5} />
+                    {screen.playlistGroup.name}
+                  </span>
+                )}
                 {screen.location && (
                   <span className="inline-flex items-center gap-1">
                     <MapPin className="h-3 w-3" strokeWidth={1.5} />
@@ -152,13 +172,13 @@ export function ScreenVisualCard({
 
       <div className="flex flex-1 flex-col gap-3 border-t border-border bg-card p-4">
         <div className="space-y-1.5">
-          <label className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {t('playbackPlaylist')}
           </label>
           <div className="relative">
             <select
               className={cn(
-                'h-10 w-full cursor-pointer appearance-none rounded-xl border border-border bg-background px-3 pe-9 text-[13px] font-medium text-foreground outline-none',
+                'h-9 w-full cursor-pointer appearance-none rounded-lg border border-border bg-background px-3 pe-9 text-sm font-medium text-foreground outline-none',
                 'focus-visible:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20',
                 'disabled:cursor-not-allowed disabled:opacity-50',
               )}
@@ -188,13 +208,13 @@ export function ScreenVisualCard({
 
         <div className="flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
           {screen.overridePlaylistId && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400">
+            <span className="inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning/10 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-warning">
               <Zap className="h-3 w-3" />
               {t('overrideBadge')}
             </span>
           )}
           {!screen.overridePlaylistId && !screen.activePlaylistId && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
               {t('noContentAssigned')}
             </span>
           )}
@@ -205,7 +225,7 @@ export function ScreenVisualCard({
             type="button"
             size="sm"
             variant="outline"
-            className="h-9 flex-1 rounded-xl text-[13px] font-medium"
+            className="h-9 flex-1 rounded-lg text-sm font-medium"
             onClick={() => onRemote(screen.id, 'refresh_content')}
           >
             <RefreshCw className="me-1.5 h-3.5 w-3.5" />
@@ -215,7 +235,7 @@ export function ScreenVisualCard({
             type="button"
             size="sm"
             variant="outline"
-            className="h-9 flex-1 rounded-xl text-[13px] font-medium"
+            className="h-9 flex-1 rounded-lg text-sm font-medium"
             onClick={() => onRemote(screen.id, 'identify')}
           >
             <BadgeAlert className="me-1.5 h-3.5 w-3.5" />
@@ -223,15 +243,25 @@ export function ScreenVisualCard({
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0 rounded-xl" aria-label={t('screenActionsAria')}>
+              <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0 rounded-lg" aria-label={t('screenActionsAria')}>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[11rem] rounded-xl">
+            <DropdownMenuContent align="end" className="min-w-[11rem] rounded-lg">
+              <DropdownMenuItem onClick={() => onCardClick(screen)}>
+                <Monitor className="me-2 h-4 w-4" />
+                {t('viewDetail')}
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(screen)}>
                 <PenLine className="me-2 h-4 w-4" />
-                {t('screenSettings')}
+                {t('renameScreen')}
               </DropdownMenuItem>
+              {canAssignPlayback && (
+                <DropdownMenuItem onClick={() => onAssignContent(screen)}>
+                  <ListMusic className="me-2 h-4 w-4" />
+                  {t('assignContent')}
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={() => onRemote(screen.id, 'refresh_content')}>
                 <RefreshCw className="me-2 h-4 w-4" />
                 {t('syncContent')}
@@ -240,14 +270,18 @@ export function ScreenVisualCard({
                 <BadgeAlert className="me-2 h-4 w-4" />
                 {t('identify')}
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => onDelete(screen.id)}
-              >
-                <Trash2 className="me-2 h-4 w-4" />
-                {t('deleteScreen')}
-              </DropdownMenuItem>
+              {canAssignPlayback && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => onDelete(screen.id)}
+                  >
+                    <Trash2 className="me-2 h-4 w-4" />
+                    {t('deleteScreen')}
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

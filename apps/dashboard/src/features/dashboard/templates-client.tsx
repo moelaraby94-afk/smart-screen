@@ -105,7 +105,7 @@ export function TemplatesClient() {
 
   return (
     <div className="space-y-8">
-      <div className="rounded-2xl border border-border bg-muted/20 p-6">
+      <div className="rounded-lg border border-border bg-muted/20 p-6">
         <div className="mb-4 flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-primary" strokeWidth={1.75} />
           <h2 className="text-lg font-semibold tracking-tight">{t('builtinTitle')}</h2>
@@ -113,17 +113,17 @@ export function TemplatesClient() {
         <p className="mb-4 text-sm text-muted-foreground">{t('builtinDesc')}</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {builtinTemplates.map((tpl) => (
-            <div key={tpl.id} className="rounded-xl border border-border bg-card p-4 transition hover:border-primary/40">
+            <div key={tpl.id} className="rounded-lg border border-border bg-card p-4 transition hover:border-primary/40">
               <div className="mb-3 flex h-28 items-center justify-center rounded-lg bg-muted/40">
                 <LayoutTemplate className="h-8 w-8 text-muted-foreground/40" />
               </div>
               <p className="font-semibold text-foreground">{tpl.name}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">{tpl.desc}</p>
-              <p className="mt-1 text-[11px] text-muted-foreground">{tpl.width}×{tpl.height}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{tpl.width}×{tpl.height}</p>
               <Button
                 variant="outline"
                 size="sm"
-                className="mt-3 w-full rounded-xl"
+                className="mt-3 w-full rounded-lg"
                 asChild
               >
                 <Link href={`/${locale}/studio?template=${tpl.category}` as Route}>

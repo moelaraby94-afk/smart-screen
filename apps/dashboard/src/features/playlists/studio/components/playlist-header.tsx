@@ -1,7 +1,6 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Badge } from '@/components/ui/badge';
 import { ListVideo, CheckCircle2, FileEdit } from 'lucide-react';
 
 type PlaylistHeaderProps = {
@@ -26,12 +25,12 @@ export function PlaylistHeader({ total, published, draft }: PlaylistHeaderProps)
           <span className="text-xs text-muted-foreground">{t('totalPlaylists')}</span>
         </div>
         <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-card/40 px-3 py-1.5">
-          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+          <CheckCircle2 className="h-4 w-4 text-success" />
           <span className="text-sm font-semibold text-foreground">{published}</span>
           <span className="text-xs text-muted-foreground">{t('publishedPlaylists')}</span>
         </div>
         <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-card/40 px-3 py-1.5">
-          <FileEdit className="h-4 w-4 text-amber-500" />
+          <FileEdit className="h-4 w-4 text-warning" />
           <span className="text-sm font-semibold text-foreground">{draft}</span>
           <span className="text-xs text-muted-foreground">{t('draftPlaylists')}</span>
         </div>

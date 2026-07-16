@@ -1,7 +1,22 @@
 import { apiFetch } from '@/features/auth/session';
 
-export async function fetchSchedules(workspaceId: string): Promise<Response> {
-  return apiFetch(`/schedules?workspaceId=${encodeURIComponent(workspaceId)}`);
+export async function fetchSchedules(
+  workspaceId: string,
+  filters?: { screenId?: string; playlistId?: string },
+): Promise<Response> {
+  let url = `/schedules?workspaceId=${encodeURIComponent(workspaceId)}`;
+  if (filters?.screenId) url += `&screenId=${encodeURIComponent(filters.screenId)}`;
+  if (filters?.playlistId) url += `&playlistId=${encodeURIComponent(filters.playlistId)}`;
+  return apiFetch(url);
+}
+
+export async function fetchScheduleById(
+  workspaceId: string,
+  scheduleId: string,
+): Promise<Response> {
+  return apiFetch(
+    `/schedules/${encodeURIComponent(scheduleId)}?workspaceId=${encodeURIComponent(workspaceId)}`,
+  );
 }
 
 export async function updateSchedule(
@@ -59,5 +74,15 @@ export async function setScreenOverride(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     },
+  );
+}
+
+export async function deactivateSchedule(
+  workspaceId: string,
+  scheduleId: string,
+): Promise<Response> {
+  return apiFetch(
+    `/schedules/${encodeURIComponent(scheduleId)}/deactivate?workspaceId=${encodeURIComponent(workspaceId)}`,
+    { method: 'POST' },
   );
 }

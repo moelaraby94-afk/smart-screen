@@ -37,7 +37,7 @@ export function RenameBranchDialog(props: RenameDialogProps) {
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent className="rounded-2xl sm:max-w-md">
+      <DialogContent className="rounded-lg sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t('renameDialogTitle')}</DialogTitle>
         </DialogHeader>
@@ -47,14 +47,14 @@ export function RenameBranchDialog(props: RenameDialogProps) {
             id="branch-rename"
             value={props.value}
             onChange={(e) => props.setValue(e.target.value)}
-            className="rounded-xl"
+            className="rounded-lg"
             onKeyDown={(e) => {
               if (e.key === 'Enter') void props.onSubmit();
             }}
           />
         </div>
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button type="button" variant="outline" className="rounded-xl" onClick={() => props.onOpenChange(false)}>
+          <Button type="button" variant="outline" className="rounded-lg" onClick={() => props.onOpenChange(false)}>
             {t('cancel')}
           </Button>
           <Button
@@ -83,18 +83,18 @@ export function DeleteBranchDialog(props: DeleteDialogProps) {
 
   return (
     <AlertDialog open={props.open} onOpenChange={props.onOpenChange}>
-      <AlertDialogContent className="rounded-2xl">
+      <AlertDialogContent className="rounded-lg">
         <AlertDialogHeader>
           <AlertDialogTitle>{t('deleteBranchTitle')}</AlertDialogTitle>
           <AlertDialogDescription>{t('deleteBranchBody')}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
-          <AlertDialogCancel className="rounded-xl" disabled={props.busy}>
+          <AlertDialogCancel className="rounded-lg" disabled={props.busy}>
             {t('cancel')}
           </AlertDialogCancel>
           <Button
             type="button"
-            className="rounded-xl bg-red-600 font-semibold text-white hover:bg-red-600/90"
+            className="rounded-lg bg-red-600 font-semibold text-white hover:bg-red-600/90"
             disabled={props.busy}
             onClick={() => void props.onConfirm()}
           >

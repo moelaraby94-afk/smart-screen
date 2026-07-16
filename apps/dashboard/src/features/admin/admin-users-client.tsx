@@ -372,7 +372,7 @@ export function AdminUsersClient() {
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-xl">{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
-              className="rounded-xl bg-red-600 hover:bg-red-600"
+              className="rounded-xl bg-destructive hover:bg-destructive"
               onClick={() => void confirmSuspend()}
             >
               {t('suspend')}

@@ -121,7 +121,7 @@ export function PlaylistCard({ playlist: p, workspace: ws, index, onOpen, onDupl
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              className="text-red-600 focus:text-red-600 dark:text-red-400"
+              className="text-destructive focus:text-destructive"
               onClick={() => onDelete(p.id)}
             >
               <Trash2 className="me-2 h-4 w-4" />

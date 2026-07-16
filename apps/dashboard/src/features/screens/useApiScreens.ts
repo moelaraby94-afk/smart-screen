@@ -41,7 +41,7 @@ type ScreensOptions = {
 
 async function screensFetcher(key: string): Promise<ScreenRow[]> {
   const response = await apiFetch(key, { method: 'GET' });
-  if (!response.ok) return [];
+  if (!response.ok) throw new Error(`Failed to fetch screens: ${response.status}`);
   const payload = (await response.json()) as ListResponse | ScreenRow[];
   const items = Array.isArray(payload) ? payload : payload.items;
   return Array.isArray(items) ? items : [];
@@ -51,7 +51,7 @@ async function screensFetcher(key: string): Promise<ScreenRow[]> {
  * Data-fetching hook for the screens list.
  *
  * Uses SWR for caching, deduplication, and revalidation. The return signature
- * `{ screens, setScreens, isLoading, reload }` is preserved for backward
+ * `{ screens, setScreens, isLoading, isError, reload }` is preserved for backward
  * compatibility with all consumers (screens-client, displays-client,
  * emergency-client, playlist-screens-client, useScreenRealtime,
  * useScreenActions).
@@ -73,11 +73,12 @@ export function useApiScreens(workspaceId: string | null, options?: ScreensOptio
 
   const key = workspaceId ? `/screens?${params.toString()}` : null;
 
-  const { data, isLoading, mutate } = useSWR(key, screensFetcher, {
+  const { data, isLoading, error, mutate } = useSWR(key, screensFetcher, {
     fallbackData: [] as ScreenRow[],
   });
 
   const screens = data ?? [];
+  const isError = Boolean(error);
 
   const setScreens = useCallback(
     (updater: ScreenRow[] | ((prev: ScreenRow[]) => ScreenRow[])) => {
@@ -95,5 +96,5 @@ export function useApiScreens(workspaceId: string | null, options?: ScreensOptio
     await mutate();
   }, [mutate]);
 
-  return { screens, setScreens, isLoading, reload };
+  return { screens, setScreens, isLoading, isError, reload };
 }

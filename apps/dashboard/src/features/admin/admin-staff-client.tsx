@@ -230,7 +230,7 @@ export function AdminStaffClient() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="rounded-lg border-red-500/35 text-red-400 hover:bg-red-500/10"
+                      className="rounded-lg border-destructive/35 text-destructive hover:bg-destructive/10"
                       disabled={savingId === u?.id || !u?.id}
                       onClick={() => {
                         if (!u?.id) return;
@@ -295,7 +295,7 @@ export function AdminStaffClient() {
             >
               <span className="inline-flex items-center gap-2">
                 {creating ? (
-                  <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber-950" aria-hidden />
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin text-warning" aria-hidden />
                 ) : null}
                 {t('createDialog.submit')}
               </span>

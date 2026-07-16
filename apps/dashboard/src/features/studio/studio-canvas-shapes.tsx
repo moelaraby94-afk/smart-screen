@@ -118,7 +118,7 @@ export function QrCodeShape({
       height={obj.height}
       rotation={obj.rotation ?? 0}
       opacity={obj.opacity ?? 1}
-      draggable
+      draggable={!obj.locked}
       onClick={(e) => {
         e.cancelBubble = true;
         onSelect();
@@ -146,18 +146,49 @@ export function ImageShape({
 }) {
   const [img] = useImage(obj.imageUrl ?? '', 'anonymous');
   if (!img || !obj.width || !obj.height) return null;
+
+  const fitMode = obj.fitMode ?? 'contain';
+  const imgRatio = img.width / img.height;
+  const boxRatio = obj.width / obj.height;
+  let drawW = obj.width;
+  let drawH = obj.height;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  if (fitMode === 'contain') {
+    if (imgRatio > boxRatio) {
+      drawW = obj.width;
+      drawH = obj.width / imgRatio;
+      offsetY = (obj.height - drawH) / 2;
+    } else {
+      drawH = obj.height;
+      drawW = obj.height * imgRatio;
+      offsetX = (obj.width - drawW) / 2;
+    }
+  } else if (fitMode === 'cover') {
+    if (imgRatio > boxRatio) {
+      drawH = obj.height;
+      drawW = obj.height * imgRatio;
+      offsetX = (obj.width - drawW) / 2;
+    } else {
+      drawW = obj.width;
+      drawH = obj.width / imgRatio;
+      offsetY = (obj.height - drawH) / 2;
+    }
+  }
+
   return (
     <KonvaImage
       id={obj.id}
       name={obj.id}
       image={img}
-      x={obj.x}
-      y={obj.y}
-      width={obj.width}
-      height={obj.height}
+      x={obj.x + offsetX}
+      y={obj.y + offsetY}
+      width={drawW}
+      height={drawH}
       rotation={obj.rotation ?? 0}
       opacity={obj.opacity ?? 1}
-      draggable
+      draggable={!obj.locked}
       onClick={(e) => {
         e.cancelBubble = true;
         onSelect();
@@ -168,7 +199,7 @@ export function ImageShape({
       }}
       onDragEnd={(e) => {
         const n = e.target;
-        onMove(obj.id, n.x(), n.y());
+        onMove(obj.id, n.x() - offsetX, n.y() - offsetY);
       }}
     />
   );
@@ -192,7 +223,7 @@ export function CanvasObjectsRenderer({ objects, onSelect, onUpdateObject, canva
           name: obj.id,
           rotation: obj.rotation ?? 0,
           opacity: obj.opacity ?? 1,
-          draggable: true as const,
+          draggable: !(obj.locked ?? false),
           onClick: (e: { cancelBubble: boolean }) => {
             e.cancelBubble = true;
             onSelect(obj.id);

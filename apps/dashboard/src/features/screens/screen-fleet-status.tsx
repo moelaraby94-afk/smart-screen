@@ -57,6 +57,7 @@ type BadgeProps = {
   className?: string;
   /** `overlay` = dark glass cards (Screens fleet). `card` = light branch cards. */
   tone?: 'overlay' | 'card';
+  ['aria-label']?: string;
 };
 
 export function ScreenFleetStatusBadge({
@@ -65,6 +66,7 @@ export function ScreenFleetStatusBadge({
   locale,
   className,
   tone = 'overlay',
+  ...rest
 }: BadgeProps) {
   const t = useTranslations('screensClient');
   useFleetStatusTick();
@@ -94,10 +96,10 @@ export function ScreenFleetStatusBadge({
           sub: 'text-white/50',
         }
       : {
-          online: 'border border-emerald-500/35 bg-emerald-500/10 text-emerald-900 dark:text-emerald-100',
-          stale: 'border border-amber-500/35 bg-amber-500/10 text-amber-950 dark:text-amber-100',
-          offline: 'border border-red-400/40 bg-red-500/10 text-red-900 dark:text-red-100',
-          maintenance: 'border border-amber-500/35 bg-amber-500/10 text-amber-950 dark:text-amber-100',
+          online: 'border border-success/35 bg-success/10 text-success',
+          stale: 'border border-warning/35 bg-warning/10 text-warning',
+          offline: 'border border-destructive/40 bg-destructive/10 text-destructive',
+          maintenance: 'border border-warning/35 bg-warning/10 text-warning',
           sub: 'text-muted-foreground',
         };
 
@@ -111,10 +113,10 @@ export function ScreenFleetStatusBadge({
           : chip.maintenance;
 
   return (
-    <div className={cn('flex flex-col items-start gap-0.5', className)}>
+    <div className={cn('flex flex-col items-start gap-0.5', className)} {...rest}>
       <span
         className={cn(
-          'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em]',
+          'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide',
           chipClass,
         )}
       >
@@ -123,9 +125,9 @@ export function ScreenFleetStatusBadge({
           className={cn(
             'h-1.5 w-1.5 rounded-full',
             reach === 'online' && 'animate-pulse bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]',
-            reach === 'stale' && 'bg-amber-400',
-            reach === 'offline' && 'bg-red-400',
-            reach === 'maintenance' && 'bg-amber-400',
+            reach === 'stale' && 'bg-warning',
+            reach === 'offline' && 'bg-destructive',
+            reach === 'maintenance' && 'bg-warning',
           )}
         />
         {label}
@@ -133,7 +135,7 @@ export function ScreenFleetStatusBadge({
       {relative ? (
         <span
           className={cn(
-            'ps-0.5 text-[9px] font-medium uppercase tracking-[0.08em]',
+            'ps-0.5 text-xs font-medium uppercase tracking-wide',
             chip.sub,
           )}
         >

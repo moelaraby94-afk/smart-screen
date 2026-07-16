@@ -16,4 +16,8 @@ export class ClaimPairingSessionDto {
   @IsOptional()
   @MaxLength(120)
   name?: string;
+
+  @IsString()
+  @IsOptional()
+  playlistGroupId?: string;
 }

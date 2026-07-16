@@ -214,9 +214,9 @@ function NavItem({
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'group relative flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 text-[13px]',
-        'transition-all duration-200 ease-out',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30',
+        'group relative flex cursor-pointer items-center gap-3 rounded-lg px-3 py-3 text-sm',
+        'transition-all duration-fast ease-out',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
         active
           ? 'bg-primary/8 text-foreground'
           : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
@@ -224,23 +224,23 @@ function NavItem({
 >
       {/* Active indicator bar */}
       {active ? (
-        <span className="absolute inset-inline-start-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary transition-all duration-200" />
+        <span className="absolute inset-inline-start-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary transition-all duration-fast" />
       ) : null}
 
       <Icon
         className={cn(
-          'h-5 w-5 shrink-0 transition-all duration-200',
+          'h-5 w-5 shrink-0 transition-all duration-fast',
           active ? 'text-primary' : 'text-muted-foreground/70 group-hover:text-foreground group-hover:scale-105',
         )}
         strokeWidth={STROKE}
       />
-      <span className={cn('min-w-0 flex-1 truncate transition-all duration-200', active ? 'font-semibold' : 'font-medium')}>
+      <span className={cn('min-w-0 flex-1 truncate transition-all duration-fast', active ? 'font-semibold' : 'font-medium')}>
         {label}
       </span>
       {count !== null && count !== undefined && count > 0 ? (
         <span
           className={cn(
-            'text-[10px] font-bold tabular-nums transition-colors duration-200',
+            'text-xs font-bold tabular-nums transition-colors duration-fast',
             active ? 'text-primary' : 'text-muted-foreground/50',
           )}
         >
@@ -254,7 +254,7 @@ function NavItem({
 /* ── Section Label ── */
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-3 pt-5 pb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/40">
+    <p className="px-3 pt-5 pb-1 text-xs font-bold uppercase tracking-wide text-muted-foreground/40">
       {children}
     </p>
   );
@@ -275,10 +275,10 @@ function IconButton({
   danger?: boolean;
 }) {
   const cls = cn(
-    'flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg transition-colors duration-200',
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30',
+    'flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg transition-colors duration-fast',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
     danger
-      ? 'text-muted-foreground/50 hover:bg-red-500/10 hover:text-red-500'
+      ? 'text-muted-foreground/50 hover:bg-destructive/10 hover:text-destructive'
       : 'text-muted-foreground/60 hover:bg-muted hover:text-foreground',
   );
   if (href) {
@@ -327,13 +327,12 @@ export function ShellSidebar({
   const pathnameActive = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme !== 'light';
-  const { workspaces } = useWorkspace();
 
   return (
     <aside
       key={`sidebar-${navLocale}-${sovereign ? 'admin' : 'workspace'}`}
       className={cn(
-        'fixed inset-y-0 z-[82] flex w-[240px] flex-col [inset-inline-start:0]',
+        'fixed inset-y-0 z-sidebar flex w-[240px] flex-col [inset-inline-start:0]',
         'transition-transform duration-300',
         rtl
           ? mobileNavOpen ? 'max-lg:translate-x-0' : 'max-lg:translate-x-full'
@@ -462,7 +461,7 @@ export function ShellSidebar({
             </>
           ) : (
             <>
-              {/* ── Flat nav: overview → workspaces → screens → playlists → media → rest ── */}
+              {/* ── 7-item sidebar per IA sitemap ── */}
               <NavItem
                 href={hrefFor(navLocale, 'overview') as Route}
                 label={t('overview')}
@@ -472,47 +471,6 @@ export function ShellSidebar({
                   if (isLoading) { e.preventDefault(); return; }
                 }}
               />
-
-              {/* Workspaces with count badge */}
-              <Link
-                href={`/${navLocale}/branches` as Route}
-                aria-current={pathname?.startsWith(`/${navLocale}/branches`) ? 'page' : undefined}
-                className={cn(
-                  'group relative flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 text-[13px]',
-                  'transition-all duration-200 ease-out',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30',
-                  pathname?.startsWith(`/${navLocale}/branches`)
-                    ? 'bg-primary/8 text-foreground'
-                    : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
-                )}
-              >
-                {pathname?.startsWith(`/${navLocale}/branches`) ? (
-                  <span className="absolute inset-inline-start-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary transition-all duration-200" />
-                ) : null}
-                <Building2
-                  className={cn(
-                    'h-5 w-5 shrink-0 transition-all duration-200',
-                    pathname?.startsWith(`/${navLocale}/branches`) ? 'text-primary' : 'text-muted-foreground/70 group-hover:text-foreground group-hover:scale-105',
-                  )}
-                  strokeWidth={STROKE}
-                />
-                <span className={cn(
-                  'min-w-0 flex-1 truncate transition-all duration-200',
-                  pathname?.startsWith(`/${navLocale}/branches`) ? 'font-semibold' : 'font-medium',
-                )}>
-                  {t('branches')}
-                </span>
-                {workspaces.length > 0 && (
-                  <span className={cn(
-                    'shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums transition-colors duration-200',
-                    pathname?.startsWith(`/${navLocale}/branches`)
-                      ? 'bg-primary/15 text-primary'
-                      : 'bg-muted text-muted-foreground/50',
-                  )}>
-                    {workspaces.length}
-                  </span>
-                )}
-              </Link>
 
               <NavItem
                 href={hrefFor(navLocale, 'screens') as Route}
@@ -528,10 +486,17 @@ export function ShellSidebar({
                 }}
               />
 
+              {/* Content — links to /content tabbed page */}
               <NavItem
-                href={hrefFor(navLocale, 'playlists') as Route}
-                label={t('playlists')}
-                active={Boolean(pathname?.startsWith(`/${navLocale}/playlists`))}
+                href={`/${navLocale}/content` as Route}
+                label={t('content')}
+                active={
+                  Boolean(pathname?.startsWith(`/${navLocale}/content`)) ||
+                  Boolean(pathname?.startsWith(`/${navLocale}/playlists`)) ||
+                  Boolean(pathname?.startsWith(`/${navLocale}/media`)) ||
+                  Boolean(pathname?.startsWith(`/${navLocale}/studio`)) ||
+                  Boolean(pathname?.startsWith(`/${navLocale}/templates`))
+                }
                 icon={Clapperboard}
                 count={counts.playlists}
                 onClick={(e) => {
@@ -542,67 +507,18 @@ export function ShellSidebar({
                 }}
               />
 
+              {/* Scheduling — links to /scheduling route */}
               <NavItem
-                href={hrefFor(navLocale, 'media') as Route}
-                label={t('media')}
-                active={Boolean(pathname?.startsWith(`/${navLocale}/media`))}
-                icon={FolderOpen}
-                count={counts.media}
-                onClick={(e) => {
-                  if (isLoading) { e.preventDefault(); return; }
-                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('media')) {
-                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
-                  }
-                }}
-              />
-
-              <NavItem
-                href={hrefFor(navLocale, 'studio') as Route}
-                label={t('studio')}
-                active={Boolean(pathname?.startsWith(`/${navLocale}/studio`))}
-                icon={Clapperboard}
-                onClick={(e) => {
-                  if (isLoading) { e.preventDefault(); return; }
-                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('studio')) {
-                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
-                  }
-                }}
-              />
-
-              <NavItem
-                href={hrefFor(navLocale, 'templates') as Route}
-                label={t('templates')}
-                active={Boolean(pathname?.startsWith(`/${navLocale}/templates`))}
-                icon={LayoutTemplate}
-                onClick={(e) => {
-                  if (isLoading) { e.preventDefault(); return; }
-                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('templates')) {
-                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
-                  }
-                }}
-              />
-
-              <NavItem
-                href={hrefFor(navLocale, 'schedules') as Route}
-                label={t('schedules')}
-                active={Boolean(pathname?.startsWith(`/${navLocale}/schedules`))}
+                href={`/${navLocale}/scheduling` as Route}
+                label={t('scheduling')}
+                active={
+                  Boolean(pathname?.startsWith(`/${navLocale}/scheduling`)) ||
+                  Boolean(pathname?.startsWith(`/${navLocale}/schedules`))
+                }
                 icon={CalendarClock}
                 onClick={(e) => {
                   if (isLoading) { e.preventDefault(); return; }
                   if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('schedules')) {
-                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
-                  }
-                }}
-              />
-
-              <NavItem
-                href={hrefFor(navLocale, 'emergency') as Route}
-                label={t('emergency')}
-                active={Boolean(pathname?.startsWith(`/${navLocale}/emergency`))}
-                icon={AlertTriangle}
-                onClick={(e) => {
-                  if (isLoading) { e.preventDefault(); return; }
-                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('emergency')) {
                     e.preventDefault(); toast.error(t('selectWorkspaceToast'));
                   }
                 }}
@@ -622,19 +538,6 @@ export function ShellSidebar({
               />
 
               <NavItem
-                href={hrefFor(navLocale, 'ai') as Route}
-                label={t('ai')}
-                active={Boolean(pathname?.startsWith(`/${navLocale}/ai`))}
-                icon={Sparkles}
-                onClick={(e) => {
-                  if (isLoading) { e.preventDefault(); return; }
-                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('ai')) {
-                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
-                  }
-                }}
-              />
-
-              <NavItem
                 href={hrefFor(navLocale, 'team') as Route}
                 label={t('team')}
                 active={Boolean(pathname?.startsWith(`/${navLocale}/team`))}
@@ -648,41 +551,10 @@ export function ShellSidebar({
               />
 
               <NavItem
-                href={`/${navLocale}/settings/billing` as Route}
-                label={t('billing')}
-                active={Boolean(pathname?.startsWith(`/${navLocale}/settings/billing`))}
-                icon={CreditCard}
-              />
-              <NavItem
                 href={`/${navLocale}/settings/profile` as Route}
                 label={t('settings')}
-                active={Boolean(pathname?.startsWith(`/${navLocale}/settings/profile`)) || Boolean(pathname?.startsWith(`/${navLocale}/settings/workspace`))}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/settings`))}
                 icon={Settings}
-              />
-
-              <NavItem
-                href={hrefFor(navLocale, 'notifications') as Route}
-                label={t('notifications')}
-                active={Boolean(pathname?.startsWith(`/${navLocale}/notifications`))}
-                icon={Bell}
-              />
-              <NavItem
-                href={hrefFor(navLocale, 'auditLog') as Route}
-                label={t('auditLog')}
-                active={Boolean(pathname?.startsWith(`/${navLocale}/audit-log`))}
-                icon={ScrollText}
-              />
-              <NavItem
-                href={hrefFor(navLocale, 'apiDocs') as Route}
-                label={t('apiDocs')}
-                active={Boolean(pathname?.startsWith(`/${navLocale}/api-docs`))}
-                icon={Terminal}
-              />
-              <NavItem
-                href={hrefFor(navLocale, 'help') as Route}
-                label={t('help')}
-                active={Boolean(pathname?.startsWith(`/${navLocale}/help`))}
-                icon={CircleHelp}
               />
             </>
           )}
@@ -702,7 +574,7 @@ export function ShellSidebar({
               router.refresh();
             }}
             className={cn(
-              'flex h-9 cursor-pointer items-center justify-center rounded-lg px-2 text-[10px] font-bold uppercase transition-colors duration-200',
+              'flex h-9 cursor-pointer items-center justify-center rounded-lg px-2 text-xs font-bold uppercase transition-colors duration-fast',
               'text-muted-foreground/60 hover:bg-muted hover:text-foreground',
             )}
             aria-label={tUser('language')}

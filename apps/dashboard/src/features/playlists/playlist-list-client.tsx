@@ -1,0 +1,455 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { Route } from 'next';
+import { useRouter } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
+import { motion } from 'framer-motion';
+import { Plus, Search, ListVideo, MoreVertical, Pencil, Copy, Trash2, Eye, AlertCircle, RotateCcw } from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { EmptyState } from '@/components/ui/empty-state';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
+import { apiFetch } from '@/features/auth/session';
+import { useWorkspace } from '@/features/workspace/workspace-context';
+import { useApiErrorToast } from '@/features/api/use-api-error-toast';
+import { readPageItems } from '@/features/api/page';
+import {
+  fetchPlaylists as apiFetchPlaylists,
+  createPlaylist as apiCreatePlaylist,
+} from '@/features/studio/studio-api';
+import { loadPlaylistMeta } from '@/features/playlists/playlist-transitions';
+import { PlaylistCreateWizard } from '@/features/playlists/playlist-create-wizard';
+import type { PlaylistSummary } from '@/features/playlists/studio/types';
+import type { PlaylistOrientation, PlaylistLayoutType, TransitionType } from '@/features/playlists/playlist-transitions';
+
+type StatusFilter = 'all' | 'published' | 'draft';
+
+export function PlaylistListClient() {
+  const t = useTranslations('playlistStudioClient');
+  const tDetail = useTranslations('playlistDetail');
+  const locale = useLocale();
+  const { workspaceId, workspaces, bumpWorkspaceDataEpoch } = useWorkspace();
+  const { toastResponseError } = useApiErrorToast();
+  const router = useRouter();
+
+  const [playlists, setPlaylists] = useState<PlaylistSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [sortBy, setSortBy] = useState('name');
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<PlaylistSummary | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [scheduleCount, setScheduleCount] = useState(0);
+
+  const canEdit = useMemo(() => {
+    const ws = workspaces.find((w) => w.id === workspaceId);
+    return ws && (ws.role === 'OWNER' || ws.role === 'ADMIN' || ws.role === 'EDITOR');
+  }, [workspaces, workspaceId]);
+
+  const loadPlaylists = useCallback(async () => {
+    if (!workspaceId) {
+      setPlaylists([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setLoadError(false);
+    try {
+      const res = await apiFetchPlaylists(workspaceId);
+      if (res.ok) {
+        setPlaylists(await readPageItems<PlaylistSummary>(res));
+      } else {
+        setPlaylists([]);
+        setLoadError(true);
+      }
+    } catch {
+      setPlaylists([]);
+      setLoadError(true);
+    }
+    setLoading(false);
+  }, [workspaceId]);
+
+  useEffect(() => {
+    void loadPlaylists();
+  }, [loadPlaylists]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const filtered = useMemo(() => {
+    let result = playlists;
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.toLowerCase();
+      result = result.filter((p) => p.name.toLowerCase().includes(q));
+    }
+    if (statusFilter === 'published') {
+      result = result.filter((p) => p.isPublished);
+    } else if (statusFilter === 'draft') {
+      result = result.filter((p) => !p.isPublished);
+    }
+    const sorted = [...result];
+    if (sortBy === 'name') {
+      sorted.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortBy === 'items') {
+      sorted.sort((a, b) => b._count.items - a._count.items);
+    } else if (sortBy === 'screens') {
+      sorted.sort((a, b) => (b._count.screensInGroup ?? 0) - (a._count.screensInGroup ?? 0));
+    } else if (sortBy === 'newest') {
+      sorted.sort((a, b) => (b.updatedAt ?? b.createdAt ?? '').localeCompare(a.updatedAt ?? a.createdAt ?? ''));
+    } else if (sortBy === 'oldest') {
+      sorted.sort((a, b) => (a.updatedAt ?? a.createdAt ?? '').localeCompare(b.updatedAt ?? b.createdAt ?? ''));
+    }
+    return sorted;
+  }, [playlists, debouncedSearch, statusFilter, sortBy]);
+
+  const handleCreate = async (data: {
+    name: string;
+    orientation: PlaylistOrientation;
+    layoutType: PlaylistLayoutType;
+    templateId?: string;
+    zonePresetId?: string;
+    defaultTransition: TransitionType;
+  }) => {
+    if (!workspaceId) return;
+    const res = await apiCreatePlaylist(workspaceId, data.name);
+    if (!res.ok) {
+      toast.error(t('couldNotCreatePlaylist'));
+      return;
+    }
+    const created = (await res.json()) as { id: string };
+    toast.success(t('playlistCreated'));
+    bumpWorkspaceDataEpoch();
+    setWizardOpen(false);
+    router.push(`/content/playlists/${created.id}` as never as Route);
+  };
+
+  const handleDuplicate = async (id: string) => {
+    if (!workspaceId) return;
+    try {
+      const res = await apiFetch(`/playlists/${id}/duplicate?workspaceId=${encodeURIComponent(workspaceId)}`, {
+        method: 'POST',
+      });
+      if (!res.ok) {
+        void toastResponseError(res);
+        return;
+      }
+      toast.success(t('duplicated'));
+      bumpWorkspaceDataEpoch();
+      void loadPlaylists();
+    } catch {
+      toast.error(t('duplicateFailed'));
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget || !workspaceId) return;
+    setDeleting(true);
+    try {
+      const res = await apiFetch(
+        `/playlists/${deleteTarget.id}?workspaceId=${encodeURIComponent(workspaceId)}&force=true`,
+        { method: 'DELETE' },
+      );
+      if (!res.ok) {
+        toast.error(t('couldNotDeletePlaylist'));
+        return;
+      }
+      toast.success(t('playlistDeleted'));
+      bumpWorkspaceDataEpoch();
+      void loadPlaylists();
+    } catch {
+      toast.error(t('couldNotDeletePlaylist'));
+    }
+    setDeleting(false);
+    setDeleteTarget(null);
+  };
+
+  const openDeleteDialog = async (playlist: PlaylistSummary) => {
+    setDeleteTarget(playlist);
+    setScheduleCount(0);
+    if (!workspaceId) return;
+    try {
+      const res = await apiFetch(`/schedules?workspaceId=${encodeURIComponent(workspaceId)}&playlistId=${encodeURIComponent(playlist.id)}`);
+      if (res.ok) {
+        const data = await res.json();
+        const items = Array.isArray(data) ? data : data.items;
+        setScheduleCount(Array.isArray(items) ? items.length : 0);
+      }
+    } catch {
+      // ignore — default to 0
+    }
+  };
+
+  return (
+    <div className="flex flex-1 flex-col gap-4" role="region" aria-label={t('pageTitle')}>
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3">
+        <div className="relative min-w-[200px] flex-1">
+          <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder={t('searchPlaylists')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-9 rounded-lg ps-9"
+            aria-label={t('searchPlaylists')}
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Label className="text-[11px] font-medium text-muted-foreground">{t('sortBy')}</Label>
+          <select
+            className="h-9 rounded-lg border border-border bg-background px-3 text-sm font-medium outline-none focus:border-primary/40"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            aria-label={t('sortBy')}
+          >
+            <option value="name">{t('sortName')}</option>
+            <option value="newest">{t('sortNewest')}</option>
+            <option value="oldest">{t('sortOldest')}</option>
+            <option value="items">{t('sortItems')}</option>
+            <option value="screens">{t('sortScreens')}</option>
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Label className="text-[11px] font-medium text-muted-foreground">{tDetail('statusFilter')}</Label>
+          <select
+            className="h-9 rounded-lg border border-border bg-background px-3 text-sm font-medium outline-none focus:border-primary/40"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+            aria-label={tDetail('statusFilter')}
+          >
+            <option value="all">{tDetail('statusAll')}</option>
+            <option value="published">{tDetail('statusPublished')}</option>
+            <option value="draft">{tDetail('statusDraft')}</option>
+          </select>
+        </div>
+
+        {canEdit && (
+          <Button variant="default" className="ms-auto rounded-lg" onClick={() => setWizardOpen(true)}>
+            <Plus className="me-2 h-4 w-4" />
+            {tDetail('createPlaylist')}
+          </Button>
+        )}
+      </div>
+
+      {/* Grid */}
+      {loadError ? (
+        <div className="flex flex-col items-center gap-4 py-20 text-center">
+          <AlertCircle className="h-10 w-10 text-destructive/50" strokeWidth={1.5} />
+          <p className="text-sm font-medium text-foreground">{t('loadErrorTitle')}</p>
+          <Button variant="outline" onClick={() => void loadPlaylists()}>
+            <RotateCcw className="me-2 h-4 w-4" />
+            {t('retry')}
+          </Button>
+        </div>
+      ) : loading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label={tDetail('loading')}>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
+              <div className="aspect-video animate-pulse bg-muted/40" />
+              <div className="space-y-2 p-3.5">
+                <div className="h-4 w-3/4 animate-pulse rounded bg-muted/40" />
+                <div className="h-3 w-1/2 animate-pulse rounded bg-muted/40" />
+                <div className="flex gap-1.5">
+                  <div className="h-4 w-16 animate-pulse rounded bg-muted/40" />
+                  <div className="h-4 w-16 animate-pulse rounded bg-muted/40" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon={ListVideo}
+          title={playlists.length === 0 ? t('emptyTitle') : tDetail('noResults')}
+          description={playlists.length === 0 ? t('emptyDescription') : tDetail('noResultsDesc')}
+          actionLabel={canEdit && playlists.length === 0 ? tDetail('createPlaylist') : playlists.length > 0 ? tDetail('clearFilters') : undefined}
+          onAction={
+            canEdit && playlists.length === 0
+              ? () => setWizardOpen(true)
+              : playlists.length > 0
+                ? () => { setSearch(''); setStatusFilter('all'); }
+                : undefined
+          }
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filtered.map((p, i) => {
+            const meta = loadPlaylistMeta(p.id);
+            return (
+              <motion.div
+                key={p.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.15, delay: Math.min(i * 0.03, 0.2) }}
+                className="group relative flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm transition-all hover:border-primary/30 hover:shadow-lg"
+              >
+                <button
+                  type="button"
+                  onClick={() => router.push(`/content/playlists/${p.id}` as never as Route)}
+                  className="flex flex-1 flex-col text-start"
+                  aria-label={`${p.name}, ${p.isPublished ? t('publishedBadge') : t('draftPlaylists')}, ${p._count.items} ${t('itemsCount', { count: p._count.items })}`}
+                >
+                  <div className="relative flex aspect-video items-center justify-center overflow-hidden bg-gradient-to-br from-muted/40 to-muted/5">
+                    {(() => {
+                      const firstItem = p.items?.[0];
+                      if (firstItem?.media?.publicUrl && firstItem.media.mimeType.startsWith('image/')) {
+                        return (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={firstItem.media.publicUrl} alt={firstItem.media.originalName} className="h-full w-full object-cover transition duration-200 group-hover:scale-105" />
+                        );
+                      }
+                      if (firstItem?.media?.publicUrl && firstItem.media.mimeType.startsWith('video/')) {
+                        return <video src={firstItem.media.publicUrl} className="h-full w-full object-cover" muted playsInline />;
+                      }
+                      if (firstItem?.canvas) {
+                        return (
+                          <div className="flex flex-col items-center gap-1.5">
+                            <Pencil className="h-8 w-8 text-primary/40" strokeWidth={1.5} />
+                            <span className="text-[10px] text-muted-foreground">{firstItem.canvas.name}</span>
+                          </div>
+                        );
+                      }
+                      return <ListVideo className="h-10 w-10 text-muted-foreground/20 transition group-hover:text-primary/40" strokeWidth={1.5} />;
+                    })()}
+
+                    <div className="absolute inset-x-2 top-2 flex items-center justify-between">
+                      {p.isPublished ? (
+                        <Badge variant="success" className="shadow-sm">
+                          <Eye className="me-1 h-2.5 w-2.5" />
+                          {t('publishedBadge')}
+                        </Badge>
+                      ) : (
+                        <Badge variant="muted" className="shadow-sm">
+                          {t('draftPlaylists')}
+                        </Badge>
+                      )}
+                      <span className="rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white/90 backdrop-blur-sm">
+                        {p._count.items} {t('itemsCount', { count: p._count.items })}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 p-3.5">
+                    <h3 className="truncate text-sm font-bold text-foreground transition group-hover:text-primary">{p.name}</h3>
+                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <span>{p._count.screensInGroup ?? 0} {t('screens')}</span>
+                      {p.updatedAt && (
+                        <>
+                          <span>·</span>
+                          <span>{new Date(p.updatedAt).toLocaleDateString(locale, { dateStyle: 'medium' })}</span>
+                        </>
+                      )}
+                    </div>
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <Badge variant="muted" className="text-[9px]">
+                        {meta.orientation === 'portrait' ? t('orientation') : meta.orientation === 'square' ? t('orientation') : t('orientation')}
+                      </Badge>
+                      <Badge variant="muted" className="text-[9px]">
+                        {meta.layoutType === 'single' ? t('singleZone') : t('multiZone')}
+                      </Badge>
+                    </div>
+                  </div>
+                </button>
+
+                {canEdit && (
+                  <div className="absolute end-2 top-2 z-10 opacity-0 transition group-hover:opacity-100">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-muted-foreground shadow-sm backdrop-blur transition hover:bg-white hover:text-foreground"
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label={t('actions')}
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-44">
+                        <DropdownMenuItem onClick={() => router.push(`/content/playlists/${p.id}` as never as Route)}>
+                          <Pencil className="me-2 h-4 w-4" />
+                          {t('edit')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => void handleDuplicate(p.id)}>
+                          <Copy className="me-2 h-4 w-4" />
+                          {t('duplicate')}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => void openDeleteDialog(p)}
+                        >
+                          <Trash2 className="me-2 h-4 w-4" />
+                          {t('delete')}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Create Playlist Wizard */}
+      <PlaylistCreateWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onCreate={handleCreate}
+      />
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{tDetail('deleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {tDetail('deleteDescription', { name: deleteTarget?.name ?? '' })}
+              {scheduleCount > 0 && (
+                <span className="mt-2 block font-medium text-warning">
+                  {t('scheduleImpactWarning', { count: scheduleCount })}
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel autoFocus disabled={deleting}>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); void handleDelete(); }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? t('saving') : t('delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}

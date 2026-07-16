@@ -90,7 +90,7 @@ export function InviteAcceptClient() {
           <p className="mt-2 max-w-sm text-sm text-muted-foreground">{errorMsg}</p>
         </div>
         <Link href={`/${locale}/login`}>
-          <Button variant="outline" className="rounded-xl">
+          <Button variant="outline" className="rounded-lg">
             {t('backToLogin')}
           </Button>
         </Link>
@@ -104,7 +104,7 @@ export function InviteAcceptClient() {
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center gap-6 py-16"
     >
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 ring-1 ring-primary/20">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 ring-1 ring-ring/20">
         <CheckCircle2 className="h-8 w-8 text-primary" />
       </div>
       <div className="text-center">
@@ -115,13 +115,13 @@ export function InviteAcceptClient() {
       </div>
       <div className="flex items-center gap-3">
         <Link href={`/${locale}/overview`}>
-          <Button variant="cta" className="rounded-xl">
+          <Button variant="cta" className="rounded-lg">
             <MailOpen className="me-2 h-4 w-4" />
             {t('goToDashboard')}
           </Button>
         </Link>
         <Link href={`/${locale}/team`}>
-          <Button variant="outline" className="rounded-xl">
+          <Button variant="outline" className="rounded-lg">
             {t('goToTeam')}
           </Button>
         </Link>

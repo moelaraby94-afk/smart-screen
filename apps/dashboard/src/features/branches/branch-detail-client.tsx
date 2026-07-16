@@ -82,7 +82,9 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
   const canDeletePlaylist = Boolean(
     branch && (branch.role === 'OWNER' || branch.role === 'ADMIN'),
   );
-  const canClaimPlayerPairing = canDeletePlaylist;
+  const canClaimPlayerPairing = Boolean(
+    branch && (branch.role === 'OWNER' || branch.role === 'EDITOR'),
+  );
   const canEditPlaylist = Boolean(branch && branch.role !== 'VIEWER');
 
   useEffect(() => {

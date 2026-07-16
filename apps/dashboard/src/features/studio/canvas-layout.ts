@@ -26,6 +26,8 @@ export type CanvasObjectJson = {
   zoneMediaId?: string | null;
   points?: number[];
   qrData?: string;
+  locked?: boolean;
+  fitMode?: 'contain' | 'cover' | 'fill';
 };
 
 export type ZonePreset = {

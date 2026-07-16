@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
-import { Upload, Search, Info as InfoIcon, ListPlus } from 'lucide-react';
+import { Upload, Search, Info as InfoIcon, ListPlus, AlertCircle, RotateCcw, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -96,6 +96,9 @@ export function MediaLibraryClient() {
   const [mediaTotalPages, setMediaTotalPages] = useState(1);
   const [mediaTotal, setMediaTotal] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [uploads, setUploads] = useState<Array<{ id: string; name: string; progress: number; status: 'uploading' | 'complete' | 'error'; file?: File }>>([]);
+  const [deletePlaylistCount, setDeletePlaylistCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const autoSeedAttemptedRef = useRef(false);
 
@@ -112,6 +115,7 @@ export function MediaLibraryClient() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
     setMediaPage(1);
     if (scope === 'all') {
       if (workspaces.length === 0) {
@@ -119,17 +123,22 @@ export function MediaLibraryClient() {
         setLoading(false);
         return;
       }
-      const results = await Promise.all(
-        workspaces.map(async (w) => {
-          const data = await fetchMedia(w.id);
-          return data.map((m) => ({
-            ...m,
-            workspaceId: w.id,
-            workspaceName: w.name,
-          }));
-        }),
-      );
-      setItems(results.flat());
+      try {
+        const results = await Promise.all(
+          workspaces.map(async (w) => {
+            const data = await fetchMedia(w.id);
+            return data.map((m) => ({
+              ...m,
+              workspaceId: w.id,
+              workspaceName: w.name,
+            }));
+          }),
+        );
+        setItems(results.flat());
+      } catch {
+        setLoadError(true);
+        setItems([]);
+      }
       setLoading(false);
       return;
     }
@@ -138,10 +147,15 @@ export function MediaLibraryClient() {
       setLoading(false);
       return;
     }
-    const data = await fetchMediaPage(workspaceId, 1);
-    setItems(data.items);
-    setMediaTotalPages(data.totalPages);
-    setMediaTotal(data.total);
+    try {
+      const data = await fetchMediaPage(workspaceId, 1);
+      setItems(data.items);
+      setMediaTotalPages(data.totalPages);
+      setMediaTotal(data.total);
+    } catch {
+      setLoadError(true);
+      setItems([]);
+    }
     setLoading(false);
   }, [workspaceId, scope, workspaces]);
 
@@ -208,28 +222,67 @@ export function MediaLibraryClient() {
         return;
       }
       if (!workspaceId || files.length === 0) return;
+      const folderId = selectedFolderId !== 'all' ? selectedFolderId : undefined;
+
+      const uploadItems = files.map((file, i) => ({
+        id: `${Date.now()}-${i}`,
+        name: file.name,
+        progress: 0,
+        status: 'uploading' as const,
+        file,
+      }));
+      setUploads((prev) => [...prev, ...uploadItems]);
       setPending(true);
-      try {
-        for (const file of files) {
-          const folderId = selectedFolderId !== 'all' ? selectedFolderId : undefined;
-          const res = await uploadMedia(workspaceId, file, folderId);
-          if (!res.ok) {
-            throw await readApiError(res);
+
+      const MAX_CONCURRENT = 3;
+      let activeCount = 0;
+      let queueIndex = 0;
+      let hasError = false;
+
+      await new Promise<void>((resolve) => {
+        const processNext = () => {
+          while (activeCount < MAX_CONCURRENT && queueIndex < uploadItems.length) {
+            const item = uploadItems[queueIndex++];
+            activeCount++;
+            void (async () => {
+              try {
+                const res = await uploadMedia(workspaceId, item.file!, folderId);
+                if (!res.ok) {
+                  throw await readApiError(res);
+                }
+                setUploads((prev) => prev.map((u) => u.id === item.id ? { ...u, progress: 100, status: 'complete' } : u));
+                setTimeout(() => {
+                  setUploads((prev) => prev.filter((u) => u.id !== item.id));
+                }, 3000);
+              } catch (e) {
+                hasError = true;
+                setUploads((prev) => prev.map((u) => u.id === item.id ? { ...u, status: 'error' } : u));
+                if (isApiError(e)) {
+                  toastApiError(e);
+                } else {
+                  toast.error(t('uploadFailed'));
+                }
+              } finally {
+                activeCount--;
+                if (queueIndex < uploadItems.length) {
+                  processNext();
+                } else if (activeCount === 0) {
+                  resolve();
+                }
+              }
+            })();
           }
-        }
+        };
+        processNext();
+      });
+
+      if (!hasError) {
         toast.success(t('uploadComplete'));
-        await load();
-        await loadFolders();
-        bumpWorkspaceDataEpoch();
-      } catch (e) {
-        if (isApiError(e)) {
-          toastApiError(e);
-        } else {
-          toast.error(t('uploadFailed'));
-        }
-      } finally {
-        setPending(false);
       }
+      await load();
+      await loadFolders();
+      bumpWorkspaceDataEpoch();
+      setPending(false);
     },
     [load, workspaceId, bumpWorkspaceDataEpoch, scope, t, selectedFolderId, loadFolders, toastApiError],
   );
@@ -262,6 +315,23 @@ export function MediaLibraryClient() {
     const f = e.target.files;
     if (f?.length) void uploadFiles(f);
     e.target.value = '';
+  };
+
+  const openDeleteDialog = async (item: MediaItem) => {
+    const wid = item.workspaceId ?? workspaceId;
+    if (!wid) return;
+    setDeleteTarget({ id: item.id, workspaceId: wid });
+    setDeletePlaylistCount(0);
+    try {
+      const res = await apiFetch(`/playlists?workspaceId=${encodeURIComponent(wid)}`);
+      if (res.ok) {
+        const allPlaylists = await readPageItems<{ id: string; items?: Array<{ media?: { id: string } }> }>(res);
+        const count = allPlaylists.filter((pl) => pl.items?.some((it) => it.media?.id === item.id)).length;
+        setDeletePlaylistCount(count);
+      }
+    } catch {
+      // ignore — default to 0
+    }
   };
 
   const confirmDelete = async () => {
@@ -625,6 +695,15 @@ export function MediaLibraryClient() {
           <div className="flex flex-1 items-center justify-center py-24 text-muted-foreground" aria-busy="true" aria-live="polite">
             {t('loading')}
           </div>
+        ) : loadError ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 py-20 text-center">
+            <AlertCircle className="h-10 w-10 text-destructive/50" strokeWidth={1.5} />
+            <p className="text-sm font-medium text-foreground">{t('loadErrorTitle')}</p>
+            <Button variant="outline" onClick={() => void load()}>
+              <RotateCcw className="me-2 h-4 w-4" />
+              {t('retry')}
+            </Button>
+          </div>
         ) : items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-16 text-center">
             <EmptyMediaIllustration />
@@ -648,6 +727,15 @@ export function MediaLibraryClient() {
               <p className="max-w-md text-sm text-muted-foreground">{t('emptyAllBranchesHint')}</p>
             )}
           </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 py-16 text-center">
+            <Search className="h-8 w-8 text-muted-foreground/40" strokeWidth={1.5} />
+            <p className="text-sm font-medium text-foreground">{t('noResultsTitle')}</p>
+            <p className="max-w-md text-sm text-muted-foreground">{t('noResultsDesc')}</p>
+            <Button variant="outline" onClick={() => { setSearchQuery(''); setTypeFilter('all'); setSelectedFolderId('all'); }}>
+              {t('clearFilters')}
+            </Button>
+          </div>
         ) : (
           <MediaGrid
             items={items}
@@ -662,11 +750,7 @@ export function MediaLibraryClient() {
             onToggleSelectAll={toggleSelectAll}
             onBulkDelete={() => setBulkDeleteOpen(true)}
             onClearSelection={clearSelection}
-            onDelete={(m) => {
-              const wid = m.workspaceId ?? workspaceId;
-              if (!wid) return;
-              setDeleteTarget({ id: m.id, workspaceId: wid });
-            }}
+            onDelete={(m) => void openDeleteDialog(m)}
             onMoveMedia={moveMedia}
             onInfo={(m) => setInfoTarget(m)}
             onAddToPlaylist={(m: MediaItem) => void openAddToPlaylist(m)}
@@ -696,13 +780,18 @@ export function MediaLibraryClient() {
             <AlertDialogTitle>{t('deleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
               {t('deleteDescription')}
+              {deletePlaylistCount > 0 && (
+                <span className="mt-2 block font-medium text-warning">
+                  {t('playlistUsageWarning', { count: deletePlaylistCount })}
+                </span>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">{t('cancel')}</AlertDialogCancel>
+            <AlertDialogCancel autoFocus className="rounded-xl">{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => void confirmDelete()}
-              className="rounded-xl bg-red-600 hover:bg-red-600"
+              className="rounded-xl bg-destructive hover:bg-destructive"
             >
               {t('delete')}
             </AlertDialogAction>
@@ -723,7 +812,7 @@ export function MediaLibraryClient() {
             <AlertDialogAction
               onClick={() => void confirmBulkDelete()}
               disabled={bulkDeleting}
-              className="rounded-xl bg-red-600 hover:bg-red-600"
+              className="rounded-xl bg-destructive hover:bg-destructive"
             >
               {bulkDeleting ? t('deleting') : t('delete')}
             </AlertDialogAction>
@@ -801,7 +890,7 @@ export function MediaLibraryClient() {
                   </Button>
                 </div>
                 {infoTarget.expiresAt && (
-                  <p className="text-xs text-amber-600">
+                  <p className="text-xs text-warning">
                     {t('expiryCurrent', { date: new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(infoTarget.expiresAt)) })}
                   </p>
                 )}
@@ -851,6 +940,53 @@ export function MediaLibraryClient() {
           )}
         </DialogContent>
       </Dialog>
+
+      {uploads.length > 0 && (
+        <div className="fixed bottom-4 end-4 z-50 w-full max-w-sm rounded-2xl border border-border bg-card p-4 shadow-lg" role="status" aria-live="polite">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-sm font-semibold text-foreground">{t('uploadProgress')}</p>
+            <button
+              type="button"
+              onClick={() => setUploads((prev) => prev.filter((u) => u.status === 'uploading'))}
+              className="text-muted-foreground hover:text-foreground"
+              aria-label={t('dismissCompleted')}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="space-y-2">
+            {uploads.map((u) => (
+              <div key={u.id} className="space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate text-xs font-medium text-foreground">{u.name}</span>
+                  {u.status === 'uploading' && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
+                  {u.status === 'error' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (u.file) void uploadFiles([u.file]);
+                        setUploads((prev) => prev.filter((x) => x.id !== u.id));
+                      }}
+                      className="text-xs font-medium text-primary hover:underline"
+                    >
+                      {t('retry')}
+                    </button>
+                  )}
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={cn(
+                      'h-full rounded-full transition-all duration-300',
+                      u.status === 'error' ? 'bg-destructive' : u.status === 'complete' ? 'bg-primary' : 'bg-primary',
+                    )}
+                    style={{ width: `${u.status === 'complete' ? 100 : u.status === 'error' ? 100 : 50}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

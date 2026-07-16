@@ -144,7 +144,7 @@ export function AiToolsClient() {
           <CardContent>
             <div className="space-y-3">
               {history.map((entry, i) => (
-                <div key={i} className="rounded-xl border border-border/70 bg-muted/20 p-4">
+                <div key={i} className="rounded-lg border border-border bg-muted/20 p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Badge variant="muted">{t(`tool_${entry.type}`)}</Badge>

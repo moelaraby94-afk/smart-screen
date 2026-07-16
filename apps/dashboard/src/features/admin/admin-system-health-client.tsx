@@ -63,7 +63,7 @@ export function AdminSystemHealthClient() {
       : 0;
 
   if (error && !stats) {
-    return <p className="text-sm text-red-600 dark:text-red-400">{error}</p>;
+    return <p className="text-sm text-destructive">{error}</p>;
   }
 
   if (!stats) {
@@ -117,7 +117,7 @@ export function AdminSystemHealthClient() {
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
               {t('description')}
             </p>
-            <p className="mt-4 rounded-xl border border-dashed border-amber-500/30 bg-amber-500/[0.06] px-3 py-2 text-xs text-amber-950 dark:text-amber-100/85">
+            <p className="mt-4 rounded-xl border border-dashed border-warning/30 bg-warning/[0.06] px-3 py-2 text-xs text-warning">
               {t('revenueDisclaimer')}
             </p>
           </div>

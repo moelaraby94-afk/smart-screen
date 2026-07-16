@@ -35,34 +35,34 @@ export function ScreenAnalyticsPanel() {
       icon: Wifi,
       label: t('online'),
       value: data.byStatus.ONLINE,
-      color: 'text-emerald-500',
-      bg: 'bg-emerald-500/10',
+      color: 'text-success',
+      bg: 'bg-success/10',
     },
     {
       icon: WifiOff,
       label: t('offline'),
       value: data.byStatus.OFFLINE,
-      color: 'text-red-500',
-      bg: 'bg-red-500/10',
+      color: 'text-destructive',
+      bg: 'bg-destructive/10',
     },
     {
       icon: Wrench,
       label: t('maintenance'),
       value: data.byStatus.MAINTENANCE,
-      color: 'text-amber-500',
-      bg: 'bg-amber-500/10',
+      color: 'text-warning',
+      bg: 'bg-warning/10',
     },
     {
       icon: Film,
       label: t('withPlaylist'),
       value: data.withPlaylist,
-      color: 'text-blue-500',
-      bg: 'bg-blue-500/10',
+      color: 'text-primary',
+      bg: 'bg-primary/10',
     },
   ];
 
   return (
-    <div className="vc-glass vc-card-surface rounded-2xl p-5 sm:p-6">
+    <div className="vc-glass vc-card-surface rounded-lg p-5 sm:p-6" role="region" aria-label={t('title')}>
       <div className="mb-4 flex items-center gap-2">
         <Activity className="h-5 w-5 text-primary" />
         <h3 className="text-sm font-semibold tracking-tight text-foreground">
@@ -74,7 +74,7 @@ export function ScreenAnalyticsPanel() {
         {stats.map((s) => (
           <div
             key={s.label}
-            className={`rounded-xl ${s.bg} p-3 sm:p-4`}
+            className={`rounded-lg ${s.bg} p-3 sm:p-4`}
           >
             <div className="flex items-center gap-2">
               <s.icon className={`h-4 w-4 ${s.color}`} />
@@ -89,12 +89,12 @@ export function ScreenAnalyticsPanel() {
         ))}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border/50 pt-4">
+      <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border pt-4">
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">{t('uptime')}</span>
           <div className="h-2 w-24 overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full rounded-full bg-emerald-500 transition-all"
+              className="h-full rounded-full bg-success transition-all"
               style={{ width: `${data.uptimePercent}%` }}
             />
           </div>

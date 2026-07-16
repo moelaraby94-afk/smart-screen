@@ -67,7 +67,7 @@ export function PlaylistTimeline({
   const locale = useLocale();
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/40">
+    <div className="flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/40" role="listbox" aria-label={t('programTimeline')}>
       <div className="flex items-center gap-2 border-b border-border/40 px-4 py-3">
         <Layers className="h-4 w-4 text-primary" />
         <h3 className="text-sm font-semibold tracking-tight text-foreground">
@@ -98,6 +98,8 @@ export function PlaylistTimeline({
                     <div
                       ref={p.innerRef}
                       {...p.draggableProps}
+                      role="option"
+                      aria-selected={false}
                       className="rounded-xl border border-border/60 bg-background p-3 transition hover:border-primary/30 hover:shadow-sm"
                     >
                       <div className="flex items-center gap-3">
@@ -219,7 +221,7 @@ export function PlaylistTimeline({
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                className="h-7 w-7 rounded-md text-red-500 hover:bg-red-500/10 hover:text-red-600"
+                                className="h-7 w-7 rounded-md text-destructive hover:bg-destructive/10 hover:text-destructive"
                                 title={t('delete')}
                                 onClick={() => onRemoveRow(row.clientId)}
                               >

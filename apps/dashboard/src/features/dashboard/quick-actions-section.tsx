@@ -4,29 +4,29 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import {
-  Monitor,
-  Upload,
-  ListVideo,
-  CalendarClock,
-  ArrowRight,
-} from 'lucide-react';
+import { Monitor, ListVideo, CalendarClock, ArrowRight } from 'lucide-react';
+import { useWorkspace } from '@/features/workspace/workspace-context';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
 
 const actions = [
-  { key: 'screens', icon: Monitor, href: '/screens', accent: 'bg-blue-500/10 text-blue-400 ring-blue-500/20' },
-  { key: 'media', icon: Upload, href: '/media', accent: 'bg-amber-500/10 text-amber-400 ring-amber-500/20' },
-  { key: 'playlists', icon: ListVideo, href: '/playlists', accent: 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20' },
-  { key: 'schedules', icon: CalendarClock, href: '/schedules', accent: 'bg-violet-500/10 text-violet-400 ring-violet-500/20' },
+  { key: 'addScreen', icon: Monitor, href: '/screens', accent: 'bg-primary/10 text-primary ring-primary/20' },
+  { key: 'createPlaylist', icon: ListVideo, href: '/content?tab=playlists', accent: 'bg-success/10 text-success ring-success/20' },
+  { key: 'viewSchedule', icon: CalendarClock, href: '/scheduling', accent: 'bg-primary/10 text-primary ring-primary/20' },
 ] as const;
 
 export function QuickActionsSection() {
   const t = useTranslations('clientHome');
   const locale = useLocale();
+  const { workspaces, workspaceId } = useWorkspace();
+
+  const currentWorkspace = workspaces.find((w) => w.id === workspaceId);
+  const isViewer = currentWorkspace?.role === 'VIEWER';
+
+  if (isViewer) return null;
 
   return (
-    <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <section className="grid grid-cols-1 gap-3 sm:grid-cols-3" role="region" aria-label={t('quickActionsAria')}>
       {actions.map((action, i) => (
         <motion.div
           key={action.key}
@@ -36,7 +36,7 @@ export function QuickActionsSection() {
         >
           <Link
             href={`/${locale}${action.href}` as Route}
-            className="group flex items-center gap-3 rounded-xl border border-border bg-card p-3.5 transition-all duration-200 hover:border-primary/30 hover:shadow-md"
+            className="group flex items-center gap-3 rounded-lg border border-border bg-card p-3.5 transition-all duration-fast hover:border-primary/30 hover:shadow-md"
           >
             <div
               className={cn(

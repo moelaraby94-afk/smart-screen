@@ -63,7 +63,7 @@ export function ForgotPasswordClient() {
     <div className="w-full">
       {/* Mobile brand header */}
       <div className="mb-8 lg:hidden">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
+        <p className="text-xs font-semibold uppercase tracking-wide text-primary">
           {t('brand')}
         </p>
         <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground">
@@ -97,14 +97,15 @@ export function ForgotPasswordClient() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="rounded-xl border-border bg-background text-foreground"
+                  className="h-9 rounded-lg border-border bg-background text-foreground"
                 />
               </div>
               <Button
                 type="submit"
                 disabled={pending}
-                className="h-11 w-full rounded-xl font-semibold"
+                className="h-10 w-full rounded-lg font-semibold"
                 variant="cta"
+                aria-busy={pending}
               >
                 {t('sendResetLink')}
               </Button>
@@ -118,7 +119,7 @@ export function ForgotPasswordClient() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="rounded-xl border-border bg-background text-foreground"
+                  className="h-9 rounded-lg border-border bg-background text-foreground"
                 />
               </div>
               <div className="space-y-2">
@@ -129,14 +130,15 @@ export function ForgotPasswordClient() {
                   minLength={8}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="rounded-xl border-border bg-background text-foreground"
+                  className="h-9 rounded-lg border-border bg-background text-foreground"
                 />
               </div>
               <Button
                 type="submit"
                 disabled={pending}
-                className="h-11 w-full rounded-xl font-semibold"
+                className="h-10 w-full rounded-lg font-semibold"
                 variant="cta"
+                aria-busy={pending}
               >
                 {t('updatePassword')}
               </Button>

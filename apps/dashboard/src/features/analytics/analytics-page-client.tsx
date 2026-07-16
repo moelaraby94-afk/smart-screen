@@ -4,29 +4,35 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
 import {
+  BarChart3,
   Activity,
-  Wifi,
-  WifiOff,
-  Wrench,
   MonitorPlay,
   Clock,
   TrendingUp,
-  BarChart3,
-  MapPin,
   Film,
   Download,
-  Filter,
+  AlertCircle,
+  RefreshCw,
+  MapPin,
 } from 'lucide-react';
-import { fetchScreenAnalytics, type ScreenAnalytics, type PerScreenAnalytics } from '@/features/screens/api/screens-api';
-import { useWorkspace } from '@/features/workspace/workspace-context';
-import { cn } from '@/lib/utils';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { CardGridSkeleton, TableSkeleton } from '@/components/ui/skeleton-patterns';
-import { EmptyState } from '@/components/ui/empty-state';
-import { Monitor } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { Route } from 'next';
+import { useWorkspace } from '@/features/workspace/workspace-context';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { MetricCard } from './metric-card';
+import { TrendChart } from './trend-chart';
+import type { PerScreenAnalytics } from '@/features/screens/api/screens-api';
+import {
+  fetchAnalytics,
+  type Period,
+  type AnalyticsResult,
+  type Performer,
+} from './api/analytics-api';
 
 function formatUptime(sec: number): string {
   if (sec < 60) return `${Math.floor(sec)}s`;
@@ -48,47 +54,68 @@ function formatRelative(iso: string | null, locale: string): string {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  ONLINE: 'bg-emerald-500',
-  OFFLINE: 'bg-red-500',
-  MAINTENANCE: 'bg-amber-500',
+  ONLINE: 'bg-success',
+  OFFLINE: 'bg-destructive',
+  MAINTENANCE: 'bg-warning',
 };
 
 const STATUS_TEXT: Record<string, string> = {
-  ONLINE: 'text-emerald-600',
-  OFFLINE: 'text-red-600',
-  MAINTENANCE: 'text-amber-600',
+  ONLINE: 'text-success',
+  OFFLINE: 'text-destructive',
+  MAINTENANCE: 'text-warning',
 };
+
+const PERIOD_OPTIONS: { value: Period; labelKey: string }[] = [
+  { value: '7d', labelKey: 'period7d' },
+  { value: '30d', labelKey: 'period30d' },
+  { value: '90d', labelKey: 'period90d' },
+];
 
 export function AnalyticsPageClient() {
   const t = useTranslations('analyticsPage');
   const tAnalytics = useTranslations('screenAnalytics');
-  const locale = useLocale();
+  const { workspaceId, workspaces } = useWorkspace();
   const router = useRouter();
-  const { workspaceId } = useWorkspace();
-  const [data, setData] = useState<ScreenAnalytics | null>(null);
+  const locale = useLocale();
+
+  const [period, setPeriod] = useState<Period>('30d');
+  const [tab, setTab] = useState<'screens' | 'content'>('screens');
+  const [data, setData] = useState<AnalyticsResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
+  const canExport = useMemo(() => {
+    const r = workspaces.find((w) => w.id === workspaceId)?.role;
+    return r === 'OWNER' || r === 'ADMIN' || r === 'EDITOR';
+  }, [workspaces, workspaceId]);
+
+  const load = useCallback(async () => {
     if (!workspaceId) return;
-    void (async () => {
-      setLoading(true);
-      const result = await fetchScreenAnalytics(workspaceId);
-      setData(result);
-      setLoading(false);
-    })();
-  }, [workspaceId]);
+    setLoading(true);
+    setError(false);
+    try {
+      const result = await fetchAnalytics(workspaceId, period);
+      if (!result) {
+        setError(true);
+      } else {
+        setData(result);
+      }
+    } catch {
+      setError(true);
+    }
+    setLoading(false);
+  }, [workspaceId, period]);
 
-  const maxHourlyCount = useMemo(() => {
-    if (!data) return 0;
-    return Math.max(...data.hourlyActivity.map((h) => h.count), 1);
-  }, [data]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
-  const filteredScreens = useMemo<PerScreenAnalytics[]>(() => {
-    if (!data) return [];
+  const filteredScreens = useMemo(() => {
+    if (!data?.screen.raw) return [];
     const q = search.trim().toLowerCase();
-    if (!q) return data.perScreen;
-    return data.perScreen.filter(
+    if (!q) return data.screen.raw.perScreen;
+    return data.screen.raw.perScreen.filter(
       (s) =>
         s.name.toLowerCase().includes(q) ||
         s.serialNumber.toLowerCase().includes(q),
@@ -119,35 +146,59 @@ export function AnalyticsPageClient() {
     URL.revokeObjectURL(url);
   }, [filteredScreens]);
 
-  if (loading) {
+  if (loading && !data) {
     return (
-      <div className="space-y-6" aria-busy="true" aria-live="polite">
-        <CardGridSkeleton count={4} />
-        <div className="grid gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <div className="h-5 w-32 animate-pulse rounded bg-muted" />
-            <div className="mt-4 h-3 w-full animate-pulse rounded bg-muted" />
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <div className="h-5 w-32 animate-pulse rounded bg-muted" />
-            <div className="mt-4 space-y-2">
-              <div className="h-3 w-full animate-pulse rounded bg-muted" />
-              <div className="h-3 w-full animate-pulse rounded bg-muted" />
-              <div className="h-3 w-full animate-pulse rounded bg-muted" />
-            </div>
-          </div>
+      <div
+        className="space-y-6"
+        role="status"
+        aria-label={t('loading')}
+        aria-busy="true"
+        aria-live="polite"
+      >
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <MetricCard key={i} label="" value="" loading />
+          ))}
         </div>
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <TableSkeleton rows={5} cols={6} />
+        <div className="rounded-lg border border-border bg-card p-5">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="mt-4 h-[300px] w-full" />
+        </div>
+        <div className="rounded-lg border border-border bg-card p-5">
+          <Skeleton className="h-5 w-32" />
+          <div className="mt-4 space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!data || data.total === 0) {
+  if (error) {
+    return (
+      <div
+        role="alert"
+        className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center"
+      >
+        <AlertCircle className="h-12 w-12 text-destructive" strokeWidth={1.5} aria-hidden />
+        <div className="space-y-1.5">
+          <p className="text-lg font-semibold text-foreground">{t('errorTitle')}</p>
+          <p className="text-sm text-muted-foreground">{t('errorDescription')}</p>
+        </div>
+        <Button variant="outline" onClick={() => void load()}>
+          <RefreshCw className="me-1.5 h-4 w-4" />
+          {t('retry')}
+        </Button>
+      </div>
+    );
+  }
+
+  if (!data || (data.screen.raw && data.screen.raw.total === 0)) {
     return (
       <EmptyState
-        icon={Monitor}
+        icon={BarChart3}
         title={t('empty')}
         description={t('emptyDescription')}
         actionLabel={t('emptyCta')}
@@ -156,232 +207,323 @@ export function AnalyticsPageClient() {
     );
   }
 
-  const stats = [
-    { icon: Wifi, label: tAnalytics('online'), value: data.byStatus.ONLINE, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-    { icon: WifiOff, label: tAnalytics('offline'), value: data.byStatus.OFFLINE, color: 'text-red-500', bg: 'bg-red-500/10' },
-    { icon: Wrench, label: tAnalytics('maintenance'), value: data.byStatus.MAINTENANCE, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-    { icon: MonitorPlay, label: tAnalytics('withPlaylist'), value: data.withPlaylist, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+  const screenMetrics = [
+    { label: t('metricUptime'), value: data.screen.metrics.uptime.value, unit: data.screen.metrics.uptime.unit, icon: Activity },
+    { label: t('metricActiveScreens'), value: data.screen.metrics.activeScreens.value, unit: data.screen.metrics.activeScreens.unit, icon: MonitorPlay },
+    { label: t('metricImpressions'), value: data.screen.metrics.totalImpressions.value, unit: data.screen.metrics.totalImpressions.unit, icon: TrendingUp },
+    { label: t('metricAvgPlayTime'), value: data.screen.metrics.avgPlayTime.value, unit: data.screen.metrics.avgPlayTime.unit, icon: Clock },
+  ];
+
+  const contentMetrics = [
+    { label: t('metricTotalPlays'), value: data.content.metrics.totalPlays.value, unit: data.content.metrics.totalPlays.unit, icon: Film },
+    { label: t('metricMostPlayed'), value: data.content.metrics.mostPlayed.value, unit: data.content.metrics.mostPlayed.unit, icon: TrendingUp },
+    { label: t('metricActivePlaylists'), value: data.content.metrics.activePlaylists.value, unit: data.content.metrics.activePlaylists.unit, icon: Film },
+    { label: t('metricContentReach'), value: data.content.metrics.contentReach.value, unit: data.content.metrics.contentReach.unit, icon: MonitorPlay },
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Overview stats */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {stats.map((s, i) => (
+    <div className="space-y-6" role="region" aria-label={t('title')}>
+      <PeriodSelector value={period} onChange={setPeriod} t={t} />
+
+      <Tabs value={tab} onValueChange={(v) => setTab(v as 'screens' | 'content')}>
+        <TabsList>
+          <TabsTrigger value="screens">{t('tabScreens')}</TabsTrigger>
+          <TabsTrigger value="content">{t('tabContent')}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="screens" className="space-y-6">
           <motion.div
-            key={s.label}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.03 * i, duration: 0.3 }}
-            className={cn('rounded-2xl border border-border bg-card p-4 shadow-sm')}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-6"
           >
-            <div className="flex items-center gap-2">
-              <s.icon className={cn('h-4 w-4', s.color)} />
-              <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
-            </div>
-            <p className={cn('mt-2 text-2xl font-bold', s.color)}>{s.value}</p>
+            <AnalyticsContent
+              metrics={screenMetrics}
+              trend={data.screen.trend}
+              performers={data.screen.performers}
+              loading={loading}
+              t={t}
+              chartAriaLabel={t('chartUptimeAria')}
+              chartEmptyLabel={t('chartEmpty')}
+              chartColor="var(--success)"
+              yAxisFormat={(v) => `${v}%`}
+            />
+
+            {data.screen.raw && (
+              <PerScreenTable
+                filteredScreens={filteredScreens}
+                search={search}
+                setSearch={setSearch}
+                canExport={canExport}
+                onExport={exportCsv}
+                t={t}
+                tAnalytics={tAnalytics}
+                locale={locale}
+                onRowClick={(id) => router.push(`/${locale}/screens/${id}` as Route)}
+              />
+            )}
           </motion.div>
+        </TabsContent>
+
+        <TabsContent value="content" className="space-y-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-6"
+          >
+            <AnalyticsContent
+              metrics={contentMetrics}
+              trend={data.content.trend}
+              performers={data.content.performers}
+              loading={loading}
+              t={t}
+              chartAriaLabel={t('chartContentAria')}
+              chartEmptyLabel={t('chartEmpty')}
+              chartColor="var(--primary)"
+            />
+          </motion.div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function PeriodSelector({
+  value,
+  onChange,
+  t,
+}: {
+  value: Period;
+  onChange: (p: Period) => void;
+  t: ReturnType<typeof useTranslations<'analyticsPage'>>;
+}) {
+  return (
+    <div className="flex items-center gap-2" role="group" aria-label={t('periodSelector')}>
+      {PERIOD_OPTIONS.map((opt) => (
+        <Button
+          key={opt.value}
+          variant={value === opt.value ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => onChange(opt.value)}
+          aria-pressed={value === opt.value}
+        >
+          {t(opt.labelKey)}
+        </Button>
+      ))}
+    </div>
+  );
+}
+
+function AnalyticsContent({
+  metrics,
+  trend,
+  performers,
+  loading,
+  t,
+  chartAriaLabel,
+  chartEmptyLabel,
+  chartColor,
+  yAxisFormat,
+}: {
+  metrics: { label: string; value: string | number; unit: string; icon: typeof Activity }[];
+  trend: { date: string; value: number }[];
+  performers: Performer[];
+  loading: boolean;
+  t: ReturnType<typeof useTranslations<'analyticsPage'>>;
+  chartAriaLabel: string;
+  chartEmptyLabel: string;
+  chartColor: string;
+  yAxisFormat?: (v: number) => string;
+}) {
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {metrics.map((m) => (
+          <MetricCard
+            key={m.label}
+            label={m.label}
+            value={m.value}
+            unit={m.unit}
+            icon={m.icon}
+            loading={loading}
+          />
         ))}
       </div>
 
-      {/* Uptime + peak hours */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <div className="mb-4 flex items-center gap-2">
-            <Activity className="h-5 w-5 text-primary" />
-            <h3 className="text-sm font-semibold tracking-tight">{t('uptimeTitle')}</h3>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="h-3 flex-1 overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-emerald-500 transition-all"
-                style={{ width: `${data.uptimePercent}%` }}
-              />
-            </div>
-            <span className="text-lg font-bold text-foreground">{data.uptimePercent}%</span>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5" />
-              <span>{tAnalytics('newestSeen')}: {formatRelative(data.newestSeen, locale)}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5" />
-              <span>{tAnalytics('oldestSeen')}: {formatRelative(data.oldestSeen, locale)}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <div className="mb-4 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            <h3 className="text-sm font-semibold tracking-tight">{t('peakHoursTitle')}</h3>
-          </div>
-          {data.peakHours.length > 0 ? (
-            <div className="space-y-2">
-              {data.peakHours.map((h, i) => (
-                <div key={h.hour} className="flex items-center gap-3">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
-                    {i + 1}
-                  </span>
-                  <span className="text-sm font-medium text-foreground">
-                    {h.hour.toString().padStart(2, '0')}:00
-                  </span>
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-primary/60"
-                      style={{ width: `${(h.count / maxHourlyCount) * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-xs text-muted-foreground">{h.count}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">{t('noPeakHours')}</p>
-          )}
-        </div>
-      </div>
-
-      {/* Hourly activity bar chart */}
-      <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <div className="rounded-lg border border-border bg-card p-5 shadow-xs" role="region" aria-label={t('trendTitle')}>
         <div className="mb-4 flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-primary" />
-          <h3 className="text-sm font-semibold tracking-tight">{t('hourlyActivityTitle')}</h3>
+          <TrendingUp className="h-5 w-5 text-primary" aria-hidden />
+          <h3 className="text-sm font-semibold tracking-tight">{t('trendTitle')}</h3>
         </div>
-        <div className="flex items-end gap-1" style={{ height: '120px' }}>
-          {data.hourlyActivity.map((h) => (
-            <div key={h.hour} className="group relative flex flex-1 flex-col items-center justify-end" style={{ height: '100%' }}>
-              <div
-                className={cn(
-                  'w-full rounded-t transition-all',
-                  h.count > 0 ? 'bg-primary/70 group-hover:bg-primary' : 'bg-muted',
-                )}
-                style={{ height: `${Math.max((h.count / maxHourlyCount) * 100, 2)}%` }}
-                title={`${h.hour}:00 — ${h.count} screens`}
-              />
-              {h.hour % 3 === 0 && (
-                <span className="mt-1 text-[9px] text-muted-foreground">{h.hour}</span>
-              )}
-            </div>
-          ))}
-        </div>
+        <TrendChart
+          data={trend}
+          loading={loading}
+          empty={!loading && trend.length === 0}
+          ariaLabel={chartAriaLabel}
+          emptyLabel={chartEmptyLabel}
+          color={chartColor}
+          yAxisFormat={yAxisFormat}
+          height={300}
+        />
       </div>
 
-      {/* Playlist distribution */}
-      {data.playlistDistribution.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <div className="mb-4 flex items-center gap-2">
-            <Film className="h-5 w-5 text-primary" />
-            <h3 className="text-sm font-semibold tracking-tight">{t('playlistDistributionTitle')}</h3>
-          </div>
+      <div className="rounded-lg border border-border bg-card p-5 shadow-xs" role="region" aria-label={t('performersTitle')}>
+        <div className="mb-4 flex items-center gap-2">
+          <BarChart3 className="h-5 w-5 text-primary" aria-hidden />
+          <h3 className="text-sm font-semibold tracking-tight">{t('performersTitle')}</h3>
+        </div>
+        {performers.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted-foreground">{t('performersEmpty')}</p>
+        ) : (
           <div className="space-y-2">
-            {data.playlistDistribution.map((p) => (
-              <div key={p.id} className="flex items-center gap-3">
-                <span className="w-32 truncate text-sm font-medium text-foreground">{p.name}</span>
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-blue-500/70"
-                    style={{ width: `${(p.count / data.total) * 100}%` }}
-                  />
+            {performers.map((p, i) => (
+              <motion.div
+                key={p.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.03 * i, duration: 0.2 }}
+                className="flex items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-muted/30"
+              >
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
+                  {i + 1}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <span className="block truncate text-sm font-medium text-foreground">{p.name}</span>
+                  {p.subMetric && (
+                    <span className="block truncate text-xs text-muted-foreground">{p.subMetric}</span>
+                  )}
                 </div>
-                <span className="text-xs text-muted-foreground">{p.count}</span>
-              </div>
+                {p.status && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className={cn('h-2 w-2 rounded-full', STATUS_COLORS[p.status])} />
+                  </span>
+                )}
+                <span className="text-sm font-semibold text-foreground">{p.metric}</span>
+                <span className="text-xs text-muted-foreground">{p.metricLabel}</span>
+              </motion.div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
+    </>
+  );
+}
 
-      {/* Per-screen table */}
-      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-        <div className="border-b border-border p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <MonitorPlay className="h-5 w-5 text-primary" />
-              <h3 className="text-sm font-semibold tracking-tight">{t('perScreenTitle')}</h3>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Filter className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  className="h-9 w-48 ps-8 text-sm"
-                  placeholder={t('searchPlaceholder')}
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
+function PerScreenTable({
+  filteredScreens,
+  search,
+  setSearch,
+  canExport,
+  onExport,
+  t,
+  tAnalytics,
+  locale,
+  onRowClick,
+}: {
+  filteredScreens: PerScreenAnalytics[];
+  search: string;
+  setSearch: (s: string) => void;
+  canExport: boolean;
+  onExport: () => void;
+  t: ReturnType<typeof useTranslations<'analyticsPage'>>;
+  tAnalytics: ReturnType<typeof useTranslations<'screenAnalytics'>>;
+  locale: string;
+  onRowClick: (id: string) => void;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-card shadow-xs overflow-hidden">
+      <div className="border-b border-border p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <MonitorPlay className="h-5 w-5 text-primary" aria-hidden />
+            <h3 className="text-sm font-semibold tracking-tight">{t('perScreenTitle')}</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              className="h-9 w-48 text-sm"
+              placeholder={t('searchPlaceholder')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label={t('searchPlaceholder')}
+            />
+            {canExport && (
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-xl"
                 disabled={!filteredScreens.length}
-                onClick={exportCsv}
+                onClick={onExport}
               >
                 <Download className="me-1.5 h-4 w-4" />
                 {t('exportCsv')}
               </Button>
-            </div>
+            )}
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground">
-                <th className="px-4 py-3 text-start font-semibold">{t('colScreen')}</th>
-                <th className="px-4 py-3 text-start font-semibold">{t('colStatus')}</th>
-                <th className="px-4 py-3 text-start font-semibold">{t('colPlaylist')}</th>
-                <th className="px-4 py-3 text-start font-semibold">{t('colLocation')}</th>
-                <th className="px-4 py-3 text-start font-semibold">{t('colLastSeen')}</th>
-                <th className="px-4 py-3 text-start font-semibold">{t('colUptime')}</th>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground">
+              <th scope="col" className="px-4 py-3 text-start font-semibold">{t('colScreen')}</th>
+              <th scope="col" className="px-4 py-3 text-start font-semibold">{t('colStatus')}</th>
+              <th scope="col" className="px-4 py-3 text-start font-semibold">{t('colPlaylist')}</th>
+              <th scope="col" className="px-4 py-3 text-start font-semibold">{t('colLocation')}</th>
+              <th scope="col" className="px-4 py-3 text-start font-semibold">{t('colLastSeen')}</th>
+              <th scope="col" className="px-4 py-3 text-start font-semibold">{t('colUptime')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredScreens.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                  {t('noSearchResults')}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredScreens.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-sm text-muted-foreground">
-                    {t('noSearchResults')}
+            ) : (
+              filteredScreens.map((s) => (
+                <tr
+                  key={s.id}
+                  className="border-b border-border/50 last:border-0 hover:bg-muted/20 cursor-pointer"
+                  onClick={() => onRowClick(s.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') onRowClick(s.id);
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`${s.name}, ${s.status}`}
+                >
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-foreground">{s.name}</div>
+                    <div className="font-mono text-[10px] text-muted-foreground">{s.serialNumber}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className={cn('h-2 w-2 rounded-full', STATUS_COLORS[s.status])} />
+                      <span className={cn('text-xs font-semibold', STATUS_TEXT[s.status])}>
+                        {tAnalytics('status' + s.status.charAt(0) + s.status.slice(1).toLowerCase())}
+                      </span>
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">{s.activePlaylist ?? '—'}</td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {s.location ? (
+                      <span className="inline-flex items-center gap-1">
+                        <MapPin className="h-3 w-3" aria-hidden />
+                        {s.location}
+                      </span>
+                    ) : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">{formatRelative(s.lastSeenAt, locale)}</td>
+                  <td className="px-4 py-3 text-xs font-medium text-foreground">
+                    {s.uptimeSec > 0 ? formatUptime(s.uptimeSec) : '—'}
                   </td>
                 </tr>
-              ) : (
-                filteredScreens.map((s, i) => (
-                  <motion.tr
-                    key={s.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.01 * i, duration: 0.2 }}
-                    className="border-b border-border/50 last:border-0 hover:bg-muted/20"
-                  >
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-foreground">{s.name}</div>
-                      <div className="font-mono text-[10px] text-muted-foreground">{s.serialNumber}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className={cn('h-2 w-2 rounded-full', STATUS_COLORS[s.status])} />
-                        <span className={cn('text-xs font-semibold', STATUS_TEXT[s.status])}>
-                          {tAnalytics('status' + s.status.charAt(0) + s.status.slice(1).toLowerCase())}
-                        </span>
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">{s.activePlaylist ?? '—'}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {s.location ? (
-                        <span className="inline-flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {s.location}
-                        </span>
-                      ) : '—'}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">{formatRelative(s.lastSeenAt, locale)}</td>
-                    <td className="px-4 py-3 text-xs font-medium text-foreground">
-                      {s.uptimeSec > 0 ? formatUptime(s.uptimeSec) : '—'}
-                    </td>
-                  </motion.tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

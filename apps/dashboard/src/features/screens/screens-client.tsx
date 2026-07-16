@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
-import { useTranslations } from 'next-intl';
-import { motion } from 'framer-motion';
-import { Monitor, Search, Trash2, CheckSquare, Radio, Download, LayoutGrid, Table as TableIcon, RefreshCw, MoreHorizontal, BadgeAlert, PenLine, Zap, AlertTriangle } from 'lucide-react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import type { Route } from 'next';
+import { useTranslations, useLocale } from 'next-intl';
+import { Monitor, Search, Trash2, CheckSquare, Radio, Download, LayoutGrid, Table as TableIcon, RefreshCw, MoreHorizontal, BadgeAlert, PenLine, Zap, AlertTriangle, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScreenActions } from '@/features/screens/hooks/use-screen-actions';
 import { Button } from '@/components/ui/button';
@@ -52,9 +53,11 @@ type PlaylistOption = ApiPlaylistOption;
 
 export function ScreensClient({ locale }: Props) {
   const t = useTranslations('screensClient');
+  const activeLocale = useLocale();
+  const router = useRouter();
   const { workspaceId, workspaces, workspaceDataEpoch, bumpWorkspaceDataEpoch, pairingActivityEpoch } =
     useWorkspace();
-  const { screens, setScreens, isLoading, reload } = useApiScreens(workspaceId);
+  const { screens, setScreens, isLoading, isError, reload } = useApiScreens(workspaceId);
   useScreenRealtime(workspaceId, setScreens);
 
   const canAssignPlayback = useMemo(() => {
@@ -64,7 +67,7 @@ export function ScreensClient({ locale }: Props) {
 
   const canClaimPairing = useMemo(() => {
     const r = workspaces.find((w) => w.id === workspaceId)?.role;
-    return r === 'OWNER' || r === 'ADMIN';
+    return r === 'OWNER' || r === 'EDITOR';
   }, [workspaces, workspaceId]);
 
   const [playlists, setPlaylists] = useState<PlaylistOption[]>([]);
@@ -145,18 +148,36 @@ export function ScreensClient({ locale }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearch = useDeferredValue(searchQuery);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [branchFilter, setBranchFilter] = useState<string>('all');
+  const [contentFilter, setContentFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const lastSelectedAnchor = useRef<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bulkPlaylistId, setBulkPlaylistId] = useState<string>('');
   const [bulkSyncBusy, setBulkSyncBusy] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'single' | 'bulk'; screenId?: string; screenName?: string } | null>(null);
 
+  const branchOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const s of screens) {
+      if (s.playlistGroupId && s.playlistGroup && !seen.has(s.playlistGroupId)) {
+        seen.set(s.playlistGroupId, s.playlistGroup.name);
+      }
+    }
+    return Array.from(seen, ([id, name]) => ({ id, name }));
+  }, [screens]);
+
   const filteredScreens = useMemo(() => {
     const q = deferredSearch.trim().toLowerCase();
     const filtered = screens.filter((s) => {
       if (statusFilter !== 'all' && s.status !== statusFilter) return false;
+      if (branchFilter !== 'all' && s.playlistGroupId !== branchFilter) return false;
+      if (contentFilter === 'has_content' && !s.activePlaylistId) return false;
+      if (contentFilter === 'no_content' && s.activePlaylistId) return false;
       if (q) {
         return (
           s.name.toLowerCase().includes(q) ||
@@ -172,7 +193,8 @@ export function ScreensClient({ locale }: Props) {
         case 'name':
           return a.name.localeCompare(b.name);
         case 'status':
-          return a.status.localeCompare(b.status);
+          const statusOrder: Record<string, number> = { OFFLINE: 0, MAINTENANCE: 1, ONLINE: 2 };
+          return (statusOrder[a.status] ?? 3) - (statusOrder[b.status] ?? 3) || a.name.localeCompare(b.name);
         case 'serial':
           return a.serialNumber.localeCompare(b.serialNumber);
         case 'lastSeen':
@@ -182,16 +204,31 @@ export function ScreensClient({ locale }: Props) {
       }
     });
     return sorted;
-  }, [screens, deferredSearch, statusFilter, sortBy]);
+  }, [screens, deferredSearch, statusFilter, branchFilter, contentFilter, sortBy]);
 
-  const toggleSelect = useCallback((id: string) => {
+  const toggleSelect = useCallback((id: string, shiftKey = false) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
+      if (shiftKey && lastSelectedAnchor.current) {
+        const anchorId = lastSelectedAnchor.current;
+        const ids = filteredScreens.map((s) => s.id);
+        const anchorIdx = ids.indexOf(anchorId);
+        const currentIdx = ids.indexOf(id);
+        if (anchorIdx !== -1 && currentIdx !== -1) {
+          const start = Math.min(anchorIdx, currentIdx);
+          const end = Math.max(anchorIdx, currentIdx);
+          for (let i = start; i <= end; i++) {
+            next.add(ids[i]);
+          }
+          return next;
+        }
+      }
       if (next.has(id)) next.delete(id);
       else next.add(id);
+      lastSelectedAnchor.current = id;
       return next;
     });
-  }, []);
+  }, [filteredScreens]);
 
   const selectAll = useCallback(() => {
     setSelectedIds(new Set(filteredScreens.map((s) => s.id)));
@@ -199,7 +236,44 @@ export function ScreensClient({ locale }: Props) {
 
   const clearSelection = useCallback(() => {
     setSelectedIds(new Set());
+    lastSelectedAnchor.current = null;
   }, []);
+
+  const clearAllFilters = useCallback(() => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setBranchFilter('all');
+    setContentFilter('all');
+    setSortBy('name');
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedIds.size > 0) {
+        clearSelection();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedIds.size, clearSelection]);
+
+  const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all' || branchFilter !== 'all' || contentFilter !== 'all' || sortBy !== 'name';
+
+  const totalPages = Math.ceil(filteredScreens.length / pageSize);
+  const paginatedScreens = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredScreens.slice(start, start + pageSize);
+  }, [filteredScreens, currentPage, pageSize]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, branchFilter, contentFilter, sortBy]);
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
 
   const bulkDelete = async () => {
     if (!workspaceId || selectedIds.size === 0) return;
@@ -274,6 +348,10 @@ export function ScreensClient({ locale }: Props) {
     }
   };
 
+  const navigateToDetail = (s: ScreenRow) => {
+    router.push(`/${activeLocale}/screens/${s.id}` as Route);
+  };
+
   const openQuick = (s: ScreenRow) => {
     setModalScreen(s);
     setIsPairingMode(false);
@@ -281,10 +359,7 @@ export function ScreensClient({ locale }: Props) {
   };
 
   const openPairing = () => {
-    setModalScreen(null);
-    setIsPairingMode(true);
-    pairing.open();
-    setModalOpen(true);
+    router.push(`/${activeLocale}/screens/pair` as Route);
   };
 
   const exportCsv = useCallback(() => {
@@ -308,32 +383,29 @@ export function ScreensClient({ locale }: Props) {
     a.download = `screens-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [filteredScreens]);
+  }, [filteredScreens, t]);
 
   if (!workspaceId) {
     return (
-      <p className="text-[15px] text-muted-foreground">{t('selectWorkspace')}</p>
+      <p className="text-sm text-muted-foreground">{t('selectWorkspace')}</p>
     );
   }
 
   return (
-    <div className="space-y-8">
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col gap-4 rounded-2xl border border-border p-6 sm:flex-row sm:items-center sm:justify-between"
-      >
+    <div className="mx-auto max-w-[1400px] px-6 py-6 space-y-6" role="region" aria-label={t('pageTitle')}>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl font-bold tracking-tight">{t('pageTitle')}</h1>
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-mono-nums text-xs text-muted-foreground">
             <span className="text-foreground">{new Intl.NumberFormat(locale).format(screens.length)}</span> {t('screensCount')}
           </p>
-          <Button variant="outline" className="rounded-xl" onClick={() => void reload()}>
+          <Button variant="outline" className="rounded-lg" onClick={() => void reload()}>
             {t('refresh')}
           </Button>
           {canClaimPairing && (
             <Button
               variant="cta"
-              className="rounded-xl font-semibold"
+              className="rounded-lg font-semibold"
               onClick={openPairing}
             >
               <Radio className="me-2 h-4 w-4" />
@@ -341,24 +413,36 @@ export function ScreensClient({ locale }: Props) {
             </Button>
           )}
         </div>
-      </motion.div>
+      </div>
 
       {screens.length > 0 && <ScreenAnalyticsPanel />}
 
-      {screens.length > 0 && (
+      {(screens.length > 0 || isError) && (
         <div className="flex flex-wrap items-center gap-3">
-          <UsageIndicator screenCount={screens.length} />
+          {screens.length > 0 && <UsageIndicator screenCount={screens.length} />}
           <div className="relative flex-1 min-w-[200px]">
             <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder={t('searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="rounded-xl ps-9"
+              className="rounded-lg ps-9 pe-9"
+              role="searchbox"
+              aria-label={t('searchPlaceholder')}
             />
+            {searchQuery && (
+              <button
+                type="button"
+                className="absolute end-2 top-1/2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground hover:text-foreground"
+                onClick={() => setSearchQuery('')}
+                aria-label={t('clearSearch')}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
           <select
-            className="h-10 rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+            className="h-9 rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             aria-label={t('filterByStatus')}
@@ -369,7 +453,28 @@ export function ScreensClient({ locale }: Props) {
             <option value="MAINTENANCE">{t('filterMaintenance')}</option>
           </select>
           <select
-            className="h-10 rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+            className="h-9 rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
+            value={branchFilter}
+            onChange={(e) => setBranchFilter(e.target.value)}
+            aria-label={t('filterByBranch')}
+          >
+            <option value="all">{t('branchAll')}</option>
+            {branchOptions.map((b) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
+          <select
+            className="h-9 rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
+            value={contentFilter}
+            onChange={(e) => setContentFilter(e.target.value)}
+            aria-label={t('filterByContent')}
+          >
+            <option value="all">{t('contentAll')}</option>
+            <option value="has_content">{t('contentHasContent')}</option>
+            <option value="no_content">{t('contentNoContent')}</option>
+          </select>
+          <select
+            className="h-9 rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             aria-label={t('sortBy')}
@@ -382,7 +487,7 @@ export function ScreensClient({ locale }: Props) {
           {canAssignPlayback && (
             <Button
               variant="outline"
-              className="rounded-xl"
+              className="rounded-lg"
               onClick={selectAll}
               disabled={filteredScreens.length === 0}
             >
@@ -393,14 +498,14 @@ export function ScreensClient({ locale }: Props) {
           <Button
             variant="outline"
             size="sm"
-            className="rounded-xl"
+            className="rounded-lg"
             disabled={!filteredScreens.length}
             onClick={exportCsv}
           >
             <Download className="me-1.5 h-4 w-4" />
             {t('exportCsv')}
           </Button>
-          <div className="flex items-center rounded-xl border border-border bg-card p-0.5">
+          <div className="flex items-center rounded-lg border border-border bg-card p-0.5">
             <button
               type="button"
               onClick={() => setViewMode('cards')}
@@ -426,11 +531,79 @@ export function ScreensClient({ locale }: Props) {
               <TableIcon className="h-4 w-4" />
             </button>
           </div>
+          {hasActiveFilters && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-sm text-primary hover:underline"
+              onClick={clearAllFilters}
+            >
+              {t('clearAllFilters')}
+            </Button>
+          )}
+        </div>
+      )}
+
+      {(statusFilter !== 'all' || branchFilter !== 'all' || contentFilter !== 'all' || searchQuery !== '') && screens.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2" role="region" aria-label={t('filterByStatus')}>
+          {searchQuery !== '' && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground">
+              {t('filterChipSearch', { value: searchQuery })}
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => setSearchQuery('')}
+                aria-label={t('removeFilter')}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+          {statusFilter !== 'all' && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground">
+              {t('filterChipStatus', { value: statusFilter === 'ONLINE' ? t('filterOnline') : statusFilter === 'OFFLINE' ? t('filterOffline') : t('filterMaintenance') })}
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => setStatusFilter('all')}
+                aria-label={t('removeFilter')}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+          {branchFilter !== 'all' && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground">
+              {t('filterChipBranch', { value: branchOptions.find((b) => b.id === branchFilter)?.name ?? branchFilter })}
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => setBranchFilter('all')}
+                aria-label={t('removeFilter')}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+          {contentFilter !== 'all' && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground">
+              {contentFilter === 'has_content' ? t('contentHasContent') : t('contentNoContent')}
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => setContentFilter('all')}
+                aria-label={t('removeFilter')}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
         </div>
       )}
 
       {selectedIds.size > 0 && (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4">
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
           <span className="text-sm font-semibold text-foreground">
             {t('selectedCount', { count: selectedIds.size })}
           </span>
@@ -450,7 +623,7 @@ export function ScreensClient({ locale }: Props) {
           {canAssignPlayback && bulkPlaylistId && (
             <Button
               variant="cta"
-              className="rounded-xl text-sm"
+              className="rounded-lg text-sm"
               disabled={bulkBusy}
               onClick={() => void bulkAssignPlaylist()}
             >
@@ -460,7 +633,7 @@ export function ScreensClient({ locale }: Props) {
           {canAssignPlayback && (
             <Button
               variant="outline"
-              className="rounded-xl text-sm"
+              className="rounded-lg text-sm"
               disabled={bulkSyncBusy}
               onClick={() => void bulkSyncContent()}
             >
@@ -470,7 +643,7 @@ export function ScreensClient({ locale }: Props) {
           )}
           <Button
             variant="outline"
-            className="rounded-xl text-sm hover:text-destructive"
+            className="rounded-lg text-sm hover:text-destructive"
             disabled={bulkBusy}
             onClick={() => setDeleteTarget({ type: 'bulk' })}
           >
@@ -479,7 +652,7 @@ export function ScreensClient({ locale }: Props) {
           </Button>
           <Button
             variant="ghost"
-            className="rounded-xl text-sm"
+            className="rounded-lg text-sm"
             disabled={bulkBusy || bulkSyncBusy}
             onClick={clearSelection}
           >
@@ -492,8 +665,21 @@ export function ScreensClient({ locale }: Props) {
         <div aria-busy="true" aria-live="polite">
           <CardGridSkeleton />
         </div>
+      ) : isError ? (
+        <div className="vc-card-surface flex flex-col items-center gap-4 rounded-lg py-16" role="alert">
+          <AlertTriangle className="h-12 w-12 text-destructive/50" />
+          <p className="font-medium text-foreground">{t('errorLoadFailed')}</p>
+          <Button
+            variant="outline"
+            className="rounded-lg"
+            onClick={() => void reload()}
+          >
+            <RefreshCw className="me-2 h-4 w-4" />
+            {t('errorRetry')}
+          </Button>
+        </div>
       ) : screens.length === 0 ? (
-        <div className="vc-card-surface flex flex-col items-center gap-4 rounded-2xl py-16">
+        <div className="vc-card-surface flex flex-col items-center gap-4 rounded-lg py-16">
           <Monitor className="h-12 w-12 text-muted-foreground/40" />
           <p className="font-medium text-foreground">{t('emptyTitle')}</p>
           <p className="max-w-md text-center text-sm text-muted-foreground">
@@ -502,7 +688,7 @@ export function ScreensClient({ locale }: Props) {
           {canClaimPairing && (
             <Button
               variant="cta"
-              className="rounded-xl font-semibold"
+              className="rounded-lg font-semibold"
               onClick={openPairing}
             >
               <Radio className="me-2 h-4 w-4" />
@@ -514,36 +700,41 @@ export function ScreensClient({ locale }: Props) {
           </p>
         </div>
       ) : filteredScreens.length === 0 ? (
-        <div className="vc-card-surface flex flex-col items-center gap-4 rounded-2xl py-16">
+        <div className="vc-card-surface flex flex-col items-center gap-4 rounded-lg py-16">
           <Monitor className="h-12 w-12 text-muted-foreground/40" />
           <p className="font-medium text-foreground">{t('noResults')}</p>
           <p className="max-w-md text-center text-sm text-muted-foreground">
             {t('noResultsDesc')}
           </p>
+          {hasActiveFilters && (
+            <Button variant="outline" className="rounded-lg" onClick={clearAllFilters}>
+              {t('noResultsClear')}
+            </Button>
+          )}
         </div>
       ) : viewMode === 'table' ? (
-        <div className="overflow-x-auto rounded-2xl border border-border">
+        <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-sm">
             <thead className="vc-table-head-surface">
               <tr className="text-start">
-                {canAssignPlayback && <th className="w-10 px-4 py-3" />}
-                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colName')}</th>
-                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colSerial')}</th>
-                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colStatus')}</th>
-                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colLocation')}</th>
-                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colPlaylist')}</th>
-                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colLastSeen')}</th>
-                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colActions')}</th>
+                {canAssignPlayback && <th scope="col" className="w-10 px-4 py-3" />}
+                <th scope="col" className="px-4 py-3 text-start font-semibold text-foreground">{t('colName')}</th>
+                <th scope="col" className="px-4 py-3 text-start font-semibold text-foreground">{t('colSerial')}</th>
+                <th scope="col" className="px-4 py-3 text-start font-semibold text-foreground">{t('colStatus')}</th>
+                <th scope="col" className="px-4 py-3 text-start font-semibold text-foreground">{t('colLocation')}</th>
+                <th scope="col" className="px-4 py-3 text-start font-semibold text-foreground">{t('colPlaylist')}</th>
+                <th scope="col" className="px-4 py-3 text-start font-semibold text-foreground">{t('colLastSeen')}</th>
+                <th scope="col" className="px-4 py-3 text-start font-semibold text-foreground">{t('colActions')}</th>
               </tr>
             </thead>
             <tbody>
-              {filteredScreens.map((screen) => (
+              {paginatedScreens.map((screen) => (
                 <tr key={screen.id} className="vc-table-row border-t">
                   {canAssignPlayback && (
                     <td className="px-4 py-3">
                       <button
                         type="button"
-                        onClick={() => toggleSelect(screen.id)}
+                        onClick={(e) => toggleSelect(screen.id, e.shiftKey)}
                         className={cn(
                           'flex h-5 w-5 items-center justify-center rounded border-2 transition',
                           selectedIds.has(screen.id)
@@ -556,7 +747,7 @@ export function ScreensClient({ locale }: Props) {
                       </button>
                     </td>
                   )}
-                  <td className="cursor-pointer px-4 py-3 font-medium text-foreground" onClick={() => openQuick(screen)}>{screen.name}</td>
+                  <td className="cursor-pointer px-4 py-3 font-medium text-foreground" onClick={() => navigateToDetail(screen)}>{screen.name}</td>
                   <td className="px-4 py-3 font-mono-nums text-muted-foreground">{screen.serialNumber}</td>
                   <td className="px-4 py-3">
                     <ScreenFleetStatusBadge status={screen.status} lastSeenAt={screen.lastSeenAt} locale={locale} tone="card" />
@@ -575,10 +766,14 @@ export function ScreensClient({ locale }: Props) {
                           <MoreHorizontal className="h-4 w-4" />
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="min-w-[11rem] rounded-xl">
+                      <DropdownMenuContent align="end" className="min-w-[11rem] rounded-lg">
+                        <DropdownMenuItem onClick={() => navigateToDetail(screen)}>
+                          <Monitor className="me-2 h-4 w-4" />
+                          {t('viewDetail')}
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => openQuick(screen)}>
                           <PenLine className="me-2 h-4 w-4" />
-                          {t('screenSettings')}
+                          {t('renameScreen')}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => void sendRemoteCommand(screen.id, 'refresh_content')}>
                           <RefreshCw className="me-2 h-4 w-4" />
@@ -590,7 +785,7 @@ export function ScreensClient({ locale }: Props) {
                         </DropdownMenuItem>
                         {screen.overridePlaylistId && (
                           <DropdownMenuItem disabled>
-                            <Zap className="me-2 h-4 w-4 text-amber-500" />
+                            <Zap className="me-2 h-4 w-4 text-warning" />
                             {t('overrideBadge')}
                           </DropdownMenuItem>
                         )}
@@ -611,21 +806,22 @@ export function ScreensClient({ locale }: Props) {
           </table>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {filteredScreens.map((screen, i) => (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {paginatedScreens.map((screen, i) => (
             <ScreenVisualCard
               key={screen.id}
               screen={screen}
               locale={locale}
               workspaceId={workspaceId}
               index={i}
-              onCardClick={openQuick}
+              onCardClick={navigateToDetail}
               onEdit={(s) => openQuick(s)}
               onDelete={(id) => {
                 const s = screens.find((sc) => sc.id === id);
                 setDeleteTarget({ type: 'single', screenId: id, screenName: s?.name });
               }}
               onRemote={(id, cmd) => void sendRemoteCommand(id, cmd)}
+              onAssignContent={(s) => openQuick(s)}
               playlists={playlists}
               canAssignPlayback={canAssignPlayback}
               assignPlaylistBusy={assignPlaylistScreenId === screen.id}
@@ -635,6 +831,44 @@ export function ScreensClient({ locale }: Props) {
             />
           ))}
         </div>
+      )}
+
+      {totalPages > 1 && (
+        <nav aria-label={t('pagination')} className="flex flex-wrap items-center justify-center gap-4 pt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-lg"
+            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            aria-label={t('prevPage')}
+          >
+            {t('prevPage')}
+          </Button>
+          <span className="text-sm text-muted-foreground" aria-live="polite">
+            {t('pageRange', { start: (currentPage - 1) * pageSize + 1, end: Math.min(currentPage * pageSize, filteredScreens.length), total: filteredScreens.length })}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-lg"
+            disabled={currentPage >= totalPages}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            aria-label={t('nextPage')}
+          >
+            {t('nextPage')}
+          </Button>
+          <select
+            className="h-8 rounded-lg border border-border bg-background/80 px-2 text-xs"
+            value={String(pageSize)}
+            onChange={(e) => { setPageSize(parseInt(e.target.value, 10)); setCurrentPage(1); }}
+            aria-label={t('pageSize')}
+          >
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </nav>
       )}
 
       <ScreenSetupModal

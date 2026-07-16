@@ -52,7 +52,7 @@ function FieldInput({
         {children}
       </div>
       {error ? (
-        <p id={errorId} role="alert" className="text-xs text-red-600 dark:text-red-400">{error}</p>
+        <p id={errorId} role="alert" className="text-xs text-destructive">{error}</p>
       ) : null}
     </div>
   );
@@ -90,26 +90,26 @@ export function CreateScreenDialogContent({
   };
 
   return (
-    <DialogContent className="rounded-2xl border-border sm:max-w-md">
+    <DialogContent className="rounded-lg border-border sm:max-w-md">
       <DialogHeader>
         <DialogTitle>{t('addTitle')}</DialogTitle>
         <DialogDescription>{t('addDescription')}</DialogDescription>
       </DialogHeader>
       <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
         <FieldInput label={t('screenName')} error={form.formState.errors.name?.message}>
-          <Input {...form.register('name')} className="rounded-xl" placeholder={t('screenName')} />
+          <Input {...form.register('name')} className="rounded-lg" placeholder={t('screenName')} />
         </FieldInput>
         <FieldInput label={t('serialNumber')} error={form.formState.errors.serialNumber?.message}>
-          <Input {...form.register('serialNumber')} className="font-mono-nums rounded-xl" placeholder={t('serialNumber')} />
+          <Input {...form.register('serialNumber')} className="font-mono-nums rounded-lg" placeholder={t('serialNumber')} />
         </FieldInput>
         <FieldInput label={t('location')} error={form.formState.errors.location?.message}>
-          <Input {...form.register('location')} className="rounded-xl" placeholder={t('location')} />
+          <Input {...form.register('location')} className="rounded-lg" placeholder={t('location')} />
         </FieldInput>
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button type="button" variant="outline" className="rounded-xl" disabled={form.formState.isSubmitting} onClick={onCancel}>
+          <Button type="button" variant="outline" className="rounded-lg" disabled={form.formState.isSubmitting} onClick={onCancel}>
             {t('cancel')}
           </Button>
-          <Button type="submit" variant="cta" className="rounded-xl font-semibold" disabled={form.formState.isSubmitting}>
+          <Button type="submit" variant="cta" className="rounded-lg font-semibold" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting ? (
               <>
                 <Loader2 className="me-2 h-4 w-4 animate-spin" />
@@ -162,24 +162,24 @@ export function EditScreenDialogContent({
   };
 
   return (
-    <DialogContent className="rounded-2xl border-border sm:max-w-md">
+    <DialogContent className="rounded-lg border-border sm:max-w-md">
       <DialogHeader>
         <DialogTitle>{t('editTitle')}</DialogTitle>
         <DialogDescription>{t('editDescription')}</DialogDescription>
       </DialogHeader>
       <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
         <FieldInput label={t('screenName')} error={form.formState.errors.name?.message}>
-          <Input {...form.register('name')} className="rounded-xl" />
+          <Input {...form.register('name')} className="rounded-lg" />
         </FieldInput>
         <FieldInput label={t('serialNumber')}>
-          <Input {...form.register('serialNumber')} disabled className="font-mono-nums rounded-xl" />
+          <Input {...form.register('serialNumber')} disabled className="font-mono-nums rounded-lg" />
         </FieldInput>
         <FieldInput label={t('location')} error={form.formState.errors.location?.message}>
-          <Input {...form.register('location')} className="rounded-xl" />
+          <Input {...form.register('location')} className="rounded-lg" />
         </FieldInput>
         <FieldInput label={t('status')} error={form.formState.errors.status?.message}>
           <select
-            className="h-11 w-full rounded-xl border border-border bg-card px-4 text-[15px] text-foreground outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
+            className="h-9 w-full rounded-lg border border-border bg-card px-4 text-sm text-foreground outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
             {...form.register('status')}
             aria-label={t('status')}
           >
@@ -189,10 +189,10 @@ export function EditScreenDialogContent({
           </select>
         </FieldInput>
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button type="button" variant="outline" className="rounded-xl" disabled={form.formState.isSubmitting} onClick={onCancel}>
+          <Button type="button" variant="outline" className="rounded-lg" disabled={form.formState.isSubmitting} onClick={onCancel}>
             {t('cancel')}
           </Button>
-          <Button type="submit" variant="cta" className="rounded-xl font-semibold" disabled={form.formState.isSubmitting}>
+          <Button type="submit" variant="cta" className="rounded-lg font-semibold" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting ? (
               <>
                 <Loader2 className="me-2 h-4 w-4 animate-spin" />

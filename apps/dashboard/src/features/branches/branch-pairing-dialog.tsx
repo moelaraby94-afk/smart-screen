@@ -24,7 +24,7 @@ type PairingState = {
   showProgressBanner: boolean;
   setCode: (v: string) => void;
   setName: (v: string) => void;
-  claim: () => Promise<void>;
+  claim: (playlistGroupId?: string) => Promise<void>;
   close: () => void;
   open: () => void;
 };

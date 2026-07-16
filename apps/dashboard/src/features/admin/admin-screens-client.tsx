@@ -130,8 +130,8 @@ export function AdminScreensClient() {
                         className={cn(
                           'inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em]',
                           s.isOfflineCacheMode
-                            ? 'border border-amber-500/40 bg-amber-500/15 text-amber-950 dark:text-amber-100'
-                            : 'border border-emerald-500/35 bg-emerald-500/10 text-emerald-900 dark:text-emerald-100',
+                            ? 'border border-warning/40 bg-warning/15 text-warning'
+                            : 'border border-success/35 bg-success/10 text-success',
                         )}
                       >
                         {s.isOfflineCacheMode ? t('offlineYes') : t('offlineNo')}

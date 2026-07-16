@@ -27,11 +27,13 @@ function buildCrumbs(
 
   const sectionLabels: Record<string, string> = {
     overview: t('overview'),
+    content: t('content'),
     media: t('media'),
     studio: t('studio'),
     playlists: t('playlists'),
     screens: t('screens'),
     schedules: t('schedules'),
+    scheduling: t('scheduling'),
     team: t('team'),
     billing: t('billing'),
     settings: t('settings'),
@@ -132,8 +134,8 @@ export function Breadcrumbs({
       aria-label="Breadcrumb"
       dir={rtl ? 'rtl' : 'ltr'}
       className={cn(
-        'flex items-center gap-1 px-4 py-1.5 text-[11px] text-muted-foreground sm:px-6 lg:px-10',
-        'border-b border-border/50 bg-muted/20',
+        'flex items-center gap-1 px-4 py-1.5 text-xs text-muted-foreground sm:px-6 lg:px-10',
+        'border-b border-border bg-muted/20',
       )}
     >
       {crumbs.map((crumb, idx) => {

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -26,8 +27,6 @@ const showDevTools =
   process.env.NODE_ENV === 'development' ||
   process.env.NEXT_PUBLIC_ENABLE_DEV_LOGIN === 'true';
 
-const nimbusInput =
-  'h-11 rounded-xl border border-border bg-card text-[15px] text-foreground placeholder:text-muted-foreground/50 focus-visible:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20';
 
 export function LoginForm() {
   const t = useTranslations('authForm');
@@ -42,6 +41,8 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [needsTwoFactor, setNeedsTwoFactor] = useState(false);
   const [twoFactorToken, setTwoFactorToken] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const emailRef = useRef<HTMLInputElement>(null);
 
   const applyAuthSuccess = async (payload: AuthSuccessPayload) => {
     if (payload.accessToken) {
@@ -159,17 +160,18 @@ export function LoginForm() {
               maxLength={8}
               autoComplete="one-time-code"
               placeholder="000000"
-              className={`${nimbusInput} text-center font-mono text-lg tracking-widest`}
+              className="h-9 rounded-lg text-center font-mono text-lg tracking-widest"
             />
           </div>
           {error ? (
-            <p className="text-sm text-destructive">{error}</p>
+            <p role="alert" aria-live="assertive" className="text-sm text-destructive">{error}</p>
           ) : null}
           <Button
-            className="h-11 w-full rounded-xl font-semibold"
+            className="h-10 w-full rounded-lg font-semibold"
             type="submit"
             variant="cta"
             disabled={pending || twoFactorToken.trim().length < 6}
+            aria-busy={pending}
           >
             {pending ? t('signingIn') : t('verify')}
           </Button>
@@ -186,44 +188,56 @@ export function LoginForm() {
           </button>
         </form>
       ) : (
-        <form className="space-y-5" onSubmit={onSubmit}>
+        <form className="space-y-5" onSubmit={onSubmit} aria-label="Sign in form">
         <div className="space-y-2">
           <label
-            className="text-[13px] font-medium text-foreground"
+            className="text-sm font-medium text-foreground"
             htmlFor="email"
           >
             {t('email')}
           </label>
           <Input
+            ref={emailRef}
             id="email"
             type="text"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
+            autoFocus
             autoComplete="username"
             placeholder={t('emailPlaceholder')}
-            className={nimbusInput}
+            className="h-9 rounded-lg"
           />
         </div>
         <div className="space-y-2">
           <label
-            className="text-[13px] font-medium text-foreground"
+            className="text-sm font-medium text-foreground"
             htmlFor="password"
           >
             {t('password')}
           </label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-            autoComplete="current-password"
-            className={nimbusInput}
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+              autoComplete="current-password"
+              className="h-9 rounded-lg pe-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              className="absolute inset-inline-end-0 top-0 flex h-9 w-10 items-center justify-center text-muted-foreground hover:text-foreground"
+              aria-label={showPassword ? t('hidePassword') : t('showPassword')}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
         {error ? (
-          <p className="text-sm text-destructive">{error}</p>
+          <p role="alert" aria-live="assertive" className="text-sm text-destructive">{error}</p>
         ) : null}
         <div className="flex flex-wrap justify-between gap-2 text-xs">
           <Link
@@ -240,10 +254,11 @@ export function LoginForm() {
           </Link>
         </div>
         <Button
-          className="h-11 w-full rounded-xl font-semibold"
+          className="h-10 w-full rounded-lg font-semibold"
           type="submit"
           variant="cta"
           disabled={pending}
+          aria-busy={pending}
         >
           {pending ? t('signingIn') : t('signIn')}
         </Button>
@@ -251,14 +266,14 @@ export function LoginForm() {
       )}
 
       {showDevTools && !needsTwoFactor ? (
-        <div className="rounded-xl border border-dashed border-primary/30 bg-primary/[0.04] p-4">
+        <div className="rounded-lg border border-dashed border-primary/30 bg-primary/[0.04] p-4">
           <p className="text-xs font-medium text-primary">
             {t('debugDevOnly')}
           </p>
           <Button
             type="button"
             variant="outline"
-            className="mt-3 w-full rounded-xl"
+            className="mt-3 w-full rounded-lg"
             disabled={pending}
             onClick={() => void onDevLogin()}
           >

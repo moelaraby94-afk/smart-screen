@@ -40,9 +40,9 @@ const STEP_META: Record<
   { icon: typeof Monitor; href: string; key: string }
 > = {
   create_screen: { icon: Monitor, href: '/screens', key: 'stepCreateScreen' },
-  upload_media: { icon: Upload, href: '/media', key: 'stepUploadMedia' },
-  create_playlist: { icon: ListVideo, href: '/playlists', key: 'stepCreatePlaylist' },
-  schedule_content: { icon: CalendarClock, href: '/schedules', key: 'stepScheduleContent' },
+  upload_media: { icon: Upload, href: '/content?tab=media', key: 'stepUploadMedia' },
+  create_playlist: { icon: ListVideo, href: '/content?tab=playlists', key: 'stepCreatePlaylist' },
+  schedule_content: { icon: CalendarClock, href: '/scheduling', key: 'stepScheduleContent' },
   invite_team: { icon: UserPlus, href: '/team', key: 'stepInviteTeam' },
 };
 
@@ -128,13 +128,13 @@ export function OnboardingProgressWidget() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="vc-card-surface relative overflow-hidden rounded-2xl border border-border p-6"
+      className="vc-card-surface relative overflow-hidden rounded-lg border border-border p-6"
     >
       <div className="pointer-events-none absolute -end-8 -top-8 h-32 w-32 rounded-full bg-primary/8 blur-3xl" />
 
       <div className="relative flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-ring/20">
             <Sparkles className="h-5 w-5 text-primary" strokeWidth={ICON_STROKE} />
           </div>
           <div>
@@ -176,7 +176,7 @@ export function OnboardingProgressWidget() {
               key={step}
               type="button"
               onClick={() => void handleStepClick(step)}
-              className={`flex items-center gap-3 rounded-xl border p-3 text-start transition ${
+              className={`flex items-center gap-3 rounded-lg border p-3 text-start transition ${
                 isDone
                   ? 'border-emerald-500/30 bg-emerald-500/5'
                   : 'border-border bg-card hover:border-primary/40 hover:bg-primary/5'

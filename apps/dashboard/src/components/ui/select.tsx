@@ -16,7 +16,7 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      'flex h-11 w-full items-center justify-between rounded-2xl border border-border bg-card px-4 py-2 text-[15px] text-foreground outline-none transition data-[placeholder]:text-muted-foreground/80 focus:border-primary/40 focus:ring-4 focus:ring-primary/10 dark:focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-50',
+      'flex h-9 w-full items-center justify-between rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground outline-none transition-colors duration-fast hover:border-border-strong data-[placeholder]:text-muted-foreground/80 focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50',
       className,
     )}
     {...props}
@@ -65,7 +65,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        'vc-glass relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-2xl border border-border/80 text-foreground shadow-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+        'relative z-dropdown max-h-96 min-w-[8rem] overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
         position === 'popper' &&
           'data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1',
         className,
@@ -95,7 +95,7 @@ const SelectLabel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Label
     ref={ref}
-    className={cn('px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground', className)}
+    className={cn('px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground', className)}
     {...props}
   />
 ));
@@ -108,7 +108,7 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      'relative flex w-full cursor-default select-none items-center rounded-xl py-2.5 ps-8 pe-3 text-[15px] outline-none transition-colors focus:bg-primary/10 focus:text-primary data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      'relative flex w-full cursor-default select-none items-center rounded-md py-2 ps-8 pe-3 text-sm outline-none transition-colors focus:bg-primary/10 focus:text-primary data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       className,
     )}
     {...props}
@@ -129,7 +129,7 @@ const SelectSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Separator
     ref={ref}
-    className={cn('-mx-1 my-1.5 h-px bg-border/80', className)}
+    className={cn('-mx-1 my-1.5 h-px bg-border', className)}
     {...props}
   />
 ));

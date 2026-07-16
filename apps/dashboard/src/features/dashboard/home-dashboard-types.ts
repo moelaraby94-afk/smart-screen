@@ -91,12 +91,12 @@ export function formatBytesLocale(n: number, locale: string): string {
 
 export function healthBadgeClass(h: HealthKey): string {
   return h === 'healthy'
-    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+    ? 'bg-success/10 text-success'
     : h === 'down'
-      ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+      ? 'bg-destructive/10 text-destructive'
       : h === 'paused'
-        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+        ? 'bg-warning/10 text-warning'
         : h === 'empty'
           ? 'bg-muted text-muted-foreground'
-          : 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+          : 'bg-warning/10 text-warning';
 }

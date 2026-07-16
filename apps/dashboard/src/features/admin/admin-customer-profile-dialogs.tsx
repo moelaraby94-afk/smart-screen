@@ -126,7 +126,7 @@ export function DeleteBranchDialog(props: DeleteBranchDialogProps) {
             {t('cancel')}
           </Button>
           <Button
-            className="rounded-2xl bg-red-600 hover:bg-red-600/90"
+            className="rounded-2xl bg-destructive hover:bg-destructive/90"
             disabled={props.deleting}
             onClick={props.onConfirm}
           >

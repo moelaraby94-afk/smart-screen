@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { DropResult } from '@hello-pangea/dnd';
 import { saveItemTransition, itemTransitionKey, type TransitionType, type PlaylistLocalMeta } from '@/features/playlists/playlist-transitions';
 import type { Row } from '../types';
+import type { MediaItem } from '@/features/media/media-library-client';
 
 type UseTimelineEditParams = {
   rows: Row[];
@@ -128,7 +129,7 @@ export function useTimelineEdit({
           kind: 'media',
           mediaId: media.id,
           durationSec: 10,
-          media: media as any,
+          media: media as MediaItem,
           zoneName: playlistMeta.layoutType === 'single' ? null : currentZone,
         });
         pushHistory(rows);

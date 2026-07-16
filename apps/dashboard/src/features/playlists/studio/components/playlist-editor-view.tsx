@@ -87,7 +87,7 @@ export function PlaylistEditorView(props: PlaylistEditorViewProps) {
   const t = useTranslations('playlistStudioClient');
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3" role="toolbar" aria-label={t('studioEditor')}>
       <PlaylistTopBar
         playlistName={props.playlistName}
         isPublished={props.isPublished}
@@ -118,7 +118,7 @@ export function PlaylistEditorView(props: PlaylistEditorViewProps) {
       <DragDropContext onDragEnd={props.onDragEnd}>
         <div className="grid gap-3 xl:grid-cols-[280px_1fr_280px]">
           {/* Left: Media Library */}
-          <div className="rounded-2xl border border-border/60 bg-card/40 p-3 xl:order-1">
+          <div className="rounded-2xl border border-border/60 bg-card/40 p-3 xl:order-1" role="region" aria-label={t('mediaLibrary')}>
             <MediaLibrary
               library={props.library}
               canvasLibrary={props.canvasLibrary}
@@ -165,7 +165,7 @@ export function PlaylistEditorView(props: PlaylistEditorViewProps) {
           </div>
 
           {/* Right: Inspector */}
-          <div className="xl:order-3">
+          <div className="xl:order-3" role="region" aria-label={t('inspector')}>
             <InspectorPanel
               selectionContext={props.selectionContext}
               playlistMeta={props.playlistMeta}

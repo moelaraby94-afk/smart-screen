@@ -11,11 +11,13 @@ import {
   Image as ImageIcon,
   Italic,
   Layers,
+  Lock,
   Minus,
   Circle as CircleIcon,
   Square,
   SquareStack,
   Type as TypeIcon,
+  Unlock,
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -36,6 +38,7 @@ type LayersPanelProps = {
   onSelect: (id: string) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
   onToggleVisibility: (id: string, visible: boolean) => void;
+  onToggleLock: (id: string, locked: boolean) => void;
 };
 
 function objectIcon(type: CanvasObjectJson['type']) {
@@ -58,7 +61,7 @@ function objectLabel(obj: CanvasObjectJson): string {
   return 'Object';
 }
 
-export function StudioLayersPanel({ objects, selectedId, onSelect, onReorder, onToggleVisibility }: LayersPanelProps) {
+export function StudioLayersPanel({ objects, selectedId, onSelect, onReorder, onToggleVisibility, onToggleLock }: LayersPanelProps) {
   const t = useTranslations('studio');
   const dir = useLocale() === 'ar' ? -1 : 1;
   const reversed = [...objects].reverse();
@@ -90,15 +93,18 @@ export function StudioLayersPanel({ objects, selectedId, onSelect, onReorder, on
       {objects.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t('noLayers')}</p>
       ) : (
-        <ul className="space-y-1">
+        <ul role="listbox" aria-label={t('layers')} className="space-y-1">
           {reversed.map((obj, i) => {
             const Icon = objectIcon(obj.type);
             const isSelected = obj.id === selectedId;
             const visible = obj.opacity !== 0;
+            const locked = obj.locked ?? false;
             return (
               <li
                 key={obj.id}
-                draggable
+                role="option"
+                aria-selected={isSelected}
+                draggable={!locked}
                 onDragStart={(e) => handleDragStart(e, i)}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => handleDrop(e, i)}
@@ -112,12 +118,24 @@ export function StudioLayersPanel({ objects, selectedId, onSelect, onReorder, on
                 <button
                   type="button"
                   className="shrink-0 rounded p-0.5 text-muted-foreground/60 hover:text-foreground"
+                  aria-label={visible ? t('hideLayer') : t('showLayer')}
                   onClick={(e) => {
                     e.stopPropagation();
                     onToggleVisibility(obj.id, !visible);
                   }}
                 >
                   {visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                </button>
+                <button
+                  type="button"
+                  className="shrink-0 rounded p-0.5 text-muted-foreground/60 hover:text-foreground"
+                  aria-label={locked ? t('unlockLayer') : t('lockLayer')}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleLock(obj.id, !locked);
+                  }}
+                >
+                  {locked ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
                 </button>
               </li>
             );
@@ -144,6 +162,120 @@ export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject
       </p>
       {selected ? (
         <div className="space-y-4">
+          {/* Position */}
+          <div className="space-y-1">
+            <Label className="text-xs">{t('position')}</Label>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Label htmlFor="prop-x" className="sr-only">{t('positionX')}</Label>
+                <Input
+                  id="prop-x"
+                  type="number"
+                  className="h-9"
+                  value={Math.round(selected.x)}
+                  onChange={(e) => onUpdateObject(selected.id, { x: Number(e.target.value) || 0 })}
+                  aria-label={t('positionX')}
+                />
+                <span className="text-[10px] text-muted-foreground">X</span>
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="prop-y" className="sr-only">{t('positionY')}</Label>
+                <Input
+                  id="prop-y"
+                  type="number"
+                  className="h-9"
+                  value={Math.round(selected.y)}
+                  onChange={(e) => onUpdateObject(selected.id, { y: Number(e.target.value) || 0 })}
+                  aria-label={t('positionY')}
+                />
+                <span className="text-[10px] text-muted-foreground">Y</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Size (for objects with width/height) */}
+          {selected.type !== 'line' && selected.type !== 'arrow' && (
+            <div className="space-y-1">
+              <Label className="text-xs">{t('size')}</Label>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Label htmlFor="prop-w" className="sr-only">{t('widthShort')}</Label>
+                  <Input
+                    id="prop-w"
+                    type="number"
+                    className="h-9"
+                    value={Math.round(selected.width ?? 0)}
+                    onChange={(e) => onUpdateObject(selected.id, { width: Number(e.target.value) || 0 })}
+                    aria-label={t('widthShort')}
+                  />
+                  <span className="text-[10px] text-muted-foreground">W</span>
+                </div>
+                <div className="flex-1">
+                  <Label htmlFor="prop-h" className="sr-only">{t('heightShort')}</Label>
+                  <Input
+                    id="prop-h"
+                    type="number"
+                    className="h-9"
+                    value={Math.round(selected.height ?? 0)}
+                    onChange={(e) => onUpdateObject(selected.id, { height: Number(e.target.value) || 0 })}
+                    aria-label={t('heightShort')}
+                  />
+                  <span className="text-[10px] text-muted-foreground">H</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Rotation */}
+          <div className="space-y-1">
+            <Label className="text-xs">{t('rotation')}</Label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min={0}
+                max={360}
+                step={1}
+                value={selected.rotation ?? 0}
+                onChange={(e) => onUpdateObject(selected.id, { rotation: Number(e.target.value) })}
+                aria-label={t('rotation')}
+                className="flex-1 accent-primary"
+              />
+              <span className="font-mono-nums text-xs text-muted-foreground">{Math.round(selected.rotation ?? 0)}°</span>
+            </div>
+          </div>
+
+          {/* Text content for text layers */}
+          {selected.type === 'text' && (
+            <div className="space-y-1">
+              <Label htmlFor="prop-text" className="text-xs">{t('textContent')}</Label>
+              <textarea
+                id="prop-text"
+                className="h-20 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary/40"
+                value={selected.text ?? ''}
+                onChange={(e) => onUpdateObject(selected.id, { text: e.target.value })}
+                aria-label={t('textContent')}
+              />
+            </div>
+          )}
+
+          {/* Fit mode for image layers */}
+          {selected.type === 'image' && (
+            <div className="space-y-1">
+              <Label htmlFor="prop-fit" className="text-xs">{t('fitMode')}</Label>
+              <select
+                id="prop-fit"
+                className="h-9 w-full rounded-lg border border-border bg-card px-2 text-sm"
+                value={selected.fitMode ?? 'contain'}
+                onChange={(e) => onUpdateObject(selected.id, { fitMode: e.target.value as 'contain' | 'cover' | 'fill' })}
+                aria-label={t('fitMode')}
+              >
+                <option value="contain">{t('fitContain')}</option>
+                <option value="cover">{t('fitCover')}</option>
+                <option value="fill">{t('fitFill')}</option>
+              </select>
+            </div>
+          )}
+
           <div className="space-y-1">
             <Label className="text-xs">{t('fill')}</Label>
             <div className="flex gap-2">
@@ -346,7 +478,7 @@ export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject
           )}
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">{t('selectObject')}</p>
+        <p className="text-sm text-muted-foreground">{t('selectLayerHint')}</p>
       )}
     </motion.aside>
   );

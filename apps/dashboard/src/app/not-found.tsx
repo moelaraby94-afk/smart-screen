@@ -31,7 +31,7 @@ export default async function GlobalNotFound() {
       </div>
       <Link
         href={`/${locale}`}
-        className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+        className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
       >
         <Home className="h-4 w-4" strokeWidth={1.8} />
         {t('backToHome')}

@@ -66,7 +66,7 @@ export function HijriDateWidget() {
 
   if (error) {
     return (
-      <div className="vc-card-surface rounded-2xl border border-border p-5">
+      <div className="vc-card-surface rounded-lg border border-border p-5">
         <p className="text-sm text-muted-foreground">{t('error')}</p>
       </div>
     );
@@ -74,7 +74,7 @@ export function HijriDateWidget() {
 
   if (!data) {
     return (
-      <div className="vc-card-surface rounded-2xl border border-border p-5">
+      <div className="vc-card-surface rounded-lg border border-border p-5">
         <p className="text-sm text-muted-foreground">{t('notConfigured')}</p>
       </div>
     );
@@ -89,13 +89,13 @@ export function HijriDateWidget() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="vc-card-surface relative overflow-hidden rounded-2xl border border-border p-5"
+      className="vc-card-surface relative overflow-hidden rounded-lg border border-border p-5"
       dir={locale === 'ar' ? 'rtl' : 'ltr'}
     >
       <div className="pointer-events-none absolute -end-8 -top-8 h-28 w-28 rounded-full bg-emerald-500/8 blur-3xl" />
 
       <div className="relative flex items-center gap-2.5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 ring-1 ring-ring/20">
           <Calendar
             className="h-[18px] w-[18px] text-emerald-600"
             strokeWidth={ICON_STROKE}

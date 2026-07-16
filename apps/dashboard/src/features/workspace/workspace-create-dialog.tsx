@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -40,8 +39,6 @@ async function readApiError(res: Response): Promise<string> {
 
 export function WorkspaceCreateDialog({ open, onOpenChange, onCreated }: Props) {
   const t = useTranslations('workspaceCreateDialog');
-  const locale = useLocale();
-  const router = useRouter();
   const { refreshWorkspaces, setWorkspaceId, bumpWorkspaceDataEpoch } = useWorkspace();
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);

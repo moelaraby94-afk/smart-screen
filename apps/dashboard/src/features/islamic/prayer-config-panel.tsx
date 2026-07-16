@@ -134,9 +134,9 @@ export function PrayerConfigPanel() {
   }
 
   return (
-    <div className="vc-card-surface rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
+    <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
       <div className="flex items-center gap-2.5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 ring-1 ring-ring/20">
           <Compass className="h-4 w-4 text-emerald-600" strokeWidth={ICON_STROKE} />
         </div>
         <div>
@@ -159,7 +159,7 @@ export function PrayerConfigPanel() {
               value={latitude}
               onChange={(e) => setLatitude(e.target.value)}
               placeholder="24.7136"
-              className="rounded-xl"
+              className="rounded-lg"
             />
           </div>
           <div className="space-y-2">
@@ -170,7 +170,7 @@ export function PrayerConfigPanel() {
               value={longitude}
               onChange={(e) => setLongitude(e.target.value)}
               placeholder="46.6753"
-              className="rounded-xl"
+              className="rounded-lg"
             />
           </div>
           <div className="space-y-2">
@@ -179,7 +179,7 @@ export function PrayerConfigPanel() {
               value={city}
               onChange={(e) => setCity(e.target.value)}
               placeholder={t('cityPlaceholder')}
-              className="rounded-xl"
+              className="rounded-lg"
             />
           </div>
         </div>
@@ -189,7 +189,7 @@ export function PrayerConfigPanel() {
           <div className="space-y-2">
             <Label>{t('calculationMethod')}</Label>
             <select
-              className="h-10 w-full rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+              className="h-9 w-full rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
               value={method}
               onChange={(e) => setMethod(Number(e.target.value))}
             >
@@ -203,7 +203,7 @@ export function PrayerConfigPanel() {
           <div className="space-y-2">
             <Label>{t('asrJuristic')}</Label>
             <select
-              className="h-10 w-full rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+              className="h-9 w-full rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
               value={asrJuristic}
               onChange={(e) => setAsrJuristic(Number(e.target.value))}
             >
@@ -223,7 +223,7 @@ export function PrayerConfigPanel() {
               max={60}
               value={bufferBefore}
               onChange={(e) => setBufferBefore(Number(e.target.value))}
-              className="rounded-xl"
+              className="rounded-lg"
             />
             <p className="text-xs text-muted-foreground">{t('bufferBeforeHint')}</p>
           </div>
@@ -235,7 +235,7 @@ export function PrayerConfigPanel() {
               max={120}
               value={bufferAfter}
               onChange={(e) => setBufferAfter(Number(e.target.value))}
-              className="rounded-xl"
+              className="rounded-lg"
             />
             <p className="text-xs text-muted-foreground">{t('bufferAfterHint')}</p>
           </div>
@@ -266,7 +266,7 @@ export function PrayerConfigPanel() {
         </div>
 
         {/* Auto-pause toggle */}
-        <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-card p-4">
           <div>
             <p className="text-sm font-medium text-foreground">{t('autoPause')}</p>
             <p className="text-xs text-muted-foreground">{t('autoPauseHint')}</p>
@@ -289,7 +289,7 @@ export function PrayerConfigPanel() {
 
         <Button
           type="button"
-          className="rounded-xl font-semibold"
+          className="rounded-lg font-semibold"
           variant="cta"
           disabled={saving}
           onClick={() => void save()}

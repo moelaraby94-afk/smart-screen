@@ -134,7 +134,7 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[min(90vh,720px)] overflow-y-auto rounded-2xl border-border sm:max-w-lg">
+      <DialogContent className="max-h-[min(90vh,720px)] overflow-y-auto rounded-lg border-border sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t('title')}</DialogTitle>
           <DialogDescription>{t('description')}</DialogDescription>
@@ -146,7 +146,7 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
               id="cs-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="rounded-xl"
+              className="rounded-lg"
               placeholder={t('namePlaceholder')}
             />
           </div>
@@ -156,7 +156,7 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
               id="cs-serial"
               value={serialNumber}
               onChange={(e) => setSerialNumber(e.target.value)}
-              className="rounded-xl"
+              className="rounded-lg"
               placeholder={t('serialPlaceholder')}
             />
           </div>
@@ -166,15 +166,15 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
               id="cs-loc"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="rounded-xl"
+              className="rounded-lg"
               placeholder={t('locationPlaceholder')}
             />
           </div>
 
-          <div className="space-y-3 rounded-2xl border border-border bg-muted/20 p-4">
+          <div className="space-y-3 rounded-lg border border-border bg-muted/20 p-4">
             <p className="text-sm font-semibold text-foreground">{t('playlistSection')}</p>
             <div className="flex flex-col gap-2">
-              <label className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm transition hover:bg-primary/5">
+              <label className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-primary/5">
                 <input
                   type="radio"
                   name="pmode"
@@ -184,7 +184,7 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
                 />
                 {t('playlistNone')}
               </label>
-              <label className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm transition hover:bg-primary/5">
+              <label className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-primary/5">
                 <input
                   type="radio"
                   name="pmode"
@@ -196,7 +196,7 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
               </label>
               {playlistMode === 'existing' ? (
                 <select
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
+                  className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-ring/20"
                   value={existingPlaylistId}
                   onChange={(e) => setExistingPlaylistId(e.target.value)}
                   disabled={loadingPlaylists}
@@ -209,7 +209,7 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
                   ))}
                 </select>
               ) : null}
-              <label className="flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm transition hover:bg-primary/5">
+              <label className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-primary/5">
                 <input
                   type="radio"
                   name="pmode"
@@ -223,7 +223,7 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
                 <Input
                   value={newPlaylistName}
                   onChange={(e) => setNewPlaylistName(e.target.value)}
-                  className="rounded-xl"
+                  className="rounded-lg"
                   placeholder={t('newPlaylistPlaceholder')}
                 />
               ) : null}
@@ -231,13 +231,13 @@ export function CreateScreenDialog({ open, onOpenChange, workspaceId, onCreated 
           </div>
         </div>
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button type="button" variant="outline" className="rounded-xl" disabled={submitting} onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="outline" className="rounded-lg" disabled={submitting} onClick={() => onOpenChange(false)}>
             {t('cancel')}
           </Button>
           <Button
             type="button"
             variant="cta"
-            className="rounded-xl font-semibold"
+            className="rounded-lg font-semibold"
             disabled={submitting}
             onClick={() => void submit()}
           >

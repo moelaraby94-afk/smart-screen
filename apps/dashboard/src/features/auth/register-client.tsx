@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,6 +41,7 @@ export function RegisterClient() {
   const [country, setCountry] = useState('US');
   const [city, setCity] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState('');
 
   useEffect(() => {
@@ -120,7 +122,7 @@ export function RegisterClient() {
     <div className="w-full">
       {/* Mobile brand header */}
       <div className="mb-8 lg:hidden">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
+        <p className="text-xs font-semibold uppercase tracking-wide text-primary">
           {t('brand')}
         </p>
         <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground">
@@ -153,7 +155,7 @@ export function RegisterClient() {
                   required
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  className="rounded-xl border-border bg-background text-foreground"
+                  className="h-9 rounded-lg border-border bg-background text-foreground"
                 />
               </div>
               <div className="space-y-2">
@@ -162,7 +164,7 @@ export function RegisterClient() {
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="rounded-xl border-border bg-background text-foreground"
+                  className="h-9 rounded-lg border-border bg-background text-foreground"
                 />
               </div>
               <div className="space-y-2">
@@ -172,7 +174,7 @@ export function RegisterClient() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="rounded-xl border-border bg-background text-foreground"
+                  className="h-9 rounded-lg border-border bg-background text-foreground"
                 />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -181,7 +183,7 @@ export function RegisterClient() {
                   <select
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
-                    className="flex h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+                    className="h-9 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                   >
                     {COUNTRIES.map((c) => (
                       <option key={c.code} value={c.code}>
@@ -193,14 +195,14 @@ export function RegisterClient() {
                 <div className="space-y-2">
                   <Label className="text-foreground">{t('phone')}</Label>
                   <div className="flex gap-2">
-                    <span className="flex h-10 min-w-[3.5rem] items-center justify-center rounded-xl border border-border bg-muted text-xs text-muted-foreground">
+                    <span className="flex h-9 min-w-[3.5rem] items-center justify-center rounded-lg border border-border bg-muted text-xs text-muted-foreground">
                       {dial}
                     </span>
                     <Input
                       required
                       value={phone}
                       onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 14))}
-                      className="rounded-xl border-border bg-background text-foreground"
+                      className="h-9 rounded-lg border-border bg-background text-foreground"
                       placeholder={t('phonePlaceholder')}
                     />
                   </div>
@@ -211,25 +213,36 @@ export function RegisterClient() {
                 <Input
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  className="rounded-xl border-border bg-background text-foreground"
+                  className="h-9 rounded-lg border-border bg-background text-foreground"
                 />
               </div>
               <div className="space-y-2">
                 <Label className="text-foreground">{t('password')}</Label>
-                <Input
-                  required
-                  type="password"
-                  minLength={8}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="rounded-xl border-border bg-background text-foreground"
-                />
+                <div className="relative">
+                  <Input
+                    required
+                    type={showPassword ? 'text' : 'password'}
+                    minLength={8}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-9 rounded-lg border-border bg-background text-foreground pe-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((s) => !s)}
+                    className="absolute inset-inline-end-0 top-0 flex h-9 w-10 items-center justify-center text-muted-foreground hover:text-foreground"
+                    aria-label={showPassword ? t('hidePassword') : t('showPassword')}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
               <Button
                 type="submit"
                 disabled={pending}
-                className="h-11 w-full rounded-xl font-semibold"
+                className="h-10 w-full rounded-lg font-semibold"
                 variant="cta"
+                aria-busy={pending}
               >
                 {t('continue')}
               </Button>
@@ -244,14 +257,15 @@ export function RegisterClient() {
                   maxLength={6}
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="rounded-xl border-border bg-background text-center font-mono text-2xl tracking-[0.4em] text-foreground"
+                  className="h-9 rounded-lg border-border bg-background text-center font-mono text-2xl tracking-[0.4em] text-foreground"
                 />
               </div>
               <Button
                 type="submit"
                 disabled={pending || otp.length !== 6}
-                className="h-11 w-full rounded-xl font-semibold"
+                className="h-10 w-full rounded-lg font-semibold"
                 variant="cta"
+                aria-busy={pending}
               >
                 {t('activateAccount')}
               </Button>
@@ -266,7 +280,7 @@ export function RegisterClient() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full rounded-xl"
+                className="w-full rounded-lg"
                 disabled={pending}
                 onClick={() => void resendOtp()}
               >

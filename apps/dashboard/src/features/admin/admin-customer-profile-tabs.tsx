@@ -45,14 +45,14 @@ import {
 export function lifecycleBadge(lifecycle: Lifecycle, t: (key: string) => string) {
   if (lifecycle === 'suspended') {
     return (
-      <span className="rounded-full border border-red-500/35 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-200">
+      <span className="rounded-full border border-destructive/35 bg-destructive/10 px-3 py-1 text-xs font-semibold text-destructive">
         {t('lifecycle.suspended')}
       </span>
     );
   }
   if (lifecycle === 'expired') {
     return (
-      <span className="rounded-full border border-amber-500/40 bg-amber-500/12 px-3 py-1 text-xs font-semibold text-amber-100">
+      <span className="rounded-full border border-warning/40 bg-warning/12 px-3 py-1 text-xs font-semibold text-warning">
         {t('lifecycle.expired')}
       </span>
     );
@@ -65,7 +65,7 @@ export function lifecycleBadge(lifecycle: Lifecycle, t: (key: string) => string)
     );
   }
   return (
-    <span className="rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-100">
+    <span className="rounded-full border border-success/35 bg-success/10 px-3 py-1 text-xs font-semibold text-success">
       {t('lifecycle.active')}
     </span>
   );
@@ -447,7 +447,7 @@ export function WorkspacesTab(props: WorkspacesTabProps) {
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="rounded-lg border-red-500/30 px-2 text-red-400 hover:bg-red-500/10"
+                          className="rounded-lg border-destructive/30 px-2 text-destructive hover:bg-destructive/10"
                           onClick={() => props.onDelete(b)}
                         >
                           <Trash2 className="h-3.5 w-3.5" />

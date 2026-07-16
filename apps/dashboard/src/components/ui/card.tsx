@@ -1,11 +1,52 @@
 import * as React from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
-function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+const cardVariants = cva(
+  'relative rounded-lg text-card-foreground transition-shadow duration-normal',
+  {
+    variants: {
+      variant: {
+        default: 'border border-border bg-card shadow-xs',
+        elevated: 'bg-card shadow-sm',
+        outline: 'border border-border-strong bg-card',
+        interactive:
+          'border border-border bg-card shadow-xs hover:shadow-sm hover:border-border-strong cursor-pointer',
+        danger: 'border border-destructive/20 bg-destructive/5',
+        muted: 'border border-border bg-muted',
+      },
+      size: {
+        compact: '',
+        default: '',
+        large: '',
+        none: '',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+      size: 'default',
+    },
+  },
+);
+
+const cardPadding: Record<string, string> = {
+  compact: 'p-3',
+  default: 'p-5',
+  large: 'p-6',
+  none: '',
+};
+
+export type CardProps = React.HTMLAttributes<HTMLDivElement> &
+  VariantProps<typeof cardVariants> & {
+    selected?: boolean;
+  };
+
+function Card({ className, variant, size, selected, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        'vc-card-surface relative overflow-hidden text-card-foreground transition-shadow duration-300 hover:shadow-[0_12px_40px_-12px_rgba(255,107,0,0.12)] dark:hover:shadow-[0_16px_48px_-12px_rgba(255,107,0,0.15)]',
+        cardVariants({ variant, size }),
+        selected && 'border-2 border-primary bg-primary/5',
         className,
       )}
       {...props}
@@ -14,31 +55,38 @@ function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
 }
 
 function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('relative z-[1] flex flex-col space-y-2 p-7 sm:p-8', className)} {...props} />;
+  return (
+    <div
+      className={cn('flex flex-col space-y-1.5 border-b border-border p-5', className)}
+      {...props}
+    />
+  );
 }
 
 function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn(
-        'text-xl font-semibold leading-tight tracking-tight text-foreground sm:text-2xl',
-        className,
-      )}
+      className={cn('text-lg font-semibold leading-tight tracking-tight text-card-foreground', className)}
       {...props}
     />
   );
 }
 
 function CardDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn('text-[15px] leading-relaxed text-muted-foreground', className)} {...props} />;
+  return <p className={cn('text-sm text-muted-foreground', className)} {...props} />;
 }
 
 function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('relative z-[1] px-7 pb-7 pt-0 sm:px-8 sm:pb-8', className)} {...props} />;
+  return <div className={cn('p-5 pt-0', className)} {...props} />;
 }
 
 function CardFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('relative z-[1] flex items-center px-7 pb-7 pt-0 sm:px-8 sm:pb-8', className)} {...props} />;
+  return (
+    <div
+      className={cn('flex items-center border-t border-border p-5 pt-0', className)}
+      {...props}
+    />
+  );
 }
 
-export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle };
+export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, cardVariants, cardPadding };

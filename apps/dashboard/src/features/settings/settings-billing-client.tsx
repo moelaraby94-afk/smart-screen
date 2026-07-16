@@ -217,9 +217,9 @@ export function SettingsBillingClient() {
   return (
     <div className="space-y-8">
       {showRetention && (
-        <div className={`rounded-2xl border p-6 shadow-sm ${isCancelled ? 'border-destructive/30 bg-destructive/5' : 'border-amber-500/30 bg-amber-500/5'}`}>
+        <div className={`rounded-2xl border p-6 shadow-sm ${isCancelled ? 'border-destructive/30 bg-destructive/5' : 'border-warning/30 bg-warning/5'}`}>
           <div className="flex items-start gap-3">
-            <AlertTriangle className={`mt-0.5 h-5 w-5 ${isCancelled ? 'text-destructive' : 'text-amber-600'}`} />
+            <AlertTriangle className={`mt-0.5 h-5 w-5 ${isCancelled ? 'text-destructive' : 'text-warning'}`} />
             <div className="flex-1">
               <h3 className="font-semibold text-foreground">
                 {isCancelled ? t('retentionCancelledTitle') : t('retentionPastDueTitle')}
@@ -681,8 +681,8 @@ export function SettingsBillingClient() {
                     className={cn(
                       'h-full rounded-full transition-all',
                       (sub.activeScreenCount ?? 0) > sub.perScreenPricing.includedScreens
-                        ? 'bg-amber-500'
-                        : 'bg-emerald-500',
+                        ? 'bg-warning'
+                        : 'bg-success',
                     )}
                     style={{
                       width: `${Math.min(100, ((sub.activeScreenCount ?? 0) / sub.screenLimit) * 100)}%`,
@@ -697,7 +697,7 @@ export function SettingsBillingClient() {
 
             {sub.perScreenPricing.perScreenPrice > 0 &&
               (sub.activeScreenCount ?? 0) > sub.perScreenPricing.includedScreens && (
-                <p className="mt-3 text-xs text-amber-600">
+                <p className="mt-3 text-xs text-warning">
                   {tBilling('overageWarning', {
                     count: (sub.activeScreenCount ?? 0) - sub.perScreenPricing.includedScreens,
                     price: `$${((sub.perScreenPricing.perScreenPrice / 100) * ((sub.activeScreenCount ?? 0) - sub.perScreenPricing.includedScreens)).toFixed(2)}`,

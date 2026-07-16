@@ -101,7 +101,7 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
     <div className="relative flex h-dvh min-h-0 flex-col overflow-x-hidden overflow-y-hidden bg-background text-foreground dark:bg-transparent">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg"
+        className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-tooltip focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg"
       >
         {t('skipToContent')}
       </a>
@@ -122,14 +122,14 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
       {mobileNavOpen ? (
         <button
           type="button"
-          className="fixed inset-0 z-[78] bg-black/40 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-overlay bg-black/40 backdrop-blur-sm lg:hidden"
           onClick={() => setMobileNavOpen(false)}
           aria-label={t('toggleMenu')}
         />
       ) : null}
 
       {/* Main column: fixed viewport height; only <main> scrolls — sidebar stays fixed, no document scroll */}
-      <div className="relative z-[20] flex min-h-0 flex-1 flex-col overflow-hidden lg:ms-[240px] lg:pl-6">
+      <div className="relative z-sidebar flex min-h-0 flex-1 flex-col overflow-hidden lg:ms-[240px] lg:pl-6">
         <ShellHeader
           navLocale={navLocale}
           rtl={rtl}

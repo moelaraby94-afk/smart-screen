@@ -24,11 +24,11 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'vc-card-surface flex flex-col items-center justify-center gap-4 rounded-2xl border border-border px-6 py-16 text-center',
+        'flex flex-col items-center justify-center gap-4 rounded-lg border border-border bg-card px-6 py-16 text-center shadow-xs',
         className,
       )}
     >
-      <span className="flex h-16 w-16 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
+      <span className="flex h-16 w-16 items-center justify-center rounded-xl bg-primary/10">
         <Icon className="h-8 w-8 text-primary" strokeWidth={1.75} aria-hidden />
       </span>
       <div className="space-y-2">
@@ -40,7 +40,7 @@ export function EmptyState({
         ) : null}
       </div>
       {actionLabel && onAction ? (
-        <Button variant="cta" className="rounded-xl font-semibold" onClick={onAction}>
+        <Button variant="default" onClick={onAction}>
           {actionLabel}
         </Button>
       ) : null}

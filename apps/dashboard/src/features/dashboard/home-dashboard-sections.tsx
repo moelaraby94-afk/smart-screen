@@ -57,7 +57,7 @@ export function WorkspaceCardsSection(props: WorkspaceCardsSectionProps) {
   const t = useTranslations('clientHome');
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-4" role="region" aria-label={t('branchesTitle')}>
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold tracking-tight text-foreground">{t('branchesTitle')}</h2>
@@ -80,7 +80,7 @@ export function WorkspaceCardsSection(props: WorkspaceCardsSectionProps) {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.03 * i, duration: 0.25 }}
-              className="group relative overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 hover:border-primary/30 hover:shadow-lg"
+              className="group relative overflow-hidden rounded-lg border border-border bg-card transition-all duration-fast hover:border-primary/30 hover:shadow-lg"
             >
               {/* Header */}
               <div className="relative flex items-center justify-between gap-2 p-3.5">
@@ -99,15 +99,15 @@ export function WorkspaceCardsSection(props: WorkspaceCardsSectionProps) {
                   <div className="mt-1 flex items-center gap-1.5">
                     <span
                       className={cn(
-                        'shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase',
+                        'shrink-0 rounded px-1.5 py-0.5 text-xs font-bold uppercase',
                         healthBadgeClass(h),
                       )}
                     >
                       {t(`health.${h}`)}
                     </span>
                     {row.isPaused === true && (
-                      <span className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-amber-500">
-                        <span className="h-1 w-1 rounded-full bg-amber-500" />
+                      <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-warning">
+                        <span className="h-1 w-1 rounded-full bg-warning" />
                         {t('health.paused')}
                       </span>
                     )}
@@ -175,7 +175,7 @@ export function WorkspaceCardsSection(props: WorkspaceCardsSectionProps) {
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
-                            className="gap-2 font-semibold text-red-600 focus:text-red-600"
+                            className="gap-2 font-semibold text-destructive focus:text-destructive"
                             onSelect={(e) => {
                               e.preventDefault();
                               props.onDelete(row);
@@ -195,39 +195,39 @@ export function WorkspaceCardsSection(props: WorkspaceCardsSectionProps) {
               <div className="relative grid grid-cols-4 gap-px border-t border-border bg-border">
                 <div className="bg-card px-2 py-2.5 text-center">
                   <div className="flex items-center justify-center gap-1">
-                    <Monitor className="h-3 w-3 text-blue-400" strokeWidth={ICON_STROKE} />
+                    <Monitor className="h-3 w-3 text-primary" strokeWidth={ICON_STROKE} />
                   </div>
                   <p className="mt-1 font-mono text-base font-bold tabular-nums text-foreground">
                     {props.loading ? '…' : row.screens}
                   </p>
-                  <p className="text-[9px] font-medium text-muted-foreground">{t('card.screens')}</p>
+                  <p className="text-xs font-medium text-muted-foreground">{t('card.screens')}</p>
                 </div>
                 <div className="bg-card px-2 py-2.5 text-center">
                   <div className="flex items-center justify-center gap-1">
-                    <ListMusic className="h-3 w-3 text-emerald-400" strokeWidth={ICON_STROKE} />
+                    <ListMusic className="h-3 w-3 text-success" strokeWidth={ICON_STROKE} />
                   </div>
                   <p className="mt-1 font-mono text-base font-bold tabular-nums text-foreground">
                     {props.loading ? '…' : row.playlists}
                   </p>
-                  <p className="text-[9px] font-medium text-muted-foreground">{t('card.playlists')}</p>
+                  <p className="text-xs font-medium text-muted-foreground">{t('card.playlists')}</p>
                 </div>
                 <div className="bg-card px-2 py-2.5 text-center">
                   <div className="flex items-center justify-center gap-1">
-                    <ImageIcon className="h-3 w-3 text-amber-400" strokeWidth={ICON_STROKE} />
+                    <ImageIcon className="h-3 w-3 text-warning" strokeWidth={ICON_STROKE} />
                   </div>
                   <p className="mt-1 font-mono text-base font-bold tabular-nums text-foreground">
                     {props.loading ? '…' : row.mediaCount}
                   </p>
-                  <p className="text-[9px] font-medium text-muted-foreground">{t('card.media')}</p>
+                  <p className="text-xs font-medium text-muted-foreground">{t('card.media')}</p>
                 </div>
                 <div className="bg-card px-2 py-2.5 text-center">
                   <div className="flex items-center justify-center gap-1">
-                    <HardDrive className="h-3 w-3 text-cyan-400" strokeWidth={ICON_STROKE} />
+                    <HardDrive className="h-3 w-3 text-primary" strokeWidth={ICON_STROKE} />
                   </div>
                   <p className="mt-1 font-mono text-xs font-bold tabular-nums text-foreground">
                     {props.loading ? '…' : formatBytes(row.storageBytes)}
                   </p>
-                  <p className="text-[9px] font-medium text-muted-foreground">{t('card.storage')}</p>
+                  <p className="text-xs font-medium text-muted-foreground">{t('card.storage')}</p>
                 </div>
               </div>
 
@@ -236,10 +236,10 @@ export function WorkspaceCardsSection(props: WorkspaceCardsSectionProps) {
                 <div className="flex items-center gap-1.5">
                   <span className={cn(
                     'h-1.5 w-1.5 rounded-full',
-                    row.screenStatus.online > 0 ? 'bg-emerald-500' : 'bg-muted-foreground/30',
+                    row.screenStatus.online > 0 ? 'bg-success' : 'bg-muted-foreground/30',
                   )} />
-                  <span className="text-[10px] text-muted-foreground">{t('card.online')}</span>
-                  <span className="font-mono text-[11px] font-bold tabular-nums text-foreground">
+                  <span className="text-xs text-muted-foreground">{t('card.online')}</span>
+                  <span className="font-mono text-xs font-bold tabular-nums text-foreground">
                     {props.loading ? '…' : row.screenStatus.online}
                   </span>
                 </div>
@@ -249,7 +249,7 @@ export function WorkspaceCardsSection(props: WorkspaceCardsSectionProps) {
                     e.stopPropagation();
                     props.onOpenBranch(row.workspaceId);
                   }}
-                  className="flex items-center gap-1 text-[11px] font-semibold text-primary transition-colors hover:text-primary/80"
+                  className="flex items-center gap-1 text-xs font-semibold text-primary transition-colors hover:text-primary/80"
                 >
                   {t('openBranchDashboard')}
                   <ArrowRight className="h-3 w-3 rtl:rotate-180" strokeWidth={ICON_STROKE} />
@@ -273,12 +273,12 @@ export function TotalsSection({ totals, loading, daysRemaining }: TotalsSectionP
   const t = useTranslations('clientHome');
 
   const cards = [
-    { label: t('totalBranches'), value: loading ? '…' : String(totals.branches), icon: Network, accent: 'from-violet-600/20 to-violet-900/5', iconBg: 'bg-violet-500/15 text-violet-400' },
-    { label: t('totalScreens'), value: loading ? '…' : String(totals.screens), icon: Monitor, accent: 'from-blue-600/20 to-blue-900/5', iconBg: 'bg-blue-500/15 text-blue-400' },
-    { label: t('totalPlaylists'), value: loading ? '…' : String(totals.playlists), icon: ListMusic, accent: 'from-emerald-600/20 to-emerald-900/5', iconBg: 'bg-emerald-500/15 text-emerald-400' },
-    { label: t('totalMedia'), value: loading ? '…' : String(totals.mediaCount), icon: ImageIcon, accent: 'from-amber-600/20 to-amber-900/5', iconBg: 'bg-amber-500/15 text-amber-400' },
-    { label: t('totalStorage'), value: loading ? '…' : formatBytes(totals.storageBytes), icon: HardDrive, accent: 'from-cyan-600/20 to-cyan-900/5', iconBg: 'bg-cyan-500/15 text-cyan-400' },
-    { label: t('subscriptionDaysLeft'), value: loading ? '…' : daysRemaining == null ? t('notSet') : String(daysRemaining), icon: Clock3, accent: 'from-pink-600/20 to-pink-900/5', iconBg: 'bg-pink-500/15 text-pink-400' },
+    { label: t('totalBranches'), value: loading ? '…' : String(totals.branches), icon: Network, accent: 'from-primary/20 to-primary/5', iconBg: 'bg-primary/15 text-primary' },
+    { label: t('totalScreens'), value: loading ? '…' : String(totals.screens), icon: Monitor, accent: 'from-primary/20 to-primary/5', iconBg: 'bg-primary/15 text-primary' },
+    { label: t('totalPlaylists'), value: loading ? '…' : String(totals.playlists), icon: ListMusic, accent: 'from-success/20 to-success/5', iconBg: 'bg-success/15 text-success' },
+    { label: t('totalMedia'), value: loading ? '…' : String(totals.mediaCount), icon: ImageIcon, accent: 'from-warning/20 to-warning/5', iconBg: 'bg-warning/15 text-warning' },
+    { label: t('totalStorage'), value: loading ? '…' : formatBytes(totals.storageBytes), icon: HardDrive, accent: 'from-primary/20 to-primary/5', iconBg: 'bg-primary/15 text-primary' },
+    { label: t('subscriptionDaysLeft'), value: loading ? '…' : daysRemaining == null ? t('notSet') : String(daysRemaining), icon: Clock3, accent: 'from-warning/20 to-warning/5', iconBg: 'bg-warning/15 text-warning' },
   ];
 
   const totalScreens = totals.screenStatus.online + totals.screenStatus.offline + totals.screenStatus.maintenance;
@@ -287,7 +287,7 @@ export function TotalsSection({ totals, loading, daysRemaining }: TotalsSectionP
   const maintenancePct = totalScreens > 0 ? (totals.screenStatus.maintenance / totalScreens) * 100 : 0;
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-4" role="region" aria-label={t('totalsTitle')}>
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold tracking-tight text-foreground">{t('totalsTitle')}</h2>
@@ -301,19 +301,20 @@ export function TotalsSection({ totals, loading, daysRemaining }: TotalsSectionP
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.04 * i, duration: 0.3 }}
-            className="group relative overflow-hidden rounded-2xl border border-border bg-card p-4 transition-all duration-200 hover:border-primary/30 hover:shadow-lg"
+            className="group relative overflow-hidden rounded-lg border border-border bg-card p-4 transition-all duration-fast hover:border-primary/30 hover:shadow-lg"
+            aria-label={`${item.label}: ${item.value}`}
           >
             <div className={cn('pointer-events-none absolute inset-0 bg-gradient-to-br opacity-60', item.accent)} />
             <div className="relative flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                   {item.label}
                 </p>
                 <p className="mt-1.5 font-mono text-xl font-bold tabular-nums text-foreground">
                   {item.value}
                 </p>
               </div>
-              <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', item.iconBg)}>
+              <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', item.iconBg)}>
                 <item.icon className="h-4 w-4" strokeWidth={ICON_STROKE} />
               </div>
             </div>
@@ -321,9 +322,9 @@ export function TotalsSection({ totals, loading, daysRemaining }: TotalsSectionP
         ))}
       </div>
       {/* Screen status bar */}
-      <div className="rounded-2xl border border-border bg-card p-4">
+      <div className="rounded-lg border border-border bg-card p-4">
         <div className="flex items-center justify-between">
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
             {t('screenStatusSummary')}
           </p>
           <p className="text-xs text-muted-foreground">
@@ -336,23 +337,23 @@ export function TotalsSection({ totals, loading, daysRemaining }: TotalsSectionP
         </div>
         {totalScreens > 0 && (
           <div className="mt-3 flex h-2.5 w-full overflow-hidden rounded-full bg-muted/50">
-            <div className="bg-emerald-500 transition-all duration-500" style={{ width: `${onlinePct}%` }} />
-            <div className="bg-rose-500/70 transition-all duration-500" style={{ width: `${offlinePct}%` }} />
-            <div className="bg-amber-500/70 transition-all duration-500" style={{ width: `${maintenancePct}%` }} />
+            <div className="bg-success transition-all duration-500" style={{ width: `${onlinePct}%` }} />
+            <div className="bg-destructive/70 transition-all duration-500" style={{ width: `${offlinePct}%` }} />
+            <div className="bg-warning/70 transition-all duration-500" style={{ width: `${maintenancePct}%` }} />
           </div>
         )}
-        <div className="mt-2.5 flex flex-wrap gap-4 text-[11px]">
+        <div className="mt-2.5 flex flex-wrap gap-4 text-xs">
           <span className="flex items-center gap-1.5 text-muted-foreground">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="h-2 w-2 rounded-full bg-success" />
             {t('totalScreens')}: <span className="font-bold text-foreground">{totals.screenStatus.online}</span>
           </span>
           <span className="flex items-center gap-1.5 text-muted-foreground">
-            <span className="h-2 w-2 rounded-full bg-rose-500/70" />
-            offline: <span className="font-bold text-foreground">{totals.screenStatus.offline}</span>
+            <span className="h-2 w-2 rounded-full bg-destructive/70" />
+            {t('statusOffline')}: <span className="font-bold text-foreground">{totals.screenStatus.offline}</span>
           </span>
           <span className="flex items-center gap-1.5 text-muted-foreground">
-            <span className="h-2 w-2 rounded-full bg-amber-500/70" />
-            maintenance: <span className="font-bold text-foreground">{totals.screenStatus.maintenance}</span>
+            <span className="h-2 w-2 rounded-full bg-warning/70" />
+            {t('statusMaintenance')}: <span className="font-bold text-foreground">{totals.screenStatus.maintenance}</span>
           </span>
         </div>
       </div>

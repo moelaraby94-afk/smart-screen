@@ -2,15 +2,16 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Monitor, Smartphone, Square } from 'lucide-react';
+import { AlertCircle, Monitor, MonitorOff, Smartphone, Square } from 'lucide-react';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { makeZonePresets, type ZonePreset } from '@/features/studio/canvas-layout';
 import {
-  type PlaylistLocalMeta,
   DEFAULT_PLAYLIST_META,
   loadPlaylistMeta,
 } from '@/features/playlists/playlist-transitions';
 import { updatePlaylistMeta as apiUpdatePlaylistMeta } from '@/features/studio/studio-api';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 
 import { PlaylistHeader } from './studio/components/playlist-header';
 import { WorkspaceTabs } from './studio/components/workspace-tabs';
@@ -46,6 +47,9 @@ export function PlaylistStudioClient() {
   const [search, setSearch] = useState('');
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [selectedRowClientId, setSelectedRowClientId] = useState<string | null>(null);
+  const [viewportWidth, setViewportWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1280);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const pendingBackRef = useRef(false);
 
   // Account-level state
   const [filterWorkspaceId, setFilterWorkspaceId] = useState<string>('');
@@ -102,6 +106,13 @@ export function PlaylistStudioClient() {
       setViewMode('grid');
     }
   }, [playlistId, loadPlaylistDetail, setPlaylistMeta]);
+
+  // Viewport width tracking for responsive guards
+  useEffect(() => {
+    const onResize = () => setViewportWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   // Track save state
   const lastSavedRowsRef = useRef<Row[]>([]);
@@ -171,7 +182,16 @@ export function PlaylistStudioClient() {
 
   // ── Handlers ───────────────────────────────────────────
   const openPlaylist = (id: string) => setPlaylistId(id);
-  const backToGrid = () => { setPlaylistId(''); setViewMode('grid'); setSelectedRowClientId(null); };
+  const backToGrid = () => {
+    if (saveState === 'unsaved') {
+      pendingBackRef.current = true;
+      setShowUnsavedDialog(true);
+      return;
+    }
+    setPlaylistId('');
+    setViewMode('grid');
+    setSelectedRowClientId(null);
+  };
 
   const handleSave = async () => {
     setSaveState('saving');
@@ -249,8 +269,32 @@ export function PlaylistStudioClient() {
   }
 
   // ── Editor View ────────────────────────────────────────
+
+  // Mobile guard — Studio editor is desktop-only
+  if (viewportWidth < 768) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-2xl border border-border p-8 text-center">
+        <MonitorOff className="h-12 w-12 text-muted-foreground" />
+        <div className="space-y-1">
+          <p className="text-base font-semibold">{t('mobileNotSupported')}</p>
+          <p className="max-w-sm text-sm text-muted-foreground">{t('mobileNotSupportedDesc')}</p>
+        </div>
+        <Button variant="outline" onClick={backToGrid}>
+          {t('backToList')}
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <PlaylistEditorView
+    <>
+      {viewportWidth >= 768 && viewportWidth < 1024 && (
+        <div className="mb-4 flex items-center gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-600 dark:text-yellow-400">
+          <AlertCircle className="h-5 w-5 shrink-0" />
+          <p>{t('tabletWarning')}</p>
+        </div>
+      )}
+      <PlaylistEditorView
       playlistName={selectedPlaylist?.name ?? ''}
       isPublished={selectedPlaylist?.isPublished ?? false}
       canPublish={canPublish}
@@ -304,5 +348,37 @@ export function PlaylistStudioClient() {
       selectedRow={selectedRow}
       onDragEnd={onDragEnd}
     />
+
+      {/* Unsaved changes dialog */}
+      <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('unsavedChangesTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('unsavedChangesDesc')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              if (pendingBackRef.current) {
+                pendingBackRef.current = false;
+                setPlaylistId('');
+                setViewMode('grid');
+                setSelectedRowClientId(null);
+              }
+              setShowUnsavedDialog(false);
+            }}>{t('discard')}</AlertDialogCancel>
+            <AlertDialogAction onClick={async () => {
+              await handleSave();
+              if (pendingBackRef.current) {
+                pendingBackRef.current = false;
+                setPlaylistId('');
+                setViewMode('grid');
+                setSelectedRowClientId(null);
+              }
+              setShowUnsavedDialog(false);
+            }}>{t('save')}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
