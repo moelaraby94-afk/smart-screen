@@ -162,6 +162,27 @@ enum UserSubscriptionStatus {
 
 
 
+/// Lifecycle states for a Campaign: draft → submit → approve/reject → publish → pause/resume → end
+enum CampaignStatus {
+
+  DRAFT
+
+  PENDING_APPROVAL
+
+  APPROVED
+
+  REJECTED
+
+  PUBLISHED
+
+  PAUSED
+
+  ENDED
+
+}
+
+
+
 model User {
 
   id               String            @id @default(cuid())
@@ -258,6 +279,10 @@ model User {
   accountOwnership    AccountMember[]  @relation("AccountOwnership")
 
   accountMemberships  AccountMember[]  @relation("AccountMembership")
+
+  createdCampaigns    Campaign[]       @relation("CampaignCreatedBy")
+
+  approvedCampaigns   Campaign[]       @relation("CampaignApprovedBy")
 
 }
 
@@ -356,6 +381,8 @@ model Workspace {
   ramadanConfig RamadanConfig?
 
   accountMemberScopes AccountMemberWorkspaceScope[]
+
+  campaigns     Campaign[]
 
 }
 
@@ -486,6 +513,8 @@ model Screen {
 
   /// Advanced override rules with date/time/recurrence
   overrideRules ScreenOverrideRule[]
+
+  campaigns     Campaign[]     @relation("CampaignScreen")
 
   @@index([workspaceId, playlistGroupId])
 
@@ -789,6 +818,11 @@ model Playlist {
 
   schedules       Schedule[]
 
+  campaigns       Campaign[]      @relation("CampaignPlaylist")
+
+  /// Items in other playlists that reference this playlist as a nested item
+  nestedPlaylistItems PlaylistItem[] @relation("NestedPlaylistItems")
+
   @@index([ownerId, updatedAt])
 
   @@index([workspaceId])
@@ -803,11 +837,15 @@ model PlaylistItem {
 
   playlistId  String
 
-  /// Exactly one of mediaId or canvasId must be set (enforced in app + DB check)
+  /// Exactly one of mediaId, canvasId, or playlistId must be set (enforced in app)
 
   mediaId     String?
 
   canvasId    String?
+
+  /// Nested playlist reference — allows a playlist to contain another playlist as an item
+
+  nestedPlaylistId String?
 
   orderIndex  Int
 
@@ -824,6 +862,9 @@ model PlaylistItem {
 
   canvas      Canvas?  @relation(fields: [canvasId], references: [id], onDelete: Restrict)
 
+  /// The nested playlist referenced by this item (null for media/canvas items)
+  nestedPlaylist Playlist? @relation("NestedPlaylistItems", fields: [nestedPlaylistId], references: [id], onDelete: SetNull)
+
 
 
   @@unique([playlistId, orderIndex])
@@ -831,6 +872,8 @@ model PlaylistItem {
   @@index([mediaId])
 
   @@index([canvasId])
+
+  @@index([nestedPlaylistId])
 
 }
 
@@ -1326,21 +1369,29 @@ model RamadanConfig {
 
 model PlaylistGroup {
 
-  id          String    @id @default(cuid())
+  id            String          @id @default(cuid())
 
-  ownerId     String
+  ownerId       String
 
-  name        String
+  name          String
 
-  createdAt   DateTime  @default(now())
+  parentGroupId String?
 
-  updatedAt   DateTime  @updatedAt
+  createdAt     DateTime        @default(now())
 
-  owner       User      @relation("OwnedPlaylistGroups", fields: [ownerId], references: [id], onDelete: Cascade)
+  updatedAt     DateTime        @updatedAt
 
-  playlists   Playlist[]
+  owner         User            @relation("OwnedPlaylistGroups", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  parent        PlaylistGroup?  @relation("PlaylistGroupHierarchy", fields: [parentGroupId], references: [id], onDelete: Cascade)
+
+  children      PlaylistGroup[] @relation("PlaylistGroupHierarchy")
+
+  playlists     Playlist[]
 
   @@unique([ownerId, name])
+
+  @@index([parentGroupId])
 
 }
 
@@ -1397,5 +1448,93 @@ model AccountMemberWorkspaceScope {
   @@unique([accountMemberId, workspaceId])
 
   @@index([workspaceId])
+
+}
+
+
+
+/// Promotional campaign with approval workflow: draft → submit → approve/reject → publish → pause/resume → end
+model Campaign {
+
+  id          String          @id @default(cuid())
+
+  workspaceId String
+
+  /// User who created the campaign
+  createdById String
+
+  /// User who approved the campaign (null until approved)
+  approvedById String?
+
+  name        String
+
+  description String?
+
+  /// Optional playlist to play when campaign is published
+  playlistId  String?
+
+  /// Optional single screen target (null = all screens)
+  screenId    String?
+
+  status      CampaignStatus  @default(DRAFT)
+
+  /// Optional comment on approval/rejection
+  reviewComment String?
+
+  startDate   DateTime?
+
+  endDate     DateTime?
+
+  createdAt   DateTime        @default(now())
+
+  updatedAt   DateTime        @updatedAt
+
+  workspace   Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdBy   User            @relation("CampaignCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  approvedBy  User?           @relation("CampaignApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  playlist    Playlist?       @relation("CampaignPlaylist", fields: [playlistId], references: [id], onDelete: SetNull)
+
+  screen      Screen?         @relation("CampaignScreen", fields: [screenId], references: [id], onDelete: SetNull)
+
+  history     CampaignHistory[]
+
+  @@index([workspaceId])
+
+  @@index([status])
+
+}
+
+
+
+/// Immutable audit trail of every campaign state change
+model CampaignHistory {
+
+  id          String          @id @default(cuid())
+
+  campaignId  String
+
+  /// User who performed the action
+  actorId     String
+
+  /// The action performed (SUBMIT, APPROVE, REJECT, PUBLISH, PAUSE, RESUME, END, CREATE, UPDATE, DELETE)
+  action      String
+
+  /// Status before the transition
+  fromStatus  CampaignStatus
+
+  /// Status after the transition
+  toStatus    CampaignStatus
+
+  /// Optional comment (e.g., rejection reason)
+  comment     String?
+
+  createdAt   DateTime        @default(now())
+
+  campaign    Campaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
 
 }

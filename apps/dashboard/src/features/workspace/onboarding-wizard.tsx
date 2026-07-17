@@ -92,7 +92,7 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
       icon: Upload,
       label: t('uploadMedia'),
       description: t('uploadMediaDesc'),
-      href: `/${locale}/media`,
+      href: `/${locale}/content/media`,
     },
     {
       icon: UserPlus,

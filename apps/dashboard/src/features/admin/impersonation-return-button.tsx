@@ -34,7 +34,7 @@ export function ImpersonationReturnButton() {
   };
 
   return (
-    <div className="sticky top-0 z-[140] -mx-3 mb-4 border-b border-red-500/35 bg-gradient-to-r from-[#2e0707] via-[#5a0b0b] to-[#2e0707] px-3 py-2 shadow-[0_8px_26px_-16px_rgba(255,0,0,0.7)] sm:-mx-6 sm:px-6 lg:-mx-14 lg:px-14">
+    <div className="sticky top-0 z-debug -mx-3 mb-4 border-b border-red-500/35 bg-gradient-to-r from-[#2e0707] via-[#5a0b0b] to-[#2e0707] px-3 py-2 shadow-[0_8px_26px_-16px_rgba(255,0,0,0.7)] sm:-mx-6 sm:px-6 lg:-mx-14 lg:px-14">
       <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3">
         <p className="text-sm font-semibold text-primary">
           {t('impersonatingAs')}{' '}

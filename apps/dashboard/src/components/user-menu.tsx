@@ -82,7 +82,7 @@ export function UserMenu({ rtl, variant }: Props) {
         align={rtl ? 'start' : 'end'}
         sideOffset={8}
         className={cn(
-          'z-[110] min-w-[14rem] rounded-xl border border-border bg-card p-2',
+          'z-dropdown min-w-[14rem] rounded-xl border border-border bg-card p-2',
           rtl && 'rtl',
         )}
       >

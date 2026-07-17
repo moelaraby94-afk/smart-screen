@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { hasLocale } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
+import { MotionConfig } from 'framer-motion';
 import { AppToaster } from '@/components/app-toaster';
 import { DocumentLocaleRoot } from '@/components/document-locale-root';
 import { IntlErrorHandlingProvider } from '@/components/intl-error-handling-provider';
@@ -44,7 +45,9 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
         <SwrProvider>
           <WorkspaceProvider>
             <NotificationProvider>
-              {children}
+              <MotionConfig reducedMotion="user">
+                {children}
+              </MotionConfig>
             </NotificationProvider>
             <AppToaster />
           </WorkspaceProvider>

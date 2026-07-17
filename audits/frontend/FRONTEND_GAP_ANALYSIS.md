@@ -306,9 +306,10 @@
 ### RS-01: No Tablet Layout for Studio
 - **Severity:** High | **Category:** Responsive | **Screen:** /studio
 - **Current Behavior:** 3-panel layout doesn't collapse on tablet
-- **Expected Behavior:** Panels collapse to drawers on tablet
+- **Expected Behavior:** Narrower panels (240px + flex + 260px) + warning message on tablet (per `06-studio-spec.md` and `04-breakpoints.md` §2.5)
 - **Business Impact:** Studio unusable on tablets | **User Impact:** Can't edit on tablet
 - **Technical Impact:** None | **Estimated Effort:** 8h | **Priority:** P1
+- **Status:** ✅ Fixed — Tablet layout with narrower panels + warning implemented
 
 ### RS-02: Schedules Calendar Overflow on Mobile
 - **Severity:** Medium | **Category:** Responsive | **Screen:** /scheduling

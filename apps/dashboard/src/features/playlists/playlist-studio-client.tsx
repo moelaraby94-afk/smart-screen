@@ -18,6 +18,7 @@ import { WorkspaceTabs } from './studio/components/workspace-tabs';
 import { GroupSidebar } from './studio/components/group-sidebar';
 import { PlaylistGridView } from './studio/components/playlist-grid-view';
 import { PlaylistEditorView } from './studio/components/playlist-editor-view';
+import { PlaylistPreviewOverlay } from './playlist-preview-overlay';
 
 import { usePlaylistData } from './studio/hooks/use-playlist-data';
 import { usePlaylistActions } from './studio/hooks/use-playlist-actions';
@@ -49,6 +50,7 @@ export function PlaylistStudioClient() {
   const [selectedRowClientId, setSelectedRowClientId] = useState<string | null>(null);
   const [viewportWidth, setViewportWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1280);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const pendingBackRef = useRef(false);
 
   // Account-level state
@@ -81,7 +83,7 @@ export function PlaylistStudioClient() {
     setPlaylists, setPlaylistId, setNewName,
   });
 
-  const { handleCreateGroup, handleRenameGroup, handleDeleteGroup } = useGroupActions({
+  const { handleCreateGroup, handleRenameGroup, handleDeleteGroup, handleMoveGroup } = useGroupActions({
     loadGroups, loadPlaylists, filterGroupId, setFilterGroupId,
     setNewGroupName, setRenamingGroupId, setRenameGroupValue,
   });
@@ -247,6 +249,7 @@ export function PlaylistStudioClient() {
             setRenameGroupValue={setRenameGroupValue}
             onRenameGroup={handleRenameGroup}
             onDeleteGroup={handleDeleteGroup}
+            onMoveGroup={handleMoveGroup}
           />
           <PlaylistGridView
             loading={loading}
@@ -347,7 +350,16 @@ export function PlaylistStudioClient() {
       selectionContext={selectionContext}
       selectedRow={selectedRow}
       onDragEnd={onDragEnd}
+      onPreview={() => setPreviewOpen(true)}
     />
+
+      <PlaylistPreviewOverlay
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        rows={currentZoneRows}
+        defaultTransition={playlistMeta.defaultTransition}
+        transitionDuration={playlistMeta.transitionDuration}
+      />
 
       {/* Unsaved changes dialog */}
       <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>

@@ -81,6 +81,9 @@ type PlaylistEditorViewProps = {
 
   // Drag
   onDragEnd: (result: DropResult) => void;
+
+  onAssignScreens?: () => void;
+  onPreview?: () => void;
 };
 
 export function PlaylistEditorView(props: PlaylistEditorViewProps) {
@@ -113,6 +116,8 @@ export function PlaylistEditorView(props: PlaylistEditorViewProps) {
         setCloneTargetWs={props.setCloneTargetWs}
         workspaces={props.workspaces}
         workspaceId={props.workspaceId}
+        onAssignScreens={props.onAssignScreens}
+        onPreview={props.onPreview}
       />
 
       <DragDropContext onDragEnd={props.onDragEnd}>

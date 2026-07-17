@@ -43,6 +43,8 @@ import {
   seedDemoContent,
 } from '@/features/media/api/media-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
+import { fetchCurrentSubscription } from '@/features/billing/billing-api';
+import { formatBytesLocale } from '@/features/dashboard/home-dashboard-types';
 import { cn } from '@/lib/utils';
 import { EmptyMediaIllustration } from '@/features/media/media-preview-components';
 import { FolderSection, MediaGrid, type MediaFolder } from '@/features/media/media-grid-sections';
@@ -91,6 +93,7 @@ export function MediaLibraryClient() {
   const [savingExpiry, setSavingExpiry] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [expiryFilter, setExpiryFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('newest');
   const [mediaPage, setMediaPage] = useState(1);
   const [mediaTotalPages, setMediaTotalPages] = useState(1);
@@ -223,6 +226,29 @@ export function MediaLibraryClient() {
       }
       if (!workspaceId || files.length === 0) return;
       const folderId = selectedFolderId !== 'all' ? selectedFolderId : undefined;
+
+      // Pre-upload storage check (UJ-02)
+      const totalUploadBytes = files.reduce((sum, f) => sum + f.size, 0);
+      const currentUsed = items.reduce((sum, m) => sum + m.sizeBytes, 0);
+      try {
+        const subRes = await fetchCurrentSubscription(workspaceId);
+        if (subRes.ok) {
+          const sub = (await subRes.json()) as { storageLimitBytes: number | null };
+          if (sub.storageLimitBytes != null && sub.storageLimitBytes > 0) {
+            const projected = currentUsed + totalUploadBytes;
+            const pct = Math.round((100 * currentUsed) / sub.storageLimitBytes);
+            if (projected > sub.storageLimitBytes) {
+              toast.error(t('storageWouldExceed', { size: formatBytesLocale(totalUploadBytes, locale) }));
+              return;
+            }
+            if (pct >= 90) {
+              toast.warning(t('storageNearLimit', { pct }));
+            }
+          }
+        }
+      } catch {
+        // If subscription fetch fails, proceed with upload — server will enforce
+      }
 
       const uploadItems = files.map((file, i) => ({
         id: `${Date.now()}-${i}`,
@@ -453,6 +479,8 @@ export function MediaLibraryClient() {
         if (selectedFolderId !== 'all' && (m.folderId ?? null) !== selectedFolderId) return false;
         if (typeFilter === 'image' && !m.mimeType.startsWith('image/')) return false;
         if (typeFilter === 'video' && !m.mimeType.startsWith('video/')) return false;
+        if (expiryFilter === 'active' && m.expiresAt && new Date(m.expiresAt) < new Date()) return false;
+        if (expiryFilter === 'expired' && (!m.expiresAt || new Date(m.expiresAt) >= new Date())) return false;
         if (q) {
           return m.originalName.toLowerCase().includes(q);
         }
@@ -474,7 +502,7 @@ export function MediaLibraryClient() {
       });
       return sorted;
     },
-    [items, selectedFolderId, searchQuery, typeFilter, sortBy],
+    [items, selectedFolderId, searchQuery, typeFilter, expiryFilter, sortBy],
   );
 
   const openAddToPlaylist = async (item: MediaItem) => {
@@ -668,6 +696,16 @@ export function MediaLibraryClient() {
           </select>
           <select
             className="h-10 rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+            value={expiryFilter}
+            onChange={(e) => setExpiryFilter(e.target.value)}
+            aria-label={t('filterByExpiry')}
+          >
+            <option value="all">{t('expiryFilterAll')}</option>
+            <option value="active">{t('expiryFilterActive')}</option>
+            <option value="expired">{t('expiryFilterExpired')}</option>
+          </select>
+          <select
+            className="h-10 rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             aria-label={t('sortBy')}
@@ -732,7 +770,7 @@ export function MediaLibraryClient() {
             <Search className="h-8 w-8 text-muted-foreground/40" strokeWidth={1.5} />
             <p className="text-sm font-medium text-foreground">{t('noResultsTitle')}</p>
             <p className="max-w-md text-sm text-muted-foreground">{t('noResultsDesc')}</p>
-            <Button variant="outline" onClick={() => { setSearchQuery(''); setTypeFilter('all'); setSelectedFolderId('all'); }}>
+            <Button variant="outline" onClick={() => { setSearchQuery(''); setTypeFilter('all'); setExpiryFilter('all'); setSelectedFolderId('all'); }}>
               {t('clearFilters')}
             </Button>
           </div>
@@ -942,7 +980,7 @@ export function MediaLibraryClient() {
       </Dialog>
 
       {uploads.length > 0 && (
-        <div className="fixed bottom-4 end-4 z-50 w-full max-w-sm rounded-2xl border border-border bg-card p-4 shadow-lg" role="status" aria-live="polite">
+        <div className="fixed bottom-4 end-4 z-toast w-full max-w-sm rounded-2xl border border-border bg-card p-4 shadow-lg" role="status" aria-live="polite">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-sm font-semibold text-foreground">{t('uploadProgress')}</p>
             <button
@@ -955,6 +993,27 @@ export function MediaLibraryClient() {
             </button>
           </div>
           <div className="space-y-2">
+            {(() => {
+              const total = uploads.length;
+              const completed = uploads.filter((u) => u.status === 'complete' || u.status === 'error').length;
+              const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+              return (
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {t('uploadTotalProgress', { completed, total })}
+                    </span>
+                    <span className="font-mono-nums text-xs font-semibold text-foreground">{pct}%</span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all duration-300"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })()}
             {uploads.map((u) => (
               <div key={u.id} className="space-y-1">
                 <div className="flex items-center justify-between gap-2">

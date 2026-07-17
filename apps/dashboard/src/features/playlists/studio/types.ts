@@ -13,6 +13,7 @@ export type PlaylistSummary = {
   groupId?: string | null;
   createdAt?: string;
   updatedAt?: string;
+  expiresAt?: string | null;
   _count: { items: number; screensInGroup?: number };
   items?: Array<{
     kind?: string;
@@ -24,7 +25,8 @@ export type PlaylistSummary = {
 export type PlaylistGroup = {
   id: string;
   name: string;
-  _count: { playlists: number };
+  parentGroupId: string | null;
+  _count: { playlists: number; children: number };
 };
 
 export type Row =

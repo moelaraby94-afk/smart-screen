@@ -114,10 +114,9 @@ export function GlobalSearch() {
       { id: 'nav-overview', labelKey: 'nav.overview', href: `/${locale}/overview`, icon: LayoutDashboard },
       { id: 'nav-screens', labelKey: 'nav.screens', href: `/${locale}/screens`, icon: Monitor },
       { id: 'nav-emergency', labelKey: 'nav.emergency', href: `/${locale}/emergency`, icon: AlertTriangle },
-      { id: 'nav-media', labelKey: 'nav.media', href: `/${locale}/media`, icon: FolderOpen },
-      { id: 'nav-studio', labelKey: 'nav.studio', href: `/${locale}/studio`, icon: Clapperboard },
+      { id: 'nav-media', labelKey: 'nav.media', href: `/${locale}/content/media`, icon: FolderOpen },
       { id: 'nav-templates', labelKey: 'nav.templates', href: `/${locale}/templates`, icon: LayoutTemplate },
-      { id: 'nav-playlists', labelKey: 'nav.playlists', href: `/${locale}/playlists`, icon: Clapperboard },
+      { id: 'nav-playlists', labelKey: 'nav.playlists', href: `/${locale}/content/playlists`, icon: Clapperboard },
       { id: 'nav-schedules', labelKey: 'nav.schedules', href: `/${locale}/schedules`, icon: CalendarClock },
       { id: 'nav-analytics', labelKey: 'nav.analytics', href: `/${locale}/analytics`, icon: Activity },
       { id: 'nav-ai', labelKey: 'nav.ai', href: `/${locale}/ai`, icon: Sparkles },
@@ -168,7 +167,7 @@ export function GlobalSearch() {
           label: p.name,
           sublabel: p.isPublished ? t('published') : t('unpublished'),
           type: 'playlist',
-          href: `/${locale}/playlists` as string,
+          href: `/${locale}/content/playlists` as string,
         });
       }
     }
@@ -180,7 +179,7 @@ export function GlobalSearch() {
           label: m.originalName,
           sublabel: m.mimeType,
           type: 'media',
-          href: `/${locale}/media` as string,
+          href: `/${locale}/content/media` as string,
         });
       }
     }
@@ -241,7 +240,7 @@ export function GlobalSearch() {
           <>
             <motion.button
               type="button"
-              className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm"
+              className="fixed inset-0 z-overlay bg-black/50 backdrop-blur-sm"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -249,7 +248,7 @@ export function GlobalSearch() {
               aria-label={t('close')}
             />
             <motion.div
-              className="fixed left-1/2 top-[15%] z-[101] w-full max-w-xl -translate-x-1/2 px-4"
+              className="fixed left-1/2 top-[15%] z-command w-full max-w-xl -translate-x-1/2 px-4"
               role="dialog"
               aria-modal="true"
               aria-label={t('placeholder')}

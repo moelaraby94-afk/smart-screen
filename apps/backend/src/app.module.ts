@@ -18,6 +18,7 @@ import { RealtimeModule } from './domains/realtime/realtime.module';
 import { MediaModule } from './domains/media/media.module';
 import { PlayerModule } from './domains/player/player.module';
 import { SchedulesModule } from './domains/schedules/schedules.module';
+import { CampaignsModule } from './domains/campaigns/campaigns.module';
 import { AdminModule } from './domains/admin/admin.module';
 import { AccountModule } from './domains/account/account.module';
 import { WebhooksModule } from './domains/webhooks/webhooks.module';
@@ -71,6 +72,7 @@ import { ConfigHelperModule } from './common/config/config-helper.module';
     MediaModule,
     PlaylistsModule,
     SchedulesModule,
+    CampaignsModule,
     SubscriptionsModule,
     StripeModule,
     RealtimeModule,

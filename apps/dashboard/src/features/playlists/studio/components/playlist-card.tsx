@@ -99,7 +99,7 @@ export function PlaylistCard({ playlist: p, workspace: ws, index, onOpen, onDupl
         </div>
       </button>
 
-      <div className="absolute end-2 top-2 z-10 opacity-0 transition group-hover:opacity-100">
+      <div className="absolute end-2 top-2 z-card opacity-0 transition group-hover:opacity-100">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button

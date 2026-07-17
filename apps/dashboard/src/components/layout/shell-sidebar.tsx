@@ -9,28 +9,22 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
   Activity,
-  AlertTriangle,
-  Bell,
+  BarChart3,
   Building2,
   CalendarClock,
-  CircleHelp,
   Clapperboard,
-  CreditCard,
-  FolderOpen,
-  Globe2,
+  Flag,
   LayoutDashboard,
   LayoutGrid,
-  LayoutTemplate,
+  Layers,
+  Megaphone,
   LogOut,
   Monitor,
+  MonitorSmartphone,
   Moon,
   ScrollText,
-  Server,
   Settings,
-  Sparkles,
   Sun,
-  Terminal,
-  ToggleRight,
   UserCog,
   Users,
 } from 'lucide-react';
@@ -40,7 +34,7 @@ import { setStoredAccessToken } from '@/features/auth/session';
 import { logout as apiLogout } from '@/features/auth/auth-api';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useWorkspace } from '@/features/workspace/workspace-context';
+import { WorkspaceSwitcher } from '@/features/workspace/workspace-switcher';
 
 /* ═══════════════════════════════════════════════════════════════
    Nimbus Rail v2 — Professional SaaS sidebar
@@ -50,50 +44,15 @@ import { useWorkspace } from '@/features/workspace/workspace-context';
    • Navigation only — no workspace, no account section
    ═══════════════════════════════════════════════════════════════ */
 
-const STROKE = 1.6;
-
-const OVERVIEW_NAV = [
-  { key: 'overview', hrefKey: 'overview' as const, icon: LayoutDashboard },
-] as const;
-
-const FLEET_NAV = [
-  { key: 'screens', hrefKey: 'screens' as const, icon: Monitor },
-  { key: 'emergency', hrefKey: 'emergency' as const, icon: AlertTriangle },
-] as const;
-
-const CONTENT_NAV = [
-  { key: 'media', hrefKey: 'media' as const, icon: FolderOpen },
-  { key: 'studio', hrefKey: 'studio' as const, icon: Clapperboard },
-  { key: 'templates', hrefKey: 'templates' as const, icon: LayoutTemplate },
-] as const;
-
-const PLAYBACK_NAV = [
-  { key: 'playlists', hrefKey: 'playlists' as const, icon: Clapperboard },
-  { key: 'schedules', hrefKey: 'schedules' as const, icon: CalendarClock },
-] as const;
-
-const INSIGHTS_NAV = [
-  { key: 'analytics', hrefKey: 'analytics' as const, icon: Activity },
-  { key: 'ai', hrefKey: 'ai' as const, icon: Sparkles },
-] as const;
-
-const MANAGEMENT_NAV = [
-  { key: 'team', hrefKey: 'team' as const, icon: Users },
-] as const;
+const STROKE = 1.5;
 
 const CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE = new Set<
   string
->(['overview', 'screens', 'media', 'studio', 'templates', 'team', 'playlists', 'schedules', 'ai', 'analytics', 'emergency', 'help', 'apiDocs', 'notifications', 'auditLog']);
+>(['overview', 'screens', 'media', 'templates', 'team', 'playlists', 'schedules', 'campaigns', 'ai', 'analytics', 'emergency', 'help', 'apiDocs', 'notifications', 'auditLog']);
 
 function hrefFor(
   locale: string,
   hrefKey:
-    | (typeof OVERVIEW_NAV)[number]['hrefKey']
-    | (typeof FLEET_NAV)[number]['hrefKey']
-    | (typeof CONTENT_NAV)[number]['hrefKey']
-    | (typeof PLAYBACK_NAV)[number]['hrefKey']
-    | (typeof INSIGHTS_NAV)[number]['hrefKey']
-    | (typeof MANAGEMENT_NAV)[number]['hrefKey']
     | 'overview'
     | 'adminHome'
     | 'adminCustomers'
@@ -113,10 +72,10 @@ function hrefFor(
     | 'media'
     | 'team'
     | 'screens'
-    | 'studio'
     | 'templates'
     | 'ai'
-    | 'emergency',
+    | 'emergency'
+    | 'campaigns',
 ): string {
   if (hrefKey === 'overview') return `/${locale}/overview`;
   if (hrefKey === 'adminHome') return `/${locale}/admin`;
@@ -134,13 +93,13 @@ function hrefFor(
   if (hrefKey === 'notifications') return `/${locale}/notifications`;
   if (hrefKey === 'analytics') return `/${locale}/analytics`;
   if (hrefKey === 'auditLog') return `/${locale}/audit-log`;
-  if (hrefKey === 'media') return `/${locale}/media`;
+  if (hrefKey === 'media') return `/${locale}/content/media`;
   if (hrefKey === 'team') return `/${locale}/team`;
   if (hrefKey === 'screens') return `/${locale}/screens`;
-  if (hrefKey === 'studio') return `/${locale}/studio`;
   if (hrefKey === 'templates') return `/${locale}/templates`;
   if (hrefKey === 'ai') return `/${locale}/ai`;
   if (hrefKey === 'emergency') return `/${locale}/emergency`;
+  if (hrefKey === 'campaigns') return `/${locale}/campaigns`;
   return `/${locale}/${hrefKey}`;
 }
 
@@ -213,35 +172,36 @@ function NavItem({
       href={href}
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
+      title={label}
       className={cn(
-        'group relative flex cursor-pointer items-center gap-3 rounded-lg px-3 py-3 text-sm',
+        'group relative flex h-11 cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm md:h-9 md:justify-center lg:justify-start',
         'transition-all duration-fast ease-out',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2',
         active
-          ? 'bg-primary/8 text-foreground'
-          : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+          ? 'bg-primary/10 text-primary'
+          : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground',
       )}
 >
-      {/* Active indicator bar */}
+      {/* Active indicator — 2px left border per DS V2 (desktop), bg-primary on icon (collapsed) */}
       {active ? (
-        <span className="absolute inset-inline-start-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary transition-all duration-fast" />
+        <span className="absolute inset-inline-start-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary transition-all duration-fast md:hidden lg:block" />
       ) : null}
 
       <Icon
         className={cn(
-          'h-5 w-5 shrink-0 transition-all duration-fast',
-          active ? 'text-primary' : 'text-muted-foreground/70 group-hover:text-foreground group-hover:scale-105',
+          'h-[18px] w-[18px] shrink-0 transition-colors duration-fast',
+          active ? 'text-primary md:bg-primary/10 md:rounded-lg md:p-0.5 md:-m-0.5' : 'text-muted-foreground/70 group-hover:text-foreground',
         )}
         strokeWidth={STROKE}
       />
-      <span className={cn('min-w-0 flex-1 truncate transition-all duration-fast', active ? 'font-semibold' : 'font-medium')}>
+      <span className={cn('min-w-0 flex-1 truncate transition-colors duration-fast md:hidden lg:block', active ? 'font-medium' : 'font-normal')}>
         {label}
       </span>
       {count !== null && count !== undefined && count > 0 ? (
         <span
           className={cn(
-            'text-xs font-bold tabular-nums transition-colors duration-fast',
-            active ? 'text-primary' : 'text-muted-foreground/50',
+            'inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-semibold tabular-nums transition-colors duration-fast md:hidden lg:inline-flex',
+            active ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground',
           )}
         >
           {count}
@@ -254,7 +214,7 @@ function NavItem({
 /* ── Section Label ── */
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-3 pt-5 pb-1 text-xs font-bold uppercase tracking-wide text-muted-foreground/40">
+    <p className="px-3 pt-5 pb-1 text-xs font-bold uppercase tracking-wide text-muted-foreground/40 md:hidden lg:block">
       {children}
     </p>
   );
@@ -320,6 +280,7 @@ export function ShellSidebar({
   isLoading,
   isAuthenticated,
   mobileNavOpen,
+  showWorkspaceSwitcher,
 }: ShellSidebarProps) {
   const t = useTranslations('nav');
   const tUser = useTranslations('userMenu');
@@ -332,42 +293,43 @@ export function ShellSidebar({
     <aside
       key={`sidebar-${navLocale}-${sovereign ? 'admin' : 'workspace'}`}
       className={cn(
-        'fixed inset-y-0 z-sidebar flex w-[240px] flex-col [inset-inline-start:0]',
-        'transition-transform duration-300',
+        'fixed inset-y-0 z-drawer flex w-[280px] flex-col [inset-inline-start:0]',
+        'transition-transform duration-normal',
         rtl
-          ? mobileNavOpen ? 'max-lg:translate-x-0' : 'max-lg:translate-x-full'
-          : mobileNavOpen ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-full',
-        'lg:translate-x-0',
+          ? mobileNavOpen ? 'max-md:translate-x-0' : 'max-md:translate-x-full'
+          : mobileNavOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full',
+        'md:w-[64px] md:translate-x-0 lg:w-[240px]',
       )}
     >
       <div className="flex h-full min-h-0 flex-1 flex-col border-e border-border bg-card">
         {/* ── Logo ── */}
-        <div className="flex shrink-0 items-center px-5 pt-5 pb-3">
+        <div className="flex shrink-0 items-center px-5 pt-5 pb-3 max-md:block md:hidden lg:block">
           <ShellLogo locale={navLocale} />
         </div>
+
+        {/* ── Workspace switcher (mobile drawer only) ── */}
+        {showWorkspaceSwitcher ? (
+          <div className="shrink-0 px-3 pb-2 max-md:block md:hidden lg:block">
+            <WorkspaceSwitcher />
+          </div>
+        ) : null}
 
         {/* ── Nav ── */}
         <nav
           key={navLocale}
+          aria-label={t('mainNavigation')}
           className={cn(
-            'vc-scrollbar flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-2',
-            rtl ? 'text-right' : 'text-left',
+            'vc-scrollbar flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-2 md:px-2 lg:px-3 text-start',
           )}
         >
           {shellNavLoading ? (
             <div className="flex flex-col gap-1 px-3 pt-4" aria-hidden aria-busy="true">
               {Array.from({ length: 7 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 rounded-xl bg-muted/40" />
+                <Skeleton key={i} className="h-9 rounded-xl bg-muted/40" />
               ))}
             </div>
           ) : sovereign ? (
             <>
-              <NavItem
-                href={hrefFor(navLocale, 'overview') as Route}
-                label={t('overview')}
-                active={sovereignLinkActive(pathname, navLocale, 'overview')}
-                icon={LayoutDashboard}
-              />
               <NavItem
                 href={hrefFor(navLocale, 'adminHome') as Route}
                 label={t('adminHome')}
@@ -375,33 +337,13 @@ export function ShellSidebar({
                 icon={LayoutGrid}
               />
 
-              <SectionLabel>{t('customersSection')}</SectionLabel>
+              <SectionLabel>{t('managementSection')}</SectionLabel>
               <NavItem
                 href={hrefFor(navLocale, 'adminCustomers') as Route}
                 label={t('adminCustomers')}
                 active={sovereignLinkActive(pathname, navLocale, 'adminCustomers')}
-                icon={Users}
-              />
-              <NavItem
-                href={hrefFor(navLocale, 'adminWorkspaces') as Route}
-                label={t('adminWorkspaces')}
-                active={pathname?.startsWith(`/${navLocale}/admin/workspaces`) ?? false}
                 icon={Building2}
               />
-              <NavItem
-                href={hrefFor(navLocale, 'adminFleet') as Route}
-                label={t('adminFleet')}
-                active={sovereignLinkActive(pathname, navLocale, 'adminFleet')}
-                icon={Globe2}
-              />
-              <NavItem
-                href={hrefFor(navLocale, 'adminScreens') as Route}
-                label={t('adminScreens')}
-                active={sovereignLinkActive(pathname, navLocale, 'adminScreens')}
-                icon={Server}
-              />
-
-              <SectionLabel>{t('staffSection')}</SectionLabel>
               <NavItem
                 href={hrefFor(navLocale, 'adminStaff') as Route}
                 label={t('adminStaff')}
@@ -409,9 +351,29 @@ export function ShellSidebar({
                 icon={UserCog}
               />
               <NavItem
-                href={hrefFor(navLocale, 'adminStats') as Route}
-                label={t('adminStats')}
-                active={sovereignLinkActive(pathname, navLocale, 'adminStats')}
+                href={`/${navLocale}/admin/users` as Route}
+                label={t('adminUsers')}
+                active={pathname?.startsWith(`/${navLocale}/admin/users`) ?? false}
+                icon={Users}
+              />
+
+              <SectionLabel>{t('systemSection')}</SectionLabel>
+              <NavItem
+                href={hrefFor(navLocale, 'adminWorkspaces') as Route}
+                label={t('adminWorkspaces')}
+                active={pathname?.startsWith(`/${navLocale}/admin/workspaces`) ?? false}
+                icon={Layers}
+              />
+              <NavItem
+                href={hrefFor(navLocale, 'adminFleet') as Route}
+                label={t('adminFleet')}
+                active={sovereignLinkActive(pathname, navLocale, 'adminFleet')}
+                icon={MonitorSmartphone}
+              />
+              <NavItem
+                href={`/${navLocale}/admin/health` as Route}
+                label={t('adminHealth')}
+                active={pathname?.startsWith(`/${navLocale}/admin/health`) ?? false}
                 icon={Activity}
               />
               <NavItem
@@ -421,42 +383,10 @@ export function ShellSidebar({
                 icon={ScrollText}
               />
               <NavItem
-                href={hrefFor(navLocale, 'adminSettings') as Route}
-                label={t('adminSettings')}
-                active={sovereignLinkActive(pathname, navLocale, 'adminSettings')}
-                icon={Settings}
-              />
-              <NavItem
                 href={hrefFor(navLocale, 'adminFeatureFlags') as Route}
                 label={t('adminFeatureFlags')}
                 active={sovereignLinkActive(pathname, navLocale, 'adminFeatureFlags')}
-                icon={ToggleRight}
-              />
-
-              <SectionLabel>{t('resourcesSection')}</SectionLabel>
-              <NavItem
-                href={hrefFor(navLocale, 'notifications') as Route}
-                label={t('notifications')}
-                active={sovereignLinkActive(pathname, navLocale, 'notifications')}
-                icon={Bell}
-              />
-              <NavItem
-                href={hrefFor(navLocale, 'auditLog') as Route}
-                label={t('auditLog')}
-                active={sovereignLinkActive(pathname, navLocale, 'auditLog')}
-                icon={ScrollText}
-              />
-              <NavItem
-                href={hrefFor(navLocale, 'apiDocs') as Route}
-                label={t('apiDocs')}
-                active={sovereignLinkActive(pathname, navLocale, 'apiDocs')}
-                icon={Terminal}
-              />
-              <NavItem
-                href={hrefFor(navLocale, 'help') as Route}
-                label={t('help')}
-                active={sovereignLinkActive(pathname, navLocale, 'help')}
-                icon={CircleHelp}
+                icon={Flag}
               />
             </>
           ) : (
@@ -486,15 +416,14 @@ export function ShellSidebar({
                 }}
               />
 
-              {/* Content — links to /content tabbed page */}
+              {/* Content — links to /content/playlists (canonical default tab) */}
               <NavItem
-                href={`/${navLocale}/content` as Route}
+                href={`/${navLocale}/content/playlists` as Route}
                 label={t('content')}
                 active={
                   Boolean(pathname?.startsWith(`/${navLocale}/content`)) ||
                   Boolean(pathname?.startsWith(`/${navLocale}/playlists`)) ||
                   Boolean(pathname?.startsWith(`/${navLocale}/media`)) ||
-                  Boolean(pathname?.startsWith(`/${navLocale}/studio`)) ||
                   Boolean(pathname?.startsWith(`/${navLocale}/templates`))
                 }
                 icon={Clapperboard}
@@ -524,11 +453,25 @@ export function ShellSidebar({
                 }}
               />
 
+              {/* Campaigns — approval workflow */}
+              <NavItem
+                href={`/${navLocale}/campaigns` as Route}
+                label={t('campaigns')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/campaigns`))}
+                icon={Megaphone}
+                onClick={(e) => {
+                  if (isLoading) { e.preventDefault(); return; }
+                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('campaigns')) {
+                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
+                  }
+                }}
+              />
+
               <NavItem
                 href={hrefFor(navLocale, 'analytics') as Route}
                 label={t('analytics')}
                 active={Boolean(pathname?.startsWith(`/${navLocale}/analytics`))}
-                icon={Activity}
+                icon={BarChart3}
                 onClick={(e) => {
                   if (isLoading) { e.preventDefault(); return; }
                   if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('analytics')) {
@@ -551,7 +494,7 @@ export function ShellSidebar({
               />
 
               <NavItem
-                href={`/${navLocale}/settings/profile` as Route}
+                href={`/${navLocale}/settings` as Route}
                 label={t('settings')}
                 active={Boolean(pathname?.startsWith(`/${navLocale}/settings`))}
                 icon={Settings}
@@ -561,7 +504,7 @@ export function ShellSidebar({
         </nav>
 
         {/* ── Bottom bar: theme + lang + logout ── */}
-        <div className="flex shrink-0 items-center gap-1.5 border-t border-border px-4 py-3">
+        <div className="flex shrink-0 items-center gap-1.5 border-t border-border px-4 py-3 md:justify-center lg:justify-start">
           <IconButton
             label={isDark ? tUser('switchToLight') : tUser('switchToDark')}
             onClick={() => setTheme(isDark ? 'light' : 'dark')}
@@ -576,6 +519,7 @@ export function ShellSidebar({
             className={cn(
               'flex h-9 cursor-pointer items-center justify-center rounded-lg px-2 text-xs font-bold uppercase transition-colors duration-fast',
               'text-muted-foreground/60 hover:bg-muted hover:text-foreground',
+              'md:hidden lg:flex',
             )}
             aria-label={tUser('language')}
             title={tUser('language')}
@@ -583,7 +527,7 @@ export function ShellSidebar({
             {navLocale === 'ar' ? 'EN' : 'AR'}
           </button>
 
-          <div className="flex-1" />
+          <div className="flex-1 md:hidden lg:block" />
 
           <IconButton
             label={tUser('signOut')}

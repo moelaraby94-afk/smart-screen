@@ -58,7 +58,7 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
   // Ensure mobile nav cannot stay open on desktop widths.
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
-    const query = window.matchMedia('(min-width: 1024px)');
+    const query = window.matchMedia('(min-width: 768px)');
     const syncDesktop = (event: MediaQueryList | MediaQueryListEvent) => {
       if (event.matches) {
         setMobileNavOpen(false);
@@ -69,6 +69,16 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
     query.addEventListener('change', listener);
     return () => query.removeEventListener('change', listener);
   }, []);
+
+  // Close mobile drawer on Escape key.
+  React.useEffect(() => {
+    if (!mobileNavOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileNavOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [mobileNavOpen]);
 
   const isImpersonating = Boolean(impersonatedBySuperAdminId);
   const pathSegment = pathname?.split('/').filter(Boolean)[0];
@@ -122,14 +132,14 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
       {mobileNavOpen ? (
         <button
           type="button"
-          className="fixed inset-0 z-overlay bg-black/40 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-drawer-backdrop bg-black/50 backdrop-blur-sm md:hidden"
           onClick={() => setMobileNavOpen(false)}
           aria-label={t('toggleMenu')}
         />
       ) : null}
 
       {/* Main column: fixed viewport height; only <main> scrolls — sidebar stays fixed, no document scroll */}
-      <div className="relative z-sidebar flex min-h-0 flex-1 flex-col overflow-hidden lg:ms-[240px] lg:pl-6">
+      <div className="relative z-content flex min-h-0 flex-1 flex-col overflow-hidden md:ms-[64px] lg:ms-[240px]">
         <ShellHeader
           navLocale={navLocale}
           rtl={rtl}
@@ -146,7 +156,7 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
         />
         <Breadcrumbs pathname={pathname} locale={navLocale} rtl={rtl} />
         <ShellHeaderInsetSetterContext.Provider value={setHeaderInsetStable}>
-          <main id="main-content" className="vc-scrollbar relative z-[1] mx-auto min-h-0 w-full max-w-[1600px] flex-1 overflow-y-auto overscroll-y-contain px-4 py-5 sm:px-6 sm:py-8 lg:px-10 lg:py-12">
+          <main id="main-content" className="vc-scrollbar relative z-content mx-auto min-h-0 w-full max-w-[1400px] flex-1 overflow-y-auto overscroll-y-contain px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-6">
             <PageTransition>
               <WorkspaceGate>{children}</WorkspaceGate>
             </PageTransition>

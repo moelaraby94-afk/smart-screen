@@ -179,7 +179,7 @@ export function PlaylistZonePreview({
                   className={cn(
                     'absolute cursor-pointer border-2 transition-all',
                     isSelected
-                      ? 'border-primary border-solid z-10 shadow-lg'
+                      ? 'border-primary border-solid z-card shadow-lg'
                       : 'border-white/20 border-dashed hover:border-white/40',
                   )}
                   style={{
@@ -192,7 +192,7 @@ export function PlaylistZonePreview({
                 >
                   {/* Zone label */}
                   <div className={cn(
-                    'absolute start-1 top-1 z-20 rounded-md px-1.5 py-0.5 text-[10px] font-semibold backdrop-blur-sm',
+                    'absolute start-1 top-1 z-card rounded-md px-1.5 py-0.5 text-[10px] font-semibold backdrop-blur-sm',
                     isSelected ? 'bg-primary text-white' : 'bg-black/50 text-white/80',
                   )}>
                     {zone.name}

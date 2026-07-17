@@ -120,7 +120,7 @@ export function WorkspaceCardsSection(props: WorkspaceCardsSectionProps) {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="relative z-20 h-7 w-7 shrink-0 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                        className="relative z-card h-7 w-7 shrink-0 rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary"
                         aria-label={t('branchCardActionsAria')}
                       >
                         <MoreVertical className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />

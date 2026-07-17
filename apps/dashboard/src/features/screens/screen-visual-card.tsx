@@ -101,7 +101,7 @@ export function ScreenVisualCard({
       )}
     >
       {onToggleSelect && (
-        <div className="absolute start-2 top-2 z-10">
+        <div className="absolute start-2 top-2 z-card">
           <Checkbox
             checked={selected ?? false}
             onCheckedChange={() => onToggleSelect(screen.id, false)}

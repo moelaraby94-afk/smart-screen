@@ -102,11 +102,11 @@ export async function fetchPlaylistGroups(): Promise<Response> {
   return apiFetch('/playlists/groups');
 }
 
-export async function createPlaylistGroup(name: string): Promise<Response> {
+export async function createPlaylistGroup(name: string, parentGroupId?: string | null): Promise<Response> {
   return apiFetch('/playlists/groups', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, parentGroupId: parentGroupId ?? null }),
   });
 }
 
@@ -115,6 +115,14 @@ export async function renamePlaylistGroup(groupId: string, name: string): Promis
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name }),
+  });
+}
+
+export async function movePlaylistGroup(groupId: string, newParentId: string | null): Promise<Response> {
+  return apiFetch(`/playlists/groups/${groupId}/move`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ newParentId }),
   });
 }
 

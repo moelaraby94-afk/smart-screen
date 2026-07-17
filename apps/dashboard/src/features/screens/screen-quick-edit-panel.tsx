@@ -243,7 +243,7 @@ export function ScreenQuickEditPanel({
           <motion.button
             type="button"
             aria-label={t('closePanel')}
-            className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-[2px]"
+            className="fixed inset-0 z-drawer-backdrop bg-black/40 backdrop-blur-[2px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -253,7 +253,7 @@ export function ScreenQuickEditPanel({
             role="dialog"
             aria-modal
             className={cn(
-              'fixed inset-y-0 z-[70] flex w-full max-w-md flex-col border-l border-white/15 bg-background/80 shadow-2xl backdrop-blur-2xl dark:bg-background/70',
+              'fixed inset-y-0 z-drawer flex w-full max-w-md flex-col border-l border-white/15 bg-background/80 shadow-2xl backdrop-blur-2xl dark:bg-background/70',
               'end-0',
             )}
             initial={{ x: `${100 * dir}%` }}

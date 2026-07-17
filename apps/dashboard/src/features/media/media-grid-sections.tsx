@@ -3,12 +3,26 @@
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, Download, Film, Folder, FolderPlus, ImageIcon, Info, ListPlus, Pencil, Trash2, X, Zap, LayoutGrid, Table as TableIcon } from 'lucide-react';
+import { Check, Download, Film, Folder, FolderPlus, ImageIcon, Info, ListPlus, Pencil, Trash2, X, Zap, LayoutGrid, Table as TableIcon, AlertTriangle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { MediaPreviewImage, MediaPreviewVideo } from '@/features/media/media-preview-components';
 import { QuickPublishDialog } from '@/features/playlists/quick-publish-dialog';
 import type { MediaItem } from '@/features/media/media-library-client';
+
+function getExpiryBadge(m: MediaItem, t: ReturnType<typeof useTranslations<'mediaClient'>>) {
+  if (!m.expiresAt) return null;
+  const expiry = new Date(m.expiresAt);
+  const now = new Date();
+  const sevenDays = 7 * 24 * 60 * 60 * 1000;
+  if (expiry < now) {
+    return { label: t('expired'), className: 'bg-destructive/15 text-destructive', icon: AlertTriangle };
+  }
+  if (expiry.getTime() - now.getTime() < sevenDays) {
+    return { label: t('expiringSoon'), className: 'bg-warning/15 text-warning', icon: Clock };
+  }
+  return null;
+}
 
 export type MediaFolder = {
   id: string;
@@ -211,6 +225,7 @@ export function MediaGrid(props: MediaGridProps) {
                 <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colSize')}</th>
                 {props.scope === 'branch' && <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colFolder')}</th>}
                 <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colCreated')}</th>
+                <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colExpiry')}</th>
                 <th className="px-4 py-3 text-start font-semibold text-foreground">{t('colActions')}</th>
               </tr>
             </thead>
@@ -244,6 +259,16 @@ export function MediaGrid(props: MediaGridProps) {
                     <td className="px-4 py-3 text-muted-foreground">{m.folderName ?? t('noFolder')}</td>
                   )}
                   <td className="px-4 py-3 font-mono-nums text-xs text-muted-foreground">{new Date(m.createdAt).toLocaleDateString(props.locale)}</td>
+                  <td className="px-4 py-3">
+                    {(() => { const badge = getExpiryBadge(m, t); return badge ? (
+                      <span className={cn('inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-semibold', badge.className)}>
+                        <badge.icon className="h-3 w-3" />
+                        {badge.label}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    ); })()}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
                       <QuickPublishDialog media={m}>
@@ -293,7 +318,7 @@ export function MediaGrid(props: MediaGridProps) {
                     props.onToggleSelect(m.id);
                   }}
                   className={cn(
-                    'absolute start-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-md border-2 transition',
+                    'absolute start-2 top-2 z-card flex h-6 w-6 items-center justify-center rounded-md border-2 transition',
                     props.selectedIds.has(m.id)
                       ? 'border-primary bg-primary text-primary-foreground'
                       : 'border-white/70 bg-black/40 text-transparent hover:border-white',
@@ -316,6 +341,12 @@ export function MediaGrid(props: MediaGridProps) {
                   {m.mimeType.startsWith('video/') ? t('video') : t('image')}
                 </div>
                 <div className="absolute end-2 top-2 flex gap-1.5 opacity-0 transition group-hover:opacity-100">
+                  {(() => { const badge = getExpiryBadge(m, t); return badge ? (
+                    <span className={cn('flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-semibold', badge.className)}>
+                      <badge.icon className="h-3 w-3" />
+                      {badge.label}
+                    </span>
+                  ) : null; })()}
                   <QuickPublishDialog media={m}>
                     <button
                       type="button"
@@ -399,6 +430,12 @@ export function MediaGrid(props: MediaGridProps) {
                 <p className="font-mono-nums text-xs text-muted-foreground">
                   {new Intl.NumberFormat(props.locale, { maximumFractionDigits: 2 }).format(m.sizeBytes / 1024 / 1024)} MB
                 </p>
+                {(() => { const badge = getExpiryBadge(m, t); return badge ? (
+                  <span className={cn('mt-1 inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-semibold', badge.className)}>
+                    <badge.icon className="h-3 w-3" />
+                    {badge.label}
+                  </span>
+                ) : null; })()}
               </div>
             </motion.div>
           ))}

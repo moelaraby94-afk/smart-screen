@@ -117,7 +117,7 @@ export function AdminOverview({ locale }: Props) {
           value: new Intl.NumberFormat(locale).format(stats.totalConnectedScreens),
           sub: t('cards.connectedScreensSub'),
           icon: Monitor,
-          accent: 'from-emerald-500 to-teal-800',
+          accent: 'from-success to-success/70',
           iconText: 'text-white',
           href: `/${locale}/admin/stats`,
         },
@@ -166,7 +166,7 @@ export function AdminOverview({ locale }: Props) {
       </motion.section>
 
       {error ? (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        <p className="text-sm text-destructive">{error}</p>
       ) : null}
 
       {!stats && !error ? (
@@ -174,7 +174,7 @@ export function AdminOverview({ locale }: Props) {
       ) : null}
 
       {stats ? (
-        <p className="rounded-lg border border-dashed border-amber-500/35 bg-amber-500/[0.08] px-4 py-3 text-sm text-amber-950 dark:text-amber-100/90">
+        <p className="rounded-lg border border-dashed border-warning/35 bg-warning/[0.08] px-4 py-3 text-sm text-warning">
           {t('revenueDisclaimer')}
         </p>
       ) : null}
@@ -230,9 +230,9 @@ export function AdminOverview({ locale }: Props) {
             <div className="h-[250px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={growthSeries}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 107, 0,0.15)" />
-                  <XAxis dataKey="name" stroke="rgba(255,255,255,0.65)" tickLine={false} axisLine={false} />
-                  <YAxis stroke="rgba(255,255,255,0.65)" tickLine={false} axisLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
                   <Tooltip
                     formatter={(value, name) => {
                       const numericValue =
@@ -246,10 +246,10 @@ export function AdminOverview({ locale }: Props) {
                     }}
                     contentStyle={{
                       borderRadius: 14,
-                      border: '1px solid rgba(255, 107, 0,0.3)',
-                      background: 'rgba(8,8,12,0.9)',
+                      border: '1px solid hsl(var(--border))',
+                      background: 'hsl(var(--card))',
                     }}
-                    labelStyle={{ color: 'rgba(255,255,255,0.85)' }}
+                    labelStyle={{ color: 'hsl(var(--foreground))' }}
                   />
                   <Line type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={3} dot={false} />
                   <Line type="monotone" dataKey="customers" stroke="hsl(var(--muted-foreground))" strokeWidth={3} dot={false} />

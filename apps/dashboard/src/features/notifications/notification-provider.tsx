@@ -264,6 +264,7 @@ const iconForType = (type: string) => {
 export function NotificationBell() {
   const t = useTranslations('notifications');
   const { notifications, unreadCount, markAllRead } = useNotifications();
+  const [bellOpen, setBellOpen] = useState(false);
 
   const formatTime = (ts: number) => {
     const diff = Date.now() - ts;
@@ -274,12 +275,14 @@ export function NotificationBell() {
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={bellOpen} onOpenChange={setBellOpen}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
           className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-foreground transition hover:bg-muted"
           aria-label={unreadCount > 0 ? `${t('bellLabel')} (${unreadCount} ${t('unread')})` : t('bellLabel')}
+          aria-expanded={bellOpen}
+          aria-haspopup="menu"
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (

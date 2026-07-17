@@ -5,24 +5,40 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import type { Route } from 'next';
+import { useWorkspace } from '@/features/workspace/workspace-context';
 
-const TABS = [
+type TabDef = {
+  key: string;
+  segment: string;
+  ownerOnly?: boolean;
+};
+
+const ALL_TABS: TabDef[] = [
   { key: 'profileSettings', segment: 'profile' },
-  { key: 'workspaceSettings', segment: 'workspace' },
-  { key: 'billing', segment: 'billing' },
-] as const;
+  { key: 'workspaceSettings', segment: 'workspace', ownerOnly: true },
+  { key: 'billing', segment: 'billing', ownerOnly: true },
+  { key: 'notificationsSettings', segment: 'notifications' },
+  { key: 'securitySettings', segment: 'security' },
+  { key: 'apiSettings', segment: 'api', ownerOnly: true },
+];
 
 export function SettingsTabs() {
   const t = useTranslations('nav');
   const locale = useLocale();
   const pathname = usePathname();
+  const { workspaces, workspaceId } = useWorkspace();
+
+  const userRole = workspaces.find((w) => w.id === workspaceId)?.role ?? 'VIEWER';
+  const isOwner = userRole === 'OWNER';
+
+  const visibleTabs = ALL_TABS.filter((tab) => !tab.ownerOnly || isOwner);
 
   return (
     <nav
       aria-label={t('profileSettings')}
-      className="inline-flex items-center gap-1 rounded-xl border border-border bg-muted/30 p-1"
+      className="inline-flex flex-wrap items-center gap-1 rounded-xl border border-border bg-muted/30 p-1"
     >
-      {TABS.map((tab) => {
+      {visibleTabs.map((tab) => {
         const href = `/${locale}/settings/${tab.segment}`;
         const active = pathname?.startsWith(href) ?? false;
         return (

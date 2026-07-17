@@ -3,9 +3,10 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
-import { ArrowLeft, Menu, X } from 'lucide-react';
+import { ArrowLeft, LogOut, Menu, MoreVertical, Search, Settings, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { UserMenu } from '@/components/user-menu';
 import { WorkspaceSwitcher } from '@/features/workspace/workspace-switcher';
 import { NotificationBell } from '@/features/notifications/notification-provider';
@@ -13,6 +14,10 @@ import { GlobalSearch } from '@/features/search/global-search';
 import { DensityToggle } from '@/components/density-toggle';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import { setStoredAccessToken } from '@/features/auth/session';
+import { logout as apiLogout } from '@/features/auth/auth-api';
+import { toast } from 'sonner';
 
 type ShellHeaderProps = {
   navLocale: 'ar' | 'en';
@@ -69,7 +74,7 @@ export function ShellHeader({
       className={cn(
         'min-w-0 flex flex-col justify-center',
         headerInset ? 'shrink-0' : 'flex-1',
-        rtl ? 'items-end text-right' : 'items-start text-left',
+        rtl ? 'items-end text-end' : 'items-start text-start',
       )}
     >
       {kicker ? (
@@ -99,7 +104,7 @@ export function ShellHeader({
       type="button"
       variant="outline"
       size="icon"
-      className="z-[80] h-8 w-8 shrink-0 rounded-lg border-border bg-card text-foreground hover:bg-muted sm:h-9 sm:w-9 lg:hidden"
+      className="z-header h-8 w-8 shrink-0 rounded-lg border-border bg-card text-foreground hover:bg-muted sm:h-9 sm:w-9 md:hidden"
       onClick={onToggleMobileNav}
       aria-label={t('toggleMenu')}
     >
@@ -112,7 +117,7 @@ export function ShellHeader({
   );
 
   const desktopActions = (
-    <div className="hidden shrink-0 flex-nowrap items-center justify-end gap-2.5 lg:flex">
+    <div className="hidden shrink-0 flex-nowrap items-center justify-end gap-3 lg:flex">
       <GlobalSearch />
       <DensityToggle />
       {showWorkspaceSwitcher ? <WorkspaceSwitcher /> : null}
@@ -123,10 +128,8 @@ export function ShellHeader({
 
   const mobileActions = (
     <div className="flex shrink-0 items-center gap-1.5 lg:hidden">
-      <GlobalSearch />
-      <DensityToggle />
       <NotificationBell />
-      <UserMenu rtl={rtl} variant={sovereign ? 'sovereign' : 'workspace'} />
+      <MobileMoreMenu navLocale={navLocale} rtl={rtl} />
     </div>
   );
 
@@ -134,11 +137,11 @@ export function ShellHeader({
     <header
       className={cn(
         'relative sticky top-0 z-sticky flex min-h-[56px] shrink-0 flex-col',
-        'border-b border-border bg-background/80 backdrop-blur-md',
+        'border-b border-border bg-card',
       )}
     >
-      <div className="relative z-[3] mx-auto flex min-h-[56px] w-full max-w-[1600px] items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-10">
-        <div className="flex shrink-0 items-center lg:hidden">
+      <div className="relative z-content mx-auto flex min-h-[56px] w-full max-w-[1400px] items-center justify-between gap-3 px-4 py-2">
+        <div className="flex shrink-0 items-center md:hidden">
           {menuBtn}
         </div>
 
@@ -146,7 +149,7 @@ export function ShellHeader({
         <div
           dir={rtl ? 'rtl' : 'ltr'}
           className={cn(
-            'flex min-w-0 flex-1 flex-row items-center gap-2 lg:hidden',
+            'flex min-w-0 flex-1 flex-row items-center gap-2 md:hidden',
           )}
         >
           {backBtn}
@@ -157,7 +160,7 @@ export function ShellHeader({
         <div
           dir={rtl ? 'rtl' : 'ltr'}
           className={cn(
-            'hidden min-w-0 flex-1 flex-row items-center gap-2 sm:gap-3 lg:flex',
+            'hidden min-w-0 flex-1 flex-row items-center gap-2 sm:gap-3 md:flex',
             headerInset ? 'min-w-0 justify-start' : rtl ? 'justify-start' : 'justify-end',
           )}
         >
@@ -170,7 +173,7 @@ export function ShellHeader({
           ) : null}
         </div>
 
-        {/* Mobile actions: notification bell + user menu */}
+        {/* Mobile actions: notification bell + more menu */}
         {mobileActions}
 
         {desktopActions}
@@ -178,13 +181,74 @@ export function ShellHeader({
       {headerInset ? (
         <div
           dir={rtl ? 'rtl' : 'ltr'}
-          className="border-b border-border bg-muted/30 px-3 py-2 lg:hidden"
+          className="border-b border-border bg-muted/30 px-3 py-2 md:hidden"
         >
-          <div className="mx-auto flex w-full max-w-[1600px] justify-center overflow-x-auto sm:px-3">
+          <div className="mx-auto flex w-full max-w-[1400px] justify-center overflow-x-auto sm:px-3">
             {headerInset}
           </div>
         </div>
       ) : null}
     </header>
+  );
+}
+
+function MobileMoreMenu({ navLocale, rtl }: { navLocale: 'ar' | 'en'; rtl: boolean }) {
+  const t = useTranslations('nav');
+  const tUser = useTranslations('userMenu');
+  const router = useRouter();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-foreground transition hover:bg-muted"
+          aria-label={t('moreMenu')}
+          aria-haspopup="menu"
+        >
+          <MoreVertical className="h-4 w-4" strokeWidth={ICON_STROKE} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align={rtl ? 'start' : 'end'} className="w-48">
+        <DropdownMenuItem
+          className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm"
+          onSelect={(e) => {
+            e.preventDefault();
+            const event = new KeyboardEvent('keydown', { key: 'k', metaKey: true });
+            window.dispatchEvent(event);
+          }}
+        >
+          <Search className="h-4 w-4 text-muted-foreground" strokeWidth={ICON_STROKE} />
+          {t('search')}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm"
+          onSelect={(e) => {
+            e.preventDefault();
+            router.push(`/${navLocale}/settings` as Route);
+          }}
+        >
+          <Settings className="h-4 w-4 text-muted-foreground" strokeWidth={ICON_STROKE} />
+          {t('settings')}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-destructive"
+          onSelect={async (e) => {
+            e.preventDefault();
+            const res = await apiLogout();
+            if (!res.ok) {
+              toast.error(tUser('signOutFailed'));
+              return;
+            }
+            setStoredAccessToken(null);
+            router.push(`/${navLocale}/login`);
+            router.refresh();
+          }}
+        >
+          <LogOut className="h-4 w-4 text-destructive" strokeWidth={ICON_STROKE} />
+          {tUser('signOut')}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

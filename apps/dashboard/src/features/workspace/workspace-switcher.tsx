@@ -88,7 +88,7 @@ export function WorkspaceSwitcher() {
             sideOffset={8}
             className={cn(
               appDropdownContentClass,
-              'z-[120] border-border bg-card',
+              'z-dropdown border-border bg-card',
             )}
             onCloseAutoFocus={(e) => e.preventDefault()}
           >

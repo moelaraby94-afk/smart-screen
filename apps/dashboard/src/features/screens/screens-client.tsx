@@ -4,7 +4,7 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } f
 import { useRouter } from 'next/navigation';
 import type { Route } from 'next';
 import { useTranslations, useLocale } from 'next-intl';
-import { Monitor, Search, Trash2, CheckSquare, Radio, Download, LayoutGrid, Table as TableIcon, RefreshCw, MoreHorizontal, BadgeAlert, PenLine, Zap, AlertTriangle, X } from 'lucide-react';
+import { Monitor, Search, Trash2, CheckSquare, Radio, Download, LayoutGrid, Table as TableIcon, RefreshCw, MoreHorizontal, BadgeAlert, PenLine, Zap, AlertTriangle, X, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScreenActions } from '@/features/screens/hooks/use-screen-actions';
 import { Button } from '@/components/ui/button';
@@ -402,6 +402,22 @@ export function ScreensClient({ locale }: Props) {
           <Button variant="outline" className="rounded-lg" onClick={() => void reload()}>
             {t('refresh')}
           </Button>
+          <Button
+            variant="outline"
+            className="rounded-lg"
+            onClick={() => router.push(`/${activeLocale}/emergency` as Route)}
+          >
+            <AlertTriangle className="me-2 h-4 w-4 text-warning" />
+            {t('emergencyAction')}
+          </Button>
+          <Button
+            variant="outline"
+            className="rounded-lg"
+            onClick={() => router.push(`/${activeLocale}/ai` as Route)}
+          >
+            <Sparkles className="me-2 h-4 w-4 text-primary" />
+            {t('aiAction')}
+          </Button>
           {canClaimPairing && (
             <Button
               variant="cta"
@@ -603,8 +619,8 @@ export function ScreensClient({ locale }: Props) {
       )}
 
       {selectedIds.size > 0 && (
-        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
-          <span className="text-sm font-semibold text-foreground">
+        <div className="sticky top-0 z-20 flex flex-wrap items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 shadow-sm" role="toolbar" aria-label={t('bulkActions')}>
+          <span className="text-sm font-semibold text-foreground" aria-live="polite">
             {t('selectedCount', { count: selectedIds.size })}
           </span>
           {canAssignPlayback && (

@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useTheme } from 'next-themes';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertCircle,
@@ -25,9 +26,11 @@ import {
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { useTranslations, useLocale } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { resolveStaticBrandingLogoPath } from '@/components/branding-context';
 import {
   fetchCanvases as apiFetchCanvases,
   fetchCanvas as apiFetchCanvas,
@@ -47,7 +50,7 @@ import {
   makeZonePresets,
 } from '@/features/studio/canvas-layout';
 import { CanvasStageView } from '@/features/studio/studio-canvas-shapes';
-import { StudioPropertiesPanel, StudioMediaStrip, StudioLayersPanel } from '@/features/studio/studio-panels';
+import { StudioPropertiesPanel, StudioMediaPanel, StudioLayersPanel } from '@/features/studio/studio-panels';
 import { CANVAS_TEMPLATES, type CanvasTemplate } from '@/features/studio/canvas-templates';
 
 type VersionSnapshot = {
@@ -104,7 +107,9 @@ function parseLayout(raw: unknown): CanvasLayoutV1 {
 export function StudioEditorClient() {
   const t = useTranslations('studio');
   const locale = useLocale();
+  const { resolvedTheme } = useTheme();
   const { workspaceId } = useWorkspace();
+  const searchParams = useSearchParams();
   const [canvases, setCanvases] = useState<CanvasDto[]>([]);
   const [canvasId, setCanvasId] = useState('');
   const [name, setName] = useState('Untitled');
@@ -217,6 +222,39 @@ export function StudioEditorClient() {
   useEffect(() => {
     if (canvasId) void loadCanvas(canvasId);
   }, [canvasId, loadCanvas]);
+
+  // Read URL params: ?template={id} or ?canvas={id}
+  const templateParam = searchParams.get('template');
+  const canvasParam = searchParams.get('canvas');
+  const urlHandledRef = useRef(false);
+  useEffect(() => {
+    if (!workspaceId || urlHandledRef.current) return;
+    if (canvasParam) {
+      urlHandledRef.current = true;
+      setCanvasId(canvasParam);
+    } else if (templateParam) {
+      urlHandledRef.current = true;
+      const tpl = CANVAS_TEMPLATES.find((tp) => tp.id === templateParam);
+      if (tpl) {
+        void (async () => {
+          const res = await apiCreateCanvas(workspaceId, {
+            name: locale === 'ar' ? tpl.nameAr : tpl.name,
+            width: tpl.width,
+            height: tpl.height,
+            layoutData: tpl.layout,
+          });
+          if (res.ok) {
+            const created = (await res.json()) as { id: string };
+            toast.success(t('templateApplied'));
+            await loadCanvases();
+            setCanvasId(created.id);
+          } else {
+            toast.error(t('createFailed'));
+          }
+        })();
+      }
+    }
+  }, [workspaceId, templateParam, canvasParam, locale, t, loadCanvases]);
 
   const fitScale = useMemo(() => Math.min(size.w / dw, size.h / dh, 2), [size, dw, dh]);
   const scale = useMemo(() => fitScale * zoomLevel, [fitScale, zoomLevel]);
@@ -540,14 +578,7 @@ export function StudioEditorClient() {
     setSelectedId(id);
   };
 
-  const onDropMedia = (e: React.DragEvent) => {
-    e.preventDefault();
-    const raw = e.dataTransfer.getData('application/canvas-media');
-    if (!raw) return;
-    const { publicUrl, mediaId } = JSON.parse(raw) as {
-      publicUrl: string;
-      mediaId: string;
-    };
+  const addMediaItem = (publicUrl: string, mediaId: string) => {
     const id = crypto.randomUUID();
     setLayout((prev) => ({
       ...prev,
@@ -567,6 +598,17 @@ export function StudioEditorClient() {
       ],
     }));
     setSelectedId(id);
+  };
+
+  const onDropMedia = (e: React.DragEvent) => {
+    e.preventDefault();
+    const raw = e.dataTransfer.getData('application/canvas-media');
+    if (!raw) return;
+    const { publicUrl, mediaId } = JSON.parse(raw) as {
+      publicUrl: string;
+      mediaId: string;
+    };
+    addMediaItem(publicUrl, mediaId);
   };
 
   const onDragOver = (e: React.DragEvent) => {
@@ -638,11 +680,20 @@ export function StudioEditorClient() {
 
   // Splash screen during initial load
   if (splashVisible) {
+    const isDark = resolvedTheme !== 'light';
+    const logoSrc = resolveStaticBrandingLogoPath(locale as 'ar' | 'en', isDark);
     return (
-      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-2xl border border-border p-8">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      <motion.div
+        initial={{ opacity: 1 }}
+        animate={{ opacity: splashVisible ? 1 : 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex min-h-[400px] flex-col items-center justify-center gap-6 rounded-2xl bg-neutral-900 p-8"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={logoSrc} alt="Cloud-Screen" className="max-h-12 w-auto object-contain" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <p className="text-sm text-muted-foreground">{t('loadingStudio')}</p>
-      </div>
+      </motion.div>
     );
   }
 
@@ -650,7 +701,7 @@ export function StudioEditorClient() {
     <div className="space-y-6" role="toolbar" aria-label={t('title')}>
       {/* Tablet warning */}
       {viewportWidth >= 768 && viewportWidth < 1024 && (
-        <div className="flex items-center gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-600 dark:text-yellow-400">
+        <div className="flex items-center gap-3 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
           <AlertCircle className="h-5 w-5 shrink-0" />
           <p>{t('tabletWarning')}</p>
         </div>
@@ -708,7 +759,7 @@ export function StudioEditorClient() {
               {t('history')}
             </Button>
             <Button type="button" variant="cta" disabled={!canvasId || saving} aria-busy={saving} onClick={() => { void save(); takeSnapshot(); }}>
-              <Save className="mr-2 h-4 w-4" />
+              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
               {saving ? t('saving') : t('save')}
             </Button>
           </div>
@@ -770,7 +821,7 @@ export function StudioEditorClient() {
                   {preset.zones.map((z, i) => (
                     <div
                       key={i}
-                      className="absolute border border-indigo-400/50 bg-indigo-400/10"
+                      className="absolute border border-primary/50 bg-primary/10"
                       style={{
                         left: `${(z.x / dw) * 100}%`,
                         top: `${(z.y / dh) * 100}%`,
@@ -894,8 +945,12 @@ export function StudioEditorClient() {
         </motion.div>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="flex flex-col gap-4">
+      <div className="grid gap-4 md:gap-6 md:grid-cols-[240px_minmax(0,1fr)_260px] lg:grid-cols-[280px_minmax(0,1fr)_300px]">
+        {/* Left: Media Panel */}
+        <StudioMediaPanel library={library} onAddMedia={addMediaItem} />
+
+        {/* Center: Canvas + Tools */}
+        <div className="flex min-h-0 flex-col gap-3">
           <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-muted/30 p-2">
             <Button type="button" size="sm" variant="ghost" onClick={addText}>
               <Type className="mr-1 h-4 w-4 text-primary" />
@@ -927,7 +982,7 @@ export function StudioEditorClient() {
             layout
             role="application"
             aria-label={t('canvasArea')}
-            className="relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-b from-zinc-950/90 to-black shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+            className="relative min-h-0 flex-1 overflow-hidden rounded-3xl border border-primary/15 bg-neutral-900 p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
             style={{ minHeight: 420, cursor: isPanning ? 'grabbing' : 'default' }}
             onMouseDown={(e) => {
               if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
@@ -1017,10 +1072,7 @@ export function StudioEditorClient() {
             </div>
           </motion.div>
 
-          <StudioMediaStrip library={library} />
-        </div>
-
-        <div className="flex flex-col gap-4" role="region" aria-label={t('properties')}>
+          {/* Bottom: Timeline (Layers) */}
           <StudioLayersPanel
             objects={layout.objects}
             selectedId={selectedId}
@@ -1029,6 +1081,10 @@ export function StudioEditorClient() {
             onToggleVisibility={toggleVisibility}
             onToggleLock={toggleLock}
           />
+        </div>
+
+        {/* Right: Properties Panel */}
+        <div className="flex flex-col gap-4" role="region" aria-label={t('properties')}>
           <StudioPropertiesPanel
             selected={selected}
             onUpdateObject={updateObject}

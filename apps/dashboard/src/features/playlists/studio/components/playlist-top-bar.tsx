@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import {
   ArrowLeft, Copy, Eye, EyeOff, FolderInput, MoreVertical,
-  Redo2, Save, Undo2, MonitorPlay,
+  Redo2, Save, Undo2, MonitorPlay, Play,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -44,6 +44,7 @@ type PlaylistTopBarProps = {
   workspaces: WorkspaceSummary[];
   workspaceId: string | null;
   onAssignScreens?: () => void;
+  onPreview?: () => void;
 };
 
 export function PlaylistTopBar({
@@ -72,6 +73,7 @@ export function PlaylistTopBar({
   workspaces,
   workspaceId,
   onAssignScreens,
+  onPreview,
 }: PlaylistTopBarProps) {
   const t = useTranslations('playlistStudioClient');
 
@@ -158,6 +160,18 @@ export function PlaylistTopBar({
             )}
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {onPreview && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-lg"
+            onClick={onPreview}
+          >
+            <Play className="me-1.5 h-4 w-4" />
+            {t('preview')}
+          </Button>
+        )}
 
         <Button
           variant="cta"

@@ -94,7 +94,7 @@ export function DeleteBranchDialog(props: DeleteDialogProps) {
           </AlertDialogCancel>
           <Button
             type="button"
-            className="rounded-lg bg-red-600 font-semibold text-white hover:bg-red-600/90"
+            className="rounded-lg bg-destructive font-semibold text-white hover:bg-destructive/90"
             disabled={props.busy}
             onClick={() => void props.onConfirm()}
           >

@@ -50,7 +50,7 @@ export function InfoTooltip({ content, side = 'top', className }: Props) {
         <span
           id={tooltipId}
           role="tooltip"
-          className={`absolute z-50 w-56 rounded-xl border border-border bg-popover p-3 text-xs leading-relaxed text-popover-foreground shadow-lg ${
+          className={`absolute z-tooltip w-56 rounded-xl border border-border bg-popover p-3 text-xs leading-relaxed text-popover-foreground shadow-lg ${
             side === 'top' ? 'bottom-full mb-2 left-1/2 -translate-x-1/2' : 'top-full mt-2 left-1/2 -translate-x-1/2'
           }`}
         >

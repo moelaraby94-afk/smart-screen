@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { getTranslations } from 'next-intl/server';
 import { StudioEditorClient } from '@/features/studio/studio-editor-client';
 
@@ -17,7 +18,9 @@ export default async function StudioPage({ params }: PageProps) {
         <h1 className="text-xl font-semibold tracking-tight">{t('title')}</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">{t('description')}</p>
       </header>
-      <StudioEditorClient />
+      <Suspense fallback={<div className="text-sm text-muted-foreground">Loading…</div>}>
+        <StudioEditorClient />
+      </Suspense>
     </main>
   );
 }

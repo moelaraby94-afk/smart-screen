@@ -18,6 +18,10 @@ export class PlaylistItemInputDto {
   @IsString()
   canvasId?: string;
 
+  @IsOptional()
+  @IsString()
+  playlistId?: string;
+
   @IsInt()
   @Min(1)
   durationSec!: number;

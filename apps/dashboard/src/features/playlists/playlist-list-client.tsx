@@ -5,7 +5,7 @@ import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Plus, Search, ListVideo, MoreVertical, Pencil, Copy, Trash2, Eye, AlertCircle, RotateCcw } from 'lucide-react';
+import { Plus, Search, ListVideo, MoreVertical, Pencil, Copy, Trash2, Eye, AlertCircle, RotateCcw, Clock, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,10 +39,13 @@ import {
 } from '@/features/studio/studio-api';
 import { loadPlaylistMeta } from '@/features/playlists/playlist-transitions';
 import { PlaylistCreateWizard } from '@/features/playlists/playlist-create-wizard';
+import { PlaylistPreviewOverlay } from '@/features/playlists/playlist-preview-overlay';
 import type { PlaylistSummary } from '@/features/playlists/studio/types';
+import type { Row } from '@/features/playlists/playlist-timeline';
 import type { PlaylistOrientation, PlaylistLayoutType, TransitionType } from '@/features/playlists/playlist-transitions';
 
 type StatusFilter = 'all' | 'published' | 'draft';
+type ExpiryFilter = 'all' | 'expiring' | 'expired';
 
 export function PlaylistListClient() {
   const t = useTranslations('playlistStudioClient');
@@ -58,11 +61,14 @@ export function PlaylistListClient() {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [expiryFilter, setExpiryFilter] = useState<ExpiryFilter>('all');
   const [sortBy, setSortBy] = useState('name');
   const [wizardOpen, setWizardOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<PlaylistSummary | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [scheduleCount, setScheduleCount] = useState(0);
+  const [previewPlaylist, setPreviewPlaylist] = useState<{ rows: Row[]; name: string } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const canEdit = useMemo(() => {
     const ws = workspaces.find((w) => w.id === workspaceId);
@@ -112,6 +118,18 @@ export function PlaylistListClient() {
     } else if (statusFilter === 'draft') {
       result = result.filter((p) => !p.isPublished);
     }
+    if (expiryFilter === 'expiring') {
+      const now = Date.now();
+      const sevenDays = 7 * 24 * 60 * 60 * 1000;
+      result = result.filter((p) => {
+        if (!p.expiresAt) return false;
+        const diff = new Date(p.expiresAt).getTime() - now;
+        return diff > 0 && diff <= sevenDays;
+      });
+    } else if (expiryFilter === 'expired') {
+      const now = Date.now();
+      result = result.filter((p) => p.expiresAt && new Date(p.expiresAt).getTime() < now);
+    }
     const sorted = [...result];
     if (sortBy === 'name') {
       sorted.sort((a, b) => a.name.localeCompare(b.name));
@@ -125,7 +143,7 @@ export function PlaylistListClient() {
       sorted.sort((a, b) => (a.updatedAt ?? a.createdAt ?? '').localeCompare(b.updatedAt ?? b.createdAt ?? ''));
     }
     return sorted;
-  }, [playlists, debouncedSearch, statusFilter, sortBy]);
+  }, [playlists, debouncedSearch, statusFilter, expiryFilter, sortBy]);
 
   const handleCreate = async (data: {
     name: string;
@@ -186,6 +204,49 @@ export function PlaylistListClient() {
     }
     setDeleting(false);
     setDeleteTarget(null);
+  };
+
+  const openPreview = async (playlist: PlaylistSummary) => {
+    if (!workspaceId) return;
+    setPreviewLoading(true);
+    try {
+      const res = await apiFetch(`/playlists/${playlist.id}?workspaceId=${encodeURIComponent(workspaceId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        const rows: Row[] = (data.items ?? []).map((item: { id: string; kind: string; durationSec: number; media?: { id: string; publicUrl: string; mimeType: string; originalName: string } | null; canvas?: { id: string; name: string; width?: number; height?: number } | null }, i: number) => {
+          if (item.kind === 'media' && item.media) {
+            return {
+              clientId: item.id ?? `item-${i}`,
+              kind: 'media' as const,
+              mediaId: item.media.id,
+              durationSec: item.durationSec ?? 5,
+              media: item.media,
+            };
+          }
+          if (item.kind === 'canvas' && item.canvas) {
+            return {
+              clientId: item.id ?? `item-${i}`,
+              kind: 'canvas' as const,
+              canvasId: item.canvas.id,
+              durationSec: item.durationSec ?? 5,
+              canvas: item.canvas,
+            };
+          }
+          return null;
+        }).filter(Boolean) as Row[];
+        if (rows.length === 0) {
+          toast.error(t('previewEmpty'));
+          setPreviewLoading(false);
+          return;
+        }
+        setPreviewPlaylist({ rows, name: playlist.name });
+      } else {
+        toast.error(t('loadErrorTitle'));
+      }
+    } catch {
+      toast.error(t('loadErrorTitle'));
+    }
+    setPreviewLoading(false);
   };
 
   const openDeleteDialog = async (playlist: PlaylistSummary) => {
@@ -249,6 +310,20 @@ export function PlaylistListClient() {
           </select>
         </div>
 
+        <div className="flex items-center gap-2">
+          <Label className="text-[11px] font-medium text-muted-foreground">{t('expiryFilter')}</Label>
+          <select
+            className="h-9 rounded-lg border border-border bg-background px-3 text-sm font-medium outline-none focus:border-primary/40"
+            value={expiryFilter}
+            onChange={(e) => setExpiryFilter(e.target.value as ExpiryFilter)}
+            aria-label={t('expiryFilter')}
+          >
+            <option value="all">{t('expiryAll')}</option>
+            <option value="expiring">{t('expiryExpiring')}</option>
+            <option value="expired">{t('expiryExpired')}</option>
+          </select>
+        </div>
+
         {canEdit && (
           <Button variant="default" className="ms-auto rounded-lg" onClick={() => setWizardOpen(true)}>
             <Plus className="me-2 h-4 w-4" />
@@ -293,7 +368,7 @@ export function PlaylistListClient() {
             canEdit && playlists.length === 0
               ? () => setWizardOpen(true)
               : playlists.length > 0
-                ? () => { setSearch(''); setStatusFilter('all'); }
+                ? () => { setSearch(''); setStatusFilter('all'); setExpiryFilter('all'); }
                 : undefined
           }
         />
@@ -339,16 +414,42 @@ export function PlaylistListClient() {
                     })()}
 
                     <div className="absolute inset-x-2 top-2 flex items-center justify-between">
-                      {p.isPublished ? (
-                        <Badge variant="success" className="shadow-sm">
-                          <Eye className="me-1 h-2.5 w-2.5" />
-                          {t('publishedBadge')}
-                        </Badge>
-                      ) : (
-                        <Badge variant="muted" className="shadow-sm">
-                          {t('draftPlaylists')}
-                        </Badge>
-                      )}
+                      <div className="flex flex-wrap gap-1.5">
+                        {p.isPublished ? (
+                          <Badge variant="success" className="shadow-sm">
+                            <Eye className="me-1 h-2.5 w-2.5" />
+                            {t('publishedBadge')}
+                          </Badge>
+                        ) : (
+                          <Badge variant="muted" className="shadow-sm">
+                            {t('draftPlaylists')}
+                          </Badge>
+                        )}
+                        {p.expiresAt && (() => {
+                          const now = Date.now();
+                          const exp = new Date(p.expiresAt).getTime();
+                          const isExpired = exp < now;
+                          const sevenDays = 7 * 24 * 60 * 60 * 1000;
+                          const isExpiringSoon = !isExpired && exp - now <= sevenDays;
+                          if (isExpired) {
+                            return (
+                              <Badge variant="destructive" className="shadow-sm">
+                                <Clock className="me-1 h-2.5 w-2.5" />
+                                {t('expiredBadge')}
+                              </Badge>
+                            );
+                          }
+                          if (isExpiringSoon) {
+                            return (
+                              <Badge variant="warning" className="shadow-sm">
+                                <Clock className="me-1 h-2.5 w-2.5" />
+                                {t('expiringSoonBadge')}
+                              </Badge>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
                       <span className="rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white/90 backdrop-blur-sm">
                         {p._count.items} {t('itemsCount', { count: p._count.items })}
                       </span>
@@ -378,7 +479,7 @@ export function PlaylistListClient() {
                 </button>
 
                 {canEdit && (
-                  <div className="absolute end-2 top-2 z-10 opacity-0 transition group-hover:opacity-100">
+                  <div className="absolute end-2 top-2 z-card opacity-0 transition group-hover:opacity-100">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button
@@ -391,6 +492,10 @@ export function PlaylistListClient() {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-44">
+                        <DropdownMenuItem onClick={() => void openPreview(p)} disabled={previewLoading}>
+                          <Play className="me-2 h-4 w-4" />
+                          {previewLoading ? t('loading') : t('preview')}
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => router.push(`/content/playlists/${p.id}` as never as Route)}>
                           <Pencil className="me-2 h-4 w-4" />
                           {t('edit')}
@@ -450,6 +555,14 @@ export function PlaylistListClient() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Playlist Preview */}
+      <PlaylistPreviewOverlay
+        open={!!previewPlaylist}
+        onClose={() => setPreviewPlaylist(null)}
+        rows={previewPlaylist?.rows ?? []}
+        defaultTransition="fade"
+      />
     </div>
   );
 }

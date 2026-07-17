@@ -130,7 +130,7 @@ export function RecentActivityFeed() {
                 >
                   <div
                     className={cn(
-                      'relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ring-[3px] ring-card',
+                      'relative z-card flex h-7 w-7 shrink-0 items-center justify-center rounded-full ring-[3px] ring-card',
                       typeColor[item.type] ?? 'bg-muted text-muted-foreground',
                     )}
                   >

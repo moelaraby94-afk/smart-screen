@@ -143,6 +143,7 @@ export function ScreenSetupModal({
   const autoAdvanceRef = useRef(false);
   const [wizardBranch, setWizardBranch] = useState<string>('');
   const [wizardNameError, setWizardNameError] = useState<string | null>(null);
+  const [showCodeHelp, setShowCodeHelp] = useState(false);
   const [branchOptions, setBranchOptions] = useState<{ id: string; name: string }[]>([]);
   const [activeTab, setActiveTab] = useState<TabKey>(isPairingMode ? 'pairing' : 'content');
   const [playlists, setPlaylists] = useState<PlaylistOption[]>([]);
@@ -616,7 +617,7 @@ export function ScreenSetupModal({
                       className="rounded-lg font-semibold"
                       onClick={() => {
                         onOpenChange(false);
-                        router.push(`/${activeLocale}/content` as Route);
+                        router.push(`/${activeLocale}/content/playlists` as Route);
                       }}
                     >
                       {t('wizardAssignContent')}
@@ -664,13 +665,61 @@ export function ScreenSetupModal({
                   {/* Step 1: Pairing code */}
                   {wizardStep === 1 && (
                     <div className="space-y-4">
-                      <p className="text-center text-sm leading-relaxed text-muted-foreground">
-                        {t('wizardCodeHelp')}
-                      </p>
-                      {pairing.showProgressBanner && (
-                        <p role="status" className="rounded-lg border border-primary/40 bg-primary/12 px-3 py-2 text-center text-xs font-medium leading-relaxed text-foreground">
-                          {t('pairingProgress')}
+                      <div className="flex items-center justify-center gap-1.5">
+                        <p className="text-center text-sm leading-relaxed text-muted-foreground">
+                          {t('wizardCodeHelp')}
                         </p>
+                        <button
+                          type="button"
+                          className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+                          onClick={() => setShowCodeHelp((v) => !v)}
+                          aria-expanded={showCodeHelp}
+                          aria-controls="pair-code-help"
+                        >
+                          {t('wizardHelpTooltip')}
+                        </button>
+                      </div>
+                      {showCodeHelp && (
+                        <p
+                          id="pair-code-help"
+                          className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-center text-xs leading-relaxed text-muted-foreground"
+                        >
+                          {t('wizardHelpTooltipContent')}
+                        </p>
+                      )}
+                      {pairing.showProgressBanner && (
+                        <div
+                          role="status"
+                          aria-live="polite"
+                          className="space-y-2 rounded-lg border border-primary/40 bg-primary/12 px-3 py-3"
+                        >
+                          <p className="text-center text-xs font-medium leading-relaxed text-foreground">
+                            {t('pairingProgress')}
+                          </p>
+                          <div className="space-y-1.5">
+                            <p className="text-center text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                              {t('wizardTroubleshootingTitle')}
+                            </p>
+                            <ul className="space-y-1 text-xs leading-relaxed text-muted-foreground">
+                              <li className="flex items-start gap-1.5">
+                                <span className="mt-0.5 h-1 w-1 flex-shrink-0 rounded-full bg-primary" />
+                                {t('wizardTip1')}
+                              </li>
+                              <li className="flex items-start gap-1.5">
+                                <span className="mt-0.5 h-1 w-1 flex-shrink-0 rounded-full bg-primary" />
+                                {t('wizardTip2')}
+                              </li>
+                              <li className="flex items-start gap-1.5">
+                                <span className="mt-0.5 h-1 w-1 flex-shrink-0 rounded-full bg-primary" />
+                                {t('wizardTip3')}
+                              </li>
+                              <li className="flex items-start gap-1.5">
+                                <span className="mt-0.5 h-1 w-1 flex-shrink-0 rounded-full bg-primary" />
+                                {t('wizardTip4')}
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
                       )}
                       {pairing.error && (
                         <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-center text-sm text-destructive" role="alert" aria-live="assertive">
@@ -805,6 +854,7 @@ export function ScreenSetupModal({
                           variant="outline"
                           className="h-12 flex-1 rounded-lg"
                           onClick={() => setWizardStep(2)}
+                          disabled={pairing.busy}
                         >
                           {t('wizardBack')}
                         </Button>
@@ -837,6 +887,16 @@ export function ScreenSetupModal({
                           )}
                         </Button>
                       </div>
+                      {pairing.busy && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="h-10 w-full rounded-lg text-sm text-muted-foreground"
+                          onClick={() => onOpenChange(false)}
+                        >
+                          {t('wizardCancelPairing')}
+                        </Button>
+                      )}
                     </div>
                   )}
                 </>

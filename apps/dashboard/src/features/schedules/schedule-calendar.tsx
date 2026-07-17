@@ -1,8 +1,8 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -17,6 +17,13 @@ import {
 
 const PX_PER_HOUR = 40;
 const TOTAL_H = 24 * PX_PER_HOUR;
+
+const DAY_ORDER_LTR = [0, 1, 2, 3, 4, 5, 6];
+const DAY_ORDER_RTL = [6, 0, 1, 2, 3, 4, 5];
+
+function getDayOrder(locale: string): number[] {
+  return locale === 'ar' ? DAY_ORDER_RTL : DAY_ORDER_LTR;
+}
 
 const PLAYLIST_COLORS = [
   'hsl(217 91% 60%)',
@@ -72,6 +79,7 @@ type ScheduleCalendarProps = {
   } | null>;
   onDragStart: () => void;
   onEventClick?: (schedule: ScheduleApi) => void;
+  onDayClick?: (date: Date) => void;
 };
 
 export function ScheduleCalendar({
@@ -83,6 +91,7 @@ export function ScheduleCalendar({
   dragRef,
   onDragStart,
   onEventClick,
+  onDayClick,
 }: ScheduleCalendarProps) {
   const t = useTranslations('schedules');
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('month');
@@ -143,6 +152,7 @@ export function ScheduleCalendar({
         <WeekView
           schedules={schedules}
           overlapIds={overlapIds}
+          locale={locale}
           dayShort={dayShort}
           dragRef={dragRef}
           onDragStart={onDragStart}
@@ -152,6 +162,7 @@ export function ScheduleCalendar({
         <DayView
           schedules={schedules}
           overlapIds={overlapIds}
+          locale={locale}
           dayShort={dayShort}
           dragRef={dragRef}
           onDragStart={onDragStart}
@@ -164,6 +175,7 @@ export function ScheduleCalendar({
           locale={locale}
           dayShort={dayShort}
           onEventClick={onEventClick}
+          onDayClick={onDayClick}
         />
       )}
     </section>
@@ -173,15 +185,18 @@ export function ScheduleCalendar({
 function WeekView({
   schedules,
   overlapIds,
+  locale,
   dayShort,
   dragRef,
   onDragStart,
   onEventClick,
-}: Omit<ScheduleCalendarProps, 'loading' | 'locale' | 'viewMode'>) {
+}: Omit<ScheduleCalendarProps, 'loading' | 'viewMode' | 'onDayClick'>) {
+  const prefersReduced = useReducedMotion();
+  const dayOrder = getDayOrder(locale);
   return (
         <div className="flex gap-2 overflow-x-auto pb-2">
           <div
-            className="sticky start-0 z-20 flex shrink-0 flex-col border-e border-border/60 pe-2 text-[11px] text-muted-foreground"
+            className="sticky start-0 z-sticky flex shrink-0 flex-col border-e border-border/60 pe-2 text-[11px] text-muted-foreground"
             style={{ width: 48, height: TOTAL_H + 28 }}
           >
             <div className="h-7 shrink-0" />
@@ -197,13 +212,13 @@ function WeekView({
           </div>
 
           <div className="flex min-w-0 flex-1 gap-1">
-            {[0, 1, 2, 3, 4, 5, 6].map((dow) => (
+            {dayOrder.map((dow) => (
               <div
                 key={dow}
                 className="relative min-w-[100px] flex-1 rounded-2xl border border-border bg-muted/20"
                 style={{ height: TOTAL_H + 28 }}
               >
-                <div className="sticky top-0 z-10 mb-1 flex h-7 items-center justify-center rounded-t-xl bg-muted/50 text-center text-xs font-semibold text-foreground">
+                <div className="sticky top-0 z-sticky mb-1 flex h-7 items-center justify-center rounded-t-xl bg-muted/50 text-center text-xs font-semibold text-foreground">
                   {dayShort(dow)}
                 </div>
                 <div
@@ -239,7 +254,7 @@ function WeekView({
                         <motion.div
                           key={`${sch.id}-${dow}-${idx}`}
                           layout
-                          initial={{ opacity: 0, y: 6 }}
+                          initial={{ opacity: 0, y: prefersReduced ? 0 : 6 }}
                           animate={{ opacity: 1, y: 0 }}
                           className={cn(
                             'absolute start-0.5 end-0.5 cursor-grab overflow-hidden rounded-lg px-1.5 py-1 text-[10px] font-medium leading-tight text-white shadow-lg active:cursor-grabbing',
@@ -299,12 +314,15 @@ function WeekView({
 function DayView({
   schedules,
   overlapIds,
+  locale,
   dayShort,
   dragRef,
   onDragStart,
   onEventClick,
-}: Omit<ScheduleCalendarProps, 'loading' | 'locale' | 'viewMode'>) {
+}: Omit<ScheduleCalendarProps, 'loading' | 'viewMode' | 'onDayClick'>) {
   const t = useTranslations('schedules');
+  const prefersReduced = useReducedMotion();
+  const dayOrder = getDayOrder(locale);
   const [selectedDow, setSelectedDow] = useState(() => new Date().getDay());
 
   const daySchedules = schedules.filter((s) => s.daysOfWeek.includes(selectedDow));
@@ -313,7 +331,7 @@ function DayView({
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-1">
-          {[0, 1, 2, 3, 4, 5, 6].map((dow) => (
+          {dayOrder.map((dow) => (
             <button
               key={dow}
               type="button"
@@ -336,7 +354,7 @@ function DayView({
 
       <div className="flex gap-2 overflow-x-auto pb-2">
         <div
-          className="sticky start-0 z-20 flex shrink-0 flex-col border-e border-border/60 pe-2 text-[11px] text-muted-foreground"
+          className="sticky start-0 z-sticky flex shrink-0 flex-col border-e border-border/60 pe-2 text-[11px] text-muted-foreground"
           style={{ width: 56, height: TOTAL_H + 28 }}
         >
           <div className="h-7 shrink-0" />
@@ -352,7 +370,7 @@ function DayView({
         </div>
 
         <div className="relative min-w-0 flex-1 rounded-2xl border border-border bg-muted/20" style={{ height: TOTAL_H + 28 }}>
-          <div className="sticky top-0 z-10 mb-1 flex h-7 items-center justify-center rounded-t-xl bg-muted/50 text-center text-sm font-semibold text-foreground">
+          <div className="sticky top-0 z-sticky mb-1 flex h-7 items-center justify-center rounded-t-xl bg-muted/50 text-center text-sm font-semibold text-foreground">
             {dayShort(selectedDow)}
           </div>
           <div
@@ -383,7 +401,7 @@ function DayView({
                   <motion.div
                     key={`${sch.id}-${idx}`}
                     layout
-                    initial={{ opacity: 0, y: 6 }}
+                    initial={{ opacity: 0, y: prefersReduced ? 0 : 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     className={cn(
                       'absolute start-1 end-1 cursor-grab overflow-hidden rounded-lg px-2 py-1.5 text-xs font-medium leading-tight text-white shadow-lg active:cursor-grabbing',
@@ -450,12 +468,14 @@ function MonthView({
   locale,
   dayShort,
   onEventClick,
+  onDayClick,
 }: {
   schedules: ScheduleApi[];
   overlapIds: Set<string>;
   locale: string;
   dayShort: (dow: number) => string;
   onEventClick?: (schedule: ScheduleApi) => void;
+  onDayClick?: (date: Date) => void;
 }) {
   const t = useTranslations('schedules');
   const [cursor, setCursor] = useState(() => {
@@ -464,25 +484,28 @@ function MonthView({
     return d;
   });
 
+  const dayOrder = getDayOrder(locale);
+
   const grid = useMemo(() => {
     const year = cursor.getFullYear();
     const month = cursor.getMonth();
     const firstDay = new Date(year, month, 1);
     const startDow = firstDay.getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const leadingBlanks = dayOrder.indexOf(startDow);
     const cells: Array<{ date: Date | null; dow: number }> = [];
-    for (let i = 0; i < startDow; i++) {
-      cells.push({ date: null, dow: i });
+    for (let i = 0; i < leadingBlanks; i++) {
+      cells.push({ date: null, dow: dayOrder[i] });
     }
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(year, month, d);
       cells.push({ date, dow: date.getDay() });
     }
     while (cells.length % 7 !== 0) {
-      cells.push({ date: null, dow: cells.length % 7 });
+      cells.push({ date: null, dow: dayOrder[cells.length % 7] });
     }
     return cells;
-  }, [cursor]);
+  }, [cursor, dayOrder]);
 
   const monthLabel = useMemo(() => {
     return new Intl.DateTimeFormat(locale === 'ar' ? 'ar' : 'en', {
@@ -543,14 +566,15 @@ function MonthView({
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-1" role="grid" aria-label={monthLabel}>
-        {Array.from({ length: 7 }, (_, i) => (
+      <div className="overflow-x-auto pb-2">
+      <div className="grid grid-cols-7 gap-1 min-w-[640px]" role="grid" aria-label={monthLabel}>
+        {dayOrder.map((dow) => (
           <div
-            key={i}
+            key={dow}
             role="columnheader"
             className="pb-1 text-center text-xs font-semibold uppercase text-muted-foreground"
           >
-            {dayShort(i)}
+            {dayShort(dow)}
           </div>
         ))}
         {grid.map((cell, idx) => {
@@ -570,7 +594,9 @@ function MonthView({
                 isToday
                   ? 'border-primary/20 bg-primary/5'
                   : 'border-border bg-muted/15',
+                onDayClick && 'cursor-pointer hover:border-primary/30 hover:bg-primary/5',
               )}
+              onClick={() => onDayClick?.(cell.date!)}
             >
               <span
                 className={cn(
@@ -622,29 +648,47 @@ function MonthView({
           );
         })}
       </div>
+      </div>
     </div>
   );
 }
 
 type ScheduleListProps = {
   schedules: ScheduleApi[];
+  overlapIds?: Set<string>;
   dayShort: (dow: number) => string;
   onDelete: (id: string) => void;
   onEdit?: (schedule: ScheduleApi) => void;
   t: (key: string) => string;
 };
 
-export function ScheduleList({ schedules, dayShort, onDelete, onEdit, t }: ScheduleListProps) {
+export function ScheduleList({ schedules, overlapIds, dayShort, onDelete, onEdit, t }: ScheduleListProps) {
+  const sorted = useMemo(() => {
+    if (!overlapIds || overlapIds.size === 0) return schedules;
+    return [...schedules].sort((a, b) => {
+      const aOver = overlapIds.has(a.id) ? 1 : 0;
+      const bOver = overlapIds.has(b.id) ? 1 : 0;
+      if (aOver !== bOver) return bOver - aOver;
+      return b.priority - a.priority;
+    });
+  }, [schedules, overlapIds]);
+
   return (
     <section className="vc-glass vc-card-surface rounded-3xl p-6">
       <h3 className="mb-4 text-base font-semibold">{t('listTitle')}</h3>
       <ul className="space-y-2">
-        {schedules.map((s) => {
+        {sorted.map((s) => {
           const color = getPlaylistColor(s.playlistId);
+          const isOver = overlapIds?.has(s.id) ?? false;
           return (
             <li
               key={s.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/60 bg-muted/20 px-4 py-3 text-sm"
+              className={cn(
+                'flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm',
+                isOver
+                  ? 'border-destructive/40 bg-destructive/5'
+                  : 'border-border/60 bg-muted/20',
+              )}
             >
               <div className="flex items-center gap-3">
                 <span
@@ -653,7 +697,18 @@ export function ScheduleList({ schedules, dayShort, onDelete, onEdit, t }: Sched
                   aria-hidden
                 />
                 <div>
-                  <p className="font-medium">{s.playlist.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">{s.playlist.name}</p>
+                    {isOver && (
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive"
+                        role="status"
+                      >
+                        <AlertTriangle className="h-3 w-3" />
+                        {t('legendOverlap')}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {s.recurrence === 'MONTHLY'
                       ? `${t('recurrenceMonthly')} · ${(s.daysOfMonth ?? []).join(', ')}`

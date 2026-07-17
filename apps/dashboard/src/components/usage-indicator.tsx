@@ -62,15 +62,15 @@ export function UsageIndicator({ screenCount, storageUsedBytes }: Props) {
             </p>
             <p className="text-sm font-medium">
               {screenCount} / {sub.screenLimit}
-              {screenPct != null && screenPct >= 90 && (
-                <span className="ms-2 text-xs font-semibold text-amber-600">{t('nearLimit')}</span>
+              {screenPct != null && screenPct >= 70 && (
+                <span className={`ms-2 text-xs font-semibold ${screenPct >= 90 ? 'text-destructive' : 'text-amber-600'}`}>{t('nearLimit')}</span>
               )}
             </p>
           </div>
           {screenPct != null && (
             <div className="h-2 w-20 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={screenPct} aria-valuemin={0} aria-valuemax={100}>
               <div
-                className={`h-full rounded-full transition-[width] duration-500 ${screenPct >= 90 ? 'bg-amber-500' : 'bg-primary'}`}
+                className={`h-full rounded-full transition-[width] duration-500 ${screenPct >= 90 ? 'bg-destructive' : screenPct >= 70 ? 'bg-amber-500' : 'bg-success'}`}
                 style={{ width: `${screenPct}%` }}
               />
             </div>
@@ -87,15 +87,15 @@ export function UsageIndicator({ screenCount, storageUsedBytes }: Props) {
               {sub.storageLimitBytes != null && sub.storageLimitBytes > 0
                 ? `${formatBytesLocale(storageUsedBytes!, locale)} / ${formatBytesLocale(sub.storageLimitBytes, locale)}`
                 : formatBytesLocale(storageUsedBytes!, locale)}
-              {storagePct != null && storagePct >= 90 && (
-                <span className="ms-2 text-xs font-semibold text-amber-600">{t('nearLimit')}</span>
+              {storagePct != null && storagePct >= 70 && (
+                <span className={`ms-2 text-xs font-semibold ${storagePct >= 90 ? 'text-destructive' : 'text-amber-600'}`}>{t('nearLimit')}</span>
               )}
             </p>
           </div>
           {storagePct != null && (
             <div className="h-2 w-20 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={storagePct} aria-valuemin={0} aria-valuemax={100}>
               <div
-                className={`h-full rounded-full transition-[width] duration-500 ${storagePct >= 90 ? 'bg-amber-500' : 'bg-primary'}`}
+                className={`h-full rounded-full transition-[width] duration-500 ${storagePct >= 90 ? 'bg-destructive' : storagePct >= 70 ? 'bg-amber-500' : 'bg-success'}`}
                 style={{ width: `${storagePct}%` }}
               />
             </div>

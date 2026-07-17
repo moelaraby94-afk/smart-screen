@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Pause, Play, X, ChevronLeft, ChevronRight, Wand2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -21,12 +21,51 @@ type Props = {
 
 export function PlaylistPreviewOverlay({ open, onClose, rows, defaultTransition, transitionDuration = 0.6 }: Props) {
   const t = useTranslations('playlistStudioClient');
+  const prefersReducedMotion = useReducedMotion();
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [direction, setDirection] = useState(1);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
 
   const current = rows[index];
+
+  // Focus trap + restore
+  useEffect(() => {
+    if (!open) return;
+    triggerRef.current = document.activeElement as HTMLElement;
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+    const focusable = overlay.querySelectorAll<HTMLElement>(
+      'button, [href], input, [tabindex]:not([tabindex="-1"])',
+    );
+    const firstFocusable = focusable[0];
+    if (firstFocusable) firstFocusable.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+      if (e.key === 'Tab' && focusable.length > 0) {
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    overlay.addEventListener('keydown', handleKeyDown);
+    return () => {
+      overlay.removeEventListener('keydown', handleKeyDown);
+      if (triggerRef.current) triggerRef.current.focus();
+    };
+  }, [open, onClose]);
 
   useEffect(() => {
     if (!open) {
@@ -63,8 +102,25 @@ export function PlaylistPreviewOverlay({ open, onClose, rows, defaultTransition,
   const currentTransition = current?.transition ?? defaultTransition;
   const variant = getMotionVariant(currentTransition, transitionDuration);
 
+  const overlayAnimation = prefersReducedMotion
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.01 } }
+    : { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.3, ease: [0, 0, 0.2, 1] as const } };
+
+  const handleStageClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black/95 backdrop-blur-md">
+    <AnimatePresence>
+      <motion.div
+        ref={overlayRef}
+        key="preview-overlay"
+        {...overlayAnimation}
+        className="fixed inset-0 z-modal flex flex-col bg-black/95 backdrop-blur-md"
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('previewMode')}
+      >
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-3 text-white">
@@ -104,8 +160,11 @@ export function PlaylistPreviewOverlay({ open, onClose, rows, defaultTransition,
         </div>
       </div>
 
-      {/* Stage */}
-      <div className="relative flex flex-1 items-center justify-center overflow-hidden">
+      {/* Stage — click on empty area closes */}
+      <div
+        className="relative flex flex-1 items-center justify-center overflow-hidden"
+        onClick={handleStageClick}
+      >
         {rows.length === 0 ? (
           <p className="text-white/60">{t('previewEmpty')}</p>
         ) : current ? (
@@ -189,11 +248,12 @@ export function PlaylistPreviewOverlay({ open, onClose, rows, defaultTransition,
               className={`h-2 rounded-full transition-all ${
                 i === index ? 'w-8 bg-white' : 'w-2 bg-white/30 hover:bg-white/50'
               }`}
-              aria-label={`Slide ${i + 1}`}
+              aria-label={`${t('previewMode')} ${i + 1}`}
             />
           ))}
         </div>
       )}
-    </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

@@ -36,6 +36,8 @@ import {
 } from '@/features/dashboard/home-dashboard-dialogs';
 import { Button } from '@/components/ui/button';
 import { CardGridSkeleton } from '@/components/ui/skeleton-patterns';
+import { UsageIndicator } from '@/components/usage-indicator';
+import { fetchMediaStats } from '@/features/dashboard/dashboard-api';
 
 export function ClientHomeDashboard() {
   const t = useTranslations('clientHome');
@@ -43,6 +45,7 @@ export function ClientHomeDashboard() {
   const { toastResponseError } = useApiErrorToast();
   const {
     workspaces,
+    workspaceId,
     setWorkspaceId,
     isSuperAdmin,
     bumpWorkspaceDataEpoch,
@@ -58,6 +61,7 @@ export function ClientHomeDashboard() {
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [pauseBusyId, setPauseBusyId] = useState<string | null>(null);
   const [seedDemoBusyId, setSeedDemoBusyId] = useState<string | null>(null);
+  const [storageUsed, setStorageUsed] = useState<number | undefined>(undefined);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -81,6 +85,23 @@ export function ClientHomeDashboard() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const loadStorage = useCallback(async () => {
+    if (!workspaceId) return;
+    try {
+      const res = await fetchMediaStats(workspaceId);
+      if (res.ok) {
+        const data = (await res.json()) as { totalSizeBytes?: number };
+        setStorageUsed(data.totalSizeBytes ?? 0);
+      }
+    } catch {
+      // silent — storage indicator is optional
+    }
+  }, [workspaceId]);
+
+  useEffect(() => {
+    void loadStorage();
+  }, [loadStorage]);
 
   const daysRemaining = useMemo(() => {
     if (!insights) return null;
@@ -246,6 +267,8 @@ export function ClientHomeDashboard() {
           <OnboardingProgressWidget />
 
           <QuickActionsSection />
+
+          <UsageIndicator screenCount={totalScreens} storageUsedBytes={storageUsed} />
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <ScreenHealthSection />

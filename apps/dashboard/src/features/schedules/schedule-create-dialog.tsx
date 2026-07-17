@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Loader2, Trash2, PowerOff } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Loader2, Trash2, PowerOff, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,6 +25,21 @@ import { cn } from '@/lib/utils';
 type PlaylistOpt = { id: string; name: string; _count?: { items: number } };
 type ScreenOpt = { id: string; name: string };
 
+type ScheduleApi = {
+  id: string;
+  screenId: string | null;
+  playlistId: string;
+  daysOfWeek: number[];
+  recurrence?: string;
+  daysOfMonth?: number[];
+  startTime: string;
+  endTime: string;
+  priority: number;
+  enabled: boolean;
+  playlist: { id: string; name: string };
+  screen: { id: string; name: string } | null;
+};
+
 type EditSchedule = {
   id: string;
   playlistId: string;
@@ -47,6 +62,7 @@ export function CreateScheduleForm({
   onCancel,
   t,
   editSchedule,
+  existingSchedules,
 }: {
   locale: string;
   workspaceId: string;
@@ -56,6 +72,7 @@ export function CreateScheduleForm({
   onCancel: () => void;
   t: ReturnType<typeof useTranslations<'schedules'>>;
   editSchedule?: EditSchedule | null;
+  existingSchedules?: ScheduleApi[];
 }) {
   const isEdit = !!editSchedule;
   const [playlistId, setPlaylistId] = useState(editSchedule?.playlistId ?? '');
@@ -73,6 +90,33 @@ export function CreateScheduleForm({
   const [deactivating, setDeactivating] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [conflictMsg, setConflictMsg] = useState('');
+
+  // Real-time conflict preview (UJ-04)
+  const conflicts = useMemo(() => {
+    if (!existingSchedules || existingSchedules.length === 0) return [];
+    const sm = startTime.split(':').reduce((h, m) => h * 60 + Number(m), 0);
+    const em = endTime.split(':').reduce((h, m) => h * 60 + Number(m), 0);
+    if (em <= sm) return [];
+
+    const currentDays = recurrence === 'DAILY' ? [0, 1, 2, 3, 4, 5, 6] : recurrence === 'WEEKLY' ? days : [];
+    const editId = editSchedule?.id;
+
+    return existingSchedules.filter((s) => {
+      if (!s.enabled) return false;
+      if (s.id === editId) return false;
+      // Screen overlap: conflict if same screen or either is "all screens"
+      const screenOverlap = !screenId || !s.screenId || screenId === s.screenId;
+      if (!screenOverlap) return false;
+      // Day overlap
+      const sDays = s.recurrence === 'DAILY' ? [0, 1, 2, 3, 4, 5, 6] : s.daysOfWeek ?? [];
+      const dayOverlap = currentDays.some((d) => sDays.includes(d));
+      if (!dayOverlap && recurrence !== 'MONTHLY' && s.recurrence !== 'MONTHLY') return false;
+      // Time overlap
+      const sStart = s.startTime.split(':').reduce((h, m) => h * 60 + Number(m), 0);
+      const sEnd = s.endTime.split(':').reduce((h, m) => h * 60 + Number(m), 0);
+      return sm < sEnd && sStart < em;
+    });
+  }, [existingSchedules, startTime, endTime, screenId, days, recurrence, editSchedule?.id]);
 
   const dayShort = (dow: number) => {
     const base = new Date(Date.UTC(2024, 0, 7 + dow));
@@ -188,6 +232,30 @@ export function CreateScheduleForm({
         {conflictMsg && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive" role="alert">
             {conflictMsg}
+          </div>
+        )}
+        {conflicts.length > 0 && (
+          <div className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2.5 text-sm" role="status">
+            <div className="flex items-center gap-1.5 font-medium text-warning">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              {t('conflictPreviewTitle')}
+            </div>
+            <ul className="mt-1.5 space-y-1 text-xs text-muted-foreground">
+              {conflicts.slice(0, 3).map((c) => (
+                <li key={c.id} className="flex items-start gap-1.5">
+                  <span className="mt-0.5 h-1 w-1 flex-shrink-0 rounded-full bg-warning" />
+                  <span>
+                    {c.playlist.name} — {c.startTime}–{c.endTime}
+                    {c.screen ? ` (${c.screen.name})` : ` (${t('allScreens')})`}
+                  </span>
+                </li>
+              ))}
+              {conflicts.length > 3 && (
+                <li className="text-xs text-muted-foreground">
+                  {t('conflictPreviewMore', { count: conflicts.length - 3 })}
+                </li>
+              )}
+            </ul>
           </div>
         )}
         <div className="grid gap-2">

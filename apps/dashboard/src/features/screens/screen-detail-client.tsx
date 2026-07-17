@@ -11,6 +11,7 @@ import {
   MapPin, Monitor, RefreshCw, BadgeAlert, Activity, Clock, Film, Zap,
   Megaphone, ListMusic, CalendarClock, ChevronRight, MoreHorizontal,
   PenLine, Trash2, BarChart3, RotateCcw, Check, X, Calendar,
+  Wifi, WifiOff, Radio, Wrench, ArrowLeft,
 } from 'lucide-react';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { getStoredAccessToken } from '@/features/auth/session';
@@ -27,6 +28,7 @@ import {
   deriveFleetReachability, formatLastSeenRelative, ScreenFleetStatusBadge,
 } from '@/features/screens/screen-fleet-status';
 import { useScreenActivePreview } from '@/features/screens/use-screen-active-preview';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -42,6 +44,9 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 
 type ScheduleRow = {
   id: string;
@@ -58,6 +63,75 @@ type ScheduleRow = {
 };
 
 type Props = { screenId: string; locale: string };
+
+type ScreenEventType =
+  | 'status_online'
+  | 'status_offline'
+  | 'status_maintenance'
+  | 'content_change'
+  | 'command_refresh'
+  | 'command_identify'
+  | 'command_restart'
+  | 'reconnect'
+  | 'override_activated'
+  | 'override_cleared'
+  | 'content_assigned';
+
+type ScreenEvent = {
+  id: string;
+  type: ScreenEventType;
+  timestamp: number;
+  status: 'success' | 'error' | 'info';
+};
+
+const MAX_EVENTS = 5;
+
+const EVENT_ICONS: Record<ScreenEventType, typeof Activity> = {
+  status_online: Wifi,
+  status_offline: WifiOff,
+  status_maintenance: Wrench,
+  content_change: Film,
+  command_refresh: RefreshCw,
+  command_identify: BadgeAlert,
+  command_restart: RotateCcw,
+  reconnect: Radio,
+  override_activated: Zap,
+  override_cleared: Zap,
+  content_assigned: ListMusic,
+};
+
+const EVENT_LABEL_KEYS: Record<ScreenEventType, string> = {
+  status_online: 'eventOnline',
+  status_offline: 'eventOffline',
+  status_maintenance: 'eventMaintenance',
+  content_change: 'eventContentChange',
+  command_refresh: 'eventCommandRefresh',
+  command_identify: 'eventCommandIdentify',
+  command_restart: 'eventCommandRestart',
+  reconnect: 'eventReconnect',
+  override_activated: 'eventOverrideActivated',
+  override_cleared: 'eventOverrideCleared',
+  content_assigned: 'eventContentAssigned',
+};
+
+function useScreenEventLog() {
+  const eventsRef = useRef<ScreenEvent[]>([]);
+  const [events, setEventsState] = useState<ScreenEvent[]>([]);
+  const idCounter = useRef(0);
+
+  const addEvent = useCallback((type: ScreenEventType, status: 'success' | 'error' | 'info' = 'info') => {
+    const event: ScreenEvent = {
+      id: `evt-${++idCounter.current}`,
+      type,
+      timestamp: Date.now(),
+      status,
+    };
+    eventsRef.current = [event, ...eventsRef.current].slice(0, MAX_EVENTS);
+    setEventsState(eventsRef.current);
+  }, []);
+
+  return { events, addEvent };
+}
 
 const EDITABLE_ROLES = ['OWNER', 'ADMIN', 'EDITOR'];
 
@@ -110,6 +184,7 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
   const prevStatusRef = useRef<string | null>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const locationInputRef = useRef<HTMLInputElement>(null);
+  const { events: screenEvents, addEvent } = useScreenEventLog();
 
   const userRole = useMemo(() => {
     const ws = workspaces.find((w) => w.id === workspaceId);
@@ -205,8 +280,13 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
       reconnectionDelayMax: 15000,
       timeout: 20000,
     });
+    let hasConnectedBefore = false;
     socket.on('connect', () => {
       socket.emit('dashboard:subscribe', { workspaceId });
+      if (hasConnectedBefore) {
+        addEvent('reconnect', 'success');
+      }
+      hasConnectedBefore = true;
     });
     socket.on('screen:status', (payload: { screenId: string; status: string; lastSeenAt: string }) => {
       if (payload.screenId !== screenId) return;
@@ -217,12 +297,18 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
       if (prevStatus && prevStatus !== payload.status) {
         if (payload.status === 'OFFLINE') {
           toast.error(tDetail('statusOfflineToast', { name: screenNameRef.current ?? '' }));
+          addEvent('status_offline', 'error');
+        } else if (payload.status === 'ONLINE') {
+          addEvent('status_online', 'success');
+        } else if (payload.status === 'MAINTENANCE') {
+          addEvent('status_maintenance', 'info');
         }
       }
       prevStatusRef.current = payload.status;
     });
     socket.on('screen:content', (payload: { screenId: string }) => {
       if (payload.screenId !== screenId) return;
+      addEvent('content_change', 'info');
       void loadAll();
     });
     return () => {
@@ -308,8 +394,14 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
       const res = await sendRemoteCommand(workspaceId, screenId, cmd);
       if (!res.ok) throw new Error('fail');
       toast.success(tDetail('commandSent'));
+      if (cmd === 'refresh_content') addEvent('command_refresh', 'success');
+      else if (cmd === 'identify') addEvent('command_identify', 'success');
+      else if (cmd === 'restart') addEvent('command_restart', 'success');
     } catch {
       toast.error(tDetail('commandFailed'));
+      if (cmd === 'refresh_content') addEvent('command_refresh', 'error');
+      else if (cmd === 'identify') addEvent('command_identify', 'error');
+      else if (cmd === 'restart') addEvent('command_restart', 'error');
     } finally {
       setRemoteBusy(false);
     }
@@ -324,6 +416,7 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
       });
       if (!res.ok) throw new Error('fail');
       toast.success(tDetail('contentAssigned', { name: screen.name }));
+      addEvent('content_assigned', 'success');
       setAssignDialogOpen(false);
       await refreshScreen();
     } catch {
@@ -344,8 +437,10 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
       if (!res.ok) throw new Error('fail');
       if (overridePlId) {
         toast.warning(tDetail('overrideActivated', { name: screen.name }));
+        addEvent('override_activated', 'info');
       } else {
         toast.success(tDetail('overrideCleared', { name: screen.name }));
+        addEvent('override_cleared', 'info');
       }
       setOverrideOpen(false);
       await refreshScreen();
@@ -402,6 +497,7 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
           <Skeleton className="h-64 rounded-lg" />
         </div>
         <Skeleton className="h-48 rounded-lg" />
+        <Skeleton className="h-48 rounded-lg" />
         <Skeleton className="h-32 rounded-lg" />
       </div>
     );
@@ -451,14 +547,19 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
 
   return (
     <div className="mx-auto max-w-[1200px] px-6 py-6 space-y-6" role="region" aria-label={tDetail('currentContent')}>
-      {/* Section 1: Breadcrumbs + Header */}
-      <nav aria-label={tDetail('breadcrumbLabel')} className="flex items-center gap-2 text-sm">
+      {/* Section 1: Back button + Breadcrumbs + Header */}
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" className="rounded-lg" aria-label={tDetail('backToScreens')} onClick={() => router.push(`/${locale}/screens` as Route)}>
+          <ArrowLeft className={cn('h-4 w-4', isAr && 'rotate-180')} />
+        </Button>
+        <nav aria-label={tDetail('breadcrumbLabel')} className="flex items-center gap-2 text-sm">
         <Link href={`/${locale}/screens` as Route} className="text-muted-foreground transition-colors hover:text-foreground">
           {t('fleet')}
         </Link>
         <ChevronRight className={`h-4 w-4 text-muted-foreground/50 ${isAr ? 'rotate-180' : ''}`} />
         <span className="font-medium text-foreground" aria-current="page">{screen.name}</span>
-      </nav>
+        </nav>
+      </div>
 
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -698,18 +799,21 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
                 </dt>
                 <dd>
                   {canEdit ? (
-                    <select
-                      className="h-8 rounded-lg border border-border bg-background px-2 text-sm font-medium text-foreground outline-none focus:border-primary/40 focus:ring-2 focus:ring-ring/20 disabled:opacity-50"
-                      value={screen.playlistGroupId ?? ''}
-                      onChange={(e) => void handleBranchChange(e.target.value || null)}
+                    <Select
+                      value={screen.playlistGroupId ?? 'none'}
+                      onValueChange={(v) => void handleBranchChange(v === 'none' ? null : v)}
                       disabled={savingBranch}
-                      aria-label={tDetail('branch')}
                     >
-                      <option value="">{tDetail('noBranchSelect')}</option>
-                      {playlists.map((p) => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="h-8 w-[180px] text-sm font-medium" aria-label={tDetail('branch')}>
+                        <SelectValue placeholder={tDetail('noBranchSelect')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">{tDetail('noBranchSelect')}</SelectItem>
+                        {playlists.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   ) : (
                     <span className="font-medium text-foreground">
                       {screen.playlistGroup?.name ?? tDetail('noBranch')}
@@ -817,11 +921,46 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
           {tDetail('recentEvents')}
         </h2>
         <div className="p-5">
-          <div className="flex flex-col items-center gap-2 py-6 text-center">
-            <Activity className="h-10 w-10 text-muted-foreground/30" strokeWidth={1.25} />
-            <p className="font-medium text-foreground">{tDetail('noEvents')}</p>
-            <p className="text-sm text-muted-foreground">{tDetail('noEventsDesc')}</p>
-          </div>
+          {screenEvents.length > 0 ? (
+            <ul role="list" className="space-y-1" aria-label={tDetail('recentEvents')}>
+              {screenEvents.map((evt) => {
+                const Icon = EVENT_ICONS[evt.type];
+                const label = tDetail(EVENT_LABEL_KEYS[evt.type] as never);
+                const colorClass =
+                  evt.status === 'error' ? 'text-destructive'
+                    : evt.status === 'success' ? 'text-success'
+                    : 'text-muted-foreground';
+                const relativeTime = formatLastSeenRelative(new Date(evt.timestamp).toISOString(), activeLocale) ?? '';
+                return (
+                  <li
+                    key={evt.id}
+                    role="listitem"
+                    className="flex items-center gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-muted/40"
+                  >
+                    <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted/50', colorClass)}>
+                      <Icon className="h-4 w-4" strokeWidth={1.5} />
+                    </span>
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className="truncate text-sm font-medium text-foreground">{label}</span>
+                      <span className="text-xs text-muted-foreground" dir="auto">{relativeTime}</span>
+                    </div>
+                    {evt.status === 'error' && (
+                      <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-destructive">{tDetail('eventFailed')}</span>
+                    )}
+                    {evt.status === 'success' && (
+                      <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-success">{tDetail('eventSuccess')}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div className="flex flex-col items-center gap-2 py-6 text-center">
+              <Activity className="h-10 w-10 text-muted-foreground/30" strokeWidth={1.25} />
+              <p className="font-medium text-foreground">{tDetail('noEvents')}</p>
+              <p className="text-sm text-muted-foreground">{tDetail('noEventsDesc')}</p>
+            </div>
+          )}
         </div>
       </section>
 

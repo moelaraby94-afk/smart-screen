@@ -28,6 +28,7 @@ export type CanvasObjectJson = {
   qrData?: string;
   locked?: boolean;
   fitMode?: 'contain' | 'cover' | 'fill';
+  duration?: number;
 };
 
 export type ZonePreset = {

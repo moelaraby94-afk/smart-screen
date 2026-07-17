@@ -265,12 +265,38 @@ export function PairingWizardClient({ locale }: Props) {
                   {t('codeHelp')}
                 </p>
                 {pairing.showProgressBanner && (
-                  <p
+                  <div
                     role="status"
-                    className="rounded-lg border border-primary/40 bg-primary/12 px-3 py-2 text-center text-xs font-medium leading-relaxed text-foreground"
+                    aria-live="polite"
+                    className="space-y-2 rounded-lg border border-primary/40 bg-primary/12 px-3 py-3"
                   >
-                    {t('pairingProgress')}
-                  </p>
+                    <p className="text-center text-xs font-medium leading-relaxed text-foreground">
+                      {t('pairingProgress')}
+                    </p>
+                    <div className="space-y-1.5">
+                      <p className="text-center text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        {t('wizardTroubleshootingTitle')}
+                      </p>
+                      <ul className="space-y-1 text-xs leading-relaxed text-muted-foreground">
+                        <li className="flex items-start gap-1.5">
+                          <span className="mt-0.5 h-1 w-1 flex-shrink-0 rounded-full bg-primary" />
+                          {t('wizardTip1')}
+                        </li>
+                        <li className="flex items-start gap-1.5">
+                          <span className="mt-0.5 h-1 w-1 flex-shrink-0 rounded-full bg-primary" />
+                          {t('wizardTip2')}
+                        </li>
+                        <li className="flex items-start gap-1.5">
+                          <span className="mt-0.5 h-1 w-1 flex-shrink-0 rounded-full bg-primary" />
+                          {t('wizardTip3')}
+                        </li>
+                        <li className="flex items-start gap-1.5">
+                          <span className="mt-0.5 h-1 w-1 flex-shrink-0 rounded-full bg-primary" />
+                          {t('wizardTip4')}
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
                 )}
                 {pairing.error && (
                   <p
@@ -289,7 +315,7 @@ export function PairingWizardClient({ locale }: Props) {
                     </Label>
                     <span className="group relative inline-flex">
                       <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60 cursor-help" tabIndex={0} aria-label={t('codeHelp')} />
-                      <span className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded-lg border border-border bg-popover p-2 text-xs text-popover-foreground opacity-0 shadow-md transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+                      <span className="pointer-events-none absolute bottom-full left-1/2 z-popover mb-2 w-48 -translate-x-1/2 rounded-lg border border-border bg-popover p-2 text-xs text-popover-foreground opacity-0 shadow-md transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
                         {t('codeHelp')}
                       </span>
                     </span>

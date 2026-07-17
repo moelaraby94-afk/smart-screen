@@ -173,8 +173,11 @@ export function SchedulesClient({ locale }: { locale: string }) {
   );
 
   const dayLabels = useMemo(
-    () => Array.from({ length: 7 }, (_, i) => dayShort(i)),
-    [dayShort],
+    () => {
+      const order = locale === 'ar' ? [6, 0, 1, 2, 3, 4, 5] : [0, 1, 2, 3, 4, 5, 6];
+      return order.map((d) => dayShort(d));
+    },
+    [dayShort, locale],
   );
 
   const dragRef = useRef<{
@@ -350,6 +353,7 @@ export function SchedulesClient({ locale }: { locale: string }) {
                   workspaceId={workspaceId}
                   playlists={playlists}
                   screens={screens}
+                  existingSchedules={schedules}
                   onCreated={() => {
                     setOpenCreate(false);
                     bumpWorkspaceDataEpoch();
@@ -496,10 +500,15 @@ export function SchedulesClient({ locale }: { locale: string }) {
           onAction={canEdit && schedules.length === 0 ? () => setOpenCreate(true) : undefined}
         />
       ) : viewMode === 'timeline' ? (
-        <SchedulesTimelineView schedules={sortedSchedules} dayLabels={dayLabels} />
+        <SchedulesTimelineView
+          schedules={sortedSchedules}
+          dayLabels={dayLabels}
+          dayOrder={locale === 'ar' ? [6, 0, 1, 2, 3, 4, 5] : [0, 1, 2, 3, 4, 5, 6]}
+        />
       ) : viewMode === 'list' ? (
         <ScheduleList
           schedules={sortedSchedules}
+          overlapIds={overlapIds}
           dayShort={dayShort}
           onDelete={(id) => {
             const s = schedules.find((x) => x.id === id);
@@ -519,10 +528,12 @@ export function SchedulesClient({ locale }: { locale: string }) {
             dragRef={dragRef}
             onDragStart={() => setDragActive(true)}
             onEventClick={canEdit ? onEditSchedule : undefined}
+            onDayClick={canEdit ? () => setOpenCreate(true) : undefined}
           />
           {!loading && sortedSchedules.length > 0 ? (
             <ScheduleList
               schedules={sortedSchedules}
+              overlapIds={overlapIds}
               dayShort={dayShort}
               onDelete={(id) => {
                 const s = schedules.find((x) => x.id === id);
@@ -542,6 +553,7 @@ export function SchedulesClient({ locale }: { locale: string }) {
             workspaceId={workspaceId}
             playlists={playlists}
             screens={screens}
+            existingSchedules={schedules}
             onCreated={() => {
               setOpenEdit(false);
               setEditSchedule(null);

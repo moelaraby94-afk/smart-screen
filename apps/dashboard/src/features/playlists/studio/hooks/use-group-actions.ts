@@ -7,6 +7,7 @@ import {
   createPlaylistGroup as apiCreatePlaylistGroup,
   renamePlaylistGroup as apiRenamePlaylistGroup,
   deletePlaylistGroup as apiDeletePlaylistGroup,
+  movePlaylistGroup as apiMovePlaylistGroup,
 } from '@/features/studio/studio-api';
 
 type UseGroupActionsParams = {
@@ -20,9 +21,10 @@ type UseGroupActionsParams = {
 };
 
 type UseGroupActionsReturn = {
-  handleCreateGroup: (name: string) => Promise<void>;
+  handleCreateGroup: (name: string, parentGroupId?: string | null) => Promise<void>;
   handleRenameGroup: (groupId: string, newName: string) => Promise<void>;
   handleDeleteGroup: (groupId: string) => Promise<void>;
+  handleMoveGroup: (groupId: string, newParentId: string | null) => Promise<void>;
 };
 
 export function useGroupActions({
@@ -37,9 +39,9 @@ export function useGroupActions({
   const t = useTranslations('playlistStudioClient');
 
   const handleCreateGroup = useCallback(
-    async (name: string) => {
+    async (name: string, parentGroupId?: string | null) => {
       if (!name.trim()) return;
-      const res = await apiCreatePlaylistGroup(name.trim());
+      const res = await apiCreatePlaylistGroup(name.trim(), parentGroupId ?? null);
       if (!res.ok) {
         toast.error(t('couldNotCreateGroup'));
         return;
@@ -82,5 +84,18 @@ export function useGroupActions({
     [filterGroupId, setFilterGroupId, loadGroups, loadPlaylists, t],
   );
 
-  return { handleCreateGroup, handleRenameGroup, handleDeleteGroup };
+  const handleMoveGroup = useCallback(
+    async (groupId: string, newParentId: string | null) => {
+      const res = await apiMovePlaylistGroup(groupId, newParentId);
+      if (!res.ok) {
+        toast.error(t('couldNotMoveGroup'));
+        return;
+      }
+      toast.success(t('groupMoved'));
+      await loadGroups();
+    },
+    [loadGroups, t],
+  );
+
+  return { handleCreateGroup, handleRenameGroup, handleDeleteGroup, handleMoveGroup };
 }

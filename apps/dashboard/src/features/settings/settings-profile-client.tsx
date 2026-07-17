@@ -18,12 +18,8 @@ import {
   updateProfile as apiUpdateProfile,
   requestEmailChange as apiRequestEmailChange,
   verifyEmailChange as apiVerifyEmailChange,
-  exportAccountData,
-  anonymizeAccount,
 } from '@/features/billing/billing-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
-import { TwoFactorSettings } from '@/features/settings/two-factor-settings';
-import { NotificationPreferences } from '@/features/settings/notification-preferences';
 
 type Me = {
   id: string;
@@ -46,10 +42,6 @@ export function SettingsProfileClient() {
   const [newEmail, setNewEmail] = useState('');
   const [emailOtp, setEmailOtp] = useState('');
   const [emailStep, setEmailStep] = useState<'request' | 'verify'>('request');
-  const [exporting, setExporting] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState('');
 
   const load = useCallback(async () => {
     const res = await fetchCurrentUser();
@@ -111,42 +103,6 @@ export function SettingsProfileClient() {
     setEmailOtp('');
     await load();
     await refreshWorkspaces();
-  };
-
-  const handleExport = async () => {
-    setExporting(true);
-    try {
-      const res = await exportAccountData();
-      if (!res.ok) throw new Error();
-      const blob = await res.json();
-      const json = JSON.stringify(blob, null, 2);
-      const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `account-data-${data?.email ?? 'export'}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success(t('exportSuccess'));
-    } catch {
-      toast.error(t('exportFailed'));
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  const handleAnonymize = async () => {
-    setDeleting(true);
-    try {
-      const res = await anonymizeAccount();
-      if (!res.ok) throw new Error();
-      toast.success(t('anonymizeSuccess'));
-      setDeleteOpen(false);
-      setTimeout(() => window.location.href = `/${typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : 'en'}/login`, 2000);
-    } catch {
-      toast.error(t('anonymizeFailed'));
-    } finally {
-      setDeleting(false);
-    }
   };
 
   if (loading || !data) return <p className="text-sm text-muted-foreground">{t('loading')}</p>;
@@ -227,62 +183,6 @@ export function SettingsProfileClient() {
         </DialogContent>
       </Dialog>
 
-      <TwoFactorSettings />
-
-      <NotificationPreferences />
-
-      <div className="vc-card-surface rounded-2xl border border-destructive/20 bg-card p-6 shadow-sm md:p-8">
-        <h2 className="text-lg font-semibold tracking-tight">{t('gdprTitle')}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{t('gdprSubtitle')}</p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            className="rounded-xl"
-            disabled={exporting}
-            onClick={() => void handleExport()}
-          >
-            {exporting ? t('exporting') : t('exportData')}
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            className="rounded-xl"
-            onClick={() => setDeleteOpen(true)}
-          >
-            {t('deleteAccount')}
-          </Button>
-        </div>
-      </div>
-
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent className="rounded-3xl sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('deleteAccountTitle')}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <p className="text-sm text-muted-foreground">{t('deleteAccountWarning')}</p>
-            <Label>{t('deleteAccountConfirm')}</Label>
-            <Input
-              value={deleteConfirm}
-              onChange={(e) => setDeleteConfirm(e.target.value)}
-              placeholder={t('deleteAccountConfirmPlaceholder')}
-              className="rounded-xl"
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="destructive"
-              className="rounded-2xl"
-              disabled={deleting || deleteConfirm !== t('deleteAccountConfirmWord')}
-              onClick={() => void handleAnonymize()}
-            >
-              {deleting ? t('deleting') : t('deleteAccountConfirmBtn')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

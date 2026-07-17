@@ -22,9 +22,11 @@ function timeToMinutes(time: string): number {
 export function SchedulesTimelineView({
   schedules,
   dayLabels,
+  dayOrder = [0, 1, 2, 3, 4, 5, 6],
 }: {
   schedules: ScheduleEntry[];
   dayLabels: string[];
+  dayOrder?: number[];
 }) {
   const t = useTranslations('schedules');
 
@@ -47,10 +49,11 @@ export function SchedulesTimelineView({
             ))}
           </div>
         </div>
-        {dayLabels.map((dayLabel, dayIdx) => {
-          const daySchedules = getSchedulesForDay(dayIdx);
+        {dayLabels.map((dayLabel, idx) => {
+          const dow = dayOrder[idx] ?? idx;
+          const daySchedules = getSchedulesForDay(dow);
           return (
-            <div key={dayIdx} className="flex items-center border-b border-border/50 py-1.5 min-h-[40px]">
+            <div key={idx} className="flex items-center border-b border-border/50 py-1.5 min-h-[40px]">
               <div className="w-[60px] shrink-0 text-xs font-medium text-muted-foreground pe-2 pt-1">{dayLabel}</div>
               <div className="relative flex-1 h-8">
                 {HOURS.map((h) => (
@@ -64,7 +67,7 @@ export function SchedulesTimelineView({
                   return (
                     <div
                       key={s.id}
-                      className="absolute top-0.5 h-7 rounded-md bg-primary/80 px-1.5 text-[10px] font-medium text-white flex items-center truncate cursor-pointer hover:bg-primary z-10"
+                      className="absolute top-0.5 h-7 rounded-md bg-primary/80 px-1.5 text-[10px] font-medium text-white flex items-center truncate cursor-pointer hover:bg-primary z-card"
                       style={{
                         left: `${leftPct}%`,
                         width: `${widthPct}%`,

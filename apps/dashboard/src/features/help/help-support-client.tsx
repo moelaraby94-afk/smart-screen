@@ -55,13 +55,13 @@ export function HelpSupportClient() {
       icon: ImageIcon,
       title: t('guides.media'),
       description: t('guides.mediaDesc'),
-      href: `/${locale}/media`,
+      href: `/${locale}/content/media`,
     },
     {
       icon: Clapperboard,
       title: t('guides.playlists'),
       description: t('guides.playlistsDesc'),
-      href: `/${locale}/playlists`,
+      href: `/${locale}/content/playlists`,
     },
     {
       icon: CalendarClock,
@@ -79,7 +79,7 @@ export function HelpSupportClient() {
       icon: BookOpen,
       title: t('guides.studio'),
       description: t('guides.studioDesc'),
-      href: `/${locale}/studio`,
+      href: `/${locale}/content/playlists`,
     },
   ];
 

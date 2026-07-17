@@ -348,7 +348,7 @@ Owner, Editor.
 
 ### Save Form
 - **Trigger:** "Save" button or Ctrl+S (future)
-- **API:** `PUT /playlists/{id}` with full layer data
+- **API:** `PATCH /canvases/{id}` with full layout data (workspaceId query param required)
 - **Validation:** None (any state is savable)
 - **Loading:** Button spinner + "Saving..."
 - **Success:** Toast: "Playlist saved"
@@ -421,8 +421,10 @@ Owner, Editor.
 
 | Endpoint | Method | Purpose | Data |
 |----------|--------|---------|------|
-| `/playlists/{id}` | GET | Load playlist with layers | → `{ layers, screenSettings }` |
-| `/playlists/{id}` | PUT | Save playlist | `{ layers, screenSettings, name }` |
+| `/canvases/{id}?workspaceId={wid}` | GET | Load canvas with layout | → `{ id, name, layoutData, width, height, durationSec }` |
+| `/canvases/{id}?workspaceId={wid}` | PATCH | Save canvas | `{ name, layoutData, width, height, durationSec }` |
+| `/canvases?workspaceId={wid}` | POST | Create canvas | `{ name, layoutData, width, height }` |
+| `/canvases?workspaceId={wid}` | GET | List canvases | Paginated canvases |
 | `/media?page={p}&search={q}` | GET | Media library for panel | Paginated media |
 | `/media` | POST (multipart) | Upload from Studio | File upload |
 
@@ -435,9 +437,9 @@ None — Studio is a single-user editing environment (no realtime collaboration)
 - No concurrent editing protection (last save wins)
 
 ### Missing APIs
-- `POST /playlists/{id}/autosave` — Auto-save endpoint (future, lightweight)
-- `GET /playlists/{id}/versions` — Version history (future)
-- `POST /playlists/{id}/versions/{ver}/restore` — Restore version (future)
+- `PATCH /canvases/{id}/autosave` — Auto-save endpoint (future, lightweight)
+- `GET /canvases/{id}/versions` — Version history (future)
+- `POST /canvases/{id}/versions/{ver}/restore` — Restore version (future)
 
 ---
 

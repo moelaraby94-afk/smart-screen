@@ -41,8 +41,11 @@ export class PlaylistsController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
   @Post('groups')
-  createGroup(@Body() body: { name: string }, @CurrentUser() user: JwtUser) {
-    return this.playlistsService.createGroup(user.sub, body.name);
+  createGroup(
+    @Body() body: { name: string; parentGroupId?: string | null },
+    @CurrentUser() user: JwtUser,
+  ) {
+    return this.playlistsService.createGroup(user.sub, body.name, body.parentGroupId ?? null);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
@@ -63,6 +66,16 @@ export class PlaylistsController {
     @CurrentUser() user: JwtUser,
   ): Promise<void> {
     await this.playlistsService.deleteGroup(user.sub, groupId);
+  }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
+  @Patch('groups/:groupId/move')
+  moveGroup(
+    @Param('groupId') groupId: string,
+    @Body() body: { newParentId: string | null },
+    @CurrentUser() user: JwtUser,
+  ) {
+    return this.playlistsService.moveGroup(user.sub, groupId, body.newParentId ?? null);
   }
 
   // ─── Playlist CRUD ─────────────────────────────────────────────────

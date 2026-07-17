@@ -17,6 +17,7 @@ export function AppToaster() {
       position={isRtl ? 'top-left' : 'top-right'}
       theme={resolvedTheme === 'light' ? 'light' : 'dark'}
       aria-live="polite"
+      style={{ zIndex: 'var(--z-toast)' }}
       toastOptions={{
         classNames: {
           toast:

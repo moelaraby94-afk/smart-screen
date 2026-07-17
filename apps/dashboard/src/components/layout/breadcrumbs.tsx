@@ -20,10 +20,10 @@ function buildCrumbs(
   const parts = pathname.split('/').filter(Boolean);
   if (parts[0] !== locale) return [];
   const rest = parts.slice(1);
-  if (rest.length === 0) return [{ label: t('overview'), href: null }];
+  if (rest.length === 0) return [];
 
   const base = `/${locale}`;
-  const crumbs: Crumb[] = [{ label: t('overview'), href: `${base}/overview` }];
+  const crumbs: Crumb[] = [];
 
   const sectionLabels: Record<string, string> = {
     overview: t('overview'),
@@ -66,7 +66,8 @@ function buildCrumbs(
   };
 
   if (rest[0] === 'admin') {
-    crumbs[0] = { label: t('adminHome'), href: `${base}/admin` };
+    if (rest.length === 1) return [];
+    crumbs.push({ label: t('adminHome'), href: `${base}/admin` });
     if (rest[1]) {
       const label = sectionLabels[rest[1]] ?? subLabels[rest[1]] ?? rest[1];
       crumbs.push({ label, href: rest.length > 2 ? `${base}/admin/${rest[1]}` : null });
@@ -85,6 +86,7 @@ function buildCrumbs(
   }
 
   if (rest[0] === 'branches') {
+    if (rest.length === 1) return [];
     if (rest[1]) {
       crumbs.push({ label: t('branches'), href: `${base}/overview` });
       if (rest[2]) {
@@ -99,6 +101,7 @@ function buildCrumbs(
   }
 
   if (rest[0] === 'settings') {
+    if (rest.length === 1) return [];
     if (rest[1]) {
       const label = subLabels[rest[1]] ?? rest[1];
       crumbs.push({ label, href: null });
@@ -106,8 +109,10 @@ function buildCrumbs(
     return crumbs;
   }
 
+  if (rest.length === 1) return [];
+
   const sectionLabel = sectionLabels[rest[0]] ?? rest[0];
-  crumbs.push({ label: sectionLabel, href: rest.length > 1 ? `${base}/${rest[0]}` : null });
+  crumbs.push({ label: sectionLabel, href: `${base}/${rest[0]}` });
   if (rest[1]) {
     crumbs.push({ label: rest[1], href: null });
   }
@@ -134,7 +139,7 @@ export function Breadcrumbs({
       aria-label="Breadcrumb"
       dir={rtl ? 'rtl' : 'ltr'}
       className={cn(
-        'flex items-center gap-1 px-4 py-1.5 text-xs text-muted-foreground sm:px-6 lg:px-10',
+        'flex items-center gap-1 px-4 py-1.5 text-sm text-muted-foreground sm:px-4 lg:px-6',
         'border-b border-border bg-muted/20',
       )}
     >
@@ -143,7 +148,7 @@ export function Breadcrumbs({
         return (
           <span key={idx} className="flex items-center gap-1">
             {idx === 0 && (
-              <Home className="h-3 w-3 text-muted-foreground/60" strokeWidth={1.5} />
+              <Home className="h-3.5 w-3.5 text-muted-foreground/60" strokeWidth={1.5} />
             )}
             {crumb.href && !isLast ? (
               <Link
@@ -164,7 +169,7 @@ export function Breadcrumbs({
             )}
             {!isLast && (
               <ChevronRight
-                className={cn('h-3 w-3 shrink-0 text-muted-foreground/40', rtl && 'rotate-180')}
+                className={cn('h-3.5 w-3.5 shrink-0 text-muted-foreground/40', rtl && 'rotate-180')}
                 strokeWidth={1.5}
               />
             )}
