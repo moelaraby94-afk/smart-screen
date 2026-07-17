@@ -1005,7 +1005,7 @@ export function MediaLibraryClient() {
                     </span>
                     <span className="font-mono-nums text-xs font-semibold text-foreground">{pct}%</span>
                   </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                  <div className="h-1.5 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={t('uploadTotalProgress', { completed, total })}>
                     <div
                       className="h-full rounded-full bg-primary transition-all duration-300"
                       style={{ width: `${pct}%` }}
@@ -1032,7 +1032,7 @@ export function MediaLibraryClient() {
                     </button>
                   )}
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                <div className="h-1.5 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={u.status === 'complete' ? 100 : u.status === 'error' ? 100 : 50} aria-valuemin={0} aria-valuemax={100} aria-label={u.name}>
                   <div
                     className={cn(
                       'h-full rounded-full transition-all duration-300',

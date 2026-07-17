@@ -56,12 +56,35 @@ export class CanvasesController {
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
   @Patch(':id')
   update(
+    @CurrentUser() user: JwtUser,
     @Param('id') id: string,
     @Query('workspaceId') workspaceId: string,
     @Body() dto: UpdateCanvasDto,
   ) {
     if (!workspaceId) throw new BadRequestException('workspaceId is required');
-    return this.canvasesService.update(workspaceId, id, dto);
+    return this.canvasesService.update(workspaceId, id, dto, user.sub);
+  }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
+  @Get(':id/versions')
+  listVersions(
+    @Param('id') id: string,
+    @Query('workspaceId') workspaceId: string,
+  ) {
+    if (!workspaceId) throw new BadRequestException('workspaceId is required');
+    return this.canvasesService.listVersions(workspaceId, id);
+  }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
+  @Post(':id/restore/:versionId')
+  restoreVersion(
+    @CurrentUser() user: JwtUser,
+    @Param('id') id: string,
+    @Param('versionId') versionId: string,
+    @Query('workspaceId') workspaceId: string,
+  ) {
+    if (!workspaceId) throw new BadRequestException('workspaceId is required');
+    return this.canvasesService.restoreVersion(workspaceId, id, versionId, user.sub);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)

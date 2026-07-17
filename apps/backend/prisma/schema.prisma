@@ -262,6 +262,8 @@ model User {
 
   createdCanvases  Canvas[]          @relation("CanvasCreatedBy")
 
+  savedCanvasVersions CanvasVersion[] @relation("CanvasVersionSavedBy")
+
   payments         PaymentRecord[]
 
   pairingClaimLockout PairingClaimLockout[]
@@ -690,6 +692,44 @@ model Canvas {
   createdBy     User           @relation("CanvasCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
 
   playlistItems PlaylistItem[]
+
+  versions      CanvasVersion[]
+
+}
+
+/// Snapshot of a canvas at a point in time — created on each save.
+
+model CanvasVersion {
+
+  id            String         @id @default(cuid())
+
+  canvasId      String
+
+  /// Snapshot of layoutData at the time of save
+
+  layoutData    Json
+
+  /// Snapshot of name at the time of save
+
+  name          String
+
+  /// Snapshot of dimensions at the time of save
+
+  width         Int
+
+  height        Int
+
+  /// Who saved this version
+
+  savedById     String
+
+  createdAt     DateTime       @default(now())
+
+  canvas        Canvas         @relation(fields: [canvasId], references: [id], onDelete: Cascade)
+
+  savedBy       User           @relation("CanvasVersionSavedBy", fields: [savedById], references: [id], onDelete: Restrict)
+
+  @@index([canvasId, createdAt(sort: Desc)])
 
 }
 

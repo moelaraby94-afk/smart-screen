@@ -59,8 +59,23 @@ export class CanvasesService {
     return canvas;
   }
 
-  async update(workspaceId: string, id: string, dto: UpdateCanvasDto) {
-    await this.getById(workspaceId, id);
+  async update(workspaceId: string, id: string, dto: UpdateCanvasDto, userId?: string) {
+    const existing = await this.getById(workspaceId, id);
+
+    // Create a version snapshot before updating
+    if (userId) {
+      await this.prisma.canvasVersion.create({
+        data: {
+          canvasId: id,
+          layoutData: existing.layoutData as object,
+          name: existing.name,
+          width: existing.width,
+          height: existing.height,
+          savedById: userId,
+        },
+      });
+    }
+
     const updated = await this.prisma.canvas.update({
       where: { id },
       data: {
@@ -78,6 +93,56 @@ export class CanvasesService {
     });
     await this.broadcastCanvasLive(id);
     return updated;
+  }
+
+  async listVersions(workspaceId: string, canvasId: string) {
+    await this.getById(workspaceId, canvasId);
+    return this.prisma.canvasVersion.findMany({
+      where: { canvasId },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      select: {
+        id: true,
+        name: true,
+        width: true,
+        height: true,
+        createdAt: true,
+        savedBy: { select: { id: true, fullName: true } },
+      },
+    });
+  }
+
+  async restoreVersion(workspaceId: string, canvasId: string, versionId: string, userId: string) {
+    const canvas = await this.getById(workspaceId, canvasId);
+    const version = await this.prisma.canvasVersion.findFirst({
+      where: { id: versionId, canvasId },
+    });
+    if (!version) throw new NotFoundException('Version not found');
+
+    // Snapshot current state before restoring
+    await this.prisma.canvasVersion.create({
+      data: {
+        canvasId,
+        layoutData: canvas.layoutData as object,
+        name: canvas.name,
+        width: canvas.width,
+        height: canvas.height,
+        savedById: userId,
+      },
+    });
+
+    const restored = await this.prisma.canvas.update({
+      where: { id: canvasId },
+      data: {
+        name: version.name,
+        width: version.width,
+        height: version.height,
+        layoutData: version.layoutData as object,
+      },
+      select: this.canvasSelect,
+    });
+    await this.broadcastCanvasLive(canvasId);
+    return restored;
   }
 
   /** Deep-copy a canvas into another workspace (e.g. playlist clone across branches). */

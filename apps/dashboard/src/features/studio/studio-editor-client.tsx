@@ -37,6 +37,8 @@ import {
   updateCanvas as apiUpdateCanvas,
   createCanvas as apiCreateCanvas,
   fetchPlaylists as apiFetchPlaylists,
+  fetchCanvasVersions as apiFetchCanvasVersions,
+  restoreCanvasVersion as apiRestoreCanvasVersion,
 } from '@/features/studio/studio-api';
 import { fetchMedia } from '@/features/media/api/media-api';
 import { readPageItems } from '@/features/api/page';
@@ -60,6 +62,15 @@ type VersionSnapshot = {
   layout: CanvasLayoutV1;
   dw: number;
   dh: number;
+};
+
+type ServerVersion = {
+  id: string;
+  name: string;
+  width: number;
+  height: number;
+  createdAt: string;
+  savedBy: { id: string; fullName: string } | null;
 };
 
 const MAX_SNAPSHOTS = 20;
@@ -120,6 +131,9 @@ export function StudioEditorClient() {
   const [saving, setSaving] = useState(false);
   const [autoSavedAt, setAutoSavedAt] = useState<number | null>(null);
   const [snapshots, setSnapshots] = useState<VersionSnapshot[]>([]);
+  const [serverVersions, setServerVersions] = useState<ServerVersion[]>([]);
+  const [versionsLoading, setVersionsLoading] = useState(false);
+  const [restoringVersion, setRestoringVersion] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [showZones, setShowZones] = useState(false);
@@ -361,6 +375,46 @@ export function StudioEditorClient() {
     toast.success(t('restored'));
   };
 
+  const loadServerVersions = useCallback(async () => {
+    if (!workspaceId || !canvasId) return;
+    setVersionsLoading(true);
+    try {
+      const res = await apiFetchCanvasVersions(workspaceId, canvasId);
+      if (res.ok) {
+        const data = await res.json();
+        setServerVersions(Array.isArray(data) ? data : (data.items ?? []));
+      }
+    } catch {
+      // silent — server versions are supplementary
+    }
+    setVersionsLoading(false);
+  }, [workspaceId, canvasId]);
+
+  const restoreServerVersion = async (version: ServerVersion) => {
+    if (!workspaceId || !canvasId) return;
+    setRestoringVersion(true);
+    try {
+      const res = await apiRestoreCanvasVersion(workspaceId, canvasId, version.id);
+      if (!res.ok) {
+        toast.error(t('restoreFailed'));
+        setRestoringVersion(false);
+        return;
+      }
+      const restored = await res.json();
+      setLayout(restored.layoutData ?? emptyLayout());
+      setDw(restored.width ?? 1920);
+      setDh(restored.height ?? 1080);
+      setName(restored.name ?? 'Untitled');
+      setSelectedId(null);
+      setShowHistory(false);
+      toast.success(t('restored'));
+      void loadServerVersions();
+    } catch {
+      toast.error(t('restoreFailed'));
+    }
+    setRestoringVersion(false);
+  };
+
   const deleteSnapshot = (id: string) => {
     if (!canvasId) return;
     setSnapshots((prev) => {
@@ -387,6 +441,12 @@ export function StudioEditorClient() {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layout, canvasId, workspaceId, name, dw, dh]);
+
+  useEffect(() => {
+    if (showHistory && canvasId && workspaceId) {
+      void loadServerVersions();
+    }
+  }, [showHistory, canvasId, workspaceId, loadServerVersions]);
 
   const addZone = (preset: ZonePreset) => {
     const newObjects: CanvasObjectJson[] = preset.zones.map((z) => ({
@@ -884,6 +944,8 @@ export function StudioEditorClient() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           className="vc-card-surface rounded-2xl border border-border p-5 shadow-sm"
+          role="region"
+          aria-label={t('versionHistory')}
         >
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold tracking-tight">{t('versionHistory')}</h3>
@@ -897,10 +959,59 @@ export function StudioEditorClient() {
               {t('saveSnapshot')}
             </Button>
           </div>
+
+          {/* Server versions (saved on each canvas update) */}
+          {serverVersions.length > 0 && (
+            <div className="mb-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('savedVersions')}</p>
+              <ul className="space-y-2" role="list">
+                {serverVersions.map((ver) => (
+                  <li
+                    key={ver.id}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 px-4 py-2.5 text-sm"
+                  >
+                    <div>
+                      <p className="font-medium">{ver.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Intl.DateTimeFormat(locale, {
+                          dateStyle: 'short',
+                          timeStyle: 'short',
+                        }).format(new Date(ver.createdAt))}
+                        {ver.savedBy?.fullName ? ` · ${ver.savedBy.fullName}` : ''}
+                        {' · '}
+                        {ver.width}×{ver.height}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs"
+                      disabled={restoringVersion}
+                      onClick={() => void restoreServerVersion(ver)}
+                    >
+                      <RotateCcw className="mr-1 h-3.5 w-3.5" />
+                      {restoringVersion ? t('restoring') : t('restore')}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {versionsLoading && (
+            <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground" aria-live="polite">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              {t('loadingVersions')}
+            </div>
+          )}
+
+          {/* Local snapshots (browser localStorage) */}
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('localSnapshots')}</p>
           {snapshots.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t('noSnapshots')}</p>
           ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-2" role="list">
               {snapshots.map((snap) => (
                 <li
                   key={snap.id}

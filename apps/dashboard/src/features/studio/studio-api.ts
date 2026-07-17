@@ -37,6 +37,26 @@ export async function createCanvas(
   );
 }
 
+export async function fetchCanvasVersions(
+  workspaceId: string,
+  canvasId: string,
+): Promise<Response> {
+  return apiFetch(
+    `/canvases/${canvasId}/versions?workspaceId=${encodeURIComponent(workspaceId)}`,
+  );
+}
+
+export async function restoreCanvasVersion(
+  workspaceId: string,
+  canvasId: string,
+  versionId: string,
+): Promise<Response> {
+  return apiFetch(
+    `/canvases/${canvasId}/restore/${versionId}?workspaceId=${encodeURIComponent(workspaceId)}`,
+    { method: 'POST' },
+  );
+}
+
 // ─── Playlists ────────────────────────────────────────────────────
 export async function fetchPlaylists(workspaceId?: string, groupId?: string): Promise<Response> {
   const params = new URLSearchParams();

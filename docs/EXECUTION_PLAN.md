@@ -703,6 +703,38 @@
 
 ---
 
+**Phase 4: Content & Templates — Completed 2025-07-18**
+
+- **Task 4.1: Content Templates (Pre-built)**
+  - Files: `canvas-templates.ts`, `template-preview.tsx` (NEW), `templates-client.tsx`, `studio-editor-client.tsx`, `studio/page.tsx`, `en.json`, `ar.json`
+  - 10 templates with category/description/orientation metadata, Konva preview with lazy loading, category filter pills, search, one-click create via Studio, Radix Dialog preview modal
+  - EN + AR translations (21 keys)
+  - Testing: TypeScript 0 errors, ESLint 0 errors, Build passes
+
+- **Task 4.2: Content Auto-Expiry**
+  - Files: `media-library-client.tsx`, `playlist-list-client.tsx`, `en.json`, `ar.json` (already implemented)
+  - Expiry date picker in media info dialog, PATCH `/media/:id/expiry` endpoint, expiry filter (active/expired/all), "Expired" badge (red), "Expiring Soon" badge (amber), playlist list expiry filter + badges
+  - Testing: Verified existing implementation against spec
+
+- **Task 4.3: Playlist Preview Mode**
+  - Files: `playlist-preview-overlay.tsx`, `playlist-list-client.tsx`, `playlist-studio-client.tsx` (already implemented)
+  - Full-screen overlay with auto-playing sequential playback, framer-motion transitions (fade/slide/zoom), play/pause/next/prev controls, progress dots, focus trap + Escape key, useReducedMotion, RTL support
+  - Testing: Verified existing implementation against spec
+
+- **Task 4.4: Multi-file Upload**
+  - Files: `media-library-client.tsx`, `media-api.ts` (already implemented)
+  - Multi-file drag & drop via react-dropzone, parallel uploads (max 3 concurrent), per-file progress bars, total progress indicator, per-file retry on error, auto-dismiss completed after 3s, pre-upload storage limit check, storage indicator
+  - A11y fix: Added `role="progressbar"` + `aria-valuenow`/`aria-valuemin`/`aria-valuemax`/`aria-label` to all progress bars per DS V2 §16
+  - Testing: TypeScript 0 errors, ESLint 0 errors (2 pre-existing warnings)
+
+- **Task 4.5: Content Version History**
+  - Backend: `schema.prisma` (CanvasVersion model), `canvases.service.ts` (version snapshot on update, listVersions, restoreVersion), `canvases.controller.ts` (GET `:id/versions`, POST `:id/restore/:versionId`), migration SQL
+  - Frontend: `studio-api.ts` (fetchCanvasVersions, restoreCanvasVersion), `studio-editor-client.tsx` (server versions panel with loading/restore states, local snapshots section, aria-live for loading, role=list/region)
+  - EN + AR translations (5 new keys: savedVersions, localSnapshots, loadingVersions, restoring, restoreFailed)
+  - Testing: TypeScript 0 errors (dashboard), Build passes, 0 new ESLint errors
+
+---
+
 ## قواعد التنفيذ
 
 1. **الترتيب:** التنفيذ من المرحلة 1 → 10 بالترتيب. المرحلة 11 منفصلة تماماً.
