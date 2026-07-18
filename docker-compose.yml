@@ -99,6 +99,7 @@ services:
       JWT_ACCESS_SECRET: "${JWT_ACCESS_SECRET:?missing in .env - generate with: openssl rand -hex 32}"
       JWT_REFRESH_SECRET: "${JWT_REFRESH_SECRET:?missing in .env - must differ from JWT_ACCESS_SECRET}"
       PLAYER_HEARTBEAT_SECRET: "${PLAYER_HEARTBEAT_SECRET:?missing in .env - generate with: openssl rand -hex 32}"
+      ENCRYPTION_KEY: "${ENCRYPTION_KEY:?missing in .env - generate with: openssl rand -hex 32}"
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
       FRONTEND_ORIGINS: ${FRONTEND_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
       # This service runs with NODE_ENV=production, so main.ts ignores TRUST_DYNAMIC_CORS

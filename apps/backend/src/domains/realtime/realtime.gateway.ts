@@ -103,7 +103,9 @@ export class RealtimeGateway
     if (redisClient) {
       this.adapterPubClient = redisClient.duplicate();
       this.adapterSubClient = redisClient.duplicate();
-      this.server.adapter(
+      // this.server is a Namespace (gateway uses namespace: '/realtime'),
+      // so access the underlying Server via .server to call adapter().
+      (this.server as unknown as { server: Server }).server.adapter(
         createAdapter(this.adapterPubClient, this.adapterSubClient),
       );
       this.log.log('WebSocket: Redis adapter enabled.');

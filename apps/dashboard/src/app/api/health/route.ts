@@ -11,9 +11,13 @@ export async function GET() {
   let backend = 'unknown';
   if (apiBase) {
     try {
+      // Backend /health is registered before the /api/v1 global prefix,
+      // so strip the API path and use the origin only.
+      const url = new URL(apiBase);
+      const healthUrl = `${url.protocol}//${url.host}/health`;
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 3000);
-      const res = await fetch(`${apiBase.replace(/\/$/, '')}/../health`, {
+      const res = await fetch(healthUrl, {
         signal: controller.signal,
         cache: 'no-store',
       });
