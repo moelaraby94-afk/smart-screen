@@ -1,4 +1,4 @@
-# Core Product Entities
+56555555تاتنتثت# Core Product Entities
 
 > **Evidence basis:** `01-current-product-model.md` (transformation), `09-screens-feature.md` through `16-team-feature.md` (audits), source code in `apps/dashboard/src/`
 > **Purpose:** Define every core entity in the product — what it is, what it owns, and its priority in the product model

@@ -319,6 +319,7 @@ export class RealtimeGateway
         status: ScreenStatus.ONLINE,
         lastSeenAt: now,
         isOfflineCacheMode: false,
+        ...(payload.playerVersion ? { playerVersion: payload.playerVersion } : {}),
       },
     });
 
@@ -389,20 +390,37 @@ export class RealtimeGateway
       isOfflineMode,
     });
 
-    // Track player version if reported
+    // Track player version and diagnostics if reported
+    const bodyObj =
+      body && typeof body === 'object' ? (body as Record<string, unknown>) : {};
     const playerVersion =
-      body &&
-      typeof body === 'object' &&
-      typeof (body as { playerVersion?: unknown }).playerVersion === 'string'
-        ? (body as { playerVersion: string }).playerVersion
+      typeof bodyObj.playerVersion === 'string'
+        ? bodyObj.playerVersion
         : undefined;
-    if (playerVersion) {
+    const diagnostics: Record<string, unknown> = {};
+    if (typeof bodyObj.batteryLevel === 'number')
+      diagnostics.batteryLevel = bodyObj.batteryLevel;
+    if (typeof bodyObj.batteryCharging === 'boolean')
+      diagnostics.batteryCharging = bodyObj.batteryCharging;
+    if (typeof bodyObj.uptimeSeconds === 'number')
+      diagnostics.uptimeSeconds = bodyObj.uptimeSeconds;
+    if (typeof bodyObj.networkType === 'string')
+      diagnostics.networkType = bodyObj.networkType;
+    if (typeof bodyObj.resolutionWidth === 'number')
+      diagnostics.resolutionWidth = bodyObj.resolutionWidth;
+    if (typeof bodyObj.resolutionHeight === 'number')
+      diagnostics.resolutionHeight = bodyObj.resolutionHeight;
+
+    if (playerVersion || Object.keys(diagnostics).length > 0) {
       const binding = this.heartbeat.getBinding(client.id);
       if (binding) {
+        const data: Record<string, unknown> = {};
+        if (playerVersion) data.playerVersion = playerVersion;
+        Object.assign(data, diagnostics);
         await this.prisma.screen
           .update({
             where: { id: binding.screenId },
-            data: { playerVersion },
+            data,
           })
           .catch(() => {});
       }

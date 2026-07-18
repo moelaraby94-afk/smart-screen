@@ -1,0 +1,58 @@
+# syntax=docker/dockerfile:1
+#
+# Marketing app — static Next.js site for landing, features, pricing.
+# Build context MUST be the monorepo root.
+#   docker build -f Dockerfile.marketing .
+
+FROM node:20-bookworm-slim AS build
+WORKDIR /repo
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY package.json package-lock.json ./
+COPY apps/backend/package.json apps/backend/
+COPY apps/dashboard/package.json apps/dashboard/
+COPY apps/player/package.json apps/player/
+COPY apps/marketing/package.json apps/marketing/
+COPY packages/ ./packages/
+
+RUN npm ci
+
+COPY apps/marketing ./apps/marketing
+
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN npm run build -w apps/marketing \
+  && npm prune --omit=dev
+
+FROM node:20-bookworm-slim AS runner
+WORKDIR /repo
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3010
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates curl \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /repo/package.json /repo/package-lock.json ./
+COPY --from=build /repo/node_modules ./node_modules
+COPY --from=build /repo/apps/marketing ./apps/marketing
+
+RUN addgroup --system --gid 1001 appgroup && \
+    adduser --system --uid 1001 --ingroup appgroup appuser
+
+RUN chown -R appuser:appgroup /repo/apps/marketing/.next
+
+WORKDIR /repo
+EXPOSE 3010
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
+  CMD curl -fsS "http://127.0.0.1:3010/" >/dev/null || exit 1
+
+USER appuser
+
+CMD ["npm", "run", "start", "-w", "apps/marketing"]

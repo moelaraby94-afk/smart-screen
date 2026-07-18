@@ -494,6 +494,18 @@ model Screen {
 
   resolutionHeight Int            @default(1080)
 
+  /// Device diagnostics reported via heartbeat (0–100, null if not available)
+  batteryLevel     Int?
+
+  /// Battery charging status reported via heartbeat
+  batteryCharging  Boolean?
+
+  /// Player uptime in seconds reported via heartbeat
+  uptimeSeconds    Int?
+
+  /// Network connection type reported via heartbeat (wifi, ethernet, etc.)
+  networkType      String?
+
   /// Player orientation lock: auto follows screen aspect, portrait forces 90° rotation, landscape forces 0°.
   orientation      ScreenOrientation @default(AUTO)
 

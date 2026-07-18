@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class ScreenRegisterDto {
   @IsString()
@@ -8,4 +8,8 @@ export class ScreenRegisterDto {
   @IsString()
   @IsNotEmpty()
   secret!: string;
+
+  @IsOptional()
+  @IsString()
+  playerVersion?: string;
 }

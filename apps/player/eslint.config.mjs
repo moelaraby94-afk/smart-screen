@@ -22,6 +22,10 @@ const eslintConfig = defineConfig([
       "react-hooks/immutability": "off",
       /** Logging goes through `@/lib/dev-log`; see the dashboard config. */
       "no-console": "error",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
     },
   },
 ]);

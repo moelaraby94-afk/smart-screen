@@ -460,11 +460,28 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
     });
     kioskSocketRef.current = socket;
 
-    const heartbeatPayload = () => ({
-      isOfflineMode:
-        (typeof navigator !== 'undefined' && !navigator.onLine) ||
-        offlinePlaybackActiveRef.current,
-    });
+    const playerVersion = process.env.NEXT_PUBLIC_PLAYER_VERSION?.trim() || '0.1.0';
+
+    const heartbeatPayload = () => {
+      const payload: Record<string, unknown> = {
+        isOfflineMode:
+          (typeof navigator !== 'undefined' && !navigator.onLine) ||
+          offlinePlaybackActiveRef.current,
+        playerVersion,
+        uptimeSeconds: Math.floor(performance.now() / 1000),
+        resolutionWidth: window.screen.width,
+        resolutionHeight: window.screen.height,
+        networkType: (navigator as unknown as { connection?: { effectiveType?: string } }).connection?.effectiveType ?? 'unknown',
+      };
+      const battery = (navigator as unknown as { getBattery?: () => Promise<{ level: number; charging: boolean }> }).getBattery;
+      if (typeof battery === 'function') {
+        void battery().then((b) => {
+          payload.batteryLevel = Math.round(b.level * 100);
+          payload.batteryCharging = b.charging;
+        }).catch(() => {});
+      }
+      return payload;
+    };
 
     /**
      * `screen:register` is handled asynchronously on the server (a DB lookup
@@ -472,8 +489,9 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
      * heartbeat in the same tick races that work and gets answered with
      * `NOT_REGISTERED`, so wait for the `screen:registered` acknowledgement.
      */
+
     const register = () => {
-      socket.emit('screen:register', { serialNumber: kioskSerial, secret });
+      socket.emit('screen:register', { serialNumber: kioskSerial, secret, playerVersion });
     };
 
     socket.on('connect', () => {
@@ -624,7 +642,7 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
     });
 
     const interval = setInterval(() => {
-      if (socket.connected) socket.emit('screen:heartbeat', heartbeatPayload());
+      if (socket.connected) socket.emit('screen:heartbeat', { ...heartbeatPayload(), playerVersion });
     }, HEARTBEAT_INTERVAL_MS);
 
     const poll = setInterval(() => {

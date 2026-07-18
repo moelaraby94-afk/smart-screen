@@ -38,7 +38,11 @@ function PlayerHeartbeatInner({ serialNumber, secret }: InnerProps) {
      * Send the first one only once registration is acknowledged.
      */
     const register = () => {
-      socket.emit('screen:register', { serialNumber, secret });
+      socket.emit('screen:register', {
+        serialNumber,
+        secret,
+        playerVersion: process.env.NEXT_PUBLIC_PLAYER_VERSION?.trim() || '0.1.0',
+      });
     };
 
     socket.on('connect', () => {
@@ -79,6 +83,7 @@ function PlayerHeartbeatInner({ serialNumber, secret }: InnerProps) {
       if (socket.connected) {
         socket.emit('screen:heartbeat', {
           isOfflineMode: typeof navigator !== 'undefined' && !navigator.onLine,
+          playerVersion: process.env.NEXT_PUBLIC_PLAYER_VERSION?.trim() || '0.1.0',
         });
       }
     }, HEARTBEAT_INTERVAL_MS);
