@@ -12,9 +12,10 @@ import { ListMediaDto } from './dto/list-media.dto';
 import { ErrorCode } from '../../common/errors/error-codes';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
-import { existsSync, mkdirSync } from 'fs';
-import { copyFile, rename, unlink, writeFile } from 'fs/promises';
-import { join, relative } from 'path';
+import { STORAGE_SERVICE } from '../../common/storage/storage.interface';
+import type { IStorageService } from '../../common/storage/storage.interface';
+import { Inject } from '@nestjs/common';
+import { join } from 'path';
 import { randomUUID } from 'crypto';
 
 const ALLOWED_MIME = new Set([
@@ -31,18 +32,12 @@ const MAX_BYTES = 150 * 1024 * 1024;
 
 @Injectable()
 export class MediaService {
-  private readonly uploadRoot: string;
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     private readonly heartbeat: ScreenHeartbeatService,
-  ) {
-    this.uploadRoot = this.config.get<string>(
-      'MEDIA_UPLOAD_DIR',
-      join(process.cwd(), 'uploads', 'media'),
-    );
-  }
+    @Inject(STORAGE_SERVICE) private readonly storage: IStorageService,
+  ) {}
 
   getPublicBaseUrl(): string {
     return (
@@ -51,34 +46,17 @@ export class MediaService {
     );
   }
 
-  /**
-   * main.ts serves static files from `uploads/` (whole directory) under the
-   * `/media-files/` prefix, but files are actually written under
-   * `uploadRoot` (default `uploads/media/`, overridable via
-   * MEDIA_UPLOAD_DIR). Derive that gap here instead of hardcoding "media" —
-   * this is exactly what drifted out of sync last time.
-   */
   buildPublicUrl(relativePath: string): string {
-    const base = this.getPublicBaseUrl().replace(/\/$/, '');
-    const staticRoot = join(process.cwd(), 'uploads');
-    const uploadRootPrefix = relative(staticRoot, this.uploadRoot).replace(
-      /\\/g,
-      '/',
-    );
-    const fullRelativePath = uploadRootPrefix
-      ? `${uploadRootPrefix}/${relativePath}`
-      : relativePath;
-    const segments = fullRelativePath
-      .split('/')
-      .map(encodeURIComponent)
-      .join('/');
-    return `${base}/media-files/${segments}`;
+    return this.storage.getPublicUrl(relativePath);
   }
 
   ensureUploadDir(workspaceId: string): string {
-    const dir = join(this.uploadRoot, workspaceId);
-    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-    return dir;
+    /**
+     * Delegates to the storage abstraction. For local storage, this creates
+     * the workspace directory. For S3, it's a no-op.
+     */
+    this.storage.ensureDir(workspaceId);
+    return '';
   }
 
   /**
@@ -184,25 +162,24 @@ export class MediaService {
       }
     }
 
-    const dir = this.ensureUploadDir(wsId);
+    this.ensureUploadDir(wsId);
     const ext = `.${detected.ext}`;
     const fileName = `${randomUUID()}${ext}`;
     const relativePath = join(wsId, fileName).replace(/\\/g, '/');
-    const absolutePath = join(dir, fileName);
+    const tempKey = `${relativePath}.part`;
 
     /**
-     * The bytes land on disk *before* the transaction opens, under a temporary
-     * name in the destination directory (same filesystem, so the final `rename`
-     * is atomic and cheap).
+     * The bytes land in storage *before* the transaction opens, under a temporary
+     * key (same location, so the final `move` is atomic for local / copy+delete
+     * for S3).
      *
      * Writing inside the transaction instead would hold both the advisory lock
-     * and a Postgres connection for the duration of a disk write of up to
+     * and a Postgres connection for the duration of a write of up to
      * MAX_BYTES — blowing Prisma's 5s interactive-transaction timeout on large
-     * uploads — and a rollback would leave the file behind, since the
-     * filesystem does not participate in the transaction.
+     * uploads — and a rollback would leave the object behind, since the
+     * storage does not participate in the transaction.
      */
-    const tempPath = `${absolutePath}.part`;
-    await writeFile(tempPath, params.buffer);
+    await this.storage.upload(tempKey, params.buffer);
 
     let created: Awaited<ReturnType<typeof this.prisma.media.create>>;
     try {
@@ -229,12 +206,12 @@ export class MediaService {
         });
       });
     } catch (err) {
-      await this.discardTempFile(tempPath);
+      await this.discardTempFile(tempKey);
       throw err;
     }
 
     try {
-      await rename(tempPath, absolutePath);
+      await this.storage.move(tempKey, relativePath);
     } catch (err) {
       // The row is committed but its bytes never arrived — undo the row so the
       // quota total and the library never reference a file that is not there.
@@ -243,7 +220,7 @@ export class MediaService {
         .catch(() => {
           /* best effort: the row is already orphaned, don't mask the real error */
         });
-      await this.discardTempFile(tempPath);
+      await this.discardTempFile(tempKey);
       throw err;
     }
 
@@ -256,8 +233,8 @@ export class MediaService {
     return created;
   }
 
-  private async discardTempFile(tempPath: string): Promise<void> {
-    await unlink(tempPath).catch(() => {
+  private async discardTempFile(tempKey: string): Promise<void> {
+    await this.storage.delete(tempKey).catch(() => {
       /* already gone, or never created */
     });
   }
@@ -292,7 +269,10 @@ export class MediaService {
    * `arr.length` and `arr.reduce((a, m) => a + m.sizeBytes, 0)` in the browser —
    * a full table scan over the wire to render two numbers.
    */
-  async stats(ownerId: string, workspaceId?: string): Promise<{
+  async stats(
+    ownerId: string,
+    workspaceId?: string,
+  ): Promise<{
     count: number;
     storageBytes: number;
   }> {
@@ -338,27 +318,26 @@ export class MediaService {
     });
     if (!media) throw new NotFoundException('Media not found');
 
-    const srcAbs = join(this.uploadRoot, ...media.relativePath.split('/'));
-    if (!existsSync(srcAbs)) {
+    const srcExists = await this.storage.exists(media.relativePath);
+    if (!srcExists) {
       throw DomainException.badRequest(
         ErrorCode.MEDIA_FILE_MISSING,
-        'Media file is missing on disk',
+        'Media file is missing in storage',
       );
     }
 
-    const dir = this.ensureUploadDir(params.targetWorkspaceId);
+    this.ensureUploadDir(params.targetWorkspaceId);
     const ext = this.safeExt(media.originalName, media.mimeType);
     const fileName = `${randomUUID()}${ext}`;
     const relativePath = join(params.targetWorkspaceId, fileName).replace(
       /\\/g,
       '/',
     );
-    const destAbs = join(dir, fileName);
+    const tempKey = `${relativePath}.part`;
 
-    // Same temp-then-rename ordering as saveUploadedFile: the copy happens
-    // outside the transaction, and only an atomic rename follows the commit.
-    const tempPath = `${destAbs}.part`;
-    await copyFile(srcAbs, tempPath);
+    // Same temp-then-move ordering as saveUploadedFile: the copy happens
+    // outside the transaction, and only a move follows the commit.
+    await this.storage.copy(media.relativePath, tempKey);
 
     let created: { id: string };
     try {
@@ -383,19 +362,19 @@ export class MediaService {
         });
       });
     } catch (err) {
-      await this.discardTempFile(tempPath);
+      await this.discardTempFile(tempKey);
       throw err;
     }
 
     try {
-      await rename(tempPath, destAbs);
+      await this.storage.move(tempKey, relativePath);
     } catch (err) {
       await this.prisma.media
         .delete({ where: { id: created.id } })
         .catch(() => {
           /* best effort */
         });
-      await this.discardTempFile(tempPath);
+      await this.discardTempFile(tempKey);
       throw err;
     }
 
@@ -419,13 +398,10 @@ export class MediaService {
       );
     }
 
-    const abs = join(this.uploadRoot, ...media.relativePath.split('/'));
     await this.prisma.media.delete({ where: { id } });
-    if (existsSync(abs)) {
-      await unlink(abs).catch(() => {
-        /* file already gone */
-      });
-    }
+    await this.storage.delete(media.relativePath).catch(() => {
+      /* file already gone */
+    });
   }
 
   async listFolders(ownerId: string, workspaceId?: string) {
@@ -443,7 +419,11 @@ export class MediaService {
     });
   }
 
-  async createFolder(ownerId: string, workspaceId: string | null, name: string) {
+  async createFolder(
+    ownerId: string,
+    workspaceId: string | null,
+    name: string,
+  ) {
     const trimmed = name.trim();
     if (trimmed.length < 2) {
       throw new BadRequestException('Folder name is too short');
@@ -459,12 +439,20 @@ export class MediaService {
     });
   }
 
-  async renameFolder(ownerId: string, workspaceId: string | null, folderId: string, name: string) {
+  async renameFolder(
+    ownerId: string,
+    workspaceId: string | null,
+    folderId: string,
+    name: string,
+  ) {
     const trimmed = name.trim();
     if (trimmed.length < 2) {
       throw new BadRequestException('Folder name is too short');
     }
-    const where: { id: string; ownerId: string; workspaceId?: string } = { id: folderId, ownerId };
+    const where: { id: string; ownerId: string; workspaceId?: string } = {
+      id: folderId,
+      ownerId,
+    };
     if (workspaceId) where.workspaceId = workspaceId;
     const folder = await this.prisma.mediaFolder.findFirst({
       where,
@@ -483,15 +471,26 @@ export class MediaService {
     });
   }
 
-  async deleteFolder(ownerId: string, workspaceId: string | null, folderId: string) {
-    const where: { id: string; ownerId: string; workspaceId?: string } = { id: folderId, ownerId };
+  async deleteFolder(
+    ownerId: string,
+    workspaceId: string | null,
+    folderId: string,
+  ) {
+    const where: { id: string; ownerId: string; workspaceId?: string } = {
+      id: folderId,
+      ownerId,
+    };
     if (workspaceId) where.workspaceId = workspaceId;
     const folder = await this.prisma.mediaFolder.findFirst({
       where,
       select: { id: true },
     });
     if (!folder) throw new NotFoundException('Folder not found');
-    const mediaWhere: { folderId: string; ownerId: string; workspaceId?: string } = { folderId, ownerId };
+    const mediaWhere: {
+      folderId: string;
+      ownerId: string;
+      workspaceId?: string;
+    } = { folderId, ownerId };
     if (workspaceId) mediaWhere.workspaceId = workspaceId;
     await this.prisma.media.updateMany({
       where: mediaWhere,

@@ -74,6 +74,10 @@ export function MediaLibraryClient() {
   const searchParams = useSearchParams();
   const scope = searchParams.get('scope') === 'all' ? 'all' : 'branch';
   const { workspaceId, workspaces, bumpWorkspaceDataEpoch } = useWorkspace();
+  const canEdit = useMemo(() => {
+    const ws = workspaces.find((w) => w.id === workspaceId);
+    return Boolean(ws && (ws.role === 'OWNER' || ws.role === 'ADMIN' || ws.role === 'EDITOR'));
+  }, [workspaces, workspaceId]);
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState(false);
@@ -626,6 +630,7 @@ export function MediaLibraryClient() {
             </div>
           ) : null}
         </div>
+        {canEdit && (
         <div className="flex flex-wrap items-center gap-2">
           <input
             ref={fileInputRef}
@@ -655,9 +660,10 @@ export function MediaLibraryClient() {
             {t('browse')}
           </Button>
         </div>
+        )}
       </motion.div>
 
-      {scope === 'branch' ? (
+      {scope === 'branch' && canEdit ? (
         <FolderSection
           folders={folders}
           selectedFolderId={selectedFolderId}
@@ -729,6 +735,15 @@ export function MediaLibraryClient() {
       >
         <input {...getInputProps()} />
 
+        {isDragActive && (
+          <div className="pointer-events-none absolute inset-0 z-card flex items-center justify-center rounded-3xl bg-primary/5 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-2">
+              <Upload className="h-10 w-10 text-primary" strokeWidth={1.5} />
+              <p className="text-lg font-semibold text-primary">{t('dropHere')}</p>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="flex flex-1 items-center justify-center py-24 text-muted-foreground" aria-busy="true" aria-live="polite">
             {t('loading')}
@@ -784,6 +799,7 @@ export function MediaLibraryClient() {
             folders={folders}
             isDragActive={isDragActive}
             selectedIds={selectedIds}
+            canEdit={canEdit}
             onToggleSelect={toggleSelect}
             onToggleSelectAll={toggleSelectAll}
             onBulkDelete={() => setBulkDeleteOpen(true)}

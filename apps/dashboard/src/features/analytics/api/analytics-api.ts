@@ -25,6 +25,7 @@ export type ScreenAnalyticsData = {
   };
   trend: TrendPoint[];
   performers: Performer[];
+  bottomPerformers: Performer[];
   raw: ScreenAnalytics | null;
 };
 
@@ -37,6 +38,7 @@ export type ContentAnalyticsData = {
   };
   trend: TrendPoint[];
   performers: Performer[];
+  bottomPerformers: Performer[];
 };
 
 export type AnalyticsResult = {
@@ -76,9 +78,35 @@ function buildScreenPerformers(raw: ScreenAnalytics | null): Performer[] {
     }));
 }
 
+function buildScreenBottomPerformers(raw: ScreenAnalytics | null): Performer[] {
+  if (!raw) return [];
+  return [...raw.perScreen]
+    .sort((a, b) => a.uptimeSec - b.uptimeSec)
+    .slice(0, 5)
+    .map((s) => ({
+      id: s.id,
+      name: s.name,
+      metric: `${s.uptimeSec > 0 ? (s.uptimeSec / 3600).toFixed(1) : '0'}h`,
+      metricLabel: 'uptime',
+      status: s.status,
+      subMetric: s.activePlaylist ?? '—',
+    }));
+}
+
 function buildContentPerformers(raw: ScreenAnalytics | null): Performer[] {
   if (!raw) return [];
   return raw.playlistDistribution.slice(0, 5).map((p) => ({
+    id: p.id,
+    name: p.name,
+    metric: String(p.count),
+    metricLabel: 'screens',
+    subMetric: `${Math.round((p.count / raw.total) * 100)}%`,
+  }));
+}
+
+function buildContentBottomPerformers(raw: ScreenAnalytics | null): Performer[] {
+  if (!raw) return [];
+  return raw.playlistDistribution.slice(-5).reverse().map((p) => ({
     id: p.id,
     name: p.name,
     metric: String(p.count),
@@ -108,6 +136,7 @@ export async function fetchAnalytics(
     },
     trend: generateTrendData(period, uptimeValue, 5),
     performers: buildScreenPerformers(raw),
+    bottomPerformers: buildScreenBottomPerformers(raw),
     raw,
   };
 
@@ -123,6 +152,7 @@ export async function fetchAnalytics(
     },
     trend: generateTrendData(period, raw.withPlaylist, 2),
     performers: buildContentPerformers(raw),
+    bottomPerformers: buildContentBottomPerformers(raw),
   };
 
   return { screen: screenData, content: contentData };

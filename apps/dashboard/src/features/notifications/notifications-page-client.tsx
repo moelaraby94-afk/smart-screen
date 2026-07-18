@@ -49,7 +49,7 @@ const TYPE_CATEGORY_MAP: Record<string, string> = {
   pairing_started: 'pairing',
 };
 
-type FilterType = 'all' | 'unread' | 'screen' | 'upload' | 'subscription' | 'schedule' | 'pairing';
+type FilterType = 'all' | 'unread' | 'read' | 'screen' | 'upload' | 'subscription' | 'schedule' | 'pairing';
 
 export function NotificationsPageClient() {
   const t = useTranslations('notifications');
@@ -61,6 +61,7 @@ export function NotificationsPageClient() {
   const filtered = useMemo(() => {
     if (filter === 'all') return notifications;
     if (filter === 'unread') return notifications.filter((n) => !n.read);
+    if (filter === 'read') return notifications.filter((n) => n.read);
     return notifications.filter((n) => TYPE_CATEGORY_MAP[n.type] === filter);
   }, [notifications, filter]);
 
@@ -84,6 +85,7 @@ export function NotificationsPageClient() {
   const filterButtons: { label: string; value: FilterType }[] = [
     { label: tPage('filterAll'), value: 'all' },
     { label: tPage('filterUnread'), value: 'unread' },
+    { label: tPage('filterRead'), value: 'read' },
     { label: tPage('filterScreen'), value: 'screen' },
     { label: tPage('filterUpload'), value: 'upload' },
     { label: tPage('filterSubscription'), value: 'subscription' },
@@ -157,7 +159,11 @@ export function NotificationsPageClient() {
         )}
       </div>
 
+      {/* Live region for screen readers */}
+      <div className="sr-only" aria-live="polite" />
+
       {/* List */}
+      <div role="list" aria-label={tPage('listLabel')}>
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center">
           <Bell className="mb-3 h-8 w-8 text-muted-foreground/50" />
@@ -190,6 +196,8 @@ export function NotificationsPageClient() {
                   !n.read && 'ring-1 ring-primary/20',
                   n.link && 'cursor-pointer hover:border-primary/30',
                 )}
+                role="link"
+                aria-label={`${n.message} — ${formatTime(n.timestamp)}${!n.read ? ' — ' + tPage('unreadLabel') : ''}`}
                 onClick={() => handleNotificationClick(n.link)}
               >
                 <span
@@ -225,6 +233,7 @@ export function NotificationsPageClient() {
           })}
         </div>
       )}
+      </div>
     </div>
   );
 }

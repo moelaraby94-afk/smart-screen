@@ -20,6 +20,7 @@ export function HomeOverview({ appTitle, headline, description }: Props) {
 
   return (
     <main className="space-y-8" aria-label={t('kicker')}>
+      <h1 className="sr-only">{t('pageTitle')}</h1>
       <motion.section
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
@@ -41,9 +42,9 @@ export function HomeOverview({ appTitle, headline, description }: Props) {
             <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t('kicker')}</p>
           </div>
 
-          <h1 className="mt-5 max-w-3xl text-2xl font-bold tracking-tight text-foreground sm:text-4xl">
+          <h2 className="mt-5 max-w-3xl text-2xl font-bold tracking-tight text-foreground sm:text-4xl">
             {firstName ? t('welcomeWithName', { name: firstName }) : headline}
-          </h1>
+          </h2>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
             {description}
           </p>

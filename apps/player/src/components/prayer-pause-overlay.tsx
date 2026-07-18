@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
 type PrayerPauseOverlayProps = {
   prayer: string | null;
@@ -11,15 +11,16 @@ export function PrayerPauseOverlay({
   prayer,
   remainingMinutes,
 }: PrayerPauseOverlayProps) {
+  const prefersReduced = useReducedMotion();
   return (
     <AnimatePresence>
       <motion.div
         key="prayer-pause"
         className="absolute inset-0 z-[200] flex items-center justify-center bg-black/90"
-        initial={{ opacity: 0 }}
+        initial={prefersReduced ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.5 }}
+        exit={prefersReduced ? undefined : { opacity: 0 }}
+        transition={prefersReduced ? { duration: 0 } : { duration: 0.5 }}
       >
         <div className="text-center">
           <div className="mb-4 text-6xl">🕌</div>

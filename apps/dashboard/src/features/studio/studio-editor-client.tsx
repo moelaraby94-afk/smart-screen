@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -13,6 +13,7 @@ import {
   Maximize,
   Minus,
   MonitorOff,
+  Play,
   Plus,
   QrCode,
   RotateCcw,
@@ -20,6 +21,7 @@ import {
   Shapes,
   SquareStack,
   Type,
+  X,
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
@@ -40,7 +42,7 @@ import {
   fetchCanvasVersions as apiFetchCanvasVersions,
   restoreCanvasVersion as apiRestoreCanvasVersion,
 } from '@/features/studio/studio-api';
-import { fetchMedia } from '@/features/media/api/media-api';
+import { fetchMedia, uploadMedia } from '@/features/media/api/media-api';
 import { readPageItems } from '@/features/api/page';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import type { MediaItem } from '@/features/media/media-library-client';
@@ -119,7 +121,8 @@ export function StudioEditorClient() {
   const t = useTranslations('studio');
   const locale = useLocale();
   const { resolvedTheme } = useTheme();
-  const { workspaceId } = useWorkspace();
+  const prefersReduced = useReducedMotion();
+  const { workspaceId, workspaces } = useWorkspace();
   const searchParams = useSearchParams();
   const [canvases, setCanvases] = useState<CanvasDto[]>([]);
   const [canvasId, setCanvasId] = useState('');
@@ -148,7 +151,14 @@ export function StudioEditorClient() {
   const [splashVisible, setSplashVisible] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1280);
+
+  const viewerBlocked = (() => {
+    const ws = workspaces.find((w) => w.id === workspaceId);
+    return Boolean(ws && ws.role === 'VIEWER');
+  })();
 
   useEffect(() => {
     const el = containerRef.current;
@@ -638,6 +648,25 @@ export function StudioEditorClient() {
     setSelectedId(id);
   };
 
+  const handleStudioUpload = async (files: FileList) => {
+    if (!workspaceId) return;
+    setUploading(true);
+    try {
+      const fileArray = Array.from(files);
+      for (const file of fileArray) {
+        const res = await uploadMedia(workspaceId, file);
+        if (!res.ok) {
+          toast.error(t('uploadFailed'));
+        }
+      }
+      toast.success(t('uploadSuccess'));
+      await loadLibrary();
+    } catch {
+      toast.error(t('uploadFailed'));
+    }
+    setUploading(false);
+  };
+
   const addMediaItem = (publicUrl: string, mediaId: string) => {
     const id = crypto.randomUUID();
     setLayout((prev) => ({
@@ -709,6 +738,19 @@ export function StudioEditorClient() {
     return <p className="text-muted-foreground">{t('needWorkspace')}</p>;
   }
 
+  // Viewer permission guard — Studio is Owner/Editor only
+  if (viewerBlocked) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-2xl border border-border p-8 text-center">
+        <AlertCircle className="h-12 w-12 text-muted-foreground" />
+        <div className="space-y-1">
+          <p className="text-base font-semibold">{t('viewerNoAccess')}</p>
+          <p className="max-w-sm text-sm text-muted-foreground">{t('viewerNoAccessDesc')}</p>
+        </div>
+      </div>
+    );
+  }
+
   // Mobile guard — Studio is desktop-only
   if (viewportWidth < 768) {
     return (
@@ -744,9 +786,11 @@ export function StudioEditorClient() {
     const logoSrc = resolveStaticBrandingLogoPath(locale as 'ar' | 'en', isDark);
     return (
       <motion.div
-        initial={{ opacity: 1 }}
-        animate={{ opacity: splashVisible ? 1 : 0 }}
-        transition={{ duration: 0.3 }}
+        initial={prefersReduced ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={prefersReduced ? { duration: 0 } : { duration: 0.3, ease: [0, 0, 0.2, 1] }}
+        role="status"
+        aria-live="polite"
         className="flex min-h-[400px] flex-col items-center justify-center gap-6 rounded-2xl bg-neutral-900 p-8"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -758,7 +802,7 @@ export function StudioEditorClient() {
   }
 
   return (
-    <div className="space-y-6" role="toolbar" aria-label={t('title')}>
+    <div className="space-y-6" role="region" aria-label={t('title')}>
       {/* Tablet warning */}
       {viewportWidth >= 768 && viewportWidth < 1024 && (
         <div className="flex items-center gap-3 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
@@ -767,7 +811,7 @@ export function StudioEditorClient() {
         </div>
       )}
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
+        initial={prefersReduced ? false : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         className="vc-card-surface rounded-2xl border border-border p-5 shadow-sm"
       >
@@ -790,7 +834,7 @@ export function StudioEditorClient() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="secondary" onClick={() => void createCanvas()}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="me-2 h-4 w-4" />
               {t('newCanvas')}
             </Button>
             <Button
@@ -798,7 +842,7 @@ export function StudioEditorClient() {
               variant="outline"
               onClick={() => setShowZones((v) => !v)}
             >
-              <SquareStack className="mr-2 h-4 w-4" />
+              <SquareStack className="me-2 h-4 w-4" />
               {t('zones')}
             </Button>
             <Button
@@ -806,7 +850,7 @@ export function StudioEditorClient() {
               variant="outline"
               onClick={() => setShowTemplates((v) => !v)}
             >
-              <LayoutTemplate className="mr-2 h-4 w-4" />
+              <LayoutTemplate className="me-2 h-4 w-4" />
               {t('templates')}
             </Button>
             <Button
@@ -815,11 +859,20 @@ export function StudioEditorClient() {
               disabled={!canvasId || snapshots.length === 0}
               onClick={() => setShowHistory((v) => !v)}
             >
-              <History className="mr-2 h-4 w-4" />
+              <History className="me-2 h-4 w-4" />
               {t('history')}
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!canvasId}
+              onClick={() => setShowPreview(true)}
+            >
+              <Play className="me-2 h-4 w-4" />
+              {t('preview')}
+            </Button>
             <Button type="button" variant="cta" disabled={!canvasId || saving} aria-busy={saving} onClick={() => { void save(); takeSnapshot(); }}>
-              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              {saving ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Save className="me-2 h-4 w-4" />}
               {saving ? t('saving') : t('save')}
             </Button>
           </div>
@@ -862,7 +915,7 @@ export function StudioEditorClient() {
 
       {showZones && (
         <motion.div
-          initial={{ opacity: 0, y: 8 }}
+          initial={prefersReduced ? false : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           className="vc-card-surface rounded-2xl border border-border p-5 shadow-sm"
         >
@@ -902,7 +955,7 @@ export function StudioEditorClient() {
 
       {showTemplates && (
         <motion.div
-          initial={{ opacity: 0, y: 8 }}
+          initial={prefersReduced ? false : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           className="vc-card-surface rounded-2xl border border-border p-5 shadow-sm"
         >
@@ -941,7 +994,7 @@ export function StudioEditorClient() {
 
       {showHistory && canvasId && (
         <motion.div
-          initial={{ opacity: 0, y: 8 }}
+          initial={prefersReduced ? false : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           className="vc-card-surface rounded-2xl border border-border p-5 shadow-sm"
           role="region"
@@ -990,7 +1043,7 @@ export function StudioEditorClient() {
                       disabled={restoringVersion}
                       onClick={() => void restoreServerVersion(ver)}
                     >
-                      <RotateCcw className="mr-1 h-3.5 w-3.5" />
+                      <RotateCcw className="me-1 h-3.5 w-3.5" />
                       {restoringVersion ? t('restoring') : t('restore')}
                     </Button>
                   </li>
@@ -1036,7 +1089,7 @@ export function StudioEditorClient() {
                       className="text-xs"
                       onClick={() => restoreSnapshot(snap)}
                     >
-                      <RotateCcw className="mr-1 h-3.5 w-3.5" />
+                      <RotateCcw className="me-1 h-3.5 w-3.5" />
                       {t('restore')}
                     </Button>
                     <Button
@@ -1058,33 +1111,33 @@ export function StudioEditorClient() {
 
       <div className="grid gap-4 md:gap-6 md:grid-cols-[240px_minmax(0,1fr)_260px] lg:grid-cols-[280px_minmax(0,1fr)_300px]">
         {/* Left: Media Panel */}
-        <StudioMediaPanel library={library} onAddMedia={addMediaItem} />
+        <StudioMediaPanel library={library} onAddMedia={addMediaItem} onUpload={handleStudioUpload} uploading={uploading} />
 
         {/* Center: Canvas + Tools */}
         <div className="flex min-h-0 flex-col gap-3">
-          <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-muted/30 p-2">
+          <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-muted/30 p-2" role="toolbar" aria-label={t('insertTools')}>
             <Button type="button" size="sm" variant="ghost" onClick={addText}>
-              <Type className="mr-1 h-4 w-4 text-primary" />
+              <Type className="me-1 h-4 w-4 text-primary" />
               {t('toolText')}
             </Button>
             <Button type="button" size="sm" variant="ghost" onClick={addRect}>
-              <Shapes className="mr-1 h-4 w-4 text-primary" />
+              <Shapes className="me-1 h-4 w-4 text-primary" />
               {t('toolRect')}
             </Button>
             <Button type="button" size="sm" variant="ghost" onClick={addEllipse}>
-              <CircleIcon className="mr-1 h-4 w-4 text-primary" />
+              <CircleIcon className="me-1 h-4 w-4 text-primary" />
               {t('toolEllipse')}
             </Button>
             <Button type="button" size="sm" variant="ghost" onClick={addLine}>
-              <Minus className="mr-1 h-4 w-4 text-primary" />
+              <Minus className="me-1 h-4 w-4 text-primary" />
               {t('toolLine')}
             </Button>
             <Button type="button" size="sm" variant="ghost" onClick={addArrow}>
-              <ArrowRight className="mr-1 h-4 w-4 text-primary" />
+              <ArrowRight className="me-1 h-4 w-4 text-primary" />
               {t('toolArrow')}
             </Button>
             <Button type="button" size="sm" variant="ghost" onClick={addQrCode}>
-              <QrCode className="mr-1 h-4 w-4 text-primary" />
+              <QrCode className="me-1 h-4 w-4 text-primary" />
               {t('toolQrCode')}
             </Button>
           </div>
@@ -1150,6 +1203,7 @@ export function StudioEditorClient() {
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white"
                 onClick={zoomIn}
                 title={t('zoomIn')}
+                aria-label={t('zoomIn')}
               >
                 <ZoomIn className="h-4 w-4" />
               </button>
@@ -1161,6 +1215,7 @@ export function StudioEditorClient() {
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white"
                 onClick={zoomOut}
                 title={t('zoomOut')}
+                aria-label={t('zoomOut')}
               >
                 <ZoomOut className="h-4 w-4" />
               </button>
@@ -1169,6 +1224,7 @@ export function StudioEditorClient() {
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white"
                 onClick={zoomFit}
                 title={t('zoomFit')}
+                aria-label={t('zoomFit')}
               >
                 <Maximize className="h-4 w-4" />
               </button>
@@ -1177,6 +1233,7 @@ export function StudioEditorClient() {
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white"
                 onClick={zoomReset}
                 title={t('zoomReset')}
+                aria-label={t('zoomReset')}
               >
                 <RotateCcw className="h-4 w-4" />
               </button>
@@ -1204,6 +1261,43 @@ export function StudioEditorClient() {
           />
         </div>
       </div>
+
+      {/* Preview overlay */}
+      {showPreview && (
+        <div
+          className="fixed inset-0 z-modal flex items-center justify-center bg-neutral-900"
+          role="dialog"
+          aria-label={t('preview')}
+          onClick={() => setShowPreview(false)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setShowPreview(false); }}
+          tabIndex={-1}
+        >
+          <button
+            type="button"
+            className="absolute end-4 top-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white transition hover:bg-white/20"
+            aria-label={t('exitPreview')}
+            onClick={(e) => { e.stopPropagation(); setShowPreview(false); }}
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <CanvasStageView
+            size={{ w: window.innerWidth, h: window.innerHeight }}
+            ox={(window.innerWidth - dw * Math.min(window.innerWidth / dw, window.innerHeight / dh)) / 2}
+            oy={(window.innerHeight - dh * Math.min(window.innerWidth / dw, window.innerHeight / dh)) / 2}
+            scale={Math.min(window.innerWidth / dw, window.innerHeight / dh)}
+            dw={dw}
+            dh={dh}
+            layout={layout}
+            onSelect={() => {}}
+            onUpdateObject={() => {}}
+            onStageClick={() => {}}
+            onDrop={() => {}}
+            onDragOver={() => {}}
+            containerRef={containerRef}
+            dropHint=""
+          />
+        </div>
+      )}
 
       {/* Unsaved changes dialog */}
       <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>

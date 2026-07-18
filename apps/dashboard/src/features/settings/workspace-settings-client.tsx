@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { Pause, Play, Save, Loader2 } from 'lucide-react';
+import { Pause, Play, Save, Loader2, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +23,8 @@ type WorkspaceDetails = {
   defaultLocale: string;
   timezone: string;
   isPaused: boolean;
+  createdAt?: string;
+  plan?: string | null;
 };
 
 const COMMON_TIMEZONES = [
@@ -52,6 +54,7 @@ export function WorkspaceSettingsClient() {
   const [saving, setSaving] = useState(false);
   const [togglingPause, setTogglingPause] = useState(false);
   const [playlists, setPlaylists] = useState<ApiPlaylistOption[]>([]);
+  const [copiedId, setCopiedId] = useState(false);
 
   const load = useCallback(async () => {
     if (!workspaceId) return;
@@ -135,6 +138,26 @@ export function WorkspaceSettingsClient() {
             <Input value={name} onChange={(e) => setName(e.target.value)} className="rounded-xl" />
           </div>
           <div className="space-y-2">
+            <Label>{t('workspaceId')}</Label>
+            <div className="flex items-center gap-2">
+              <Input value={details.id} readOnly aria-readonly className="rounded-xl font-mono text-sm" />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-10 shrink-0 rounded-xl"
+                onClick={() => {
+                  void navigator.clipboard.writeText(details.id);
+                  setCopiedId(true);
+                  setTimeout(() => setCopiedId(false), 2000);
+                }}
+                aria-label={t('copyId')}
+              >
+                {copiedId ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+          <div className="space-y-2">
             <Label>{t('defaultLocale')}</Label>
             <select
               className="h-10 w-full rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
@@ -160,6 +183,20 @@ export function WorkspaceSettingsClient() {
             </select>
             <p className="text-xs text-muted-foreground">{t('timezoneHint')}</p>
           </div>
+        </div>
+        <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
+          {details.plan && (
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">{t('plan')}:</span>
+              <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">{details.plan}</span>
+            </div>
+          )}
+          {details.createdAt && (
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">{t('createdDate')}:</span>
+              <span className="font-medium">{new Date(details.createdAt).toLocaleDateString(undefined)}</span>
+            </div>
+          )}
         </div>
         <Button
           type="button"

@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   Loader2,
   MapPin,
@@ -69,6 +69,7 @@ export function ScreenVisualCard({
   onToggleSelect?: (id: string, shiftKey: boolean) => void;
 }) {
   const t = useTranslations('screensClient');
+  const prefersReducedMotion = useReducedMotion();
   const { previewUrl, loading, previewRev } = useScreenActivePreview(
     screen.id,
     workspaceId,
@@ -82,10 +83,10 @@ export function ScreenVisualCard({
   return (
     <motion.article
       layout
-      initial={{ opacity: 0, y: 14, scale: 0.98 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 14, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay: index * 0.04, type: 'spring', stiffness: 420, damping: 28 }}
-      whileHover={{ scale: 1.015, y: -2 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.04, type: 'spring', stiffness: 420, damping: 28 }}
+      whileHover={prefersReducedMotion ? undefined : { scale: 1.015, y: -2 }}
       role="button"
       tabIndex={0}
       aria-label={`${screen.name}, ${statusText}`}

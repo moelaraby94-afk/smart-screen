@@ -45,6 +45,9 @@ export function SettingsTabs() {
           <Link
             key={tab.segment}
             href={href as Route}
+            role="tab"
+            aria-selected={active}
+            aria-current={active ? 'page' : undefined}
             className={cn(
               'rounded-lg px-4 py-1.5 text-sm font-semibold tracking-tight transition-all',
               active

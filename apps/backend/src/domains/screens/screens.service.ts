@@ -401,7 +401,11 @@ export class ScreensService {
     });
   }
 
-  async addAssignment(workspaceId: string, screenId: string, dto: { playlistId: string; orderIndex?: number }) {
+  async addAssignment(
+    workspaceId: string,
+    screenId: string,
+    dto: { playlistId: string; orderIndex?: number },
+  ) {
     await this.assertScreenInWorkspace(workspaceId, screenId);
     const existing = await this.prisma.screenPlaylistAssignment.findUnique({
       where: { screenId_playlistId: { screenId, playlistId: dto.playlistId } },
@@ -427,7 +431,11 @@ export class ScreensService {
     return created;
   }
 
-  async removeAssignment(workspaceId: string, screenId: string, assignmentId: string) {
+  async removeAssignment(
+    workspaceId: string,
+    screenId: string,
+    assignmentId: string,
+  ) {
     await this.assertScreenInWorkspace(workspaceId, screenId);
     await this.prisma.screenPlaylistAssignment.delete({
       where: { id: assignmentId, screenId },
@@ -461,7 +469,10 @@ export class ScreensService {
     return result;
   }
 
-  private async assertScreenInWorkspace(workspaceId: string, screenId: string): Promise<void> {
+  private async assertScreenInWorkspace(
+    workspaceId: string,
+    screenId: string,
+  ): Promise<void> {
     const screen = await this.prisma.screen.findFirst({
       where: { id: screenId, workspaceId },
       select: { id: true },

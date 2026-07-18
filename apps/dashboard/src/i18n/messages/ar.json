@@ -359,7 +359,12 @@
     "fontFamily": "عائلة الخط",
     "fontDefault": "الخط الافتراضي",
     "textAlign": "محاذاة النص",
+    "alignLeft": "محاذاة لليسار",
+    "alignCenter": "محاذاة للوسط",
+    "alignRight": "محاذاة لليمين",
     "textStyle": "نمط النص",
+    "bold": "عريض",
+    "italic": "مائل",
     "toolLine": "خط",
     "toolArrow": "سهم",
     "toolQrCode": "رمز QR",
@@ -387,6 +392,7 @@
     "retry": "إعادة المحاولة",
     "loadingStudio": "جاري تحميل الاستوديو…",
     "canvasArea": "منطقة محرر اللوحات",
+    "insertTools": "أدوات الإدراج",
     "emptyCanvasHint": "اسحب الوسائط هنا أو انقر على أداة بالأعلى لإضافة طبقات",
     "unsavedChangesTitle": "تغييرات غير محفوظة",
     "unsavedChangesDesc": "لديك تغييرات غير محفوظة. هل تريد الحفظ قبل المغادرة؟",
@@ -401,7 +407,11 @@
     "uploadingMedia": "جاري الرفع…",
     "uploadSuccess": "تم رفع الوسائط بنجاح.",
     "uploadFailed": "فشل الرفع.",
-    "timeline": "الجدول الزمني"
+    "timeline": "الجدول الزمني",
+    "preview": "معاينة",
+    "exitPreview": "إنهاء المعاينة",
+    "viewerNoAccess": "الوصول للاستوديو محظور",
+    "viewerNoAccessDesc": "تحتاج إلى صلاحيات المالك أو المحرر لاستخدام استوديو اللوحات."
   },
   "schedules": {
     "title": "الجدولة",
@@ -517,6 +527,8 @@
     "loading": "جاري تحميل مساحات العمل…",
     "loadFailed": "تعذر تحميل مساحات العمل.",
     "auditHint": "قائمة تدقيق سريعة — افتح ملف العميل من المالك عند توفره.",
+    "searchPlaceholder": "ابحث بالاسم أو المالك…",
+    "noResults": "لا توجد مساحات عمل مطابقة لبحثك.",
     "workspace": "مساحة العمل",
     "owner": "المالك",
     "screens": "الشاشات",
@@ -565,6 +577,14 @@
     "loading": "جاري تحميل الأسطول…",
     "loadFailed": "تعذر تحميل شاشات الأسطول.",
     "hint": "يعتمد الوضع على نبضات الاتصال: قد تظهر الشاشات المنقطعة قليلاً كقديمة أو غير متصلة.",
+    "searchPlaceholder": "ابحث بالشاشة أو مساحة العمل أو التسلسل…",
+    "noResults": "لا توجد شاشات مطابقة لبحثك.",
+    "summary": {
+      "online": "متصل",
+      "offline": "غير متصل",
+      "warning": "تحذير",
+      "total": "الإجمالي"
+    },
     "workspace": "مساحة العمل",
     "screen": "الشاشة",
     "serial": "التسلسل",
@@ -847,6 +867,7 @@
     "currentContentEmptyDesc": "عيّن قائمة تشغيل لبدء عرض المحتوى على هذه الشاشة.",
     "editPlaylist": "تعديل قائمة التشغيل",
     "override": "تجاوز",
+    "overrideDialogDesc": "استبدل المحتوى الحالي مؤقتاً بقائمة تشغيل محددة. ينتهي التجاوز تلقائياً بعد المدة المختارة.",
     "activeSchedules": "الجدولات النشطة",
     "noSchedules": "لا توجد جدولات نشطة",
     "noSchedulesDesc": "لا توجد جدولات نشطة حالياً لهذه الشاشة.",
@@ -936,6 +957,7 @@
     "files": "{count, plural, zero {لا ملفات} one {# ملف} two {# ملفان} few {# ملفات} many {# ملفًا} other {# ملف}}",
     "releaseToAdd": "حرر للإضافة…",
     "dropMore": "أسقط المزيد من الملفات للرفع",
+    "dropHere": "أسقط الملفات هنا",
     "video": "فيديو",
     "image": "صورة",
     "deleteTitle": "حذف الوسيط؟",
@@ -1166,7 +1188,8 @@
       "cancel": "إلغاء",
       "done": "تم",
       "confirmRevokeTitle": "إلغاء مفتاح API؟",
-      "confirmRevokeDesc": "لا يمكن التراجع عن هذا الإجراء. أي تكاملات تستخدم هذا المفتاح سوف تتوقف فوراً."
+      "confirmRevokeDesc": "لا يمكن التراجع عن هذا الإجراء. أي تكاملات تستخدم هذا المفتاح سوف تتوقف فوراً.",
+      "revokeAria": "إلغاء {name}"
     },
     "webhooks": {
       "title": "نقاط استقبال Webhook",
@@ -1210,6 +1233,7 @@
   },
   "homeOverview": {
     "kicker": "القيادة",
+    "pageTitle": "نظرة عامة",
     "tagline": "كريستال نابض · تحكم مؤسسي",
     "welcomeWithName": "أهلاً بعودتك، {name}",
     "workspacesCount": "{count, plural, =1 {مساحة عمل واحدة} other {# مساحات عمل}}",
@@ -1594,6 +1618,7 @@
     "loading": "جاري تحميل المؤشرات…",
     "loadFailed": "تعذر تحميل مقاييس المشرف.",
     "failed": "فشل تحميل المقاييس",
+    "retry": "إعادة المحاولة",
     "cards": {
       "screens": "إجمالي الشاشات",
       "screensValue": "{active} / {total}",
@@ -1617,6 +1642,7 @@
     "loadFailed": "تعذر تحميل صحة النظام.",
     "revenueDisclaimer": "أرقام الإيرادات من واجهة الإحصاءات توضيحية فقط حتى يتم ربطها ببيانات الدفع الحية.",
     "failed": "فشل التحميل",
+    "retry": "إعادة المحاولة",
     "users": "مستخدم",
     "workspaces": "مساحة عمل",
     "cards": {
@@ -1648,6 +1674,8 @@
     "noWorkspacesOption": "لا توجد مساحات عمل بعد",
     "newWorkspaceTitle": "مساحة عمل جديدة",
     "createWorkspaceAria": "إنشاء مساحة عمل",
+    "searchPlaceholder": "بحث في مساحات العمل...",
+    "searchEmpty": "لا توجد نتائج",
     "roles": {
       "OWNER": "مالك",
       "ADMIN": "مسؤول",
@@ -1657,6 +1685,7 @@
   },
   "adminUsersDirectory": {
     "loadingDirectory": "جاري تحميل الدليل…",
+    "searchPlaceholder": "ابحث بالاسم أو البريد الإلكتروني…",
     "loadFailed": "تعذر تحميل المستخدمين.",
     "updateSuccess": "تم تحديث المستخدم.",
     "updateFailed": "فشل التحديث.",
@@ -1910,6 +1939,8 @@
   },
   "superAdminGuard": {
     "accessDenied": "تم رفض الوصول",
+    "accessDeniedDesc": "ليس لديك صلاحية للوصول إلى هذه الصفحة. تواصل مع مالك مساحة العمل إذا كنت تعتقد أن هذا خطأ.",
+    "backToOverview": "الذهاب إلى لوحة التحكم",
     "verifying": "جارٍ التحقق من الصلاحيات…"
   },
   "settingsBillingClient": {
@@ -1944,7 +1975,10 @@
       "download": "PDF"
     },
     "downloadInvoice": "تحميل الفاتورة PDF",
-    "invoiceDownloadFailed": "تعذر تحميل الفاتورة. قد لا يكون Stripe مُعداً."
+    "invoiceDownloadFailed": "تعذر تحميل الفاتورة. قد لا يكون Stripe مُعداً.",
+    "usageTitle": "الاستخدام",
+    "usageScreens": "الشاشات",
+    "usageStorage": "التخزين"
   },
   "settingsProfileClient": {
     "updateFailed": "فشل التحديث",
@@ -1963,11 +1997,14 @@
     "email": "البريد الإلكتروني",
     "changeEmail": "تغيير البريد الإلكتروني",
     "saveChanges": "حفظ التغييرات",
+    "nameRequired": "يجب أن يكون الاسم من 2 إلى 50 حرفًا.",
+    "emailInvalid": "يرجى إدخال بريد إلكتروني صحيح.",
     "verifyNewEmail": "تأكيد البريد الإلكتروني الجديد",
     "newEmail": "البريد الإلكتروني الجديد",
     "sendCode": "إرسال الرمز",
     "code6Digits": "رمز من 6 أرقام",
     "confirmEmail": "تأكيد البريد الإلكتروني",
+    "cancel": "إلغاء",
     "prefsTitle": "تفضيلات الإشعارات",
     "prefsSubtitle": "اختر الأحداث التي تطلق إشعارات داخل التطبيق.",
     "prefsSave": "حفظ التفضيلات",
@@ -1985,6 +2022,21 @@
     "pref_schedule_changed_desc": "عند إنشاء أو تعديل جدول",
     "pref_pairing_started": "بدء الاقتران",
     "pref_pairing_started_desc": "عند بدء اقتران شاشة جديدة",
+    "categoryScreen": "الشاشات",
+    "categorySchedule": "الجدولة",
+    "categoryTeam": "الفريق",
+    "categorySystem": "النظام",
+    "pref_invite_accepted": "قبول الدعوة",
+    "pref_invite_accepted_desc": "عند قبول دعوة الفريق",
+    "pref_member_removed": "إزالة عضو",
+    "pref_member_removed_desc": "عند إزالة عضو من الفريق",
+    "pref_storage_limit": "حد التخزين",
+    "pref_storage_limit_desc": "عند اقتراب التخزين من الحد",
+    "pref_plan_expiry": "انتهاء الباقة",
+    "pref_plan_expiry_desc": "عند اقتراب انتهاء اشتراك الباقة",
+    "resetToDefaults": "إعادة للافتراضي",
+    "confirmResetDefaults": "إعادة جميع التفضيلات إلى الافتراضي؟",
+    "reset": "إعادة",
     "gdprTitle": "البيانات والخصوصية",
     "gdprSubtitle": "صدّر بياناتك أو اطلب حذف حسابك (GDPR).",
     "exportData": "تصدير بياناتي",
@@ -2058,6 +2110,8 @@
     "email": "البريد الإلكتروني",
     "newPassword": "كلمة المرور الجديدة",
     "sendResetLink": "إرسال رابط إعادة التعيين",
+    "sending": "جاري الإرسال…",
+    "successMessage": "إذا كان هناك حساب بهذا البريد الإلكتروني، فقد تم إرسال رابط إعادة التعيين.",
     "updatePassword": "تحديث كلمة المرور",
     "backToSignIn": "العودة إلى تسجيل الدخول"
   },
@@ -2084,6 +2138,8 @@
     "phonePlaceholder": "501234567",
     "city": "المدينة",
     "password": "كلمة المرور",
+    "passwordHint": "8 أحرف على الأقل",
+    "creatingAccount": "جاري إنشاء الحساب…",
     "continue": "متابعة",
     "code6Digits": "رمز من 6 أرقام",
     "activateAccount": "تفعيل الحساب",
@@ -2128,6 +2184,9 @@
     "filterByRole": "تصفية حسب الدور",
     "resendInviteAria": "إعادة إرسال الدعوة إلى {email}",
     "cancelInviteAria": "إلغاء الدعوة إلى {email}",
+    "cancelInviteTitle": "إلغاء الدعوة",
+    "confirmCancelInvite": "إلغاء الدعوة إلى {email}؟ ستحتاج إلى إعادة دعوتهم للانضمام إلى مساحة العمل.",
+    "cancelInviteConfirm": "إلغاء الدعوة",
     "removeMemberAria": "إزالة {name}",
     "confirmRemoveName": "إزالة {name} من مساحة العمل؟ سيفقد الوصول إلى جميع بيانات مساحة العمل.",
     "members": "الأعضاء",
@@ -2374,6 +2433,7 @@
     "nameLabel": "اسم الشاشة",
     "namePlaceholder": "مثال: شاشة-001",
     "nameSuggestion": "مثال: شاشة-001",
+    "nameSuggestionDefault": "شاشة-001",
     "nameError": "يجب أن يكون الاسم بين 2 و 50 حرفاً",
     "branchHelp": "تعيين هذه الشاشة إلى فرع (اختياري)",
     "branchLabel": "الفرع",
@@ -2846,7 +2906,9 @@
     "publishing": "جارٍ النشر…",
     "publishNow": "نشر الآن",
     "publishedToScreens": "تم النشر إلى {count} شاشة.",
-    "publishFailed": "فشل النشر. حاول مرة أخرى."
+    "publishFailed": "فشل النشر. حاول مرة أخرى.",
+    "loadErrorTitle": "فشل تحميل قائمة التشغيل. حاول مرة أخرى.",
+    "retry": "إعادة المحاولة"
   },
   "playlistWizard": {
     "createPlaylist": "إنشاء قائمة تشغيل جديدة",
@@ -2886,7 +2948,11 @@
     "tr_zoomOut": "تصغير",
     "tr_flip": "قلب",
     "tr_cube": "مكعب",
-    "tr_rotate": "تدوير"
+    "tr_rotate": "تدوير",
+    "orientLandscape": "أفقي",
+    "orientPortrait": "عمودي",
+    "orientSquare": "مربع",
+    "untitledPlaylist": "قائمة تشغيل بدون عنوان"
   },
   "errors": {
     "UNKNOWN_ERROR": "حدث خطأ ما. برجاء المحاولة مرة أخرى.",
@@ -2966,7 +3032,12 @@
     "pausedOk": "تم إيقاف التشغيل. ستتوقف الشاشات عن العرض.",
     "resumedOk": "تم استئناف التشغيل. ستستأنف الشاشات العرض.",
     "statusPaused": "متوقف",
-    "statusActive": "نشط"
+    "statusActive": "نشط",
+    "workspaceId": "معرف مساحة العمل",
+    "copyId": "نسخ المعرف",
+    "copied": "تم النسخ!",
+    "plan": "الباقة",
+    "createdDate": "تاريخ الإنشاء"
   },
   "twoFactor": {
     "title": "المصادقة الثنائية",
@@ -3069,6 +3140,7 @@
       "empty": "لا توجد إشعارات للعرض.",
       "filterAll": "الكل",
       "filterUnread": "غير مقروء",
+      "filterRead": "مقروء",
       "filterScreen": "الشاشات",
       "filterUpload": "الرفع",
       "filterSubscription": "الفوترة",
@@ -3077,7 +3149,9 @@
       "clearAll": "مسح الكل",
       "deleteOne": "حذف",
       "noFilterResults": "لا توجد إشعارات مطابقة لهذا الفلتر.",
-      "clearFilter": "مسح الفلتر"
+      "clearFilter": "مسح الفلتر",
+      "listLabel": "قائمة الإشعارات",
+      "unreadLabel": "غير مقروء"
     }
   },
   "auditLogPage": {
@@ -3130,6 +3204,7 @@
     "metricContentReach": "وصول المحتوى",
     "trendTitle": "الاتجاه",
     "performersTitle": "الأفضل أداءً",
+    "bottomPerformersTitle": "الأقل أداءً",
     "performersEmpty": "لا توجد بيانات متاحة لهذه الفترة.",
     "chartUptimeAria": "مخطط اتجاه نسبة التشغيل خلال الفترة المحددة",
     "chartContentAria": "مخطط اتجاه أداء المحتوى خلال الفترة المحددة",
@@ -3239,7 +3314,11 @@
     "usage": "إحصائيات الاستخدام",
     "usageDemoNotice": "إحصائيات الاستخدام توضيحية فقط.",
     "historyTitle": "سجل الاقتراحات",
-    "clearHistory": "مسح"
+    "clearHistory": "مسح",
+    "placeholderHeadline": "الموضوع (مثال: تخفيضات الصيف)",
+    "placeholderBodyText": "الموضوع أو العنوان",
+    "placeholderCta": "المنتج أو الهدف",
+    "placeholderColorScheme": "المجال (مثال: التجزئة)"
   },
   "emergencyPage": {
     "kicker": "الطوارئ",
@@ -3445,6 +3524,7 @@
     "shellTitle": "حدث خطأ أثناء تحميل الصفحة",
     "tryAgain": "المحاولة مرة أخرى",
     "retry": "إعادة المحاولة",
+    "reload": "إعادة تحميل",
     "pleaseTryAgain": "يرجى المحاولة مرة أخرى"
   },
   "notFoundPage": {
@@ -3452,6 +3532,7 @@
     "title": "الصفحة غير موجودة",
     "description": "الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
     "backToOverview": "العودة للرئيسية",
+    "backToLogin": "اذهب لتسجيل الدخول",
     "backToHome": "العودة للرئيسية"
   }
 }

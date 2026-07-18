@@ -189,7 +189,7 @@ export function ApiKeysManager() {
                 onClick={() => setConfirmRevokeId(key.id)}
                 disabled={revokingId === key.id}
                 className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:text-red-600 disabled:opacity-50"
-                aria-label={t('keys.revoke')}
+                aria-label={t('keys.revokeAria', { name: key.name })}
               >
                 {revokingId === key.id ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

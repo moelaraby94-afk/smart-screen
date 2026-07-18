@@ -35,6 +35,7 @@ import { logout as apiLogout } from '@/features/auth/auth-api';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { WorkspaceSwitcher } from '@/features/workspace/workspace-switcher';
+import { useReducedMotion } from 'framer-motion';
 
 /* ═══════════════════════════════════════════════════════════════
    Nimbus Rail v2 — Professional SaaS sidebar
@@ -288,13 +289,14 @@ export function ShellSidebar({
   const pathnameActive = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme !== 'light';
+  const prefersReducedMotion = useReducedMotion() ?? false;
 
   return (
     <aside
       key={`sidebar-${navLocale}-${sovereign ? 'admin' : 'workspace'}`}
       className={cn(
         'fixed inset-y-0 z-drawer flex w-[280px] flex-col [inset-inline-start:0]',
-        'transition-transform duration-normal',
+        prefersReducedMotion ? 'transition-opacity duration-0' : 'transition-transform duration-normal',
         rtl
           ? mobileNavOpen ? 'max-md:translate-x-0' : 'max-md:translate-x-full'
           : mobileNavOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full',
@@ -504,7 +506,7 @@ export function ShellSidebar({
         </nav>
 
         {/* ── Bottom bar: theme + lang + logout ── */}
-        <div className="flex shrink-0 items-center gap-1.5 border-t border-border px-4 py-3 md:justify-center lg:justify-start">
+        <div className="flex shrink-0 items-center gap-1.5 border-t border-border px-4 py-3 md:justify-center lg:justify-start [padding-bottom:env(safe-area-inset-bottom)]">
           <IconButton
             label={isDark ? tUser('switchToLight') : tUser('switchToDark')}
             onClick={() => setTheme(isDark ? 'light' : 'dark')}

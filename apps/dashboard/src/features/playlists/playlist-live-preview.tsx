@@ -163,6 +163,7 @@ export function PlaylistLivePreview({
               variant="ghost"
               size="icon"
               className="absolute start-2 top-1/2 -translate-y-1/2 h-8 w-8 text-white hover:bg-white/10"
+              aria-label={t('prevItem')}
               onClick={goPrev}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -171,6 +172,7 @@ export function PlaylistLivePreview({
               variant="ghost"
               size="icon"
               className="absolute end-2 top-1/2 -translate-y-1/2 h-8 w-8 text-white hover:bg-white/10"
+              aria-label={t('nextItem')}
               onClick={goNext}
             >
               <ChevronRight className="h-4 w-4" />

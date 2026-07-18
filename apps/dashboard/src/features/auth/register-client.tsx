@@ -153,6 +153,7 @@ export function RegisterClient() {
                 <Label className="text-foreground">{t('businessName')}</Label>
                 <Input
                   required
+                  autoFocus
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                   className="h-9 rounded-lg border-border bg-background text-foreground"
@@ -218,6 +219,7 @@ export function RegisterClient() {
               </div>
               <div className="space-y-2">
                 <Label className="text-foreground">{t('password')}</Label>
+                <p className="text-xs text-muted-foreground">{t('passwordHint')}</p>
                 <div className="relative">
                   <Input
                     required
@@ -244,7 +246,7 @@ export function RegisterClient() {
                 variant="cta"
                 aria-busy={pending}
               >
-                {t('continue')}
+                {pending ? t('creatingAccount') : t('continue')}
               </Button>
             </form>
           ) : (

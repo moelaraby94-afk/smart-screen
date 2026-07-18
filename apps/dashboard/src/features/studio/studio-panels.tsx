@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   AlignCenter,
   AlignLeft,
@@ -68,6 +68,7 @@ function objectLabel(obj: CanvasObjectJson): string {
 export function StudioLayersPanel({ objects, selectedId, onSelect, onReorder, onToggleVisibility, onToggleLock }: LayersPanelProps) {
   const t = useTranslations('studio');
   const dir = useLocale() === 'ar' ? -1 : 1;
+  const prefersReduced = useReducedMotion();
   const reversed = [...objects].reverse();
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -86,7 +87,7 @@ export function StudioLayersPanel({ objects, selectedId, onSelect, onReorder, on
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 20 * dir }}
+      initial={prefersReduced ? false : { opacity: 0, x: 20 * dir }}
       animate={{ opacity: 1, x: 0 }}
       className="vc-card-surface flex h-[60px] flex-col overflow-hidden rounded-2xl border border-border p-3"
       role="listbox"
@@ -171,6 +172,7 @@ type MediaPanelProps = {
 export function StudioMediaPanel({ library, onUpload, uploading, onAddMedia }: MediaPanelProps) {
   const t = useTranslations('studio');
   const dir = useLocale() === 'ar' ? -1 : 1;
+  const prefersReduced = useReducedMotion();
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
@@ -188,7 +190,7 @@ export function StudioMediaPanel({ library, onUpload, uploading, onAddMedia }: M
 
   return (
     <motion.aside
-      initial={{ opacity: 0, x: -20 * dir }}
+      initial={prefersReduced ? false : { opacity: 0, x: -20 * dir }}
       animate={{ opacity: 1, x: 0 }}
       className="vc-card-surface flex h-full flex-col rounded-2xl border border-border p-3"
       role="region"
@@ -274,10 +276,11 @@ export function StudioMediaPanel({ library, onUpload, uploading, onAddMedia }: M
 export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject, playlists }: PropertiesPanelProps) {
   const t = useTranslations('studio');
   const dir = useLocale() === 'ar' ? -1 : 1;
+  const prefersReduced = useReducedMotion();
 
   return (
     <motion.aside
-      initial={{ opacity: 0, x: 20 * dir }}
+      initial={prefersReduced ? false : { opacity: 0, x: 20 * dir }}
       animate={{ opacity: 1, x: 0 }}
       className="vc-card-surface h-fit rounded-2xl border border-border p-3"
     >
@@ -506,6 +509,7 @@ export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject
                     variant={(selected.align ?? 'left') === 'left' ? 'default' : 'outline'}
                     className="h-9 w-9 p-0"
                     onClick={() => onUpdateObject(selected.id, { align: 'left' })}
+                    aria-label={t('alignLeft')}
                   >
                     <AlignLeft className="h-4 w-4" />
                   </Button>
@@ -515,6 +519,7 @@ export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject
                     variant={selected.align === 'center' ? 'default' : 'outline'}
                     className="h-9 w-9 p-0"
                     onClick={() => onUpdateObject(selected.id, { align: 'center' })}
+                    aria-label={t('alignCenter')}
                   >
                     <AlignCenter className="h-4 w-4" />
                   </Button>
@@ -524,6 +529,7 @@ export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject
                     variant={selected.align === 'right' ? 'default' : 'outline'}
                     className="h-9 w-9 p-0"
                     onClick={() => onUpdateObject(selected.id, { align: 'right' })}
+                    aria-label={t('alignRight')}
                   >
                     <AlignRight className="h-4 w-4" />
                   </Button>
@@ -544,6 +550,7 @@ export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject
                       const next = `${hasBold ? '' : 'bold '}${hasItalic ? 'italic' : ''}`.trim() || 'normal';
                       onUpdateObject(selected.id, { fontStyle: next });
                     }}
+                    aria-label={t('bold')}
                   >
                     <Bold className="h-4 w-4" />
                   </Button>
@@ -559,6 +566,7 @@ export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject
                       const next = `${hasBold ? 'bold ' : ''}${hasItalic ? '' : 'italic'}`.trim() || 'normal';
                       onUpdateObject(selected.id, { fontStyle: next });
                     }}
+                    aria-label={t('italic')}
                   >
                     <Italic className="h-4 w-4" />
                   </Button>

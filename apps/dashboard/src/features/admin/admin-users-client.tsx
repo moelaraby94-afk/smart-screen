@@ -1,12 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Route } from 'next';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
   MoreHorizontal,
   Pencil,
+  Search,
   Shield,
   UserCircle,
   UserMinus,
@@ -123,6 +124,7 @@ export function AdminUsersClient() {
 
   const [suspendTarget, setSuspendTarget] = useState<UserRow | null>(null);
   const [impersonateTarget, setImpersonateTarget] = useState<UserRow | null>(null);
+  const [search, setSearch] = useState('');
 
   const load = useCallback(async () => {
     const [meRes, listRes] = await Promise.all([
@@ -212,14 +214,40 @@ export function AdminUsersClient() {
 
   const dateLocale = locale === 'ar' ? 'ar' : 'en-US';
 
+  const filteredRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter((u) =>
+      u.fullName.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q),
+    );
+  }, [rows, search]);
+
   if (loading) {
     return (
-      <p className="text-sm text-muted-foreground">{t('loadingDirectory')}</p>
+      <div className="space-y-3">
+        <div className="h-10 rounded-xl bg-muted/40 animate-pulse" />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-14 rounded-xl bg-muted/30 animate-pulse" />
+        ))}
+      </div>
     );
   }
 
   return (
     <>
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute inset-y-0 start-0 h-4 w-4 self-center text-muted-foreground ms-3" />
+          <Input
+            type="search"
+            placeholder={t('searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="rounded-xl ps-9"
+          />
+        </div>
+      </div>
       <div className="vc-card-surface overflow-hidden rounded-2xl border border-border shadow-sm">
         <div className="overflow-x-auto">
           <Table>
@@ -238,7 +266,7 @@ export function AdminUsersClient() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((u) => (
+              {filteredRows.map((u) => (
                 <TableRow
                   key={u.id}
                   className={cn(
@@ -311,7 +339,7 @@ export function AdminUsersClient() {
             </TableBody>
           </Table>
         </div>
-        {rows.length === 0 ? (
+        {filteredRows.length === 0 ? (
           <p className="p-8 text-center text-sm text-muted-foreground">{t('empty')}</p>
         ) : null}
       </div>

@@ -192,7 +192,7 @@ export function EmergencyClient() {
             </div>
 
             <Button variant="destructive" className="w-full" disabled={!message.trim() || screens.length === 0 || activating || !canEdit} onClick={handleActivate}>
-              {activating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+              {activating ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Send className="me-2 h-4 w-4" />}
               {t('activateBtn')}
             </Button>
           </CardContent>

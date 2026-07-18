@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { BriefcaseBusiness, Check, ChevronDown, Plus } from 'lucide-react';
+import { BriefcaseBusiness, Check, ChevronDown, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -30,6 +30,22 @@ export function WorkspaceSwitcher() {
   const { workspaceId, workspaces, setWorkspaceId, bumpWorkspaceDataEpoch } = useWorkspace();
   const [createOpen, setCreateOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  const showSearch = workspaces.length > 5;
+
+  React.useEffect(() => {
+    if (!showSearch) return;
+    const timer = setTimeout(() => setDebouncedSearch(searchInput), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput, showSearch]);
+
+  const filteredWorkspaces = useMemo(() => {
+    if (!showSearch || !debouncedSearch.trim()) return workspaces;
+    const q = debouncedSearch.toLowerCase();
+    return workspaces.filter((w) => w.name.toLowerCase().includes(q));
+  }, [workspaces, showSearch, debouncedSearch]);
 
   const pathParts = pathname?.split('/').filter(Boolean) ?? [];
   const isOverviewHome =
@@ -96,8 +112,25 @@ export function WorkspaceSwitcher() {
               {tWs('menuLabel')}
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-border/60" />
+            {showSearch && (
+              <div className="px-2 pb-2">
+                <div className="relative">
+                  <Search className="pointer-events-none absolute inset-y-0 my-auto h-3.5 w-3.5 text-muted-foreground" strokeWidth={ICON_STROKE} aria-hidden />
+                  <input
+                    type="text"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    placeholder={tWs('searchPlaceholder')}
+                    className="w-full rounded-lg border border-border bg-background py-1.5 ps-7 pe-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    aria-label={tWs('searchPlaceholder')}
+                  />
+                </div>
+              </div>
+            )}
             <DropdownMenuGroup>
-              {workspaces.map((workspace) => {
+              {filteredWorkspaces.length === 0 ? (
+                <p className="px-3 py-4 text-center text-sm text-muted-foreground">{tWs('searchEmpty')}</p>
+              ) : filteredWorkspaces.map((workspace) => {
                 const active =
                   !isOverviewHome && workspace.id === workspaceId;
                 return (

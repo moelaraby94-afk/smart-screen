@@ -192,6 +192,7 @@ export function PlaylistTimeline({
                                 className="h-7 w-7 rounded-md"
                                 disabled={index === 0}
                                 title={t('moveUp')}
+                                aria-label={t('moveUp')}
                                 onClick={() => onMoveRow(index, -1)}
                               >
                                 <ChevronUp className="h-3.5 w-3.5" />
@@ -203,6 +204,7 @@ export function PlaylistTimeline({
                                 className="h-7 w-7 rounded-md"
                                 disabled={index >= rows.length - 1}
                                 title={t('moveDown')}
+                                aria-label={t('moveDown')}
                                 onClick={() => onMoveRow(index, 1)}
                               >
                                 <ChevronDown className="h-3.5 w-3.5" />
@@ -213,6 +215,7 @@ export function PlaylistTimeline({
                                 size="icon"
                                 className="h-7 w-7 rounded-md text-muted-foreground hover:text-primary"
                                 title={t('duplicateItem')}
+                                aria-label={t('duplicateItem')}
                                 onClick={() => onDuplicateRow(row.clientId)}
                               >
                                 <CopyPlus className="h-3.5 w-3.5" />
@@ -223,6 +226,7 @@ export function PlaylistTimeline({
                                 size="icon"
                                 className="h-7 w-7 rounded-md text-destructive hover:bg-destructive/10 hover:text-destructive"
                                 title={t('delete')}
+                                aria-label={t('delete')}
                                 onClick={() => onRemoveRow(row.clientId)}
                               >
                                 <Trash2 className="h-3.5 w-3.5" />

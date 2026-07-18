@@ -81,7 +81,7 @@ export function OverviewTab({ data }: OverviewTabProps) {
   return (
     <div role="tabpanel" id="customer-panel-overview" aria-labelledby="customer-tab-overview" className="space-y-6">
       <section className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6 md:p-8">
-        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+        <div className="pointer-events-none absolute -end-20 -top-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
         <div className="relative flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="space-y-4">
             <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">

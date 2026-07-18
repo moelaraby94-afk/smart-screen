@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Route } from 'next';
 import { useTranslations, useLocale } from 'next-intl';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { CheckCircle2, ChevronRight, Radio, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWorkspace } from '@/features/workspace/workspace-context';
@@ -35,6 +35,7 @@ export function PairingWizardClient({ locale }: Props) {
   const [branchId, setBranchId] = useState('');
   const [branches, setBranches] = useState<PlaylistOption[]>([]);
   const autoAdvanceRef = useRef(false);
+  const prefersReducedMotion = useReducedMotion();
 
   const pairing = usePlayerPairing(workspaceId ?? '', {
     canClaim: canClaimPairing,
@@ -126,6 +127,12 @@ export function PairingWizardClient({ locale }: Props) {
 
   const canProceed = step === 1 ? pairing.code.length === 6 : step === 2 ? screenName.trim().length >= 2 : true;
 
+  useEffect(() => {
+    if (step === 2 && screenName === '') {
+      setScreenName(t('nameSuggestionDefault'));
+    }
+  }, [step, screenName, t]);
+
   if (!canClaimPairing) {
     return (
       <div className="mx-auto max-w-[600px] px-6 py-6">
@@ -163,9 +170,9 @@ export function PairingWizardClient({ locale }: Props) {
           <div className="space-y-6">
             <div className="flex flex-col items-center gap-3 py-4 text-center">
               <motion.div
-                initial={{ scale: 0, opacity: 0 }}
+                initial={prefersReducedMotion ? false : { scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.6, type: 'spring', stiffness: 200, damping: 15 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.6, type: 'spring', stiffness: 200, damping: 15 }}
               >
                 <CheckCircle2 className="h-16 w-16 text-success" strokeWidth={1.5} />
               </motion.div>
@@ -256,9 +263,9 @@ export function PairingWizardClient({ locale }: Props) {
             {/* Step 1: Pairing Code */}
             {step === 1 && (
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.2 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
                 className="space-y-4"
               >
                 <p className="text-center text-sm leading-relaxed text-muted-foreground">
@@ -349,9 +356,9 @@ export function PairingWizardClient({ locale }: Props) {
             {/* Step 2: Screen Name */}
             {step === 2 && (
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.2 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
                 className="space-y-4"
               >
                 <p className="text-center text-sm leading-relaxed text-muted-foreground">
@@ -400,9 +407,9 @@ export function PairingWizardClient({ locale }: Props) {
             {/* Step 3: Branch (Optional) */}
             {step === 3 && (
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.2 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
                 className="space-y-4"
               >
                 <p className="text-center text-sm leading-relaxed text-muted-foreground">

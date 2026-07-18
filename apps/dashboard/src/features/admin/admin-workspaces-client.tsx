@@ -1,10 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
-import { Building2 } from 'lucide-react';
+import { Building2, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
 import { AdminEmptyState } from '@/components/admin/admin-empty-state';
 import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
 import { fetchAdminWorkspaces, mockWorkspacePlan as apiMockWorkspacePlan } from './admin-api';
@@ -52,6 +53,7 @@ export function AdminWorkspacesClient() {
   const [rows, setRows] = useState<WorkspaceRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [mockingId, setMockingId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
 
   const load = useCallback(async () => {
     const res = await fetchAdminWorkspaces();
@@ -84,6 +86,16 @@ export function AdminWorkspacesClient() {
     }
   };
 
+  const filteredRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter((w) =>
+      w.name.toLowerCase().includes(q) ||
+      (w.ownerEmail ?? '').toLowerCase().includes(q) ||
+      (w.ownerName ?? '').toLowerCase().includes(q),
+    );
+  }, [rows, search]);
+
   if (loading) {
     return <AdminCosmicLoader label={t('loading')} />;
   }
@@ -91,6 +103,17 @@ export function AdminWorkspacesClient() {
   return (
     <div className="space-y-4">
       <p className="text-xs text-muted-foreground">{t('auditHint')}</p>
+      <div className="relative max-w-sm">
+        <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={t('searchPlaceholder')}
+          className="ps-9"
+          disabled={rows.length === 0}
+        />
+      </div>
       <div className={adminGlassTable.wrap}>
         {rows.length > 0 ? (
         <div className="overflow-x-auto">
@@ -109,7 +132,7 @@ export function AdminWorkspacesClient() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((w) => (
+              {filteredRows.map((w) => (
                 <TableRow key={w.id} className={adminGlassTable.tbodyRow}>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -195,6 +218,9 @@ export function AdminWorkspacesClient() {
           <AdminEmptyState icon={Building2} title={t('empty')} description={t('emptyDescription')} />
         )}
       </div>
+      {filteredRows.length === 0 && rows.length > 0 && (
+        <p className="py-8 text-center text-sm text-muted-foreground">{t('noResults')}</p>
+      )}
     </div>
   );
 }

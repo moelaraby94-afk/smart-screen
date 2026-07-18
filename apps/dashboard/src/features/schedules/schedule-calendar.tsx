@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Trash2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -95,6 +95,12 @@ export function ScheduleCalendar({
 }: ScheduleCalendarProps) {
   const t = useTranslations('schedules');
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('month');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setViewMode('day');
+    }
+  }, []);
 
   return (
     <section className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6">
@@ -268,7 +274,7 @@ function WeekView({
                             background: isOver
                               ? 'linear-gradient(135deg, hsl(var(--destructive)) 0%, hsl(var(--destructive) / 0.7) 100%)'
                               : `linear-gradient(135deg, ${color} 0%, ${color}99 100%)`,
-                            borderLeft: `3px solid ${isOver ? 'hsl(var(--destructive))' : color}`,
+                            borderInlineStart: `3px solid ${isOver ? 'hsl(var(--destructive))' : color}`,
                           }}
                           title={`${sch.playlist.name} · ${sch.startTime}–${sch.endTime}`}
                           role="button"
@@ -415,7 +421,7 @@ function DayView({
                       background: isOver
                         ? 'linear-gradient(135deg, hsl(var(--destructive)) 0%, hsl(var(--destructive) / 0.7) 100%)'
                         : `linear-gradient(135deg, ${color} 0%, ${color}99 100%)`,
-                      borderLeft: `3px solid ${isOver ? 'hsl(var(--destructive))' : color}`,
+                      borderInlineStart: `3px solid ${isOver ? 'hsl(var(--destructive))' : color}`,
                     }}
                     title={`${sch.playlist.name} · ${sch.startTime}–${sch.endTime}`}
                     role="button"
@@ -483,6 +489,7 @@ function MonthView({
     d.setDate(1);
     return d;
   });
+  const [focusedCell, setFocusedCell] = useState(-1);
 
   const dayOrder = getDayOrder(locale);
 
@@ -516,6 +523,26 @@ function MonthView({
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  const handleGridKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const cols = 7;
+      const totalCells = grid.length;
+      let next = focusedCell < 0 ? grid.findIndex((c) => c.date) : focusedCell;
+      if (e.key === 'ArrowRight') next = Math.min(next + 1, totalCells - 1);
+      if (e.key === 'ArrowLeft') next = Math.max(next - 1, 0);
+      if (e.key === 'ArrowDown') next = Math.min(next + cols, totalCells - 1);
+      if (e.key === 'ArrowUp') next = Math.max(next - cols, 0);
+      setFocusedCell(next);
+    } else if (e.key === 'Enter' && focusedCell >= 0) {
+      const cell = grid[focusedCell];
+      if (cell?.date && onDayClick) {
+        e.preventDefault();
+        onDayClick(cell.date);
+      }
+    }
+  };
 
   return (
     <div className="min-h-[600px]">
@@ -567,7 +594,7 @@ function MonthView({
       </div>
 
       <div className="overflow-x-auto pb-2">
-      <div className="grid grid-cols-7 gap-1 min-w-[640px]" role="grid" aria-label={monthLabel}>
+      <div className="grid grid-cols-7 gap-1 min-w-[640px]" role="grid" aria-label={monthLabel} onKeyDown={handleGridKeyDown} tabIndex={0}>
         {dayOrder.map((dow) => (
           <div
             key={dow}
@@ -589,11 +616,13 @@ function MonthView({
             <div
               key={idx}
               role="gridcell"
+              aria-selected={focusedCell === idx}
               className={cn(
-                'min-h-[100px] rounded-lg border p-1',
+                'min-h-[100px] rounded-lg border p-1 outline-none',
                 isToday
                   ? 'border-primary/20 bg-primary/5'
                   : 'border-border bg-muted/15',
+                focusedCell === idx && 'ring-2 ring-primary ring-offset-1',
                 onDayClick && 'cursor-pointer hover:border-primary/30 hover:bg-primary/5',
               )}
               onClick={() => onDayClick?.(cell.date!)}
@@ -620,12 +649,12 @@ function MonthView({
                         isConflict && 'ring-1 ring-destructive',
                       )}
                       style={{
-                        borderLeft: `3px solid ${isConflict ? 'hsl(var(--destructive))' : color}`,
+                        borderInlineStart: `3px solid ${isConflict ? 'hsl(var(--destructive))' : color}`,
                         background: isConflict ? 'hsl(var(--destructive) / 0.05)' : `${color}1a`,
                         color: isConflict ? 'hsl(var(--destructive))' : color,
                       }}
-                      title={`${s.playlist.name} · ${s.startTime}–${s.endTime}`}
-                      aria-label={`${s.playlist.name}, ${s.startTime} to ${s.endTime}`}
+                      title={isConflict ? `${s.playlist.name} · ${s.startTime}–${s.endTime} — ${t('conflictDetected')}` : `${s.playlist.name} · ${s.startTime}–${s.endTime}`}
+                      aria-label={`${s.playlist.name}, ${s.startTime} to ${s.endTime}${isConflict ? `, ${t('conflictDetected')}` : ''}`}
                       onClick={() => onEventClick?.(s)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {

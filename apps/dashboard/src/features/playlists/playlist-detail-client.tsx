@@ -94,6 +94,7 @@ export function PlaylistDetailClient({ playlistId }: { playlistId: string }) {
   const [screens, setScreens] = useState<AssignedScreen[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
@@ -114,6 +115,7 @@ export function PlaylistDetailClient({ playlistId }: { playlistId: string }) {
   const load = useCallback(async () => {
     if (!workspaceId || !playlistId) return;
     setLoading(true);
+    setLoadError(false);
     try {
       const [plRes, scrRes] = await Promise.all([
         apiFetch(`/playlists/${playlistId}?workspaceId=${encodeURIComponent(workspaceId)}`),
@@ -123,6 +125,8 @@ export function PlaylistDetailClient({ playlistId }: { playlistId: string }) {
         setPlaylist(await plRes.json());
       } else if (plRes.status === 404) {
         setNotFound(true);
+      } else {
+        setLoadError(true);
       }
       if (scrRes.ok) {
         const data = await scrRes.json();
@@ -130,7 +134,7 @@ export function PlaylistDetailClient({ playlistId }: { playlistId: string }) {
         setScreens(Array.isArray(items) ? items : []);
       }
     } catch {
-      setNotFound(true);
+      setLoadError(true);
     }
     setLoading(false);
   }, [workspaceId, playlistId]);
@@ -317,6 +321,21 @@ export function PlaylistDetailClient({ playlistId }: { playlistId: string }) {
               {t('backToContent')}
             </Button>
           </Link>
+        </div>
+      </main>
+    );
+  }
+
+  if (loadError && !playlist) {
+    return (
+      <main className="mx-auto max-w-[1200px] px-6 py-6">
+        <div className="flex flex-col items-center gap-4 py-20 text-center">
+          <AlertCircle className="h-10 w-10 text-destructive/50" strokeWidth={1.5} />
+          <p className="text-sm font-medium text-foreground">{t('loadErrorTitle')}</p>
+          <Button variant="outline" onClick={() => void load()}>
+            <ArrowLeft className="me-2 h-4 w-4" strokeWidth={ICON_STROKE} />
+            {t('retry')}
+          </Button>
         </div>
       </main>
     );

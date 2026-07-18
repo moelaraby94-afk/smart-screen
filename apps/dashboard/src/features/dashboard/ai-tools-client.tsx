@@ -9,11 +9,11 @@ import { Input } from '@/components/ui/input';
 import { useTranslations } from 'next-intl';
 
 const suggestionTypes = [
-  { type: 'headline', icon: FileText, inputPlaceholder: 'Topic (e.g., Summer Sale)' },
-  { type: 'body-text', icon: FileText, inputPlaceholder: 'Topic or headline' },
-  { type: 'cta', icon: Target, inputPlaceholder: 'Product or goal' },
-  { type: 'color-scheme', icon: Palette, inputPlaceholder: 'Industry (e.g., Retail)' },
-];
+  { type: 'headline', icon: FileText, placeholderKey: 'placeholderHeadline' },
+  { type: 'body-text', icon: FileText, placeholderKey: 'placeholderBodyText' },
+  { type: 'cta', icon: Target, placeholderKey: 'placeholderCta' },
+  { type: 'color-scheme', icon: Palette, placeholderKey: 'placeholderColorScheme' },
+] as const;
 
 const mockResults: Record<string, string[]> = {
   headline: ['Unbeatable Summer Deals!', 'Get 50% Off This Summer', 'Your Summer Sale Starts Here'],
@@ -93,7 +93,7 @@ export function AiToolsClient() {
                     <p className="text-sm text-muted-foreground">{t(`tool_${s.type}_desc`)}</p>
                     <div className="mt-3 flex gap-2">
                       <Input
-                        placeholder={s.inputPlaceholder}
+                        placeholder={t(s.placeholderKey)}
                         value={inputs[s.type] || ''}
                         onChange={(e) => setInputs({ ...inputs, [s.type]: e.target.value })}
                         onKeyDown={(e) => e.key === 'Enter' && handleGenerate(s.type)}

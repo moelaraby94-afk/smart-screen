@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { motion } from 'framer-motion';
-import { HardDrive, Link2, MonitorSmartphone, Activity } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { HardDrive, Link2, MonitorSmartphone, Activity, RefreshCw } from 'lucide-react';
 import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { fetchAdminStats } from './admin-api';
 import { ICON_STROKE } from '@/lib/icon-stroke';
@@ -36,6 +37,7 @@ function formatBytes(n: number, locale: string): string {
 export function AdminHomeOverviewClient() {
   const locale = useLocale();
   const t = useTranslations('adminHomeOverview');
+  const prefersReduced = useReducedMotion();
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,7 +64,15 @@ export function AdminHomeOverviewClient() {
   }, [load]);
 
   if (error && !overview) {
-    return <p className="text-sm text-destructive">{error}</p>;
+    return (
+      <div role="alert" className="flex flex-col items-center gap-3 py-12 text-center">
+        <p className="text-sm text-destructive">{error}</p>
+        <Button variant="outline" size="sm" onClick={() => void load()}>
+          <RefreshCw className="me-1.5 h-4 w-4" />
+          {t('retry')}
+        </Button>
+      </div>
+    );
   }
 
   if (!overview) {
@@ -125,9 +135,9 @@ export function AdminHomeOverviewClient() {
       {cards.map((c, i) => (
         <motion.div
           key={c.key}
-          initial={{ opacity: 0, y: 12 }}
+          initial={prefersReduced ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 * i }}
+          transition={prefersReduced ? { duration: 0 } : { delay: 0.05 * i }}
           className="vc-card-surface relative overflow-hidden rounded-3xl p-7"
         >
           <div className="absolute -end-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />

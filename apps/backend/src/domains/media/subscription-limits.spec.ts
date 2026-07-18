@@ -169,6 +169,12 @@ describe('Subscription limit enforcement (P1-T4)', () => {
         fake as unknown as PrismaService,
         createMockConfigService(),
         mockHeartbeat,
+        {
+          getPublicUrl: () => '',
+          getSignedUrl: () => Promise.resolve(''),
+          ensureDir: () => {},
+          providerName: 'local',
+        } as never,
       );
     }
 

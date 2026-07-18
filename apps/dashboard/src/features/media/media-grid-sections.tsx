@@ -118,6 +118,7 @@ type MediaGridProps = {
   folders: MediaFolder[];
   isDragActive: boolean;
   selectedIds: Set<string>;
+  canEdit: boolean;
   onToggleSelect: (id: string) => void;
   onToggleSelectAll: () => void;
   onBulkDelete: () => void;
@@ -160,6 +161,7 @@ export function MediaGrid(props: MediaGridProps) {
               <span className="text-xs font-semibold text-primary">
                 {props.selectedIds.size} {t('selected')}
               </span>
+              {props.canEdit && (
               <Button
                 type="button"
                 size="sm"
@@ -170,6 +172,7 @@ export function MediaGrid(props: MediaGridProps) {
                 <Trash2 className="me-1 h-3.5 w-3.5" />
                 {t('deleteSelected')}
               </Button>
+              )}
               <button
                 type="button"
                 onClick={props.onClearSelection}
@@ -271,11 +274,13 @@ export function MediaGrid(props: MediaGridProps) {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
+                      {props.canEdit && (
                       <QuickPublishDialog media={m}>
                         <button type="button" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={t('quickPublish')}>
                           <Zap className="h-4 w-4" />
                         </button>
                       </QuickPublishDialog>
+                      )}
                       <a href={m.publicUrl} download={m.originalName} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={t('download')}>
                         <Download className="h-4 w-4" />
                       </a>
@@ -285,9 +290,11 @@ export function MediaGrid(props: MediaGridProps) {
                       <button type="button" onClick={() => props.onInfo(m)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={t('info')}>
                         <Info className="h-4 w-4" />
                       </button>
+                      {props.canEdit && (
                       <button type="button" onClick={() => props.onDelete(m)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive" aria-label={t('delete')}>
                         <Trash2 className="h-4 w-4" />
                       </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -332,7 +339,7 @@ export function MediaGrid(props: MediaGridProps) {
                 ) : (
                   <MediaPreviewVideo src={m.publicUrl} />
                 )}
-                <div className="absolute left-2 top-2 flex items-center gap-1 rounded-lg border border-border bg-card/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-foreground shadow-sm backdrop-blur-sm">
+                <div className="absolute start-2 top-2 flex items-center gap-1 rounded-lg border border-border bg-card/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-foreground shadow-sm backdrop-blur-sm">
                   {m.mimeType.startsWith('video/') ? (
                     <Film className="ngl-media-icon-accent h-3 w-3" />
                   ) : (
@@ -347,6 +354,7 @@ export function MediaGrid(props: MediaGridProps) {
                       {badge.label}
                     </span>
                   ) : null; })()}
+                  {props.canEdit && (
                   <QuickPublishDialog media={m}>
                     <button
                       type="button"
@@ -357,6 +365,7 @@ export function MediaGrid(props: MediaGridProps) {
                       <Zap className="h-4 w-4" />
                     </button>
                   </QuickPublishDialog>
+                  )}
                   <a
                     href={m.publicUrl}
                     download={m.originalName}
@@ -388,6 +397,7 @@ export function MediaGrid(props: MediaGridProps) {
                   >
                     <Info className="h-4 w-4" />
                   </button>
+                  {props.canEdit && (
                   <button
                     type="button"
                     onClick={(e) => {
@@ -399,10 +409,11 @@ export function MediaGrid(props: MediaGridProps) {
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
+                  )}
                 </div>
               </div>
               <div className="space-y-1 p-3">
-                {props.scope === 'branch' ? (
+                {props.scope === 'branch' && props.canEdit ? (
                   <select
                     className="h-7 w-full rounded border border-border bg-background px-2 text-[11px]"
                     value={m.folderId ?? 'all'}

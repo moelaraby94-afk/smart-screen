@@ -70,7 +70,7 @@ export function MediaLibraryPanel({ library }: MediaLibraryPanelProps) {
                           playsInline
                         />
                       )}
-                      <span className="absolute bottom-0.5 right-0.5 rounded bg-black/60 p-0.5">
+                      <span className="absolute bottom-0.5 end-0.5 rounded bg-black/60 p-0.5">
                         {m.mimeType.startsWith('video/') ? (
                           <Film className="h-2.5 w-2.5 text-primary" />
                         ) : (

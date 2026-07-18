@@ -28,6 +28,7 @@ type Props = {
   emptyLabel: string;
   yAxisFormat?: (value: number) => string;
   xAxisFormat?: (value: string) => string;
+  reducedMotion?: boolean;
 };
 
 export function TrendChart({
@@ -41,6 +42,7 @@ export function TrendChart({
   emptyLabel,
   yAxisFormat,
   xAxisFormat,
+  reducedMotion,
 }: Props) {
   const t = useTranslations('analyticsPage');
 
@@ -128,7 +130,7 @@ export function TrendChart({
               stroke={color}
               strokeWidth={2}
               fill="url(#trendGradient)"
-              animationDuration={300}
+              animationDuration={reducedMotion ? 0 : 300}
             />
           </AreaChart>
         ) : (
@@ -165,7 +167,7 @@ export function TrendChart({
               stroke={color}
               strokeWidth={2}
               dot={false}
-              animationDuration={300}
+              animationDuration={reducedMotion ? 0 : 300}
             />
           </LineChart>
         )}

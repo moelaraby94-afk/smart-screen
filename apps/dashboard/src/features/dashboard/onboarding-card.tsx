@@ -58,7 +58,7 @@ export function OnboardingCard() {
         size="lg"
         className="mt-8"
         aria-label={t('ctaAria')}
-        onClick={() => router.push(`/${locale}/screens` as never as Route)}
+        onClick={() => router.push(`/${locale}/screens/pair` as never as Route)}
       >
         {t('cta')}
       </Button>

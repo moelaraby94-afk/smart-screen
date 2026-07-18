@@ -774,23 +774,36 @@ export class WorkspacesService {
     },
   ) {
     const normalizedEmail = dto.email.trim().toLowerCase();
-    const validRoles: string[] = [UserRole.VIEWER, UserRole.EDITOR, UserRole.ADMIN];
+    const validRoles: string[] = [
+      UserRole.VIEWER,
+      UserRole.EDITOR,
+      UserRole.ADMIN,
+    ];
     if (!validRoles.includes(dto.role)) {
-      throw new BadRequestException('Invalid role. Must be VIEWER, EDITOR, or ADMIN.');
+      throw new BadRequestException(
+        'Invalid role. Must be VIEWER, EDITOR, or ADMIN.',
+      );
     }
 
     // Validate workspace scopes if provided
     if (dto.workspaceScopes && dto.workspaceScopes.length > 0) {
       for (const scope of dto.workspaceScopes) {
         if (!validRoles.includes(scope.role)) {
-          throw new BadRequestException(`Invalid role for workspace scope: ${scope.role}`);
+          throw new BadRequestException(
+            `Invalid role for workspace scope: ${scope.role}`,
+          );
         }
         const ws = await this.prisma.workspace.findFirst({
-          where: { id: scope.workspaceId, members: { some: { userId: ownerId, role: UserRole.OWNER } } },
+          where: {
+            id: scope.workspaceId,
+            members: { some: { userId: ownerId, role: UserRole.OWNER } },
+          },
           select: { id: true },
         });
         if (!ws) {
-          throw new BadRequestException(`Workspace ${scope.workspaceId} not found or not owned by you.`);
+          throw new BadRequestException(
+            `Workspace ${scope.workspaceId} not found or not owned by you.`,
+          );
         }
       }
     }
@@ -850,24 +863,42 @@ export class WorkspacesService {
     };
   }
 
-  async addAccountMember(ownerId: string, userId: string, role: string, workspaceScopes?: Array<{ workspaceId: string; role: string }>) {
-    const validRoles: string[] = [UserRole.VIEWER, UserRole.EDITOR, UserRole.ADMIN];
+  async addAccountMember(
+    ownerId: string,
+    userId: string,
+    role: string,
+    workspaceScopes?: Array<{ workspaceId: string; role: string }>,
+  ) {
+    const validRoles: string[] = [
+      UserRole.VIEWER,
+      UserRole.EDITOR,
+      UserRole.ADMIN,
+    ];
     if (!validRoles.includes(role)) {
-      throw new BadRequestException('Invalid role. Must be VIEWER, EDITOR, or ADMIN.');
+      throw new BadRequestException(
+        'Invalid role. Must be VIEWER, EDITOR, or ADMIN.',
+      );
     }
 
     // Validate workspace scopes if provided
     if (workspaceScopes && workspaceScopes.length > 0) {
       for (const scope of workspaceScopes) {
         if (!validRoles.includes(scope.role)) {
-          throw new BadRequestException(`Invalid role for workspace scope: ${scope.role}`);
+          throw new BadRequestException(
+            `Invalid role for workspace scope: ${scope.role}`,
+          );
         }
         const ws = await this.prisma.workspace.findFirst({
-          where: { id: scope.workspaceId, members: { some: { userId: ownerId, role: UserRole.OWNER } } },
+          where: {
+            id: scope.workspaceId,
+            members: { some: { userId: ownerId, role: UserRole.OWNER } },
+          },
           select: { id: true },
         });
         if (!ws) {
-          throw new BadRequestException(`Workspace ${scope.workspaceId} not found or not owned by you.`);
+          throw new BadRequestException(
+            `Workspace ${scope.workspaceId} not found or not owned by you.`,
+          );
         }
       }
     }
@@ -909,10 +940,20 @@ export class WorkspacesService {
     };
   }
 
-  async updateAccountMemberRole(ownerId: string, membershipId: string, newRole: string) {
-    const validRoles: string[] = [UserRole.VIEWER, UserRole.EDITOR, UserRole.ADMIN];
+  async updateAccountMemberRole(
+    ownerId: string,
+    membershipId: string,
+    newRole: string,
+  ) {
+    const validRoles: string[] = [
+      UserRole.VIEWER,
+      UserRole.EDITOR,
+      UserRole.ADMIN,
+    ];
     if (!validRoles.includes(newRole)) {
-      throw new BadRequestException('Invalid role. Must be VIEWER, EDITOR, or ADMIN.');
+      throw new BadRequestException(
+        'Invalid role. Must be VIEWER, EDITOR, or ADMIN.',
+      );
     }
 
     const membership = await this.prisma.accountMember.findUnique({

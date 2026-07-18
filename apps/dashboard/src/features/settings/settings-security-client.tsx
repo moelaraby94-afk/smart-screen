@@ -30,6 +30,8 @@ export function SettingsSecurityClient() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [newPasswordError, setNewPasswordError] = useState<string | null>(null);
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState('');
   const [exporting, setExporting] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -167,7 +169,13 @@ export function SettingsSecurityClient() {
                 type={showNew ? 'text' : 'password'}
                 autoComplete="new-password"
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
+                onChange={(e) => { setNewPassword(e.target.value); if (newPasswordError) setNewPasswordError(null); }}
+                onBlur={() => {
+                  if (newPassword && newPassword.length < 8) {
+                    setNewPasswordError(t('weakPassword'));
+                  }
+                }}
+                aria-invalid={!!newPasswordError}
                 className="rounded-xl pe-10"
               />
               <button
@@ -180,6 +188,7 @@ export function SettingsSecurityClient() {
               </button>
             </div>
             <p className="text-xs text-muted-foreground">{t('passwordHint')}</p>
+            {newPasswordError && <p className="text-sm text-destructive" role="alert">{newPasswordError}</p>}
           </div>
 
           <div className="space-y-2">
@@ -190,7 +199,13 @@ export function SettingsSecurityClient() {
                 type={showConfirm ? 'text' : 'password'}
                 autoComplete="new-password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => { setConfirmPassword(e.target.value); if (confirmPasswordError) setConfirmPasswordError(null); }}
+                onBlur={() => {
+                  if (confirmPassword && newPassword !== confirmPassword) {
+                    setConfirmPasswordError(t('passwordsDontMatch'));
+                  }
+                }}
+                aria-invalid={!!confirmPasswordError}
                 className="rounded-xl pe-10"
               />
               <button
@@ -202,6 +217,7 @@ export function SettingsSecurityClient() {
                 {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
+            {confirmPasswordError && <p className="text-sm text-destructive" role="alert">{confirmPasswordError}</p>}
           </div>
 
           {error && (

@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import * as Sentry from '@sentry/nextjs';
 import { useTranslations } from 'next-intl';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { devError } from '@/lib/dev-log';
 
 type Props = {
@@ -24,16 +25,22 @@ export default function LocaleError({ error, reset }: Props) {
 
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-amber-500/10">
+        <AlertTriangle className="h-8 w-8 text-amber-500" strokeWidth={1.5} />
+      </div>
       <p className="text-lg font-semibold text-foreground">{t('title')}</p>
       {process.env.NODE_ENV === 'development' ? (
         <p className="max-w-lg text-sm text-muted-foreground">{error.message}</p>
-      ) : null}
+      ) : (
+        <p className="text-sm text-muted-foreground">{t('pleaseTryAgain')}</p>
+      )}
       <button
         type="button"
         onClick={() => reset()}
-        className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90"
+        className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
       >
-        {t('tryAgain')}
+        <RefreshCw className="h-4 w-4" strokeWidth={1.8} />
+        {t('reload')}
       </button>
     </div>
   );

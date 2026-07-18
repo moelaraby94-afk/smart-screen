@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { motion } from 'framer-motion';
-import { Activity, Cpu, HardDrive, Radio, Server } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { Activity, Cpu, HardDrive, Radio, Server, RefreshCw } from 'lucide-react';
 import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { fetchAdminStats } from './admin-api';
 
@@ -34,6 +35,7 @@ function formatBytes(n: number, locale: string): string {
 export function AdminSystemHealthClient() {
   const locale = useLocale();
   const t = useTranslations('adminSystemHealth');
+  const prefersReduced = useReducedMotion();
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,7 +65,15 @@ export function AdminSystemHealthClient() {
       : 0;
 
   if (error && !stats) {
-    return <p className="text-sm text-destructive">{error}</p>;
+    return (
+      <div role="alert" className="flex flex-col items-center gap-3 py-12 text-center">
+        <p className="text-sm text-destructive">{error}</p>
+        <Button variant="outline" size="sm" onClick={() => void load()}>
+          <RefreshCw className="me-1.5 h-4 w-4" />
+          {t('retry')}
+        </Button>
+      </div>
+    );
   }
 
   if (!stats) {
@@ -104,7 +114,7 @@ export function AdminSystemHealthClient() {
   return (
     <div className="space-y-8">
       <motion.section
-        initial={{ opacity: 0, y: 10 }}
+        initial={prefersReduced ? false : { opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="vc-card-surface rounded-2xl border border-border p-6 sm:p-8"
       >
@@ -128,10 +138,11 @@ export function AdminSystemHealthClient() {
         {cards.map((c, i) => (
           <motion.div
             key={c.label}
-            initial={{ opacity: 0, y: 12 }}
+            initial={prefersReduced ? false : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.04 * i }}
+            transition={prefersReduced ? { duration: 0 } : { delay: 0.04 * i }}
             className="vc-card-surface relative overflow-hidden rounded-3xl p-7"
+            aria-label={`${c.label}: ${c.value}`}
           >
             <div className="absolute -end-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
             <div className="relative flex items-start justify-between gap-4">

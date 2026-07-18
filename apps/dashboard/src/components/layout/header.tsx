@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
 import { ArrowLeft, LogOut, Menu, MoreVertical, Search, Settings, X } from 'lucide-react';
@@ -120,7 +121,12 @@ export function ShellHeader({
     <div className="hidden shrink-0 flex-nowrap items-center justify-end gap-3 lg:flex">
       <GlobalSearch />
       <DensityToggle />
-      {showWorkspaceSwitcher ? <WorkspaceSwitcher /> : null}
+      {showWorkspaceSwitcher ? (
+        <div className="flex items-center gap-1.5">
+          <OfflineIndicator />
+          <WorkspaceSwitcher />
+        </div>
+      ) : null}
       <NotificationBell />
       <UserMenu rtl={rtl} variant={sovereign ? 'sovereign' : 'workspace'} />
     </div>
@@ -128,6 +134,7 @@ export function ShellHeader({
 
   const mobileActions = (
     <div className="flex shrink-0 items-center gap-1.5 lg:hidden">
+      {showWorkspaceSwitcher ? <OfflineIndicator /> : null}
       <NotificationBell />
       <MobileMoreMenu navLocale={navLocale} rtl={rtl} />
     </div>
@@ -138,6 +145,7 @@ export function ShellHeader({
       className={cn(
         'relative sticky top-0 z-sticky flex min-h-[56px] shrink-0 flex-col',
         'border-b border-border bg-card',
+        '[padding-top:env(safe-area-inset-top)]',
       )}
     >
       <div className="relative z-content mx-auto flex min-h-[56px] w-full max-w-[1400px] items-center justify-between gap-3 px-4 py-2">
@@ -250,5 +258,33 @@ function MobileMoreMenu({ navLocale, rtl }: { navLocale: 'ar' | 'en'; rtl: boole
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+function OfflineIndicator() {
+  const [isOnline, setIsOnline] = useState(true);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setIsOnline(navigator.onLine);
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  if (isOnline) return null;
+
+  return (
+    <span
+      className="h-2 w-2 shrink-0 rounded-full bg-amber-500"
+      title="Offline"
+      aria-label="Offline"
+      role="status"
+    />
   );
 }

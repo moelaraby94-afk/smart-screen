@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   Image as ImageIcon,
   Monitor,
@@ -56,6 +56,7 @@ export function GlobalSearch() {
   const locale = useLocale();
   const { workspaceId } = useWorkspace();
   const [open, setOpen] = useState(false);
+  const prefersReduced = useReducedMotion();
   const [query, setQuery] = useState('');
   const [screens, setScreens] = useState<ScreenRow[]>([]);
   const [playlists, setPlaylists] = useState<PlaylistSummary[]>([]);
@@ -222,7 +223,7 @@ export function GlobalSearch() {
       >
         <Search className="h-4 w-4" />
         <span className="text-xs">{t('placeholder')}</span>
-        <kbd className="ml-4 rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+        <kbd className="ms-4 rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
           Ctrl K
         </kbd>
       </button>
@@ -241,9 +242,9 @@ export function GlobalSearch() {
             <motion.button
               type="button"
               className="fixed inset-0 z-overlay bg-black/50 backdrop-blur-sm"
-              initial={{ opacity: 0 }}
+              initial={prefersReduced ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              exit={prefersReduced ? undefined : { opacity: 0 }}
               onClick={() => setOpen(false)}
               aria-label={t('close')}
             />
@@ -252,10 +253,10 @@ export function GlobalSearch() {
               role="dialog"
               aria-modal="true"
               aria-label={t('placeholder')}
-              initial={{ opacity: 0, y: -20 }}
+              initial={prefersReduced ? false : { opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2 }}
+              exit={prefersReduced ? undefined : { opacity: 0, y: -20 }}
+              transition={prefersReduced ? { duration: 0 } : { duration: 0.2 }}
             >
               <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
                 <div className="flex items-center gap-3 border-b border-border px-4 py-3">

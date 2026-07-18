@@ -78,7 +78,12 @@ export class WorkspacesController {
     @CurrentUser() user: JwtUser,
     @Body() dto: AddAccountMemberDto,
   ) {
-    return this.workspaces.addAccountMember(user.sub, dto.userId, dto.role, dto.workspaceScopes);
+    return this.workspaces.addAccountMember(
+      user.sub,
+      dto.userId,
+      dto.role,
+      dto.workspaceScopes,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -88,7 +93,11 @@ export class WorkspacesController {
     @CurrentUser() user: JwtUser,
     @Body() dto: UpdateAccountMemberRoleDto,
   ) {
-    return this.workspaces.updateAccountMemberRole(user.sub, membershipId, dto.role);
+    return this.workspaces.updateAccountMemberRole(
+      user.sub,
+      membershipId,
+      dto.role,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

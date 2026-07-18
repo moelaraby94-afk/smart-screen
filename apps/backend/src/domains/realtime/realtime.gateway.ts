@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { Logger } from '@nestjs/common';
+import { Logger, OnModuleDestroy } from '@nestjs/common';
 import { ScreenPairingSessionStatus, ScreenStatus } from '@prisma/client';
 import {
   ConnectedSocket,
@@ -16,7 +16,10 @@ import * as bcrypt from 'bcryptjs';
 import { parse as cookieParse } from 'cookie';
 import type { Server } from 'socket.io';
 import type { Socket } from 'socket.io';
+import { createAdapter } from '@socket.io/redis-adapter';
+import type { Redis } from 'ioredis';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { RedisService } from '../../common/redis/redis.service';
 import { createCorsOriginChecker } from '../../common/config/cors-config';
 import { ScreenHeartbeatService } from './screen-heartbeat.service';
 
@@ -49,7 +52,11 @@ type JwtAccessPayload = {
   },
 })
 export class RealtimeGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+  implements
+    OnGatewayInit,
+    OnGatewayConnection,
+    OnGatewayDisconnect,
+    OnModuleDestroy
 {
   private readonly log = new Logger(RealtimeGateway.name);
 
@@ -59,6 +66,9 @@ export class RealtimeGateway
   private readonly authedSockets = new Set<string>();
   /** Idle timeout handles for sockets that haven't authenticated yet. */
   private readonly unauthTimers = new Map<string, NodeJS.Timeout>();
+  /** Redis adapter pub/sub clients — stored for cleanup on shutdown. */
+  private adapterPubClient: Redis | null = null;
+  private adapterSubClient: Redis | null = null;
 
   @WebSocketServer()
   server!: Server;
@@ -68,10 +78,48 @@ export class RealtimeGateway
     private readonly heartbeat: ScreenHeartbeatService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly redisService: RedisService,
   ) {}
 
-  afterInit(): void {
+  afterInit(): Promise<void> {
     this.heartbeat.setServer(this.server);
+
+    /**
+     * Redis adapter for Socket.IO — enables broadcasting events across
+     * multiple backend instances. Only activated when REDIS_URL is set.
+     *
+     * Official source: Socket.IO docs —
+     * https://socket.io/docs/v4/redis-adapter/
+     */
+    const redisClient = this.redisService.getClient();
+    if (redisClient) {
+      this.adapterPubClient = redisClient.duplicate();
+      this.adapterSubClient = redisClient.duplicate();
+      this.server.adapter(
+        createAdapter(this.adapterPubClient, this.adapterSubClient),
+      );
+      this.log.log('WebSocket: Redis adapter enabled.');
+    }
+    return Promise.resolve();
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    /**
+     * Close the Redis adapter pub/sub clients to prevent connection leaks.
+     * The underlying RedisService connection is closed separately by its own
+     * OnModuleDestroy hook.
+     *
+     * Official source: Socket.IO Redis Adapter —
+     * https://socket.io/docs/v4/redis-adapter/#graceful-close
+     */
+    if (this.adapterPubClient) {
+      await this.adapterPubClient.quit().catch(() => {});
+      this.adapterPubClient = null;
+    }
+    if (this.adapterSubClient) {
+      await this.adapterSubClient.quit().catch(() => {});
+      this.adapterSubClient = null;
+    }
   }
 
   handleConnection(client: Socket): void {

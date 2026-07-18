@@ -88,7 +88,10 @@ export class MediaController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get('folders/list')
-  listFolders(@CurrentUser() user: JwtUser, @Query('workspaceId') workspaceId?: string) {
+  listFolders(
+    @CurrentUser() user: JwtUser,
+    @Query('workspaceId') workspaceId?: string,
+  ) {
     return this.mediaService.listFolders(user.sub, workspaceId);
   }
 
@@ -99,7 +102,11 @@ export class MediaController {
     @CurrentUser() user: JwtUser,
     @Query('workspaceId') workspaceId?: string,
   ) {
-    return this.mediaService.createFolder(user.sub, workspaceId ?? null, dto.name);
+    return this.mediaService.createFolder(
+      user.sub,
+      workspaceId ?? null,
+      dto.name,
+    );
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
@@ -110,7 +117,12 @@ export class MediaController {
     @CurrentUser() user: JwtUser,
     @Query('workspaceId') workspaceId?: string,
   ) {
-    return this.mediaService.renameFolder(user.sub, workspaceId ?? null, id, dto.name);
+    return this.mediaService.renameFolder(
+      user.sub,
+      workspaceId ?? null,
+      id,
+      dto.name,
+    );
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)

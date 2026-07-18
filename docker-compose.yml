@@ -1,4 +1,4 @@
-# Stack: PostgreSQL + Nest API + Next Dashboard
+# Stack: PostgreSQL + Redis + MinIO + Nest API + Next Dashboard
 #
 # Browser API URL: set NEXT_PUBLIC_API_BASE_URL to how clients reach the API
 # (e.g. http://YOUR_SERVER_IP:4000/api/v1 when BACKEND_PORT defaults to 4000 → container :3000). Dashboard SSR uses INTERNAL_API_BASE_URL
@@ -23,6 +23,38 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
+    volumes:
+      - redisdata:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - miniodata:/data
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   backend:
     build:
       # Monorepo root: required for npm workspaces + Prisma paths (do not use apps/backend as context).
@@ -31,6 +63,8 @@ services:
     restart: unless-stopped
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     ports:
       - "${BACKEND_PORT:-4000}:3000"
@@ -84,6 +118,22 @@ services:
       # Without this, buildPublicUrl() falls back to http://localhost:PORT (3000 inside the container),
       # which is the dashboard from the host's perspective — so every media URL 404s.
       MEDIA_PUBLIC_BASE_URL: ${MEDIA_PUBLIC_BASE_URL:-http://localhost:4000}
+      # --- Redis ---
+      # Optional: when set, enables Redis adapter for WebSocket, shared rate limiting,
+      # caching, and queues. Leave unset to use in-memory fallback (single instance only).
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      # --- Storage ---
+      # "local" (default) uses the volume mount below; "s3" uses S3-compatible storage.
+      MEDIA_STORAGE_PROVIDER: ${MEDIA_STORAGE_PROVIDER:-local}
+      # When MEDIA_STORAGE_PROVIDER=s3, configure these:
+      # S3_BUCKET: ${S3_BUCKET:-cloudscreen}
+      # S3_REGION: ${S3_REGION:-auto}
+      # S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
+      # S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minioadmin}
+      # S3_SECRET_KEY: ${S3_SECRET_KEY:-minioadmin}
+      # --- Database pool ---
+      DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-10}
+      DATABASE_POOL_TIMEOUT_MS: ${DATABASE_POOL_TIMEOUT_MS:-30000}
     healthcheck:
       test:
         [
@@ -123,6 +173,10 @@ services:
 
 volumes:
   pgdata:
+  redisdata:
+    name: cloud_screen_redisdata
+  miniodata:
+    name: cloud_screen_miniodata
   media_uploads:
     name: cloud_screen_media_uploads
   backend_data:

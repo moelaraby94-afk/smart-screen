@@ -70,7 +70,7 @@ export function PlayerHud({ tickerText }: Props) {
 
   return (
     <>
-      <div className="pointer-events-none fixed right-4 top-4 z-[500] flex items-center gap-3 rounded-xl border border-cyan-500/20 bg-black/55 px-3.5 py-2.5 shadow-[0_0_32px_rgba(0,212,255,0.18),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-md">
+      <div className="pointer-events-none fixed end-4 top-4 z-[500] flex items-center gap-3 rounded-xl border border-cyan-500/20 bg-black/55 px-3.5 py-2.5 shadow-[0_0_32px_rgba(0,212,255,0.18),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-md">
         <span
           className="relative flex h-3 w-3 shrink-0"
           title={online ? 'Network online' : 'Offline — cached playback'}

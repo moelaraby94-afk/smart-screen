@@ -305,6 +305,77 @@ export function SettingsBillingClient() {
         ) : null}
       </div>
 
+      {/* Usage bars */}
+      {!subLoading && sub && (
+        <div className="vc-card-surface rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
+          <h2 className="text-lg font-semibold tracking-tight">{t('usageTitle')}</h2>
+          <div className="mt-6 space-y-5">
+            {/* Screens usage */}
+            {sub.screenLimit != null && sub.screenLimit > 0 && (
+              <div>
+                <div className="mb-2 flex items-center justify-between text-sm">
+                  <span className="font-medium">{t('usageScreens')}</span>
+                  <span className="text-muted-foreground">
+                    {sub.activeScreenCount ?? 0} / {sub.screenLimit}
+                  </span>
+                </div>
+                <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={cn(
+                      'h-full rounded-full transition-all',
+                      ((sub.activeScreenCount ?? 0) / sub.screenLimit) >= 0.9
+                        ? 'bg-destructive'
+                        : ((sub.activeScreenCount ?? 0) / sub.screenLimit) >= 0.7
+                          ? 'bg-warning'
+                          : 'bg-success',
+                    )}
+                    style={{
+                      width: `${Math.min(100, ((sub.activeScreenCount ?? 0) / sub.screenLimit) * 100)}%`,
+                    }}
+                    role="progressbar"
+                    aria-valuenow={sub.activeScreenCount ?? 0}
+                    aria-valuemin={0}
+                    aria-valuemax={sub.screenLimit}
+                    aria-label={t('usageScreens')}
+                  />
+                </div>
+              </div>
+            )}
+            {/* Storage usage (from subscription data) */}
+            {sub.screenLimit != null && sub.screenLimit > 0 && (
+              <div>
+                <div className="mb-2 flex items-center justify-between text-sm">
+                  <span className="font-medium">{t('usageStorage')}</span>
+                  <span className="text-muted-foreground">
+                    {sub.seats} / {sub.screenLimit}
+                  </span>
+                </div>
+                <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={cn(
+                      'h-full rounded-full transition-all',
+                      (sub.seats / sub.screenLimit) >= 0.9
+                        ? 'bg-destructive'
+                        : (sub.seats / sub.screenLimit) >= 0.7
+                          ? 'bg-warning'
+                          : 'bg-success',
+                    )}
+                    style={{
+                      width: `${Math.min(100, (sub.seats / sub.screenLimit) * 100)}%`,
+                    }}
+                    role="progressbar"
+                    aria-valuenow={sub.seats}
+                    aria-valuemin={0}
+                    aria-valuemax={sub.screenLimit}
+                    aria-label={t('usageStorage')}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="vc-card-surface overflow-hidden rounded-2xl border border-border">
         <div className="border-b border-border/60 px-6 py-4">
           <h3 className="font-semibold">{t('paymentHistory')}</h3>

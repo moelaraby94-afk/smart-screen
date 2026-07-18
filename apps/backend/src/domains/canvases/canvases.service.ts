@@ -59,7 +59,12 @@ export class CanvasesService {
     return canvas;
   }
 
-  async update(workspaceId: string, id: string, dto: UpdateCanvasDto, userId?: string) {
+  async update(
+    workspaceId: string,
+    id: string,
+    dto: UpdateCanvasDto,
+    userId?: string,
+  ) {
     const existing = await this.getById(workspaceId, id);
 
     // Create a version snapshot before updating
@@ -112,7 +117,12 @@ export class CanvasesService {
     });
   }
 
-  async restoreVersion(workspaceId: string, canvasId: string, versionId: string, userId: string) {
+  async restoreVersion(
+    workspaceId: string,
+    canvasId: string,
+    versionId: string,
+    userId: string,
+  ) {
     const canvas = await this.getById(workspaceId, canvasId);
     const version = await this.prisma.canvasVersion.findFirst({
       where: { id: versionId, canvasId },

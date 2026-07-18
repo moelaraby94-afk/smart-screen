@@ -42,6 +42,8 @@ export function SettingsProfileClient() {
   const [newEmail, setNewEmail] = useState('');
   const [emailOtp, setEmailOtp] = useState('');
   const [emailStep, setEmailStep] = useState<'request' | 'verify'>('request');
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [newEmailError, setNewEmailError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const res = await fetchCurrentUser();
@@ -62,6 +64,10 @@ export function SettingsProfileClient() {
   }, [load]);
 
   const saveProfile = async () => {
+    if (fullName.trim().length < 2 || fullName.trim().length > 50) {
+      setNameError(t('nameRequired'));
+      return;
+    }
     setSaving(true);
     try {
       const res = await apiUpdateProfile({
@@ -81,6 +87,11 @@ export function SettingsProfileClient() {
   };
 
   const requestEmailChange = async () => {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.trim())) {
+      setNewEmailError(t('emailInvalid'));
+      return;
+    }
+    setNewEmailError(null);
     const res = await apiRequestEmailChange(newEmail.trim());
     if (!res.ok) {
       toast.error(t('emailRequestFailed'));
@@ -115,7 +126,18 @@ export function SettingsProfileClient() {
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label>{t('fullName')}</Label>
-            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="rounded-xl" />
+            <Input
+              value={fullName}
+              onChange={(e) => { setFullName(e.target.value); if (nameError) setNameError(null); }}
+              onBlur={() => {
+                if (fullName.trim().length > 0 && (fullName.trim().length < 2 || fullName.trim().length > 50)) {
+                  setNameError(t('nameRequired'));
+                }
+              }}
+              aria-invalid={!!nameError}
+              className="rounded-xl"
+            />
+            {nameError && <p className="text-sm text-destructive" role="alert">{nameError}</p>}
           </div>
           <div className="space-y-2">
             <Label>{t('businessName')}</Label>
@@ -154,7 +176,19 @@ export function SettingsProfileClient() {
             <>
               <div className="space-y-2 py-2">
                 <Label>{t('newEmail')}</Label>
-                <Input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} type="email" className="rounded-xl" />
+                <Input
+                  value={newEmail}
+                  onChange={(e) => { setNewEmail(e.target.value); if (newEmailError) setNewEmailError(null); }}
+                  onBlur={() => {
+                    if (newEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.trim())) {
+                      setNewEmailError(t('emailInvalid'));
+                    }
+                  }}
+                  type="email"
+                  aria-invalid={!!newEmailError}
+                  className="rounded-xl"
+                />
+                {newEmailError && <p className="text-sm text-destructive" role="alert">{newEmailError}</p>}
               </div>
               <DialogFooter>
                 <Button type="button" className="rounded-2xl" onClick={() => void requestEmailChange()}>

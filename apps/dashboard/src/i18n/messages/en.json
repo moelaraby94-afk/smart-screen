@@ -359,7 +359,12 @@
     "fontFamily": "Font family",
     "fontDefault": "System default",
     "textAlign": "Text alignment",
+    "alignLeft": "Align left",
+    "alignCenter": "Align center",
+    "alignRight": "Align right",
     "textStyle": "Text style",
+    "bold": "Bold",
+    "italic": "Italic",
     "toolLine": "Line",
     "toolArrow": "Arrow",
     "toolQrCode": "QR Code",
@@ -387,6 +392,7 @@
     "retry": "Retry",
     "loadingStudio": "Loading studio…",
     "canvasArea": "Canvas editor area",
+    "insertTools": "Insert tools",
     "emptyCanvasHint": "Drag media here or click a tool above to add layers",
     "unsavedChangesTitle": "Unsaved changes",
     "unsavedChangesDesc": "You have unsaved changes. Would you like to save before leaving?",
@@ -401,7 +407,11 @@
     "uploadingMedia": "Uploading…",
     "uploadSuccess": "Media uploaded successfully.",
     "uploadFailed": "Upload failed.",
-    "timeline": "Timeline"
+    "timeline": "Timeline",
+    "preview": "Preview",
+    "exitPreview": "Exit preview",
+    "viewerNoAccess": "Studio access restricted",
+    "viewerNoAccessDesc": "You need Owner or Editor permissions to use the Canvas Studio."
   },
   "schedules": {
     "title": "Schedules",
@@ -517,6 +527,8 @@
     "loading": "Loading workspaces…",
     "loadFailed": "Could not load workspaces.",
     "auditHint": "Quick audit list — open a customer profile from the owner when available.",
+    "searchPlaceholder": "Search by name or owner…",
+    "noResults": "No workspaces match your search.",
     "workspace": "Workspace",
     "owner": "Owner",
     "screens": "Screens",
@@ -565,6 +577,14 @@
     "loading": "Loading fleet…",
     "loadFailed": "Could not load fleet screens.",
     "hint": "Status uses heartbeats: briefly disconnected players may show as stale or offline.",
+    "searchPlaceholder": "Search by screen, workspace, or serial…",
+    "noResults": "No screens match your search.",
+    "summary": {
+      "online": "Online",
+      "offline": "Offline",
+      "warning": "Warning",
+      "total": "Total"
+    },
     "workspace": "Workspace",
     "screen": "Screen",
     "serial": "Serial",
@@ -847,6 +867,7 @@
     "currentContentEmptyDesc": "Assign a playlist to start displaying content on this screen.",
     "editPlaylist": "Edit playlist",
     "override": "Override",
+    "overrideDialogDesc": "Temporarily replace the current content with a selected playlist. The override expires automatically after the chosen duration.",
     "activeSchedules": "Active schedules",
     "noSchedules": "No active schedules",
     "noSchedulesDesc": "No schedules are currently active for this screen.",
@@ -936,6 +957,7 @@
     "files": "{count, plural, one {# file} other {# files}}",
     "releaseToAdd": "Release to add…",
     "dropMore": "Drop more files to upload",
+    "dropHere": "Drop files here",
     "video": "Video",
     "image": "Image",
     "deleteTitle": "Delete media?",
@@ -1166,7 +1188,8 @@
       "cancel": "Cancel",
       "done": "Done",
       "confirmRevokeTitle": "Revoke API Key?",
-      "confirmRevokeDesc": "This action cannot be undone. Any integrations using this key will stop working immediately."
+      "confirmRevokeDesc": "This action cannot be undone. Any integrations using this key will stop working immediately.",
+      "revokeAria": "Revoke {name}"
     },
     "webhooks": {
       "title": "Webhook Endpoints",
@@ -1210,6 +1233,7 @@
   },
   "homeOverview": {
     "kicker": "Command",
+    "pageTitle": "Overview",
     "tagline": "Vibrant Crystal · Enterprise control",
     "welcomeWithName": "Welcome back, {name}",
     "workspacesCount": "{count, plural, =1 {1 workspace} other {# workspaces}}",
@@ -1594,6 +1618,7 @@
     "loading": "Loading metrics…",
     "loadFailed": "Could not load admin metrics.",
     "failed": "Failed to load metrics.",
+    "retry": "Retry",
     "cards": {
       "screens": "Total screens",
       "screensValue": "{active} / {total}",
@@ -1617,6 +1642,7 @@
     "loadFailed": "Could not load system health.",
     "revenueDisclaimer": "Revenue figures from the stats API are illustrative only until connected to live payment data.",
     "failed": "Failed to load",
+    "retry": "Retry",
     "users": "users",
     "workspaces": "workspaces",
     "cards": {
@@ -1648,6 +1674,8 @@
     "noWorkspacesOption": "No workspaces yet",
     "newWorkspaceTitle": "New workspace",
     "createWorkspaceAria": "Create workspace",
+    "searchPlaceholder": "Search workspaces...",
+    "searchEmpty": "No workspaces found",
     "roles": {
       "OWNER": "Owner",
       "ADMIN": "Admin",
@@ -1657,6 +1685,7 @@
   },
   "adminUsersDirectory": {
     "loadingDirectory": "Loading directory…",
+    "searchPlaceholder": "Search by name or email…",
     "loadFailed": "Could not load users.",
     "updateSuccess": "User updated.",
     "updateFailed": "Update failed.",
@@ -1909,7 +1938,9 @@
     "create": "Create workspace"
   },
   "superAdminGuard": {
-    "accessDenied": "Access denied",
+    "accessDenied": "Access Denied",
+    "accessDeniedDesc": "You don't have permission to access this page. Contact your workspace owner if you believe this is an error.",
+    "backToOverview": "Go to Overview",
     "verifying": "Verifying privileges…"
   },
   "settingsBillingClient": {
@@ -1944,7 +1975,10 @@
       "download": "PDF"
     },
     "downloadInvoice": "Download invoice PDF",
-    "invoiceDownloadFailed": "Could not download invoice. Stripe may not be configured."
+    "invoiceDownloadFailed": "Could not download invoice. Stripe may not be configured.",
+    "usageTitle": "Usage",
+    "usageScreens": "Screens",
+    "usageStorage": "Storage"
   },
   "settingsProfileClient": {
     "updateFailed": "Update failed",
@@ -1963,11 +1997,14 @@
     "email": "Email",
     "changeEmail": "Change email",
     "saveChanges": "Save changes",
+    "nameRequired": "Name must be 2-50 characters.",
+    "emailInvalid": "Please enter a valid email address.",
     "verifyNewEmail": "Verify new email",
     "newEmail": "New email",
     "sendCode": "Send code",
     "code6Digits": "6-digit code",
     "confirmEmail": "Confirm email",
+    "cancel": "Cancel",
     "prefsTitle": "Notification preferences",
     "prefsSubtitle": "Choose which events trigger in-app notifications.",
     "prefsSave": "Save preferences",
@@ -1985,6 +2022,21 @@
     "pref_schedule_changed_desc": "When a schedule is created or modified",
     "pref_pairing_started": "Pairing started",
     "pref_pairing_started_desc": "When a new screen pairing begins",
+    "categoryScreen": "Screen",
+    "categorySchedule": "Schedule",
+    "categoryTeam": "Team",
+    "categorySystem": "System",
+    "pref_invite_accepted": "Invite accepted",
+    "pref_invite_accepted_desc": "When a team invitation is accepted",
+    "pref_member_removed": "Member removed",
+    "pref_member_removed_desc": "When a team member is removed",
+    "pref_storage_limit": "Storage limit",
+    "pref_storage_limit_desc": "When storage is near the limit",
+    "pref_plan_expiry": "Plan expiry",
+    "pref_plan_expiry_desc": "When the subscription plan is about to expire",
+    "resetToDefaults": "Reset to defaults",
+    "confirmResetDefaults": "Reset all preferences to defaults?",
+    "reset": "Reset",
     "gdprTitle": "Data & privacy",
     "gdprSubtitle": "Export your data or request account deletion (GDPR).",
     "exportData": "Export my data",
@@ -2058,6 +2110,8 @@
     "email": "Email",
     "newPassword": "New password",
     "sendResetLink": "Send reset link",
+    "sending": "Sending…",
+    "successMessage": "If an account exists with this email, a reset link has been sent.",
     "updatePassword": "Update password",
     "backToSignIn": "Back to sign in"
   },
@@ -2084,6 +2138,8 @@
     "phonePlaceholder": "501234567",
     "city": "City",
     "password": "Password",
+    "passwordHint": "Minimum 8 characters",
+    "creatingAccount": "Creating account…",
     "continue": "Continue",
     "code6Digits": "6-digit code",
     "activateAccount": "Activate account",
@@ -2128,6 +2184,9 @@
     "filterByRole": "Filter by role",
     "resendInviteAria": "Resend invitation to {email}",
     "cancelInviteAria": "Cancel invitation to {email}",
+    "cancelInviteTitle": "Cancel invitation",
+    "confirmCancelInvite": "Cancel the invitation to {email}? They will need to be re-invited to join the workspace.",
+    "cancelInviteConfirm": "Cancel invitation",
     "removeMemberAria": "Remove {name}",
     "confirmRemoveName": "Remove {name} from the workspace? They will lose access to all workspace data.",
     "members": "Members",
@@ -2374,6 +2433,7 @@
     "nameLabel": "Screen name",
     "namePlaceholder": "e.g. Screen-001",
     "nameSuggestion": "e.g. Screen-001",
+    "nameSuggestionDefault": "Screen-001",
     "nameError": "Name must be 2-50 characters",
     "branchHelp": "Assign this screen to a branch (optional)",
     "branchLabel": "Branch",
@@ -2846,7 +2906,9 @@
     "publishing": "Publishing…",
     "publishNow": "Publish Now",
     "publishedToScreens": "Published to {count} screen(s).",
-    "publishFailed": "Failed to publish. Try again."
+    "publishFailed": "Failed to publish. Try again.",
+    "loadErrorTitle": "Failed to load playlist. Please try again.",
+    "retry": "Retry"
   },
   "playlistWizard": {
     "createPlaylist": "Create new playlist",
@@ -2886,7 +2948,11 @@
     "tr_zoomOut": "Zoom Out",
     "tr_flip": "Flip",
     "tr_cube": "Cube",
-    "tr_rotate": "Rotate"
+    "tr_rotate": "Rotate",
+    "orientLandscape": "Landscape",
+    "orientPortrait": "Portrait",
+    "orientSquare": "Square",
+    "untitledPlaylist": "Untitled Playlist"
   },
   "errors": {
     "UNKNOWN_ERROR": "Something went wrong. Please try again.",
@@ -2966,7 +3032,12 @@
     "pausedOk": "Playback paused. Screens will stop playing.",
     "resumedOk": "Playback resumed. Screens will resume playing.",
     "statusPaused": "Paused",
-    "statusActive": "Active"
+    "statusActive": "Active",
+    "workspaceId": "Workspace ID",
+    "copyId": "Copy ID",
+    "copied": "Copied!",
+    "plan": "Plan",
+    "createdDate": "Created"
   },
   "twoFactor": {
     "title": "Two-factor authentication",
@@ -3069,6 +3140,7 @@
       "empty": "No notifications to show.",
       "filterAll": "All",
       "filterUnread": "Unread",
+      "filterRead": "Read",
       "filterScreen": "Screens",
       "filterUpload": "Uploads",
       "filterSubscription": "Billing",
@@ -3077,7 +3149,9 @@
       "clearAll": "Clear all",
       "deleteOne": "Delete",
       "noFilterResults": "No notifications match this filter.",
-      "clearFilter": "Clear filter"
+      "clearFilter": "Clear filter",
+      "listLabel": "Notifications list",
+      "unreadLabel": "Unread"
     }
   },
   "auditLogPage": {
@@ -3130,6 +3204,7 @@
     "metricContentReach": "Content Reach",
     "trendTitle": "Trend",
     "performersTitle": "Top Performers",
+    "bottomPerformersTitle": "Bottom Performers",
     "performersEmpty": "No data available for this period.",
     "chartUptimeAria": "Uptime trend chart over the selected period",
     "chartContentAria": "Content performance trend chart over the selected period",
@@ -3239,7 +3314,11 @@
     "usage": "Usage Statistics",
     "usageDemoNotice": "Usage statistics are illustrative only.",
     "historyTitle": "Suggestion History",
-    "clearHistory": "Clear"
+    "clearHistory": "Clear",
+    "placeholderHeadline": "Topic (e.g., Summer Sale)",
+    "placeholderBodyText": "Topic or headline",
+    "placeholderCta": "Product or goal",
+    "placeholderColorScheme": "Industry (e.g., Retail)"
   },
   "emergencyPage": {
     "kicker": "Emergency",
@@ -3445,6 +3524,7 @@
     "shellTitle": "Failed to load page",
     "tryAgain": "Try again",
     "retry": "Try again",
+    "reload": "Reload",
     "pleaseTryAgain": "Please try again"
   },
   "notFoundPage": {
@@ -3452,6 +3532,7 @@
     "title": "Page not found",
     "description": "The page you are looking for does not exist or has been moved.",
     "backToOverview": "Back to overview",
+    "backToLogin": "Go to Login",
     "backToHome": "Back to home"
   }
 }

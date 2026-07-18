@@ -3,10 +3,14 @@ import { APP_FILTER } from '@nestjs/core';
 import { SentryModule } from '@sentry/nestjs/setup';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AllExceptionsFilter } from './common/errors/all-exceptions.filter';
 import { CsrfModule } from './common/csrf/csrf.module';
 import { PrismaModule } from './common/prisma/prisma.module';
+import { RedisModule } from './common/redis/redis.module';
+import { RedisService } from './common/redis/redis.service';
+import { RedisThrottlerStorage } from './common/redis/redis-throttler-storage';
+import { StorageModule } from './common/storage/storage.module';
 import { AuthModule } from './domains/auth/auth.module';
 import { WorkspacesModule } from './domains/workspaces/workspaces.module';
 import { ScreensModule } from './domains/screens/screens.module';
@@ -50,18 +54,31 @@ import { ConfigHelperModule } from './common/config/config-helper.module';
      * Tracking is by IP, so `TRUST_PROXY_HOPS` must be set behind a reverse
      * proxy or every client shares the proxy's bucket (see main.ts).
      *
-     * Storage is in-memory: counters are per process. Running more than one
-     * backend instance needs a shared store (@nest-lab/throttler-storage-redis).
+     * When REDIS_URL is set, rate limits are shared across instances via
+     * RedisThrottlerStorage (registered as a provider below). Without Redis,
+     * the default in-memory storage is used (single-instance only).
+     *
+     * Official source: NestJS Rate Limiting —
+     * https://docs.nestjs.com/security/rate-limiting
      */
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 60_000,
-          limit: Number(process.env.RATE_LIMIT_PER_MINUTE ?? '300'),
-        },
-      ],
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule, RedisModule],
+      inject: [ConfigService, RedisService],
+      useFactory: (config: ConfigService, redis: RedisService) => ({
+        throttlers: [
+          {
+            ttl: 60_000,
+            limit: Number(config.get<string>('RATE_LIMIT_PER_MINUTE') ?? '300'),
+          },
+        ],
+        storage: redis.isConfigured
+          ? new RedisThrottlerStorage(redis)
+          : undefined,
+      }),
     }),
     ConfigModule.forRoot({ isGlobal: true }),
+    RedisModule,
+    StorageModule,
     EmailModule,
     CsrfModule,
     PrismaModule,

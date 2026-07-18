@@ -409,7 +409,9 @@ export class PairingService {
             resolutionWidth: session.resolutionWidth,
             resolutionHeight: session.resolutionHeight,
             pairingSecretHash,
-            ...(dto.playlistGroupId ? { playlistGroupId: dto.playlistGroupId } : {}),
+            ...(dto.playlistGroupId
+              ? { playlistGroupId: dto.playlistGroupId }
+              : {}),
           },
           select: {
             id: true,

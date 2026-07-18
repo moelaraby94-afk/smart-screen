@@ -109,6 +109,12 @@ describe('cross-tenant scoping of by-id getters', () => {
             get: (_k: string, d?: unknown) => d,
           } as never,
           mockHeartbeat,
+          {
+            getPublicUrl: () => '',
+            getSignedUrl: () => Promise.resolve(''),
+            ensureDir: () => {},
+            providerName: 'local',
+          } as never,
         );
         return { get: (ws, id) => svc.getById(ws, id) };
       },

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Loader2, Search, ToggleLeft, ToggleRight } from 'lucide-react';
 import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,7 @@ type WorkspaceFlags = {
 export function FeatureFlagsClient() {
   const t = useTranslations('featureFlags');
   const { toastResponseError } = useApiErrorToast();
+  const prefersReduced = useReducedMotion();
   const [data, setData] = useState<WorkspaceFlags[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -120,9 +121,9 @@ export function FeatureFlagsClient() {
         {filtered.map((ws, idx) => (
           <motion.div
             key={ws.workspaceId}
-            initial={{ opacity: 0, y: 8 }}
+            initial={prefersReduced ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.03 * idx }}
+            transition={prefersReduced ? { duration: 0 } : { delay: 0.03 * idx }}
             className="vc-card-surface rounded-2xl border border-border p-5"
           >
             <div className="mb-4 flex items-center justify-between">
@@ -143,6 +144,9 @@ export function FeatureFlagsClient() {
                   <button
                     key={mod.module}
                     type="button"
+                    role="switch"
+                    aria-checked={mod.enabled}
+                    aria-label={t(`modules.${mod.module}.label`)}
                     disabled={isToggling}
                     onClick={() => void handleToggle(ws.workspaceId, mod.module, mod.enabled)}
                     className={`flex items-center justify-between gap-2 rounded-xl border p-3 text-sm transition disabled:opacity-50 ${

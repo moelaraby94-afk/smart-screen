@@ -88,7 +88,7 @@ export function PlaylistTopBar({
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-card/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-2.5">
-        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-xl" onClick={onBack} title={t('backToList')}>
+        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-xl" onClick={onBack} title={t('backToList')} aria-label={t('backToList')}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
@@ -114,10 +114,10 @@ export function PlaylistTopBar({
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg" disabled={undoStackLen === 0} onClick={onUndo} title={t('undo')}>
+          <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg" disabled={undoStackLen === 0} onClick={onUndo} title={t('undo')} aria-label={t('undo')}>
             <Undo2 className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg" disabled={redoStackLen === 0} onClick={onRedo} title={t('redo')}>
+          <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg" disabled={redoStackLen === 0} onClick={onRedo} title={t('redo')} aria-label={t('redo')}>
             <Redo2 className="h-4 w-4" />
           </Button>
         </div>

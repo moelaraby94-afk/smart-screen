@@ -99,7 +99,11 @@ export class SchedulingService {
     }
 
     // Auto-clean expired override
-    if (screen.overridePlaylistId && screen.overrideExpiresAt && screen.overrideExpiresAt <= at) {
+    if (
+      screen.overridePlaylistId &&
+      screen.overrideExpiresAt &&
+      screen.overrideExpiresAt <= at
+    ) {
       await this.prisma.screen.update({
         where: { id: screenId },
         data: { overridePlaylistId: null, overrideExpiresAt: null },
@@ -153,7 +157,7 @@ export class SchedulingService {
     const hasPublished = assignments.some((a) => a.playlist.isPublished);
     if (hasPublished) {
       return {
-        playlistId: assignments[0]!.playlistId,
+        playlistId: assignments[0].playlistId,
         source: 'rotation',
       };
     }
@@ -216,7 +220,9 @@ export class SchedulingService {
         if (xRec !== yRec) continue;
         const days =
           xRec === 'MONTHLY'
-            ? (x.daysOfMonth ?? []).filter((d) => (y.daysOfMonth ?? []).includes(d))
+            ? (x.daysOfMonth ?? []).filter((d) =>
+                (y.daysOfMonth ?? []).includes(d),
+              )
             : x.daysOfWeek.filter((d) => y.daysOfWeek.includes(d));
         if (days.length === 0) continue;
 

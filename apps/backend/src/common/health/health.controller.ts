@@ -1,9 +1,13 @@
 import { Controller, Get } from '@nestjs/common';
+import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
 import { HealthService } from './health.service';
 
 @Controller()
 export class HealthController {
-  constructor(private readonly healthService: HealthService) {}
+  constructor(
+    private readonly health: HealthCheckService,
+    private readonly healthService: HealthService,
+  ) {}
 
   /**
    * Liveness probe — always returns 200 if the process is running.
@@ -15,11 +19,20 @@ export class HealthController {
   }
 
   /**
-   * Readiness probe — returns 200 only if the database is reachable.
-   * Returns 503 if the DB ping fails.
+   * Readiness probe — returns 200 only if all dependencies are reachable:
+   * - Database (Prisma)
+   * - Redis (if configured)
+   * - Storage (local or S3)
+   *
+   * Returns 503 if any dependency fails.
    */
   @Get('ready')
-  async readiness(): Promise<{ status: 'ready' }> {
-    return this.healthService.checkReadiness();
+  @HealthCheck()
+  readiness() {
+    return this.health.check([
+      () => this.healthService.checkDatabase(),
+      () => this.healthService.checkRedis(),
+      () => this.healthService.checkStorage(),
+    ]);
   }
 }

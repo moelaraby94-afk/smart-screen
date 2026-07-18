@@ -10,7 +10,7 @@ import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
 
 const actions = [
-  { key: 'addScreen', icon: Monitor, href: '/screens', accent: 'bg-primary/10 text-primary ring-primary/20' },
+  { key: 'addScreen', icon: Monitor, href: '/screens/pair', accent: 'bg-primary/10 text-primary ring-primary/20' },
   { key: 'createPlaylist', icon: ListVideo, href: '/content?tab=playlists', accent: 'bg-success/10 text-success ring-success/20' },
   { key: 'viewSchedule', icon: CalendarClock, href: '/scheduling', accent: 'bg-primary/10 text-primary ring-primary/20' },
 ] as const;

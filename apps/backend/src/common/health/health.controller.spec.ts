@@ -1,49 +1,96 @@
 import { HealthController } from './health.controller';
 import { HealthService } from './health.service';
+import type { HealthCheckService } from '@nestjs/terminus';
 import type { PrismaService } from '../prisma/prisma.service';
+import type { RedisService } from '../redis/redis.service';
+import type { IStorageService } from '../storage/storage.interface';
 
 describe('HealthController', () => {
-  function build(prismaOverrides: { $queryRawUnsafe?: jest.Mock }) {
+  function build() {
     const prisma = {
-      $queryRawUnsafe: prismaOverrides.$queryRawUnsafe ?? jest.fn(),
+      $queryRaw: jest.fn().mockResolvedValue([{ 1: 1 }]),
     } as unknown as PrismaService;
-    const service = new HealthService(prisma);
-    const controller = new HealthController(service);
-    return { controller, service, prisma };
+    const redis = {
+      isConfigured: false,
+      ping: jest.fn().mockResolvedValue(false),
+    } as unknown as RedisService;
+    const storage = {
+      providerName: 'local',
+      getUploadRoot: () => process.cwd(),
+    } as unknown as IStorageService;
+    const service = new HealthService(prisma, redis, storage);
+    const healthCheck = {
+      check: jest.fn(async (indicators: (() => Promise<unknown>)[]) => {
+        const results = await Promise.all(indicators.map((fn) => fn()));
+        const info: Record<string, unknown> = {};
+        for (const r of results) {
+          Object.assign(info, r);
+        }
+        const allUp = Object.values(info).every(
+          (v) => (v as { status?: string }).status === 'up',
+        );
+        if (!allUp) throw new Error('Health check failed');
+        return { status: 'ok', info };
+      }),
+    } as unknown as HealthCheckService;
+    const controller = new HealthController(healthCheck, service);
+    return { controller, service, prisma, redis };
   }
 
   describe('liveness', () => {
     it('always returns { status: "ok" } without touching the database', () => {
-      const { controller, prisma } = build({});
+      const { controller, prisma } = build();
 
       const result = controller.liveness();
 
       expect(result).toEqual({ status: 'ok' });
-      expect(prisma.$queryRawUnsafe).not.toHaveBeenCalled();
+      expect(prisma.$queryRaw).not.toHaveBeenCalled();
     });
   });
 
   describe('readiness', () => {
-    it('returns { status: "ready" } when the DB ping succeeds', async () => {
-      const $queryRawUnsafe = jest.fn().mockResolvedValue([{ 1: 1 }]);
-      const { controller } = build({ $queryRawUnsafe });
+    it('returns health check results when all dependencies are up', async () => {
+      const { controller, prisma } = build();
 
       const result = await controller.readiness();
 
-      expect($queryRawUnsafe).toHaveBeenCalledWith('SELECT 1');
-      expect(result).toEqual({ status: 'ready' });
+      expect(prisma.$queryRaw).toHaveBeenCalled();
+      expect(result.status).toBe('ok');
+      expect(result.info).toHaveProperty('database');
+      expect(result.info).toHaveProperty('redis');
+      expect(result.info).toHaveProperty('storage');
     });
 
-    it('throws when the DB ping fails', async () => {
-      const $queryRawUnsafe = jest
-        .fn()
-        .mockRejectedValue(new Error('Connection refused'));
-      const { service } = build({ $queryRawUnsafe });
+    it('returns 503 when the DB ping fails', async () => {
+      const prisma = {
+        $queryRaw: jest.fn().mockRejectedValue(new Error('Connection refused')),
+      } as unknown as PrismaService;
+      const redis = {
+        isConfigured: false,
+        ping: jest.fn().mockResolvedValue(false),
+      } as unknown as RedisService;
+      const storage = {
+        providerName: 'local',
+        getUploadRoot: () => process.cwd(),
+      } as unknown as IStorageService;
+      const service = new HealthService(prisma, redis, storage);
+      const healthCheck = {
+        check: jest.fn(async (indicators: (() => Promise<unknown>)[]) => {
+          const results = await Promise.all(indicators.map((fn) => fn()));
+          const info: Record<string, unknown> = {};
+          for (const r of results) {
+            Object.assign(info, r);
+          }
+          const allUp = Object.values(info).every(
+            (v) => (v as { status?: string }).status === 'up',
+          );
+          if (!allUp) throw new Error('Health check failed');
+          return { status: 'ok', info };
+        }),
+      } as unknown as HealthCheckService;
+      const controller = new HealthController(healthCheck, service);
 
-      await expect(service.checkReadiness()).rejects.toThrow(
-        'Connection refused',
-      );
-      expect($queryRawUnsafe).toHaveBeenCalledWith('SELECT 1');
+      await expect(controller.readiness()).rejects.toThrow();
     });
   });
 });

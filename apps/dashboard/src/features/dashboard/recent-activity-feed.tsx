@@ -69,11 +69,20 @@ export function RecentActivityFeed() {
     void load();
   }, [load, workspaceDataEpoch]);
 
-  const fmtDate = (ts: string) =>
-    new Intl.DateTimeFormat(locale, {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(new Date(ts));
+  const fmtRelative = (ts: string) => {
+    const t = Date.parse(ts);
+    if (!Number.isFinite(t)) return ts;
+    const diffSec = Math.max(0, Math.floor((Date.now() - t) / 1000));
+    const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+    if (diffSec < 60) return rtf.format(-diffSec, 'second');
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return rtf.format(-diffMin, 'minute');
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 48) return rtf.format(-diffHr, 'hour');
+    const diffDay = Math.floor(diffHr / 24);
+    if (diffDay < 14) return rtf.format(-diffDay, 'day');
+    return new Intl.DateTimeFormat(locale, { dateStyle: 'short' }).format(new Date(t));
+  };
 
   return (
     <motion.section
@@ -114,7 +123,7 @@ export function RecentActivityFeed() {
           <p className="text-xs text-muted-foreground">{t('empty')}</p>
         </div>
       ) : (
-        <div className="relative max-h-[280px] overflow-y-auto pr-1">
+        <div className="relative max-h-[280px] overflow-y-auto pe-1">
           {/* Timeline line */}
           <div className="absolute inset-y-0 start-[14px] w-px bg-border" />
           <ul className="space-y-0.5">
@@ -145,7 +154,7 @@ export function RecentActivityFeed() {
                     </p>
                   </div>
                   <time className="shrink-0 font-mono text-xs text-muted-foreground">
-                    {fmtDate(item.timestamp)}
+                    {fmtRelative(item.timestamp)}
                   </time>
                 </motion.li>
               );

@@ -115,6 +115,9 @@ export function TeamClient() {
   const [sending, setSending] = useState(false);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [cancelInviteDialogOpen, setCancelInviteDialogOpen] = useState(false);
+  const [cancelInviteTarget, setCancelInviteTarget] = useState<string | null>(null);
+  const [cancelInviteEmail, setCancelInviteEmail] = useState<string>('');
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -451,7 +454,11 @@ export function TeamClient() {
                           variant="ghost"
                           size="sm"
                           className="h-9 w-9 p-0 text-muted-foreground hover:text-destructive"
-                          onClick={() => void handleCancelInvite(inv.id)}
+                          onClick={() => {
+                            setCancelInviteTarget(inv.id);
+                            setCancelInviteEmail(inv.email);
+                            setCancelInviteDialogOpen(true);
+                          }}
                           disabled={cancellingId === inv.id}
                           aria-label={t('cancelInviteAria', { email: inv.email })}
                         >
@@ -894,6 +901,32 @@ export function TeamClient() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* ─── Cancel Invite AlertDialog ─────────────────────── */}
+        <AlertDialog open={cancelInviteDialogOpen} onOpenChange={setCancelInviteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('cancelInviteTitle')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t('confirmCancelInvite', { email: cancelInviteEmail })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => { setCancelInviteTarget(null); setCancelInviteEmail(''); }}>
+                {t('cancelRemove')}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                disabled={!!cancellingId}
+                onClick={() => {
+                  if (cancelInviteTarget) void handleCancelInvite(cancelInviteTarget);
+                  setCancelInviteEmail('');
+                }}
+              >
+                {t('cancelInviteConfirm')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* ─── Remove Member AlertDialog ─────────────────────── */}
         <AlertDialog open={removeDialogOpen} onOpenChange={setRemoveDialogOpen}>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type { Route } from 'next';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
@@ -20,6 +21,7 @@ export function ForgotPasswordClient() {
   const [email, setEmail] = useState(emailParam ?? '');
   const [newPassword, setNewPassword] = useState('');
   const [pending, setPending] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const requestReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +33,7 @@ export function ForgotPasswordClient() {
         return;
       }
       toast.success(t('requestSent'));
+      setSuccess(true);
     } finally {
       setPending(false);
     }
@@ -88,12 +91,13 @@ export function ForgotPasswordClient() {
         </p>
       </div>
 
-          {!token ? (
+          {!token && !success ? (
             <form className="mt-8 space-y-4" onSubmit={(e) => void requestReset(e)}>
               <div className="space-y-2">
                 <Label className="text-foreground">{t('email')}</Label>
                 <Input
                   required
+                  autoFocus
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -107,9 +111,19 @@ export function ForgotPasswordClient() {
                 variant="cta"
                 aria-busy={pending}
               >
-                {t('sendResetLink')}
+                {pending ? t('sending') : t('sendResetLink')}
               </Button>
             </form>
+          ) : !token && success ? (
+            <div className="mt-8 space-y-4 text-center">
+              <p className="text-sm text-muted-foreground" role="status">{t('successMessage')}</p>
+              <Link
+                href={`/${locale}/login` as Route}
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+              >
+                {t('backToSignIn')}
+              </Link>
+            </div>
           ) : (
             <form className="mt-8 space-y-4" onSubmit={(e) => void resetPassword(e)}>
               <div className="space-y-2">

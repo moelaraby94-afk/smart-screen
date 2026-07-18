@@ -296,7 +296,7 @@ export function CampaignsClient() {
                     <TableCell className="font-medium">
                       <button
                         type="button"
-                        className="text-left hover:text-primary"
+                        className="text-start hover:text-primary"
                         onClick={() => void handleViewDetail(campaign)}
                       >
                         {campaign.name}
@@ -328,6 +328,7 @@ export function CampaignsClient() {
                           className="h-8 w-8"
                           onClick={() => void handleViewDetail(campaign)}
                           title={t('viewDetail')}
+                          aria-label={t('viewDetail')}
                         >
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
@@ -340,6 +341,7 @@ export function CampaignsClient() {
                                 className="h-8 w-8"
                                 disabled={isMutating}
                                 title={t('actions')}
+                                aria-label={t('actions')}
                               >
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>

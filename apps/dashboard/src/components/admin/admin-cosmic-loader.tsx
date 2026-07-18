@@ -17,6 +17,7 @@ export function AdminCosmicLoader({ label, className }: Props) {
       )}
       role="status"
       aria-live="polite"
+      aria-busy="true"
     >
       <Loader2 className="h-6 w-6 shrink-0 animate-spin text-primary" aria-hidden />
       <span>{label}</span>

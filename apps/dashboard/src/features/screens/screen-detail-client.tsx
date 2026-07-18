@@ -731,10 +731,10 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
                         className="h-8 w-32 rounded-lg text-sm"
                         maxLength={50}
                       />
-                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => void handleSaveName()} disabled={savingName}>
+                      <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={tDetail('save')} onClick={() => void handleSaveName()} disabled={savingName}>
                         <Check className="h-4 w-4" />
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditingName(false)}>
+                      <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={tDetail('cancel')} onClick={() => setEditingName(false)}>
                         <X className="h-4 w-4" />
                       </Button>
                     </>
@@ -771,10 +771,10 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
                         placeholder={tDetail('locationPlaceholder')}
                         className="h-8 w-32 rounded-lg text-sm"
                       />
-                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => void handleSaveLocation()} disabled={savingLocation}>
+                      <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={tDetail('save')} onClick={() => void handleSaveLocation()} disabled={savingLocation}>
                         <Check className="h-4 w-4" />
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditingLocation(false)}>
+                      <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={tDetail('cancel')} onClick={() => setEditingLocation(false)}>
                         <X className="h-4 w-4" />
                       </Button>
                     </>
@@ -1022,7 +1022,7 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
         <DialogContent className="max-w-md rounded-lg">
           <DialogHeader>
             <DialogTitle>{tDetail('override')}</DialogTitle>
-            <DialogDescription>{tDetail('dangerZoneDesc')}</DialogDescription>
+            <DialogDescription>{tDetail('overrideDialogDesc')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
@@ -1090,7 +1090,7 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{tDetail('cancel')}</AlertDialogCancel>
+            <AlertDialogCancel autoFocus>{tDetail('cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={() => void handleDelete()} disabled={deleting}>
               {deleting ? tDetail('deleting') : tDetail('deleteScreen')}
             </AlertDialogAction>

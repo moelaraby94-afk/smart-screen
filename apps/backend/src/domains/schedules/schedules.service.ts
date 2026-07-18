@@ -156,7 +156,9 @@ export class SchedulesService {
           : {}),
         ...(dto.daysOfWeek !== undefined ? { daysOfWeek: dto.daysOfWeek } : {}),
         ...(dto.recurrence !== undefined ? { recurrence: dto.recurrence } : {}),
-        ...(dto.daysOfMonth !== undefined ? { daysOfMonth: dto.daysOfMonth } : {}),
+        ...(dto.daysOfMonth !== undefined
+          ? { daysOfMonth: dto.daysOfMonth }
+          : {}),
         ...(dto.startTime !== undefined ? { startTime: dto.startTime } : {}),
         ...(dto.endTime !== undefined ? { endTime: dto.endTime } : {}),
         ...(dto.startDate !== undefined

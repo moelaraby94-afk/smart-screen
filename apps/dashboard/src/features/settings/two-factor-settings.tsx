@@ -165,7 +165,7 @@ export function TwoFactorSettings() {
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
             <img
               src={setupData.qrCodeDataUrl}
-              alt="2FA QR Code"
+              alt={t('manualEntry')}
               className="h-48 w-48 rounded-xl border border-border"
             />
             <div className="space-y-2">
@@ -183,6 +183,7 @@ export function TwoFactorSettings() {
               onChange={(e) => setToken(e.target.value)}
               placeholder="000000"
               maxLength={6}
+              aria-label={t('enterCode')}
               className="max-w-[200px] rounded-xl font-mono text-center text-lg tracking-widest"
             />
           </div>

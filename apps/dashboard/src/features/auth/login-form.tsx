@@ -53,7 +53,6 @@ export function LoginForm() {
       setWorkspaceId(workspaceId);
     }
     await refreshWorkspaces(workspaceId ?? null);
-    toast.success(t('signedIn'));
     const returnTo = searchParams.get('returnTo');
     const isSuper = Boolean(payload.user?.isSuperAdmin);
     let dest: string;
@@ -66,7 +65,7 @@ export function LoginForm() {
     } else {
       dest = `/${activeLocale}`;
     }
-    router.push(dest as Route);
+    router.replace(dest as Route);
     router.refresh();
   };
 
@@ -78,7 +77,9 @@ export function LoginForm() {
       setStoredAccessToken(null);
       const response = await apiLogin(email, password);
       if (!response.ok) {
-        throw new Error(errorMessage(await readApiError(response)));
+        setError(errorMessage(await readApiError(response)));
+        setPending(false);
+        return;
       }
 
       const payload = (await response.json()) as AuthSuccessPayload & {

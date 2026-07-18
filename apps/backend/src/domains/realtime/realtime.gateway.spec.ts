@@ -6,6 +6,7 @@ import { ScreenStatus } from '@prisma/client';
 import { RealtimeGateway } from './realtime.gateway';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { ScreenHeartbeatService } from './screen-heartbeat.service';
+import { RedisService } from '../../common/redis/redis.service';
 
 type MockSocket = {
   id: string;
@@ -101,6 +102,15 @@ describe('RealtimeGateway T2.4 (WebSocket auth hardening)', () => {
         { provide: ScreenHeartbeatService, useValue: heartbeat },
         { provide: JwtService, useValue: jwtService },
         { provide: ConfigService, useValue: configService },
+        {
+          provide: RedisService,
+          useValue: {
+            getClient: () => null,
+            isConfigured: false,
+            ping: jest.fn().mockResolvedValue(false),
+            quit: jest.fn().mockResolvedValue(undefined),
+          } as unknown as RedisService,
+        },
       ],
     }).compile();
     gateway = moduleRef.get(RealtimeGateway);

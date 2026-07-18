@@ -84,7 +84,12 @@ export class CanvasesController {
     @Query('workspaceId') workspaceId: string,
   ) {
     if (!workspaceId) throw new BadRequestException('workspaceId is required');
-    return this.canvasesService.restoreVersion(workspaceId, id, versionId, user.sub);
+    return this.canvasesService.restoreVersion(
+      workspaceId,
+      id,
+      versionId,
+      user.sub,
+    );
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN)

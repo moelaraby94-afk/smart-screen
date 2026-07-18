@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   BarChart3,
   Activity,
@@ -77,6 +77,7 @@ export function AnalyticsPageClient() {
   const { workspaceId, workspaces } = useWorkspace();
   const router = useRouter();
   const locale = useLocale();
+  const prefersReducedMotion = useReducedMotion() ?? false;
 
   const [period, setPeriod] = useState<Period>('30d');
   const [tab, setTab] = useState<'screens' | 'content'>('screens');
@@ -146,6 +147,26 @@ export function AnalyticsPageClient() {
     URL.revokeObjectURL(url);
   }, [filteredScreens]);
 
+  const screenTrend = useMemo(() => {
+    if (!data?.screen.trend || data.screen.trend.length < 2) return undefined;
+    const td = data.screen.trend;
+    const first = td[0].value;
+    const last = td[td.length - 1].value;
+    if (first === 0) return undefined;
+    const pct = Math.round(((last - first) / first) * 100);
+    return { value: Math.abs(pct), direction: (pct >= 0 ? 'up' : 'down') as 'up' | 'down' };
+  }, [data?.screen.trend]);
+
+  const contentTrend = useMemo(() => {
+    if (!data?.content.trend || data.content.trend.length < 2) return undefined;
+    const td = data.content.trend;
+    const first = td[0].value;
+    const last = td[td.length - 1].value;
+    if (first === 0) return undefined;
+    const pct = Math.round(((last - first) / first) * 100);
+    return { value: Math.abs(pct), direction: (pct >= 0 ? 'up' : 'down') as 'up' | 'down' };
+  }, [data?.content.trend]);
+
   if (loading && !data) {
     return (
       <div
@@ -208,16 +229,16 @@ export function AnalyticsPageClient() {
   }
 
   const screenMetrics = [
-    { label: t('metricUptime'), value: data.screen.metrics.uptime.value, unit: data.screen.metrics.uptime.unit, icon: Activity },
+    { label: t('metricUptime'), value: data.screen.metrics.uptime.value, unit: data.screen.metrics.uptime.unit, icon: Activity, trend: screenTrend },
     { label: t('metricActiveScreens'), value: data.screen.metrics.activeScreens.value, unit: data.screen.metrics.activeScreens.unit, icon: MonitorPlay },
-    { label: t('metricImpressions'), value: data.screen.metrics.totalImpressions.value, unit: data.screen.metrics.totalImpressions.unit, icon: TrendingUp },
+    { label: t('metricImpressions'), value: data.screen.metrics.totalImpressions.value, unit: data.screen.metrics.totalImpressions.unit, icon: TrendingUp, trend: screenTrend },
     { label: t('metricAvgPlayTime'), value: data.screen.metrics.avgPlayTime.value, unit: data.screen.metrics.avgPlayTime.unit, icon: Clock },
   ];
 
   const contentMetrics = [
-    { label: t('metricTotalPlays'), value: data.content.metrics.totalPlays.value, unit: data.content.metrics.totalPlays.unit, icon: Film },
+    { label: t('metricTotalPlays'), value: data.content.metrics.totalPlays.value, unit: data.content.metrics.totalPlays.unit, icon: Film, trend: contentTrend },
     { label: t('metricMostPlayed'), value: data.content.metrics.mostPlayed.value, unit: data.content.metrics.mostPlayed.unit, icon: TrendingUp },
-    { label: t('metricActivePlaylists'), value: data.content.metrics.activePlaylists.value, unit: data.content.metrics.activePlaylists.unit, icon: Film },
+    { label: t('metricActivePlaylists'), value: data.content.metrics.activePlaylists.value, unit: data.content.metrics.activePlaylists.unit, icon: Film, trend: contentTrend },
     { label: t('metricContentReach'), value: data.content.metrics.contentReach.value, unit: data.content.metrics.contentReach.unit, icon: MonitorPlay },
   ];
 
@@ -233,21 +254,24 @@ export function AnalyticsPageClient() {
 
         <TabsContent value="screens" className="space-y-6">
           <motion.div
-            initial={{ opacity: 0 }}
+            initial={prefersReducedMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3 }}
             className="space-y-6"
           >
             <AnalyticsContent
               metrics={screenMetrics}
               trend={data.screen.trend}
               performers={data.screen.performers}
+              bottomPerformers={data.screen.bottomPerformers}
               loading={loading}
               t={t}
               chartAriaLabel={t('chartUptimeAria')}
               chartEmptyLabel={t('chartEmpty')}
               chartColor="var(--success)"
               yAxisFormat={(v) => `${v}%`}
+              prefersReducedMotion={prefersReducedMotion}
+              onPerformerClick={(id) => router.push(`/${locale}/screens/${id}` as Route)}
             />
 
             {data.screen.raw && (
@@ -268,20 +292,22 @@ export function AnalyticsPageClient() {
 
         <TabsContent value="content" className="space-y-6">
           <motion.div
-            initial={{ opacity: 0 }}
+            initial={prefersReducedMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3 }}
             className="space-y-6"
           >
             <AnalyticsContent
               metrics={contentMetrics}
               trend={data.content.trend}
               performers={data.content.performers}
+              bottomPerformers={data.content.bottomPerformers}
               loading={loading}
               t={t}
               chartAriaLabel={t('chartContentAria')}
               chartEmptyLabel={t('chartEmpty')}
               chartColor="var(--primary)"
+              prefersReducedMotion={prefersReducedMotion}
             />
           </motion.div>
         </TabsContent>
@@ -320,22 +346,28 @@ function AnalyticsContent({
   metrics,
   trend,
   performers,
+  bottomPerformers,
   loading,
   t,
   chartAriaLabel,
   chartEmptyLabel,
   chartColor,
   yAxisFormat,
+  prefersReducedMotion,
+  onPerformerClick,
 }: {
-  metrics: { label: string; value: string | number; unit: string; icon: typeof Activity }[];
+  metrics: { label: string; value: string | number; unit: string; icon: typeof Activity; trend?: { value: number; direction: 'up' | 'down' } }[];
   trend: { date: string; value: number }[];
   performers: Performer[];
+  bottomPerformers: Performer[];
   loading: boolean;
   t: ReturnType<typeof useTranslations<'analyticsPage'>>;
   chartAriaLabel: string;
   chartEmptyLabel: string;
   chartColor: string;
   yAxisFormat?: (v: number) => string;
+  prefersReducedMotion?: boolean;
+  onPerformerClick?: (id: string) => void;
 }) {
   return (
     <>
@@ -347,6 +379,7 @@ function AnalyticsContent({
             value={m.value}
             unit={m.unit}
             icon={m.icon}
+            trend={m.trend}
             loading={loading}
           />
         ))}
@@ -366,6 +399,7 @@ function AnalyticsContent({
           color={chartColor}
           yAxisFormat={yAxisFormat}
           height={300}
+          reducedMotion={prefersReducedMotion}
         />
       </div>
 
@@ -381,10 +415,20 @@ function AnalyticsContent({
             {performers.map((p, i) => (
               <motion.div
                 key={p.id}
-                initial={{ opacity: 0 }}
+                initial={prefersReducedMotion ? false : { opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.03 * i, duration: 0.2 }}
-                className="flex items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-muted/30"
+                transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.03 * i, duration: 0.2 }}
+                className={cn(
+                  'flex items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-muted/30',
+                  onPerformerClick && 'cursor-pointer',
+                )}
+                onClick={() => onPerformerClick?.(p.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') onPerformerClick?.(p.id);
+                }}
+                tabIndex={onPerformerClick ? 0 : undefined}
+                role={onPerformerClick ? 'button' : undefined}
+                aria-label={onPerformerClick ? `${p.name}, ${p.metric} ${p.metricLabel}` : undefined}
               >
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
                   {i + 1}
@@ -407,6 +451,50 @@ function AnalyticsContent({
           </div>
         )}
       </div>
+
+      {bottomPerformers.length > 0 && (
+        <div className="rounded-lg border border-border bg-card p-5 shadow-xs" role="region" aria-label={t('bottomPerformersTitle')}>
+          <div className="mb-4 flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-muted-foreground rotate-180" aria-hidden />
+            <h3 className="text-sm font-semibold tracking-tight">{t('bottomPerformersTitle')}</h3>
+          </div>
+          <div className="space-y-2">
+            {bottomPerformers.map((p, i) => (
+              <div
+                key={p.id}
+                className={cn(
+                  'flex items-center gap-3 rounded-lg border border-border/50 p-3 hover:bg-muted/30',
+                  onPerformerClick && 'cursor-pointer',
+                )}
+                onClick={() => onPerformerClick?.(p.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') onPerformerClick?.(p.id);
+                }}
+                tabIndex={onPerformerClick ? 0 : undefined}
+                role={onPerformerClick ? 'button' : undefined}
+                aria-label={onPerformerClick ? `${p.name}, ${p.metric} ${p.metricLabel}` : undefined}
+              >
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted/20 text-xs font-bold text-muted-foreground">
+                  {i + 1}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <span className="block truncate text-sm font-medium text-foreground">{p.name}</span>
+                  {p.subMetric && (
+                    <span className="block truncate text-xs text-muted-foreground">{p.subMetric}</span>
+                  )}
+                </div>
+                {p.status && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className={cn('h-2 w-2 rounded-full', STATUS_COLORS[p.status])} />
+                  </span>
+                )}
+                <span className="text-sm font-semibold text-foreground">{p.metric}</span>
+                <span className="text-xs text-muted-foreground">{p.metricLabel}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </>
   );
 }

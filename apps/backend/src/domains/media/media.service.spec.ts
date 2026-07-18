@@ -14,17 +14,30 @@ import { ConfigService } from '@nestjs/config';
 import { MediaService } from './media.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
+import { LocalStorageService } from '../../common/storage/local-storage.service';
 
 const mockHeartbeat = {
   emitUploadComplete: () => {},
 } as unknown as ScreenHeartbeatService;
 
+function makeStorage(uploadRoot: string): LocalStorageService {
+  return new LocalStorageService({
+    get: (key: string, def?: unknown) =>
+      key === 'MEDIA_UPLOAD_DIR' ? uploadRoot : def,
+  } as unknown as ConfigService);
+}
+
 describe('MediaService.buildPublicUrl', () => {
   it('points at the actual uploadRoot (uploads/media), not just uploads/', () => {
+    const config = {
+      get: (_key: string, def?: unknown) => def,
+    } as unknown as ConfigService;
+    const storage = makeStorage(join(process.cwd(), 'uploads', 'media'));
     const service = new MediaService(
       {} as PrismaService,
-      { get: (_key: string, def?: unknown) => def } as unknown as ConfigService,
+      config,
       mockHeartbeat,
+      storage,
     );
 
     const url = service.buildPublicUrl('ws_1/file.png');
@@ -36,15 +49,15 @@ describe('MediaService.buildPublicUrl', () => {
   });
 
   it('respects a MEDIA_UPLOAD_DIR override that stays under uploads/', () => {
+    const config = {
+      get: (key: string, def?: unknown) => def,
+    } as unknown as ConfigService;
+    const storage = makeStorage(join(process.cwd(), 'uploads', 'custom'));
     const service = new MediaService(
       {} as PrismaService,
-      {
-        get: (key: string, def?: unknown) =>
-          key === 'MEDIA_UPLOAD_DIR'
-            ? join(process.cwd(), 'uploads', 'custom')
-            : def,
-      } as unknown as ConfigService,
+      config,
       mockHeartbeat,
+      storage,
     );
 
     const url = service.buildPublicUrl('ws_1/file.png');
@@ -120,6 +133,7 @@ describe('MediaService storage quota + write ordering', () => {
       },
     } as unknown as PrismaService;
 
+    const storage = makeStorage(uploadRoot);
     const service = new MediaService(
       prisma,
       {
@@ -127,6 +141,7 @@ describe('MediaService storage quota + write ordering', () => {
           key === 'MEDIA_UPLOAD_DIR' ? uploadRoot : def,
       } as unknown as ConfigService,
       mockHeartbeat,
+      storage,
     );
 
     return { service, prisma, tx, mediaCreate, mediaDelete };
@@ -134,6 +149,7 @@ describe('MediaService storage quota + write ordering', () => {
 
   const upload = (service: MediaService) =>
     service.saveUploadedFile({
+      ownerId: 'user_1',
       workspaceId: WORKSPACE_ID,
       buffer: PNG_1X1,
       originalName: 'pixel.png',
@@ -243,6 +259,7 @@ describe('MediaService storage quota + write ordering', () => {
 
     await expect(
       service.saveUploadedFile({
+        ownerId: 'user_1',
         workspaceId: WORKSPACE_ID,
         buffer: Buffer.from('<html><script>alert(1)</script></html>'),
         originalName: 'evil.png',
@@ -305,6 +322,7 @@ describe('MediaService storage quota + write ordering', () => {
         },
       } as unknown as PrismaService;
 
+      const storage = makeStorage(uploadRoot);
       const service = new MediaService(
         prisma,
         {
@@ -312,6 +330,7 @@ describe('MediaService storage quota + write ordering', () => {
             key === 'MEDIA_UPLOAD_DIR' ? uploadRoot : def,
         } as unknown as ConfigService,
         mockHeartbeat,
+        storage,
       );
 
       return { service, mediaCreate };

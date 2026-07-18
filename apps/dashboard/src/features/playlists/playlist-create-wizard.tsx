@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   ArrowRight,
   ArrowLeft,
@@ -11,12 +11,17 @@ import {
   Smartphone,
   Square,
   Sparkles,
-  X,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import {
   type PlaylistOrientation,
@@ -54,6 +59,7 @@ export function PlaylistCreateWizard({ open, onClose, onCreate }: Props) {
   const [selectedTemplate, setSelectedTemplate] = useState<CanvasTemplate | null>(null);
   const [selectedZonePreset, setSelectedZonePreset] = useState<ZonePreset | null>(null);
   const [defaultTransition, setDefaultTransition] = useState<TransitionType>('fade');
+  const prefersReducedMotion = useReducedMotion();
 
   const reset = () => {
     setStep('name');
@@ -72,7 +78,7 @@ export function PlaylistCreateWizard({ open, onClose, onCreate }: Props) {
 
   const handleCreate = async () => {
     await onCreate({
-      name: name.trim() || 'Untitled Playlist',
+      name: name.trim() || t('untitledPlaylist'),
       orientation,
       layoutType,
       templateId: selectedTemplate?.id,
@@ -89,56 +95,38 @@ export function PlaylistCreateWizard({ open, onClose, onCreate }: Props) {
   const orientationOptions: Array<{
     id: PlaylistOrientation;
     icon: typeof Monitor;
-    label: string;
-    labelAr: string;
+    labelKey: string;
   }> = [
-    { id: 'landscape', icon: Monitor, label: 'Landscape', labelAr: 'أفقي' },
-    { id: 'portrait', icon: Smartphone, label: 'Portrait', labelAr: 'عمودي' },
-    { id: 'square', icon: Square, label: 'Square', labelAr: 'مربع' },
+    { id: 'landscape', icon: Monitor, labelKey: 'orientLandscape' },
+    { id: 'portrait', icon: Smartphone, labelKey: 'orientPortrait' },
+    { id: 'square', icon: Square, labelKey: 'orientSquare' },
   ];
 
   const presetW = orientation === 'portrait' ? 1080 : orientation === 'square' ? 1080 : 1920;
   const presetH = orientation === 'portrait' ? 1920 : orientation === 'square' ? 1080 : 1080;
 
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-overlay flex items-center justify-center bg-black/60 backdrop-blur-sm"
-          onClick={handleClose}
-        >
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-border px-6 py-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h2 className="text-base font-bold text-foreground">{t('createPlaylist')}</h2>
-                  <p className="text-xs text-muted-foreground">
-                    {t('step')} {stepIndex + 1} / {STEPS.length} — {t(`${step}Title`)}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={handleClose}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-              >
-                <X className="h-5 w-5" />
-              </button>
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); }}>
+      <DialogContent className="max-w-2xl max-h-[80vh] p-0 overflow-hidden flex flex-col">
+        <DialogTitle className="sr-only">{t('createPlaylist')}</DialogTitle>
+        <DialogDescription className="sr-only">
+          {t('step')} {stepIndex + 1} / {STEPS.length} — {t(`${step}Title`)}
+        </DialogDescription>
+
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-border px-6 py-4 pe-12">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+              <Sparkles className="h-5 w-5 text-primary" />
             </div>
+            <div>
+              <h2 className="text-base font-bold text-foreground">{t('createPlaylist')}</h2>
+              <p className="text-xs text-muted-foreground">
+                {t('step')} {stepIndex + 1} / {STEPS.length} — {t(`${step}Title`)}
+              </p>
+            </div>
+          </div>
+        </div>
 
             {/* Progress bar */}
             <div className="flex gap-1.5 px-6 py-3">
@@ -162,7 +150,7 @@ export function PlaylistCreateWizard({ open, onClose, onCreate }: Props) {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
                     className="space-y-6"
                   >
                     <div className="space-y-2">
@@ -202,7 +190,7 @@ export function PlaylistCreateWizard({ open, onClose, onCreate }: Props) {
                                 strokeWidth={1.5}
                               />
                               <span className={cn('text-xs font-semibold', active ? 'text-primary' : 'text-muted-foreground')}>
-                                {opt.label}
+                                {t(opt.labelKey)}
                               </span>
                             </button>
                           );
@@ -218,7 +206,7 @@ export function PlaylistCreateWizard({ open, onClose, onCreate }: Props) {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
                     className="space-y-6"
                   >
                     <div className="space-y-3">
@@ -328,7 +316,7 @@ export function PlaylistCreateWizard({ open, onClose, onCreate }: Props) {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
                     className="space-y-4"
                   >
                     <div className="flex items-center justify-between">
@@ -394,7 +382,7 @@ export function PlaylistCreateWizard({ open, onClose, onCreate }: Props) {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
                     className="space-y-4"
                   >
                     <Label>{t('defaultTransition')}</Label>
@@ -462,9 +450,7 @@ export function PlaylistCreateWizard({ open, onClose, onCreate }: Props) {
                 </Button>
               )}
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+      </DialogContent>
+    </Dialog>
   );
 }

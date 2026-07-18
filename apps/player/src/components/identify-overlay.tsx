@@ -1,19 +1,20 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 type Props = {
   serialNumber: string;
 };
 
 export function IdentifyOverlay({ serialNumber }: Props) {
+  const prefersReduced = useReducedMotion();
   return (
     <motion.div
       className="pointer-events-none fixed inset-0 z-[200] flex items-start justify-center pt-[8vh]"
-      initial={{ opacity: 0, y: -20 }}
+      initial={prefersReduced ? false : { opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
+      exit={prefersReduced ? undefined : { opacity: 0, y: -20 }}
+      transition={prefersReduced ? { duration: 0 } : { duration: 0.4, ease: 'easeOut' }}
     >
       <div className="relative rounded-2xl border border-white/20 bg-black/70 px-8 py-5 shadow-2xl backdrop-blur-md">
         <div className="flex items-center gap-3">
@@ -22,7 +23,7 @@ export function IdentifyOverlay({ serialNumber }: Props) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
           </div>
-          <div className="text-left">
+          <div className="text-start">
             <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-cyan-200/70">
               Screen ID
             </p>
