@@ -29,6 +29,10 @@ describe('StripeWebhookService T3.5 (missing webhook handlers)', () => {
         findFirst: jest.fn().mockResolvedValue({ userId: 'user_1' }),
       },
       paymentRecord: { create: jest.fn().mockResolvedValue({}) },
+      subscription: {
+        findUnique: jest.fn().mockResolvedValue({ workspaceId: 'ws_1' }),
+        update: jest.fn().mockResolvedValue({}),
+      },
     };
     const prisma = {
       $transaction: jest.fn(

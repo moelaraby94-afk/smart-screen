@@ -1,6 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Queue } from 'bullmq';
 import * as nodemailer from 'nodemailer';
+import { InjectQueue } from '@nestjs/bullmq';
 
 export type SendMailInput = {
   to: string;
@@ -13,7 +15,10 @@ export type SendMailInput = {
 export class EmailService {
   private readonly log = new Logger(EmailService.name);
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    @Optional() @InjectQueue('email') private readonly emailQueue?: Queue,
+  ) {}
 
   /** True when at least one outbound provider is configured. */
   isConfigured(): boolean {
@@ -117,6 +122,17 @@ export class EmailService {
   private extractName(from: string): string {
     const m = from.match(/^(.+)<[^>]+>$/);
     return m ? m[1].trim().replace(/"/g, '') : 'Cloud Signage';
+  }
+
+  /** Enqueue an email for async sending via BullMQ. Falls back to sync send if queue is not available. */
+  async enqueue(input: SendMailInput): Promise<void> {
+    if (this.emailQueue) {
+      await this.emailQueue.add('send', input);
+      this.log.debug(`Email enqueued: ${input.subject} → ${input.to}`);
+      return;
+    }
+    this.log.warn('Email queue not available, sending synchronously');
+    await this.sendMail(input);
   }
 
   private async sendViaSmtp(

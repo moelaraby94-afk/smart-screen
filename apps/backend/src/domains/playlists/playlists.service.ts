@@ -100,7 +100,7 @@ export class PlaylistsService {
         media: item.media ? this.mediaService.toResponse(item.media) : null,
       })),
     }));
-    return buildPage(serialized as any, total, query);
+    return buildPage(serialized as unknown[], total, query);
   }
 
   async getOne(workspaceId: string, id: string) {

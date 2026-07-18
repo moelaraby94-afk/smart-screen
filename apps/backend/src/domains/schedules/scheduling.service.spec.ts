@@ -1,6 +1,11 @@
 import { SchedulingService } from './scheduling.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import type { Schedule, Screen, Workspace } from '@prisma/client';
+import {
+  RecurrenceType,
+  type Schedule,
+  type Screen,
+  type Workspace,
+} from '@prisma/client';
 
 /**
  * In-memory stand-in for PrismaService covering only screen.findUnique
@@ -20,6 +25,7 @@ function createFakePrisma(
       findUnique: jest.fn(() => {
         return screen ? { ...screen, workspace: screen.workspace } : null;
       }),
+      update: jest.fn(() => ({ ...screen })),
     },
     schedule: {
       findMany: jest.fn(
@@ -40,6 +46,9 @@ function createFakePrisma(
           );
         },
       ),
+    },
+    screenPlaylistAssignment: {
+      findMany: jest.fn(() => []),
     },
   };
 }
@@ -87,7 +96,7 @@ function makeSchedule(overrides: Partial<FakeSchedule> = {}): FakeSchedule {
     screenId: null,
     playlistId: 'playlist-sched',
     daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
-    recurrence: 'WEEKLY',
+    recurrence: RecurrenceType.WEEKLY,
     daysOfMonth: [],
     startTime: '09:00',
     endTime: '17:00',
@@ -300,7 +309,7 @@ describe('SchedulingService (P1-T3)', () => {
   it('matches on the configured day-of-month for MONTHLY recurrence', async () => {
     const screen = makeScreen();
     const schedule = makeSchedule({
-      recurrence: 'MONTHLY',
+      recurrence: RecurrenceType.MONTHLY,
       daysOfMonth: [14],
       daysOfWeek: [],
       startTime: '00:00',

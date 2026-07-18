@@ -1,4 +1,5 @@
 import { IsEmail, IsIn, IsString, MinLength } from 'class-validator';
+import { MatchesPasswordComplexity } from '../../../common/validators/password-complexity.decorator';
 
 export class CreateStaffDto {
   @IsString()
@@ -9,7 +10,8 @@ export class CreateStaffDto {
   email!: string;
 
   @IsString()
-  @MinLength(6)
+  @MinLength(8)
+  @MatchesPasswordComplexity()
   password!: string;
 
   @IsIn(['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'VIEWER'])

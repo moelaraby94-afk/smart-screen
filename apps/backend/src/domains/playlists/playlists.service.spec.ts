@@ -1,6 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PlaylistsService } from './playlists.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { AccountContextHelper } from '../../common/auth/account-context.helper';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
 import { MediaService } from '../media/media.service';
 import { CanvasesService } from '../canvases/canvases.service';
@@ -349,6 +350,9 @@ describe('PlaylistsService (P1-T6)', () => {
       createMockMediaService(),
       createMockCanvasesService(),
       createMockScheduling(),
+      {
+        resolveOwnerId: jest.fn().mockResolvedValue('owner-1'),
+      } as unknown as AccountContextHelper,
     );
   }
 
@@ -357,7 +361,7 @@ describe('PlaylistsService (P1-T6)', () => {
     const fake = createFakePrisma({});
     const service = makeService(fake);
 
-    const result = await service.create(WS_ID, 'My Playlist');
+    const result = await service.create('owner-1', WS_ID, 'My Playlist');
     expect(result.workspaceId).toBe(WS_ID);
     expect(result.name).toBe('My Playlist');
   });

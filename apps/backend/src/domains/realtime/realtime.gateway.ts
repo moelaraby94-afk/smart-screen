@@ -1,6 +1,12 @@
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { Logger, OnModuleDestroy } from '@nestjs/common';
+import {
+  Logger,
+  OnModuleDestroy,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { ScreenPairingSessionStatus, ScreenStatus } from '@prisma/client';
 import {
   ConnectedSocket,
@@ -22,11 +28,10 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 import { RedisService } from '../../common/redis/redis.service';
 import { createCorsOriginChecker } from '../../common/config/cors-config';
 import { ScreenHeartbeatService } from './screen-heartbeat.service';
-
-type ScreenRegisterPayload = {
-  serialNumber: string;
-  secret: string;
-};
+import { ScreenRegisterDto } from './dto/screen-register.dto';
+import { ScreenHeartbeatDto } from './dto/screen-heartbeat.dto';
+import { OfflineEventQueueService } from './offline-event-queue.service';
+import { WsThrottlerGuard } from '../../common/throttler/ws-throttler.guard';
 
 type DashboardSubscribePayload = {
   workspaceId: string;
@@ -51,6 +56,8 @@ type JwtAccessPayload = {
     credentials: true,
   },
 })
+@UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+@UseGuards(WsThrottlerGuard)
 export class RealtimeGateway
   implements
     OnGatewayInit,
@@ -79,6 +86,7 @@ export class RealtimeGateway
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
+    private readonly offlineEventQueue: OfflineEventQueueService,
   ) {}
 
   afterInit(): Promise<void> {
@@ -245,10 +253,8 @@ export class RealtimeGateway
 
   /**
    * Validates the per-screen secret against Screen.pairingSecretHash.
-   * Screens paired before per-screen secrets existed have no hash yet — for
-   * those only, fall back to the shared PLAYER_HEARTBEAT_SECRET and log a
-   * warning, so the fallback's usage stays visible until every screen has
-   * been re-paired and it can be retired.
+   * Screens must have a per-screen secret hash — the shared
+   * PLAYER_HEARTBEAT_SECRET fallback has been removed in Phase 2.
    */
   private async assertScreenSecret(
     screen: {
@@ -261,23 +267,13 @@ export class RealtimeGateway
     if (screen.pairingSecretHash) {
       return bcrypt.compare(secret, screen.pairingSecretHash);
     }
-    const sharedSecret = this.configService.get<string>(
-      'PLAYER_HEARTBEAT_SECRET',
-      'dev-player-heartbeat-secret',
-    );
-    if (secret !== sharedSecret) return false;
-    this.log.warn(
-      `Screen ${screen.serialNumber} (${screen.id}) authenticated via the ` +
-        'shared PLAYER_HEARTBEAT_SECRET fallback (no per-screen secret set). ' +
-        'Re-pair this screen to retire the shared-secret fallback.',
-    );
-    return true;
+    return false;
   }
 
   @SubscribeMessage('screen:register')
   async handleScreenRegister(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: ScreenRegisterPayload,
+    @MessageBody() payload: ScreenRegisterDto,
   ): Promise<void> {
     if (!payload?.serialNumber || !payload.secret) {
       client.emit('screen:error', { code: 'UNAUTHORIZED' });
@@ -336,6 +332,17 @@ export class RealtimeGateway
 
     await client.join(`screen:${screen.id}`);
 
+    // Drain offline events that were queued while screen was offline
+    const queuedEvents = await this.offlineEventQueue.drain(screen.id);
+    for (const evt of queuedEvents) {
+      client.emit(evt.event, evt.payload);
+    }
+    if (queuedEvents.length > 0) {
+      this.log.log(
+        `Drained ${queuedEvents.length} offline events for screen ${screen.id}`,
+      );
+    }
+
     client.emit('screen:registered', {
       screenId: screen.id,
       ticker: screen.playerTicker ?? null,
@@ -365,7 +372,7 @@ export class RealtimeGateway
   @SubscribeMessage('screen:heartbeat')
   async handleScreenHeartbeat(
     @ConnectedSocket() client: Socket,
-    @MessageBody() body?: { isOfflineMode?: boolean },
+    @MessageBody() body?: ScreenHeartbeatDto,
   ): Promise<void> {
     const ok = this.heartbeat.touchHeartbeat(client.id);
     if (!ok) {
@@ -381,6 +388,25 @@ export class RealtimeGateway
     await this.heartbeat.applyHeartbeatFromSocket(client.id, {
       isOfflineMode,
     });
+
+    // Track player version if reported
+    const playerVersion =
+      body &&
+      typeof body === 'object' &&
+      typeof (body as { playerVersion?: unknown }).playerVersion === 'string'
+        ? (body as { playerVersion: string }).playerVersion
+        : undefined;
+    if (playerVersion) {
+      const binding = this.heartbeat.getBinding(client.id);
+      if (binding) {
+        await this.prisma.screen
+          .update({
+            where: { id: binding.screenId },
+            data: { playerVersion },
+          })
+          .catch(() => {});
+      }
+    }
   }
 
   /** Legacy ping — treated as heartbeat for players already registered. */
@@ -460,7 +486,13 @@ export class RealtimeGateway
 
     this.markAuthed(client);
     await client.join(`workspace:${payload.workspaceId}`);
+    await client.join(`user:${user.sub}`);
     client.emit('dashboard:subscribed', { workspaceId: payload.workspaceId });
+  }
+
+  /** Emit a notification event to a specific user's room. */
+  emitNotificationToUser(userId: string, notification: unknown): void {
+    this.server.to(`user:${userId}`).emit('notification:new', notification);
   }
 
   private getClientIp(client: Socket): string {

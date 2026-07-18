@@ -1,9 +1,11 @@
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcryptjs';
@@ -21,6 +23,7 @@ import { ConfigHelper } from '../../common/config/config.helper';
 import { MediaService } from '../media/media.service';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
 import { EmailService } from '../email/email.service';
+import { AuthService } from '../auth/auth.service';
 import { teamInviteEmail } from '../email/email-templates';
 
 /** Minimal valid 1×1 PNG (transparent). */
@@ -40,6 +43,8 @@ export class WorkspacesService {
     private readonly heartbeat: ScreenHeartbeatService,
     private readonly email: EmailService,
     private readonly configHelper: ConfigHelper,
+    @Inject(forwardRef(() => AuthService))
+    private readonly authService: AuthService,
   ) {}
 
   /**
@@ -297,9 +302,26 @@ export class WorkspacesService {
 
     const workspace = await this.prisma.workspace.findUnique({
       where: { id: workspaceId },
-      select: { id: true, name: true },
+      select: {
+        id: true,
+        name: true,
+        subscription: { select: { seats: true } },
+      },
     });
     if (!workspace) throw new NotFoundException('Workspace not found');
+
+    const seatLimit = workspace.subscription?.seats ?? 5;
+    const [memberCount, pendingCount] = await Promise.all([
+      this.prisma.workspaceMember.count({ where: { workspaceId } }),
+      this.prisma.workspaceInvitation.count({
+        where: { workspaceId, status: InvitationStatus.PENDING },
+      }),
+    ]);
+    if (memberCount + pendingCount >= seatLimit) {
+      throw new BadRequestException(
+        `Seat limit reached (${memberCount + pendingCount}/${seatLimit}). Upgrade your plan to invite more members.`,
+      );
+    }
 
     const inviter = await this.prisma.user.findUnique({
       where: { id: invitedById },
@@ -323,7 +345,7 @@ export class WorkspacesService {
       if (this.email.isConfigured()) {
         const base = this.configHelper.getFrontendBaseUrl();
         try {
-          await this.email.sendMail({
+          await this.email.enqueue({
             to: normalizedEmail,
             ...teamInviteEmail({
               inviterName: inviter?.fullName ?? 'A team member',
@@ -368,7 +390,7 @@ export class WorkspacesService {
       const base = this.configHelper.getFrontendBaseUrl();
       const inviteUrl = `${base}/en/invite?token=${token}`;
       try {
-        await this.email.sendMail({
+        await this.email.enqueue({
           to: normalizedEmail,
           ...teamInviteEmail({
             inviterName: inviter?.fullName ?? 'A team member',
@@ -459,6 +481,19 @@ export class WorkspacesService {
     }
 
     await this.prisma.$transaction(async (tx) => {
+      const sub = await tx.subscription.findUnique({
+        where: { workspaceId: invitation.workspaceId },
+        select: { seats: true },
+      });
+      const seatLimit = sub?.seats ?? 5;
+      const currentCount = await tx.workspaceMember.count({
+        where: { workspaceId: invitation.workspaceId },
+      });
+      if (currentCount >= seatLimit) {
+        throw new BadRequestException(
+          `Seat limit reached (${currentCount}/${seatLimit}). Upgrade your plan to add more members.`,
+        );
+      }
       await tx.workspaceMember.create({
         data: {
           workspaceId: invitation.workspaceId,
@@ -552,7 +587,7 @@ export class WorkspacesService {
       const base = this.configHelper.getFrontendBaseUrl();
       const inviteUrl = `${base}/en/invite?token=${token}`;
       try {
-        await this.email.sendMail({
+        await this.email.enqueue({
           to: invitation.email,
           ...teamInviteEmail({
             inviterName: inviter?.fullName ?? 'A team member',
@@ -688,6 +723,11 @@ export class WorkspacesService {
         user: { select: { id: true, email: true, fullName: true } },
       },
     });
+
+    // Invalidate all sessions for the affected user so they get a fresh
+    // JWT with updated role claims on next authentication.
+    await this.authService.revokeAllSessions(updated.user.id);
+
     return updated;
   }
 
@@ -700,7 +740,7 @@ export class WorkspacesService {
 
     const membership = await this.prisma.workspaceMember.findUnique({
       where: { id: membershipId },
-      select: { id: true, role: true, workspaceId: true },
+      select: { id: true, role: true, workspaceId: true, userId: true },
     });
     if (!membership || membership.workspaceId !== workspaceId) {
       throw new NotFoundException('Member not found in this workspace.');
@@ -714,6 +754,7 @@ export class WorkspacesService {
     await this.prisma.workspaceMember.delete({
       where: { id: membershipId },
     });
+    await this.authService.revokeAllSessions(membership.userId);
     return { ok: true };
   }
 
@@ -973,19 +1014,21 @@ export class WorkspacesService {
         user: { select: { id: true, email: true, fullName: true } },
       },
     });
+    await this.authService.revokeAllSessions(updated.user.id);
     return updated;
   }
 
   async removeAccountMember(ownerId: string, membershipId: string) {
     const membership = await this.prisma.accountMember.findUnique({
       where: { id: membershipId },
-      select: { id: true, ownerId: true },
+      select: { id: true, ownerId: true, userId: true },
     });
     if (!membership || membership.ownerId !== ownerId) {
       throw new NotFoundException('Account member not found.');
     }
 
     await this.prisma.accountMember.delete({ where: { id: membershipId } });
+    await this.authService.revokeAllSessions(membership.userId);
     return { ok: true };
   }
 

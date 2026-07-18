@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as bcrypt from 'bcryptjs';
 import { PlayerService } from './player.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { PlaylistsService } from '../playlists/playlists.service';
@@ -137,7 +138,10 @@ describe('PlayerService — prayer pause (T4.1)', () => {
   }
 
   it('getPrayerPauseStatusForKiosk returns pause status with valid serial + secret', async () => {
-    const fake = createFakePrisma({ screens: [makeScreen()] });
+    const secretHash = await bcrypt.hash('test-secret', 10);
+    const fake = createFakePrisma({
+      screens: [makeScreen({ pairingSecretHash: secretHash })],
+    });
     const prayerTimes = createMockPrayerTimesService({
       paused: true,
       prayer: 'Dhuhr',
@@ -147,7 +151,7 @@ describe('PlayerService — prayer pause (T4.1)', () => {
 
     const result = await service.getPrayerPauseStatusForKiosk(
       SERIAL,
-      'dev-player-heartbeat-secret',
+      'test-secret',
     );
     expect(result).toEqual({
       paused: true,

@@ -5,7 +5,7 @@ const STRONG_ENV = {
   NODE_ENV: 'production',
   JWT_ACCESS_SECRET: '9f3c1a7e5b2d8064af19c7e3d5b0a284',
   JWT_REFRESH_SECRET: 'c47e0b91d6a2f38157be4c09a7d2e6b3',
-  PLAYER_HEARTBEAT_SECRET: '5a8d2f61c093e7b4d81af6205c937e4b',
+  ENCRYPTION_KEY: '5a8d2f61c093e7b4d81af6205c937e4b',
 } as NodeJS.ProcessEnv;
 
 describe('assertProductionSecretsAreSet', () => {
@@ -31,10 +31,10 @@ describe('assertProductionSecretsAreSet', () => {
   it('throws in production when a secret still equals its dev default', () => {
     const env = {
       ...STRONG_ENV,
-      PLAYER_HEARTBEAT_SECRET: 'dev-player-heartbeat-secret',
+      ENCRYPTION_KEY: 'replace-with-strong-encryption-key',
     };
     expect(() => assertProductionSecretsAreSet(env)).toThrow(
-      /PLAYER_HEARTBEAT_SECRET is a publicly known placeholder/,
+      /ENCRYPTION_KEY is a publicly known placeholder/,
     );
   });
 
@@ -82,7 +82,7 @@ describe('assertProductionSecretsAreSet', () => {
       NODE_ENV: 'production',
       JWT_ACCESS_SECRET: 'dev-access-secret',
       JWT_REFRESH_SECRET: 'dev-refresh-secret',
-      PLAYER_HEARTBEAT_SECRET: STRONG_ENV.PLAYER_HEARTBEAT_SECRET,
+      ENCRYPTION_KEY: STRONG_ENV.ENCRYPTION_KEY,
     } as NodeJS.ProcessEnv;
 
     let message = '';
@@ -93,6 +93,6 @@ describe('assertProductionSecretsAreSet', () => {
     }
     expect(message).toMatch(/JWT_ACCESS_SECRET/);
     expect(message).toMatch(/JWT_REFRESH_SECRET/);
-    expect(message).not.toMatch(/PLAYER_HEARTBEAT_SECRET/);
+    expect(message).not.toMatch(/ENCRYPTION_KEY/);
   });
 });

@@ -9,6 +9,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { MatchesPasswordComplexity } from '../../../common/validators/password-complexity.decorator';
 
 export class WorkspaceScopeDto {
   @IsString()
@@ -31,6 +32,7 @@ export class CreateAccountMemberDto {
 
   @IsString()
   @MinLength(8)
+  @MatchesPasswordComplexity()
   password!: string;
 
   @IsString()

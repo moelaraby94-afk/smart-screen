@@ -23,7 +23,14 @@ import { SubscriptionsService } from '../../domains/subscriptions/subscriptions.
  * the pipe configuration regresses.
  */
 const WORKSPACE = 'ws_1';
-const allowAll = { canActivate: () => true };
+const MOCK_USER = { sub: 'user_1', email: 'test@test.com', role: 'OWNER' };
+const allowAll = {
+  canActivate: (ctx: any) => {
+    const req = ctx.switchToHttp().getRequest();
+    if (!req.user) req.user = MOCK_USER;
+    return true;
+  },
+};
 
 describe('request body validation', () => {
   let app: INestApplication;
@@ -32,7 +39,7 @@ describe('request body validation', () => {
 
   beforeAll(async () => {
     media = {
-      createFolder: jest.fn((_ws: string, name: string) => ({
+      createFolder: jest.fn((_userId: string, _ws: string, name: string) => ({
         id: 'f1',
         name,
       })),
@@ -85,7 +92,11 @@ describe('request body validation', () => {
       const res = await postFolder({ name: '  Campaigns  ' });
 
       expect(res.status).toBe(201);
-      expect(media.createFolder).toHaveBeenCalledWith(WORKSPACE, 'Campaigns');
+      expect(media.createFolder).toHaveBeenCalledWith(
+        'user_1',
+        WORKSPACE,
+        'Campaigns',
+      );
     });
 
     /** Regression: this used to return 500 from `name.trim()`. */

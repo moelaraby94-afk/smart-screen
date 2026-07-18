@@ -46,15 +46,16 @@
       "!**/instrument.ts",
       "!**/*.dto.ts",
       "!**/*.spec.ts",
-      "!**/*.mock.ts"
+      "!**/*.mock.ts",
+      "!**/test/factories/**"
     ],
     "coverageDirectory": "../coverage",
     "coverageThreshold": {
       "global": {
-        "branches": 35,
-        "functions": 35,
-        "lines": 42,
-        "statements": 42
+        "branches": 37,
+        "functions": 38,
+        "lines": 45,
+        "statements": 45
       }
     },
     "testEnvironment": "node"
@@ -62,6 +63,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1090.0",
     "@aws-sdk/s3-request-presigner": "^3.1090.0",
+    "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.1",
@@ -81,6 +83,7 @@
     "@socket.io/redis-adapter": "^8.3.0",
     "@types/qrcode": "^1.5.6",
     "bcryptjs": "^3.0.0",
+    "bullmq": "^5.80.8",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "cookie": "^1.1.1",
@@ -101,6 +104,7 @@
     "qrcode": "^1.5.4",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "sharp": "^0.35.3",
     "stripe": "^17.7.0"
   },
   "devDependencies": {

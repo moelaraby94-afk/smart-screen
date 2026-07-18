@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import * as QRCode from 'qrcode';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { CryptoService } from '../../common/crypto/crypto.service';
 
 const BACKUP_CODE_COUNT = 8;
 
@@ -14,6 +15,7 @@ export class TwoFactorService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    private readonly cryptoService: CryptoService,
   ) {
     this.issuer =
       this.configService.get<string>('APP_NAME', 'Cloud Signage') ??
@@ -115,7 +117,7 @@ export class TwoFactorService {
     await this.prisma.user.update({
       where: { id: userId },
       data: {
-        twoFactorSecret: secret,
+        twoFactorSecret: this.cryptoService.encrypt(secret),
         twoFactorEnabled: true,
         twoFactorBackupCodes: hashes,
       },
@@ -134,7 +136,8 @@ export class TwoFactorService {
       throw new UnauthorizedException('2FA is not enabled');
     }
 
-    const isTotpValid = this.verifyToken(token, user.twoFactorSecret);
+    const decryptedSecret = this.cryptoService.decrypt(user.twoFactorSecret);
+    const isTotpValid = this.verifyToken(token, decryptedSecret);
     if (!isTotpValid) {
       const isBackupCode = await this.verifyAndConsumeBackupCode(userId, token);
       if (!isBackupCode) {

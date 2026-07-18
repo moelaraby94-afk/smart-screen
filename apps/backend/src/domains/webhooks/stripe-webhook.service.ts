@@ -154,12 +154,90 @@ export class StripeWebhookService {
             stripeSub,
             event.type === 'customer.subscription.deleted',
           );
+        } else if (event.type === 'invoice.payment_succeeded') {
+          const invoice = event.data.object;
+          const subscriptionId =
+            typeof invoice.subscription === 'string'
+              ? invoice.subscription
+              : undefined;
+          const workspaceId = await this.findWorkspaceIdBySubscription(
+            tx,
+            subscriptionId,
+          );
+          if (workspaceId) {
+            const owner = await tx.workspaceMember.findFirst({
+              where: { workspaceId, role: UserRole.OWNER },
+              select: { userId: true },
+            });
+            if (owner) {
+              await tx.paymentRecord.create({
+                data: {
+                  userId: owner.userId,
+                  amountCents: invoice.amount_paid ?? 0,
+                  currency: invoice.currency ?? 'usd',
+                  status: 'SUCCEEDED',
+                  provider: 'stripe',
+                  externalId: invoice.id,
+                  invoiceRef: invoice.id,
+                  paidAt: new Date(),
+                  metadata: {
+                    workspaceId,
+                    subscriptionId: subscriptionId ?? null,
+                  },
+                },
+              });
+            }
+          }
         } else if (event.type === 'invoice.payment_failed') {
           const invoice = event.data.object;
           const subscriptionId =
             typeof invoice.subscription === 'string'
               ? invoice.subscription
               : undefined;
+          const workspaceId = await this.findWorkspaceIdBySubscription(
+            tx,
+            subscriptionId,
+          );
+          if (workspaceId) {
+            const owner = await tx.workspaceMember.findFirst({
+              where: { workspaceId, role: UserRole.OWNER },
+              select: {
+                userId: true,
+                user: { select: { email: true, fullName: true } },
+              },
+            });
+            if (owner) {
+              await tx.paymentRecord.create({
+                data: {
+                  userId: owner.userId,
+                  amountCents: invoice.amount_due ?? 0,
+                  currency: invoice.currency ?? 'usd',
+                  status: 'FAILED',
+                  provider: 'stripe',
+                  externalId: invoice.id,
+                  invoiceRef: invoice.id,
+                  metadata: {
+                    workspaceId,
+                    subscriptionId: subscriptionId ?? null,
+                  },
+                },
+              });
+
+              // Set grace period: 7 days from now
+              const gracePeriodEndsAt = new Date(
+                Date.now() + 7 * 24 * 60 * 60 * 1000,
+              );
+              await tx.subscription.update({
+                where: { workspaceId },
+                data: { gracePeriodEndsAt },
+              });
+
+              // Enqueue dunning email (best-effort, non-blocking)
+              this.logger.warn(
+                `Payment failed for workspace ${workspaceId}, grace period set to ${gracePeriodEndsAt.toISOString()}`,
+              );
+            }
+          }
           this.logger.warn(
             `Invoice payment failed for subscription ${subscriptionId ?? 'unknown'} (invoice ${invoice.id})`,
           );
@@ -176,5 +254,17 @@ export class StripeWebhookService {
     }
 
     return { received: true };
+  }
+
+  private async findWorkspaceIdBySubscription(
+    tx: Prisma.TransactionClient,
+    subscriptionId: string | undefined,
+  ): Promise<string | null> {
+    if (!subscriptionId) return null;
+    const sub = await tx.subscription.findUnique({
+      where: { stripeSubscriptionId: subscriptionId },
+      select: { workspaceId: true },
+    });
+    return sub?.workspaceId ?? null;
   }
 }

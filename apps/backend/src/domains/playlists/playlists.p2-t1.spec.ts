@@ -1,6 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { PlaylistsService } from './playlists.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { AccountContextHelper } from '../../common/auth/account-context.helper';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
 import { MediaService } from '../media/media.service';
 import { CanvasesService } from '../canvases/canvases.service';
@@ -354,6 +355,9 @@ describe('PlaylistsService P2-T1 (duplicate/clone/orphan/orderIndex)', () => {
       media,
       canvases,
       createMockScheduling(),
+      {
+        resolveOwnerId: jest.fn().mockResolvedValue('owner-1'),
+      } as unknown as AccountContextHelper,
     );
     return { service, media, canvases };
   }

@@ -135,6 +135,16 @@ export class MediaController {
     return this.mediaService.deleteFolder(user.sub, workspaceId ?? null, id);
   }
 
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
+  @Get(':id/url')
+  async getMediaUrl(
+    @Param('id') id: string,
+    @Query('workspaceId') workspaceId: string,
+  ) {
+    if (!workspaceId) throw new BadRequestException('workspaceId is required');
+    return this.mediaService.getMediaUrl(workspaceId, id);
+  }
+
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
   @Patch(':id/folder')
   moveMediaFolder(

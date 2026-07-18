@@ -10,6 +10,7 @@ import {
   skipFor,
 } from '../../common/pagination/pagination-query.dto';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { UpdateCampaignDto } from './dto/update-campaign.dto';
 
@@ -34,7 +35,10 @@ function assertTransition(from: CampaignStatus, to: CampaignStatus): void {
 
 @Injectable()
 export class CampaignsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly realtime: RealtimeGateway,
+  ) {}
 
   async list(workspaceId: string, query: PaginationQueryDto) {
     const where: Prisma.CampaignWhereInput = { workspaceId };
@@ -275,6 +279,17 @@ export class CampaignsService {
         },
       }),
     ]);
+
+    // Push campaign update to all screens in workspace when published
+    if (toStatus === 'PUBLISHED') {
+      this.realtime.server
+        .to(`workspace:${workspaceId}`)
+        .emit('campaign:push', {
+          campaignId: id,
+          workspaceId,
+          status: toStatus,
+        });
+    }
 
     return updated[0];
   }

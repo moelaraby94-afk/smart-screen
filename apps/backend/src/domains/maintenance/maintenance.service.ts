@@ -1,7 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
+import { SubscriptionPlan } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { STORAGE_SERVICE } from '../../common/storage/storage.interface';
+import type { IStorageService } from '../../common/storage/storage.interface';
 
 /** Default retention: 90 days. Override with AUDIT_LOG_RETENTION_DAYS env var. */
 const DEFAULT_AUDIT_LOG_RETENTION_DAYS = 90;
@@ -13,6 +16,7 @@ export class MaintenanceService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    @Inject(STORAGE_SERVICE) private readonly storage: IStorageService,
   ) {}
 
   /** Purge pairing sessions past expiry (runs once per day, UTC). */
@@ -54,5 +58,57 @@ export class MaintenanceService {
     return Number.isFinite(parsed) && parsed > 0
       ? parsed
       : DEFAULT_AUDIT_LOG_RETENTION_DAYS;
+  }
+
+  /** Downgrade subscriptions past grace period (daily at 8am UTC). */
+  @Cron('0 8 * * *')
+  async downgradeExpiredGracePeriods(): Promise<void> {
+    const now = new Date();
+    const expired = await this.prisma.subscription.findMany({
+      where: {
+        gracePeriodEndsAt: { lt: now },
+        plan: { not: SubscriptionPlan.FREE },
+      },
+      select: { id: true, workspaceId: true },
+    });
+    if (expired.length === 0) return;
+
+    for (const sub of expired) {
+      await this.prisma.subscription.update({
+        where: { id: sub.id },
+        data: {
+          plan: SubscriptionPlan.FREE,
+          gracePeriodEndsAt: null,
+          seats: 1,
+          screenLimit: 1,
+        },
+      });
+    }
+    this.logger.log(
+      `Downgraded ${expired.length} subscription(s) past grace period to FREE.`,
+    );
+  }
+
+  /** Purge expired media files (daily at 4am UTC). */
+  @Cron('0 4 * * *')
+  async purgeExpiredMedia(): Promise<void> {
+    const now = new Date();
+    const expired = await this.prisma.media.findMany({
+      where: { expiresAt: { lt: now } },
+      select: { id: true, relativePath: true },
+    });
+    if (expired.length === 0) return;
+
+    for (const media of expired) {
+      await this.storage.delete(media.relativePath).catch(() => {
+        /* file already gone */
+      });
+      await this.prisma.media.delete({ where: { id: media.id } }).catch(() => {
+        /* row already gone */
+      });
+    }
+    this.logger.log(
+      `Purged ${expired.length} expired media item(s) (expiresAt < ${now.toISOString()}).`,
+    );
   }
 }

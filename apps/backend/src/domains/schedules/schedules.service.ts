@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { RecurrenceType } from '@prisma/client';
 import { buildPage } from '../../common/pagination/page';
 import {
   PaginationQueryDto,
@@ -82,8 +83,8 @@ export class SchedulesService {
       dto.screenId ?? null,
     );
 
-    const recurrence = dto.recurrence ?? 'WEEKLY';
-    if (recurrence === 'MONTHLY') {
+    const recurrence = dto.recurrence ?? RecurrenceType.WEEKLY;
+    if (recurrence === RecurrenceType.MONTHLY) {
       if (!dto.daysOfMonth || dto.daysOfMonth.length === 0) {
         throw new BadRequestException(
           'daysOfMonth is required for MONTHLY recurrence',
@@ -135,7 +136,7 @@ export class SchedulesService {
     const nextRecurrence = dto.recurrence ?? existing.recurrence;
     const nextDaysOfWeek = dto.daysOfWeek ?? existing.daysOfWeek;
     const nextDaysOfMonth = dto.daysOfMonth ?? existing.daysOfMonth;
-    if (nextRecurrence === 'MONTHLY') {
+    if (nextRecurrence === RecurrenceType.MONTHLY) {
       if (nextDaysOfMonth.length === 0) {
         throw new BadRequestException(
           'daysOfMonth is required for MONTHLY recurrence',

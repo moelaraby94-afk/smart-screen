@@ -73,11 +73,8 @@ describe('OnboardingService (T3.3 — Json columns)', () => {
     const service = new OnboardingService(prisma);
     await service.completeStep('ws_1', 'create_screen');
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const callArg = updateSpy.mock.calls[0][0];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(callArg.data.completedSteps).toEqual(['create_screen']);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(typeof callArg.data.completedSteps).not.toBe('string');
   });
 
@@ -102,11 +99,8 @@ describe('OnboardingService (T3.3 — Json columns)', () => {
     const service = new OnboardingService(prisma);
     await service.reset('ws_1');
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const callArg = upsertSpy.mock.calls[0][0];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(callArg.update.completedSteps).toEqual([]);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(typeof callArg.update.completedSteps).not.toBe('string');
   });
 });

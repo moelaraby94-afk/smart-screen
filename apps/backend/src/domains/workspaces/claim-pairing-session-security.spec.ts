@@ -8,6 +8,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { UserRole } from '@prisma/client';
 import request from 'supertest';
 import { RolesGuard } from '../../common/auth/roles.guard';
+import { AccountContextHelper } from '../../common/auth/account-context.helper';
 import { WorkspaceAuthHelper } from '../../common/auth/workspace-auth.helper';
 import { DomainException } from '../../common/errors/domain.exception';
 import { ErrorCode } from '../../common/errors/error-codes';
@@ -65,6 +66,23 @@ function createFakePrisma() {
           return memberships.get(key) ?? null;
         },
       ),
+      findFirst: jest.fn(
+        ({ where }: { where: { workspaceId: string; role?: UserRole } }) => {
+          for (const [key, val] of memberships) {
+            if (key.startsWith(`${where.workspaceId}:`)) {
+              if (!where.role || val.role === where.role) {
+                const userId = key.split(':')[1];
+                return { userId, role: val.role };
+              }
+            }
+          }
+          return null;
+        },
+      ),
+    },
+    accountMember: {
+      findFirst: jest.fn(() => null),
+      findUnique: jest.fn(() => null),
     },
     pairingClaimLockout: {
       findUnique: jest.fn(
@@ -158,6 +176,7 @@ describe('POST /workspaces/:workspaceId/pairing-sessions/claim — brute-force d
       providers: [
         JwtStrategy,
         RolesGuard,
+        AccountContextHelper,
         UserThrottlerGuard,
         PairingService,
         WorkspaceAuthHelper,

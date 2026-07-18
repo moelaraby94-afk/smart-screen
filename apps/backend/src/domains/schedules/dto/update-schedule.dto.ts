@@ -5,7 +5,7 @@ import {
   IsArray,
   IsBoolean,
   IsDateString,
-  IsIn,
+  IsEnum,
   IsInt,
   IsOptional,
   IsString,
@@ -13,6 +13,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import { RecurrenceType } from '@prisma/client';
 
 const HHmm = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -36,8 +37,8 @@ export class UpdateScheduleDto {
   daysOfWeek?: number[];
 
   @IsOptional()
-  @IsIn(['WEEKLY', 'MONTHLY'])
-  recurrence?: string;
+  @IsEnum(RecurrenceType)
+  recurrence?: RecurrenceType;
 
   @IsOptional()
   @IsArray()

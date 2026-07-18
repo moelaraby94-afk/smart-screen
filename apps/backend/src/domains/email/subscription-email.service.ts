@@ -25,6 +25,6 @@ export class SubscriptionEmailService {
       );
       return;
     }
-    await this.email.sendMail({ to: toEmail, subject, html, text });
+    await this.email.enqueue({ to: toEmail, subject, html, text });
   }
 }

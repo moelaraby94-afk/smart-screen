@@ -29,10 +29,8 @@ export class PlayerService {
 
   /**
    * Validates the per-screen secret against Screen.pairingSecretHash.
-   * Screens paired before per-screen secrets existed have no hash yet —
-   * for those only, fall back to the shared PLAYER_HEARTBEAT_SECRET and log
-   * a warning, so the fallback's usage stays visible until every screen has
-   * been re-paired and it can be retired.
+   * Screens must have a per-screen secret hash — the shared
+   * PLAYER_HEARTBEAT_SECRET fallback has been removed in Phase 2.
    */
   private async assertPlayerSecretForScreen(
     screen: {
@@ -52,18 +50,7 @@ export class PlayerService {
       }
       return;
     }
-    const sharedSecret = this.config.get<string>(
-      'PLAYER_HEARTBEAT_SECRET',
-      'dev-player-heartbeat-secret',
-    );
-    if (secret !== sharedSecret) {
-      throw new UnauthorizedException('Invalid player credentials');
-    }
-    this.logger.warn(
-      `Screen ${screen.serialNumber} (${screen.id}) authenticated via the ` +
-        'shared PLAYER_HEARTBEAT_SECRET fallback (no per-screen secret set). ' +
-        'Re-pair this screen to retire the shared-secret fallback.',
-    );
+    throw new UnauthorizedException('Invalid player credentials');
   }
 
   /**

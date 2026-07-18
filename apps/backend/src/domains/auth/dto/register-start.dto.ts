@@ -6,6 +6,7 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
+import { MatchesPasswordComplexity } from '../../../common/validators/password-complexity.decorator';
 
 export class RegisterStartDto {
   @IsEmail()
@@ -36,6 +37,7 @@ export class RegisterStartDto {
 
   @IsString()
   @MinLength(8)
+  @MatchesPasswordComplexity()
   password!: string;
 
   @IsString()

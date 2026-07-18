@@ -1,4 +1,5 @@
 import { IsEmail, IsString, MinLength } from 'class-validator';
+import { MatchesPasswordComplexity } from '../../../common/validators/password-complexity.decorator';
 
 export class ResetPasswordDto {
   @IsEmail()
@@ -10,5 +11,6 @@ export class ResetPasswordDto {
 
   @IsString()
   @MinLength(8)
+  @MatchesPasswordComplexity()
   newPassword!: string;
 }

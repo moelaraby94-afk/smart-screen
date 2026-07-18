@@ -5,6 +5,7 @@ import {
   Post,
   Body,
   Param,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
@@ -12,6 +13,8 @@ import {
   CurrentUser,
   type JwtUser,
 } from '../../common/auth/current-user.decorator';
+import { PaginationQueryDto } from '../../common/pagination/pagination-query.dto';
+import { buildPage, type Page } from '../../common/pagination/page';
 import {
   NotificationsService,
   type NotificationRow,
@@ -25,12 +28,14 @@ export class NotificationsController {
   @Get()
   async list(
     @CurrentUser() user: JwtUser,
-  ): Promise<{ items: NotificationRow[]; unreadCount: number }> {
-    const [items, unreadCount] = await Promise.all([
-      this.service.listForUser(user.sub),
+    @Query() query: PaginationQueryDto,
+  ): Promise<Page<NotificationRow> & { unreadCount: number }> {
+    const [items, total, unreadCount] = await Promise.all([
+      this.service.listForUser(user.sub, query),
+      this.service.countForUser(user.sub),
       this.service.unreadCount(user.sub),
     ]);
-    return { items, unreadCount };
+    return { ...buildPage(items, total, query), unreadCount };
   }
 
   @Patch(':id/read')

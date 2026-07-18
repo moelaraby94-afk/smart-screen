@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-floating-promises */
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -7,6 +7,8 @@ import { RealtimeGateway } from './realtime.gateway';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { ScreenHeartbeatService } from './screen-heartbeat.service';
 import { RedisService } from '../../common/redis/redis.service';
+import { OfflineEventQueueService } from './offline-event-queue.service';
+import { WsThrottlerGuard } from '../../common/throttler/ws-throttler.guard';
 
 type MockSocket = {
   id: string;
@@ -110,6 +112,19 @@ describe('RealtimeGateway T2.4 (WebSocket auth hardening)', () => {
             ping: jest.fn().mockResolvedValue(false),
             quit: jest.fn().mockResolvedValue(undefined),
           } as unknown as RedisService,
+        },
+        {
+          provide: OfflineEventQueueService,
+          useValue: {
+            enqueue: jest.fn().mockResolvedValue(undefined),
+            drain: jest.fn().mockResolvedValue([]),
+          } as unknown as OfflineEventQueueService,
+        },
+        {
+          provide: WsThrottlerGuard,
+          useValue: {
+            canActivate: jest.fn().mockResolvedValue(true),
+          } as unknown as WsThrottlerGuard,
         },
       ],
     }).compile();
@@ -219,12 +234,13 @@ describe('RealtimeGateway T2.4 (WebSocket auth hardening)', () => {
       workspaceId: 'ws_1',
       serialNumber: 'SN001',
       playerTicker: null,
-      pairingSecretHash: null,
+      pairingSecretHash:
+        '$2b$10$P6fGjb9BSmEeLq8c.ssyeeHWuXL3L2dlSz2mEt6QL/AC9ck/EqnVW',
     });
 
     await gateway.handleScreenRegister(sock as any, {
       serialNumber: 'SN001',
-      secret: 'dev-player-heartbeat-secret',
+      secret: 'test-secret',
     });
 
     jest.advanceTimersByTime(5001);
@@ -258,11 +274,12 @@ describe('RealtimeGateway T2.4 (WebSocket auth hardening)', () => {
       workspaceId: 'ws_1',
       serialNumber: 'SN001',
       playerTicker: null,
-      pairingSecretHash: null,
+      pairingSecretHash:
+        '$2b$10$P6fGjb9BSmEeLq8c.ssyeeHWuXL3L2dlSz2mEt6QL/AC9ck/EqnVW',
     });
     await gateway.handleScreenRegister(sock as any, {
       serialNumber: 'SN001',
-      secret: 'dev-player-heartbeat-secret',
+      secret: 'test-secret',
     });
 
     gateway.handleDisconnect(sock as any);
@@ -284,12 +301,13 @@ describe('RealtimeGateway T2.4 (WebSocket auth hardening)', () => {
       workspaceId: 'ws_1',
       serialNumber: 'SN001',
       playerTicker: 'ticker text',
-      pairingSecretHash: null,
+      pairingSecretHash:
+        '$2b$10$P6fGjb9BSmEeLq8c.ssyeeHWuXL3L2dlSz2mEt6QL/AC9ck/EqnVW',
     });
 
     await gateway.handleScreenRegister(sock as any, {
       serialNumber: 'SN001',
-      secret: 'dev-player-heartbeat-secret',
+      secret: 'test-secret',
     });
 
     jest.advanceTimersByTime(5001);

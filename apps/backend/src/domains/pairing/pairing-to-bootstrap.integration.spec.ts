@@ -20,7 +20,10 @@ import { PlayerController } from '../player/player.controller';
 import { PlayerService } from '../player/player.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
+import { OfflineEventQueueService } from '../realtime/offline-event-queue.service';
+import { WsThrottlerGuard } from '../../common/throttler/ws-throttler.guard';
 import { PairingService } from './pairing.service';
+import { RedisService } from '../../common/redis/redis.service';
 
 /**
  * End-to-end coverage of the pairing → playback handoff, the seam where the
@@ -382,6 +385,26 @@ describe('pairing → player bootstrap (per-screen secret handoff)', () => {
           provide: ConfigService,
           useValue: { get: (_k: string, dflt?: unknown) => dflt },
         },
+        {
+          provide: RedisService,
+          useValue: {
+            get: jest.fn(),
+            set: jest.fn(),
+            del: jest.fn(),
+            getClient: jest.fn().mockReturnValue(null),
+          },
+        },
+        {
+          provide: OfflineEventQueueService,
+          useValue: {
+            enqueue: jest.fn().mockResolvedValue(undefined),
+            drain: jest.fn().mockResolvedValue([]),
+          },
+        },
+        {
+          provide: WsThrottlerGuard,
+          useValue: { canActivate: jest.fn().mockResolvedValue(true) },
+        },
       ],
     }).compile();
 
@@ -528,9 +551,10 @@ describe('pairing → player bootstrap (per-screen secret handoff)', () => {
     expect(bad.disconnect).toHaveBeenCalledWith(true);
   });
 
-  it('keeps the shared-secret fallback working for screens created outside pairing', async () => {
-    // Mirrors workspaces.service.ts / screens.service.ts, which create screens
-    // without a pairingSecretHash (seeded + manually created screens).
+  it('rejects screens without a per-screen secret (shared-secret fallback removed)', async () => {
+    // Screens created outside pairing have no pairingSecretHash.
+    // Phase 2: shared PLAYER_HEARTBEAT_SECRET fallback removed —
+    // these screens must be re-paired to get a per-screen secret.
     fakePrisma.screens.set('legacy', {
       id: 'legacy',
       workspaceId: WORKSPACE_ID,
@@ -552,6 +576,6 @@ describe('pairing → player bootstrap (per-screen secret handoff)', () => {
       .query({ serialNumber: 'CS-LEGACY-001' })
       .set('x-player-secret', SHARED_SECRET);
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(401);
   });
 });

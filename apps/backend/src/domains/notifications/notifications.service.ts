@@ -1,5 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Optional,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { skipFor } from '../../common/pagination/pagination-query.dto';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 export type NotificationRow = {
   id: string;
@@ -13,13 +21,22 @@ export type NotificationRow = {
 
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional()
+    @Inject(forwardRef(() => RealtimeGateway))
+    private readonly realtime?: RealtimeGateway,
+  ) {}
 
-  async listForUser(userId: string, limit = 50): Promise<NotificationRow[]> {
+  async listForUser(
+    userId: string,
+    query: { page: number; limit: number },
+  ): Promise<NotificationRow[]> {
     const rows = await this.prisma.notification.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      take: limit,
+      skip: skipFor(query),
+      take: query.limit,
     });
     return rows.map((r) => ({
       id: r.id,
@@ -30,6 +47,10 @@ export class NotificationsService {
       link: r.link,
       createdAt: r.createdAt.toISOString(),
     }));
+  }
+
+  async countForUser(userId: string): Promise<number> {
+    return this.prisma.notification.count({ where: { userId } });
   }
 
   async unreadCount(userId: string): Promise<number> {
@@ -74,7 +95,7 @@ export class NotificationsService {
         link: data.link ?? null,
       },
     });
-    return {
+    const result: NotificationRow = {
       id: row.id,
       type: row.type,
       title: row.title,
@@ -83,6 +104,8 @@ export class NotificationsService {
       link: row.link,
       createdAt: row.createdAt.toISOString(),
     };
+    this.realtime?.emitNotificationToUser(userId, result);
+    return result;
   }
 
   async createForWorkspaceMembers(

@@ -83,7 +83,7 @@ export class AccountService {
     }
     if (this.email.isConfigured()) {
       const tpl = emailChangeOtpEmail({ code });
-      await this.email.sendMail({
+      await this.email.enqueue({
         to: newEmail,
         subject: tpl.subject,
         html: tpl.html,

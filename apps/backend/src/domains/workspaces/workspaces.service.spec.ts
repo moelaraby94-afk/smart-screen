@@ -10,6 +10,7 @@ import { ConfigHelper } from '../../common/config/config.helper';
 import { MediaService } from '../media/media.service';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
 import { EmailService } from '../email/email.service';
+import { AuthService } from '../auth/auth.service';
 import { ConfigService } from '@nestjs/config';
 
 /**
@@ -178,6 +179,7 @@ function createFakePrisma(opts: {
       findMany: jest.fn(() => Promise.resolve([])),
       create: jest.fn(() => Promise.resolve({ id: 'inv-1' })),
       update: jest.fn(() => Promise.resolve({})),
+      count: jest.fn(() => Promise.resolve(0)),
     },
     $transaction: jest.fn(async (fn: (tx: unknown) => Promise<unknown>) => {
       const tx = {
@@ -205,9 +207,13 @@ function createFakePrisma(opts: {
             memberMap.set(`${m.workspaceId}:${m.userId}`, m);
             return Promise.resolve(m);
           }),
+          count: jest.fn(() => Promise.resolve(0)),
         },
         workspaceInvitation: {
           update: jest.fn(() => Promise.resolve({})),
+        },
+        subscription: {
+          findUnique: jest.fn(() => Promise.resolve({ seats: 5 })),
         },
         playlistItem: {
           create: jest.fn(() => Promise.resolve({})),
@@ -235,6 +241,7 @@ function createMockEmailService() {
   return {
     isConfigured: jest.fn(() => false),
     sendMail: jest.fn(() => Promise.resolve()),
+    enqueue: jest.fn(() => Promise.resolve()),
   } as unknown as EmailService;
 }
 
@@ -262,6 +269,9 @@ describe('WorkspacesService (P1-T6)', () => {
       createMockHeartbeat(),
       createMockEmailService(),
       configHelper,
+      {
+        revokeAllSessions: jest.fn().mockResolvedValue(undefined),
+      } as unknown as AuthService,
     );
   }
 

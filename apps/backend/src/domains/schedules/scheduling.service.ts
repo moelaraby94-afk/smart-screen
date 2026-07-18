@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { formatInTimeZone } from 'date-fns-tz';
 import { enUS } from 'date-fns/locale';
-import type { Schedule } from '@prisma/client';
+import { RecurrenceType, type Schedule } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
 const WEEKDAY_NAME_TO_DOW: Record<string, number> = {
@@ -173,7 +173,7 @@ export class SchedulingService {
     dow: number,
     dom: number,
   ): boolean {
-    if (s.recurrence === 'MONTHLY') {
+    if (s.recurrence === RecurrenceType.MONTHLY) {
       if (!s.daysOfMonth.includes(dom)) return false;
     } else {
       if (!s.daysOfWeek.includes(dow)) return false;
@@ -196,7 +196,7 @@ export class SchedulingService {
       startTime: string;
       endTime: string;
       priority: number;
-      recurrence?: string;
+      recurrence?: RecurrenceType;
       daysOfMonth?: number[];
     }>,
   ): Array<[string, string]> {
@@ -215,11 +215,11 @@ export class SchedulingService {
         const y = list[j];
         if (x.screenId !== y.screenId) continue;
         // Only schedules of the same recurrence type can overlap deterministically.
-        const xRec = x.recurrence ?? 'WEEKLY';
-        const yRec = y.recurrence ?? 'WEEKLY';
+        const xRec = x.recurrence ?? RecurrenceType.WEEKLY;
+        const yRec = y.recurrence ?? RecurrenceType.WEEKLY;
         if (xRec !== yRec) continue;
         const days =
-          xRec === 'MONTHLY'
+          xRec === RecurrenceType.MONTHLY
             ? (x.daysOfMonth ?? []).filter((d) =>
                 (y.daysOfMonth ?? []).includes(d),
               )

@@ -16,7 +16,7 @@ import { STORAGE_SERVICE } from '../../common/storage/storage.interface';
 import type { IStorageService } from '../../common/storage/storage.interface';
 import { Inject } from '@nestjs/common';
 import { join } from 'path';
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 
 const ALLOWED_MIME = new Set([
   'image/jpeg',
@@ -152,6 +152,21 @@ export class MediaService {
 
     const wsId = params.workspaceId ?? '_account';
 
+    // EXIF stripping for images: preserve orientation only
+    let uploadBuffer = params.buffer;
+    const IMAGE_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+    if (IMAGE_MIMES.has(detected.mime)) {
+      try {
+        const sharp = (await import('sharp')).default;
+        uploadBuffer = await sharp(params.buffer).rotate().toBuffer();
+      } catch {
+        // sharp failed — use original buffer
+      }
+    }
+
+    // SHA-256 file hash for integrity checking
+    const fileHash = createHash('sha256').update(uploadBuffer).digest('hex');
+
     if (params.folderId) {
       const folder = await this.prisma.mediaFolder.findFirst({
         where: { id: params.folderId, ownerId: params.ownerId },
@@ -179,7 +194,7 @@ export class MediaService {
      * uploads — and a rollback would leave the object behind, since the
      * storage does not participate in the transaction.
      */
-    await this.storage.upload(tempKey, params.buffer);
+    await this.storage.upload(tempKey, uploadBuffer);
 
     let created: Awaited<ReturnType<typeof this.prisma.media.create>>;
     try {
@@ -202,6 +217,7 @@ export class MediaService {
             sizeBytes,
             relativePath,
             folderId: params.folderId ?? null,
+            fileHash,
           },
         });
       });
@@ -295,6 +311,16 @@ export class MediaService {
     });
     if (!media) throw new NotFoundException('Media not found');
     return this.toResponse(media);
+  }
+
+  async getMediaUrl(workspaceId: string, id: string): Promise<{ url: string }> {
+    const media = await this.prisma.media.findFirst({
+      where: { id, workspaceId },
+      select: { id: true, relativePath: true },
+    });
+    if (!media) throw new NotFoundException('Media not found');
+    const url = await this.storage.getSignedUrl(media.relativePath, 3600);
+    return { url };
   }
 
   /**

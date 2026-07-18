@@ -1,26 +1,34 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
 import request from 'supertest';
-import { App } from 'supertest/types';
-import { AppModule } from './../src/app.module';
+import { CsrfController } from '../src/common/csrf/csrf.controller';
 
-describe('AppController (e2e)', () => {
-  let app: INestApplication<App>;
+describe('CSRF endpoint (e2e)', () => {
+  let app: INestApplication;
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
+      controllers: [CsrfController],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    app = moduleRef.createNestApplication();
+    app.setGlobalPrefix('api/v1', {
+      exclude: ['health', 'ready', 'metrics'],
+    });
+    app.use(cookieParser());
     await app.init();
   });
 
-  it('/api/v1/csrf (GET)', () => {
-    return request(app.getHttpServer()).get('/api/v1/csrf').expect(200);
+  afterAll(async () => {
+    await app.close();
   });
 
-  afterEach(async () => {
-    await app.close();
+  it('GET /api/v1/csrf returns 200 with token', async () => {
+    const res = await request(app.getHttpServer()).get('/api/v1/csrf');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('csrfToken');
+    expect(typeof res.body.csrfToken).toBe('string');
+    expect(res.body.csrfToken).toHaveLength(64);
   });
 });

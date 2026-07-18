@@ -1,0 +1,37 @@
+-- Migration: Encrypt existing 2FA TOTP secrets at rest
+-- Phase 2: Security Hardening
+--
+-- This migration encrypts all existing plaintext twoFactorSecret values
+-- using AES-256-GCM. It must be run AFTER deploying the new code that
+-- includes CryptoService.
+--
+-- IMPORTANT: This is a DATA-ONLY migration. Run it manually after deploying
+-- the updated backend code. The application code handles encryption for all
+-- NEW 2FA enrollments automatically.
+--
+-- For existing records, the application has a backward-compatibility layer:
+-- if decrypt() fails (indicating plaintext), it treats the value as plaintext,
+-- encrypts it, and updates the record. This migration script is therefore
+-- optional — the app self-heals. But running it proactively avoids the
+-- first-decrypt failure for each user.
+--
+-- Safety:
+-- 1. BACKUP the database before running this migration.
+-- 2. Test on staging first.
+-- 3. This script is idempotent — it only encrypts values that look like
+--    plaintext (no colon separator from base64:base64:base64 format).
+--
+-- The actual encryption is performed by the application's CryptoService
+-- (Node.js crypto module, AES-256-GCM). SQL cannot perform this encryption
+-- because the key is derived via scryptSync in the application layer.
+--
+-- Therefore, this file is a RUNBOOK, not an executable migration.
+-- To encrypt existing secrets:
+--
+-- 1. Deploy the new backend code with ENCRYPTION_KEY set.
+-- 2. Run the following script from the backend directory:
+--    npx ts-node scripts/encrypt-2fa-secrets.ts
+-- 3. Verify: SELECT id, "twoFactorSecret" FROM "User" WHERE "twoFactorEnabled" = true;
+--    All values should contain colons (iv:authTag:ciphertext format).
+--
+-- The script encrypts-2fa-secrets.ts is included in the scripts directory.

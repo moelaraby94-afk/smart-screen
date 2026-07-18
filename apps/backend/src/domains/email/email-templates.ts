@@ -122,3 +122,109 @@ export function onboardingTipsEmail(params: {
   const text = `Hi ${params.fullName},\n\n${tip.title}\n${tip.body}\n\n${params.dashboardUrl ? `Open dashboard: ${params.dashboardUrl}\n\n` : ''}You are receiving this because you recently signed up for ${brand}.`;
   return { subject, html, text };
 }
+
+export function screenOfflineEmail(params: {
+  screenName: string;
+  workspaceName: string;
+  lastSeen: string;
+  dashboardUrl?: string;
+  brandName?: string;
+}): { subject: string; html: string; text: string } {
+  const brand = params.brandName ?? 'Cloud Signage';
+  const subject = `${brand}: Screen "${params.screenName}" is offline`;
+  const name = esc(params.screenName);
+  const ws = esc(params.workspaceName);
+  const dash = params.dashboardUrl
+    ? `<p><a href="${esc(params.dashboardUrl)}">View screens</a></p>`
+    : '';
+  const html = `<p>Hi,</p><p>Your screen <strong>${name}</strong> in workspace <strong>${ws}</strong> has been offline for 5 minutes.</p><p>Last seen: ${esc(params.lastSeen)}</p>${dash}`;
+  const text = `Your screen "${params.screenName}" in workspace "${params.workspaceName}" has been offline for 5 minutes.\nLast seen: ${params.lastSeen}${params.dashboardUrl ? `\n\nView screens: ${params.dashboardUrl}` : ''}`;
+  return { subject, html, text };
+}
+
+export function campaignApprovalEmail(params: {
+  campaignName: string;
+  workspaceName: string;
+  approved: boolean;
+  reviewComment?: string;
+  dashboardUrl?: string;
+  brandName?: string;
+}): { subject: string; html: string; text: string } {
+  const brand = params.brandName ?? 'Cloud Signage';
+  const status = params.approved ? 'approved' : 'rejected';
+  const subject = `${brand}: Campaign "${params.campaignName}" ${status}`;
+  const name = esc(params.campaignName);
+  const ws = esc(params.workspaceName);
+  const comment = params.reviewComment
+    ? `<p><strong>Review comment:</strong> ${esc(params.reviewComment)}</p>`
+    : '';
+  const dash = params.dashboardUrl
+    ? `<p><a href="${esc(params.dashboardUrl)}">View campaigns</a></p>`
+    : '';
+  const html = `<p>Hi,</p><p>Your campaign <strong>${name}</strong> in workspace <strong>${ws}</strong> has been <strong>${status}</strong>.</p>${comment}${dash}`;
+  const text = `Your campaign "${params.campaignName}" in workspace "${params.workspaceName}" has been ${status}.${params.reviewComment ? `\nReview comment: ${params.reviewComment}` : ''}${params.dashboardUrl ? `\n\nView campaigns: ${params.dashboardUrl}` : ''}`;
+  return { subject, html, text };
+}
+
+export function subscriptionExpiryEmail(params: {
+  fullName: string;
+  planName: string;
+  expiryDate: string;
+  dashboardUrl?: string;
+  brandName?: string;
+}): { subject: string; html: string; text: string } {
+  const brand = params.brandName ?? 'Cloud Signage';
+  const subject = `${brand}: Your subscription expires in 7 days`;
+  const name = esc(params.fullName);
+  const dash = params.dashboardUrl
+    ? `<p><a href="${esc(params.dashboardUrl)}">Manage billing</a></p>`
+    : '';
+  const html = `<p>Hi ${name},</p><p>Your <strong>${esc(params.planName)}</strong> subscription will expire on <strong>${esc(params.expiryDate)}</strong>.</p><p>Please renew to avoid service interruption.</p>${dash}`;
+  const text = `Hi ${params.fullName},\n\nYour ${params.planName} subscription will expire on ${params.expiryDate}.\nPlease renew to avoid service interruption.${params.dashboardUrl ? `\n\nManage billing: ${params.dashboardUrl}` : ''}`;
+  return { subject, html, text };
+}
+
+export function passwordChangedEmail(params: {
+  fullName: string;
+  brandName?: string;
+}): { subject: string; html: string; text: string } {
+  const brand = params.brandName ?? 'Cloud Signage';
+  const subject = `${brand}: Your password was changed`;
+  const name = esc(params.fullName);
+  const html = `<p>Hi ${name},</p><p>Your password has been changed successfully. If you did not make this change, please contact support immediately.</p>`;
+  const text = `Hi ${params.fullName},\n\nYour password has been changed successfully. If you did not make this change, please contact support immediately.`;
+  return { subject, html, text };
+}
+
+export function twoFactorDisabledEmail(params: {
+  fullName: string;
+  brandName?: string;
+}): { subject: string; html: string; text: string } {
+  const brand = params.brandName ?? 'Cloud Signage';
+  const subject = `${brand}: Two-factor authentication disabled`;
+  const name = esc(params.fullName);
+  const html = `<p>Hi ${name},</p><p>Two-factor authentication has been disabled on your account. If you did not make this change, please contact support immediately.</p>`;
+  const text = `Hi ${params.fullName},\n\nTwo-factor authentication has been disabled on your account. If you did not make this change, please contact support immediately.`;
+  return { subject, html, text };
+}
+
+export function limitWarningEmail(params: {
+  fullName: string;
+  resourceType: 'storage' | 'screens';
+  current: number;
+  limit: number;
+  percentage: number;
+  dashboardUrl?: string;
+  brandName?: string;
+}): { subject: string; html: string; text: string } {
+  const brand = params.brandName ?? 'Cloud Signage';
+  const resource = params.resourceType === 'storage' ? 'storage' : 'screen';
+  const subject = `${brand}: ${resource} usage at ${params.percentage}%`;
+  const name = esc(params.fullName);
+  const dash = params.dashboardUrl
+    ? `<p><a href="${esc(params.dashboardUrl)}">View usage</a></p>`
+    : '';
+  const html = `<p>Hi ${name},</p><p>You are using <strong>${params.current}</strong> of <strong>${params.limit}</strong> ${resource} units (${params.percentage}%).</p><p>Consider upgrading your plan to avoid hitting the limit.</p>${dash}`;
+  const text = `Hi ${params.fullName},\n\nYou are using ${params.current} of ${params.limit} ${resource} units (${params.percentage}%).\nConsider upgrading your plan to avoid hitting the limit.${params.dashboardUrl ? `\n\nView usage: ${params.dashboardUrl}` : ''}`;
+  return { subject, html, text };
+}

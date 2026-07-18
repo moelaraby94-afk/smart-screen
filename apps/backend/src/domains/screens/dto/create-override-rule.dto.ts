@@ -1,25 +1,24 @@
 import {
   ArrayMaxSize,
-  ArrayMinSize,
   IsArray,
   IsBoolean,
   IsDateString,
+  IsEnum,
   IsInt,
-  IsIn,
   IsOptional,
   IsString,
   Matches,
   Max,
-  MaxLength,
   Min,
 } from 'class-validator';
+import { RecurrenceType } from '@prisma/client';
 
 export class CreateOverrideRuleDto {
   @IsString()
   playlistId!: string;
 
-  @IsIn(['ONCE', 'DAILY', 'WEEKLY', 'MONTHLY'])
-  recurrence!: string;
+  @IsEnum(RecurrenceType)
+  recurrence!: RecurrenceType;
 
   @IsOptional()
   @IsArray()

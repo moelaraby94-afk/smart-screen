@@ -1,7 +1,7 @@
 const REQUIRED_SECRETS = [
   'JWT_ACCESS_SECRET',
   'JWT_REFRESH_SECRET',
-  'PLAYER_HEARTBEAT_SECRET',
+  'ENCRYPTION_KEY',
 ] as const;
 
 /**
@@ -18,7 +18,7 @@ const REQUIRED_SECRETS = [
 const KNOWN_PLACEHOLDER_SECRETS = new Set([
   'dev-access-secret',
   'dev-refresh-secret',
-  'dev-player-heartbeat-secret',
+  'replace-with-strong-encryption-key',
   'change-me-in-production',
   'change-me',
   'changeme',

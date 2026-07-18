@@ -37,11 +37,20 @@ jobs:
       - name: Verify
         run: npm run verify
 
-      # T1.3 — Dependency audit gate. Non-blocking for now (|| true) so CI
-      # stays green while remaining dev-only vulnerabilities are triaged.
-      # Flip to blocking (remove || true) once T1.2 is fully resolved.
+      - name: Backend test coverage
+        working-directory: apps/backend
+        run: node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --coverage --forceExit
+        env:
+          DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci?schema=public
+
+      - name: Backend E2E tests
+        working-directory: apps/backend
+        run: node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --config test/jest-e2e.json --forceExit
+
+      # T1.3 — Dependency audit gate. Now blocking — CI fails on high+critical
+      # vulnerabilities. Phase 2 security hardening.
       - name: Dependency audit (high+critical)
-        run: npm audit --audit-level=high || true
+        run: npm audit --audit-level=high
 
       - name: Marketing build
         run: npm run build -w apps/marketing

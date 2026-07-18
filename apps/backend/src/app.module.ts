@@ -3,6 +3,7 @@ import { APP_FILTER } from '@nestjs/core';
 import { SentryModule } from '@sentry/nestjs/setup';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AllExceptionsFilter } from './common/errors/all-exceptions.filter';
 import { CsrfModule } from './common/csrf/csrf.module';
@@ -11,6 +12,7 @@ import { RedisModule } from './common/redis/redis.module';
 import { RedisService } from './common/redis/redis.service';
 import { RedisThrottlerStorage } from './common/redis/redis-throttler-storage';
 import { StorageModule } from './common/storage/storage.module';
+import { EmailQueueModule } from './common/queues/email-queue.module';
 import { AuthModule } from './domains/auth/auth.module';
 import { WorkspacesModule } from './domains/workspaces/workspaces.module';
 import { ScreensModule } from './domains/screens/screens.module';
@@ -77,9 +79,21 @@ import { ConfigHelperModule } from './common/config/config-helper.module';
       }),
     }),
     ConfigModule.forRoot({ isGlobal: true }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule, RedisModule],
+      inject: [ConfigService, RedisService],
+      useFactory: (config: ConfigService, _redis: RedisService) => {
+        const url = config.get<string>('REDIS_URL');
+        if (!url) {
+          return { connection: { host: 'localhost', port: 6379 } };
+        }
+        return { connection: { url } };
+      },
+    }),
     RedisModule,
     StorageModule,
     EmailModule,
+    EmailQueueModule,
     CsrfModule,
     PrismaModule,
     AuthModule,

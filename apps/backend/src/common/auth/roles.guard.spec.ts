@@ -5,16 +5,8 @@ import { DomainException } from '../errors/domain.exception';
 import { ErrorCode } from '../errors/error-codes';
 import { PrismaService } from '../prisma/prisma.service';
 import { RolesGuard } from './roles.guard';
+import { AccountContextHelper } from './account-context.helper';
 
-/**
- * RolesGuard is the primary tenant boundary: it proves the caller is a member
- * of the `workspaceId` they name before any handler runs. It had no test at all,
- * yet it is what stops user A from operating on workspace B by passing B's id.
- *
- * The service layer is the second boundary (`findFirst({ where: {id, workspaceId} })`);
- * cross-tenant-scoping.spec.ts covers that. Between them, a request needs both a
- * membership *and* a matching workspace id on the row.
- */
 type Membership = { role: UserRole } | null;
 
 function buildContext(opts: {
@@ -50,15 +42,26 @@ function buildContext(opts: {
   return { context, reflector };
 }
 
-function buildPrisma(membership: Membership): {
-  prisma: PrismaService;
-  findUnique: jest.Mock;
-} {
-  const findUnique = jest.fn().mockResolvedValue(membership);
-  const prisma = {
-    workspaceMember: { findUnique },
+function buildAccountContext(membership: Membership) {
+  const resolveForWorkspace = jest
+    .fn()
+    .mockResolvedValue(
+      membership
+        ? { role: membership.role, ownerId: 'owner1', isOwner: false }
+        : null,
+    );
+  const resolveOwnerId = jest.fn().mockResolvedValue('u1');
+  const accountContext = {
+    resolveForWorkspace,
+    resolveOwnerId,
+  } as unknown as AccountContextHelper;
+  return { accountContext, resolveForWorkspace, resolveOwnerId };
+}
+
+function buildPrisma(): PrismaService {
+  return {
+    accountMember: { findUnique: jest.fn().mockResolvedValue(null) },
   } as unknown as PrismaService;
-  return { prisma, findUnique };
 }
 
 const OWNER_ONLY = [UserRole.OWNER];
@@ -76,10 +79,12 @@ describe('RolesGuard', () => {
       workspaceId: 'ws_a',
       requiredRoles: ANY_MEMBER,
     });
-    const { prisma } = buildPrisma({ role: UserRole.EDITOR });
+    const { accountContext } = buildAccountContext({ role: UserRole.EDITOR });
 
     await expect(
-      new RolesGuard(reflector, prisma).canActivate(context),
+      new RolesGuard(reflector, buildPrisma(), accountContext).canActivate(
+        context,
+      ),
     ).resolves.toBe(true);
   });
 
@@ -93,19 +98,14 @@ describe('RolesGuard', () => {
       workspaceId: 'ws_victim',
       requiredRoles: ANY_MEMBER,
     });
-    const { prisma, findUnique } = buildPrisma(null);
+    const { accountContext, resolveForWorkspace } = buildAccountContext(null);
 
-    const guard = new RolesGuard(reflector, prisma);
+    const guard = new RolesGuard(reflector, buildPrisma(), accountContext);
     const error = await guard.canActivate(context).catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(DomainException);
     expect((error as DomainException).code).toBe(ErrorCode.NO_WORKSPACE_ACCESS);
-    expect(findUnique).toHaveBeenCalledWith({
-      where: {
-        workspaceId_userId: { workspaceId: 'ws_victim', userId: 'attacker' },
-      },
-      select: { role: true },
-    });
+    expect(resolveForWorkspace).toHaveBeenCalledWith('attacker', 'ws_victim');
   });
 
   it('rejects a member whose role is too low for the route', async () => {
@@ -114,9 +114,9 @@ describe('RolesGuard', () => {
       workspaceId: 'ws_a',
       requiredRoles: OWNER_ONLY,
     });
-    const { prisma } = buildPrisma({ role: UserRole.VIEWER });
+    const { accountContext } = buildAccountContext({ role: UserRole.VIEWER });
 
-    const error = await new RolesGuard(reflector, prisma)
+    const error = await new RolesGuard(reflector, buildPrisma(), accountContext)
       .canActivate(context)
       .catch((e: unknown) => e);
 
@@ -130,13 +130,17 @@ describe('RolesGuard', () => {
       user: { sub: 'u1' },
       requiredRoles: ANY_MEMBER,
     });
-    const { prisma, findUnique } = buildPrisma(null);
+    const { accountContext, resolveForWorkspace, resolveOwnerId } =
+      buildAccountContext(null);
+    resolveOwnerId.mockResolvedValue('other-owner');
+    const prisma = {
+      accountMember: { findUnique: jest.fn().mockResolvedValue(null) },
+    } as unknown as PrismaService;
 
     await expect(
-      new RolesGuard(reflector, prisma).canActivate(context),
+      new RolesGuard(reflector, prisma, accountContext).canActivate(context),
     ).rejects.toBeDefined();
-    // Never even looked up a membership — failed before the DB.
-    expect(findUnique).not.toHaveBeenCalled();
+    expect(resolveForWorkspace).not.toHaveBeenCalled();
   });
 
   it('lets a super admin through without a membership check', async () => {
@@ -145,22 +149,26 @@ describe('RolesGuard', () => {
       workspaceId: 'ws_anything',
       requiredRoles: OWNER_ONLY,
     });
-    const { prisma, findUnique } = buildPrisma(null);
+    const { accountContext, resolveForWorkspace } = buildAccountContext(null);
 
     await expect(
-      new RolesGuard(reflector, prisma).canActivate(context),
+      new RolesGuard(reflector, buildPrisma(), accountContext).canActivate(
+        context,
+      ),
     ).resolves.toBe(true);
-    expect(findUnique).not.toHaveBeenCalled();
+    expect(resolveForWorkspace).not.toHaveBeenCalled();
   });
 
   it('skips the check entirely for a route with no @Roles', async () => {
     const { context, reflector } = buildContext({ requiredRoles: undefined });
-    const { prisma, findUnique } = buildPrisma(null);
+    const { accountContext, resolveForWorkspace } = buildAccountContext(null);
 
     await expect(
-      new RolesGuard(reflector, prisma).canActivate(context),
+      new RolesGuard(reflector, buildPrisma(), accountContext).canActivate(
+        context,
+      ),
     ).resolves.toBe(true);
-    expect(findUnique).not.toHaveBeenCalled();
+    expect(resolveForWorkspace).not.toHaveBeenCalled();
   });
 
   it.each(['params', 'query', 'body', 'header'] as const)(
@@ -172,16 +180,16 @@ describe('RolesGuard', () => {
         source,
         requiredRoles: ANY_MEMBER,
       });
-      const { prisma, findUnique } = buildPrisma({ role: UserRole.ADMIN });
+      const { accountContext, resolveForWorkspace } = buildAccountContext({
+        role: UserRole.ADMIN,
+      });
 
-      await new RolesGuard(reflector, prisma).canActivate(context);
-      expect(findUnique).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: {
-            workspaceId_userId: { workspaceId: 'ws_a', userId: 'u1' },
-          },
-        }),
-      );
+      await new RolesGuard(
+        reflector,
+        buildPrisma(),
+        accountContext,
+      ).canActivate(context);
+      expect(resolveForWorkspace).toHaveBeenCalledWith('u1', 'ws_a');
     },
   );
 });

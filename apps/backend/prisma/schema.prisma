@@ -183,6 +183,20 @@ enum CampaignStatus {
 
 
 
+enum RecurrenceType {
+
+  WEEKLY
+
+  MONTHLY
+
+  ONCE
+
+  DAILY
+
+}
+
+
+
 model User {
 
   id               String            @id @default(cuid())
@@ -355,8 +369,6 @@ model Workspace {
 
   medias        Media[]          @relation("MediaWorkspace")
   mediaFolders  MediaFolder[]    @relation("MediaFolderWorkspace")
-  /// Deprecated: not used by the app. Displays pair via ScreenPairingSession (6-digit flow) only.
-  pairingCodes  WorkspacePairingCode[]
 
   screenPairingSessions ScreenPairingSession[]
 
@@ -472,6 +484,9 @@ model Screen {
   /// Bottom marquee / ticker text pushed to the player HUD
 
   playerTicker     String?
+
+  /// Player software version reported via heartbeat
+  playerVersion    String?
 
   playerPlatform   PlayerPlatform @default(WEB)
 
@@ -754,6 +769,9 @@ model Media {
   relativePath  String
   folderId      String?
 
+  /// SHA-256 hash of file content for integrity checking
+  fileHash      String?
+
   createdAt     DateTime       @default(now())
 
   updatedAt     DateTime       @updatedAt
@@ -802,22 +820,6 @@ model MediaFolder {
   @@index([ownerId, createdAt])
 
 }
-
-/// Deprecated: legacy table kept for DB compatibility. Pairing is `ScreenPairingSession` only.
-model WorkspacePairingCode {
-  id          String   @id @default(cuid())
-  workspaceId String
-  code        String
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
-  @@unique([workspaceId, code])
-  @@index([workspaceId, isActive, createdAt])
-}
-
 
 
 model Playlist {
@@ -933,8 +935,8 @@ model Schedule {
 
   daysOfWeek  Int[]
 
-  /// "WEEKLY" (matches daysOfWeek) or "MONTHLY" (matches daysOfMonth)
-  recurrence  String   @default("WEEKLY")
+  /// WEEKLY (matches daysOfWeek) or MONTHLY (matches daysOfMonth)
+  recurrence  RecurrenceType @default(WEEKLY)
 
   /// Days of month (1..31) used when recurrence = "MONTHLY"
   daysOfMonth Int[]    @default([])
@@ -966,6 +968,8 @@ model Schedule {
   @@index([screenId])
 
   @@index([playlistId])
+
+  @@index([screenId, startTime, endTime])
 
 }
 
@@ -1010,8 +1014,8 @@ model ScreenOverrideRule {
 
   playlistId  String
 
-  /// "ONCE" = one-time date range, "DAILY" = every day in time window, "WEEKLY" = specific days of week, "MONTHLY" = specific days of month
-  recurrence  String   @default("ONCE")
+  /// ONCE = one-time date range, DAILY = every day in time window, WEEKLY = specific days of week, MONTHLY = specific days of month
+  recurrence  RecurrenceType @default(ONCE)
 
   /// For WEEKLY: days 0-6 (Sun-Sat). Empty = all days
   daysOfWeek  Int[]    @default([])
@@ -1077,6 +1081,9 @@ model Subscription {
   currentPeriodEnd DateTime?
 
   canceledAt       DateTime?
+
+  /// Set when a payment fails — workspace retains paid features until this date.
+  gracePeriodEndsAt DateTime?
 
   /// Set after Stripe Checkout / subscription webhooks (Billing Portal).
   stripeCustomerId     String?  @unique
@@ -1179,6 +1186,8 @@ model Notification {
 
   @@index([userId, createdAt])
 
+  @@index([userId, type, createdAt(sort: Desc)])
+
 }
 
 model ApiKey {
@@ -1243,7 +1252,31 @@ model WebhookEndpoint {
 
   updatedAt   DateTime  @updatedAt
 
+  deliveryLogs WebhookDeliveryLog[]
+
   @@index([workspaceId, enabled])
+
+}
+
+model WebhookDeliveryLog {
+
+  id            String   @id @default(cuid())
+
+  webhookId     String
+
+  webhook       WebhookEndpoint @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  attempt       Int
+
+  statusCode    Int?
+
+  responseBody  String?
+
+  status        String   @default("PENDING")
+
+  createdAt     DateTime @default(now())
+
+  @@index([webhookId, createdAt])
 
 }
 

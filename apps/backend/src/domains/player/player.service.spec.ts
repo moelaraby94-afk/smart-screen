@@ -246,18 +246,14 @@ describe('PlayerService (P1-T6)', () => {
     );
   });
 
-  // ─── Test 5: getBootstrap with correct shared secret → success ─────
-  it('authenticates with shared secret fallback when no per-screen hash', async () => {
+  // ─── Test 5: getBootstrap without per-screen hash → Unauthorized ──
+  it('rejects shared secret fallback when no per-screen hash (Phase 2)', async () => {
     const fake = createFakePrisma({ screens: [makeScreen()] });
     const service = makeService(fake);
 
-    const result = await service.getBootstrap(
-      SERIAL,
-      'dev-player-heartbeat-secret',
-    );
-    expect(result.screenId).toBe(SCREEN_ID);
-    expect(result.workspaceName).toBe('Test WS');
-    expect(result.ticker).toBe('Hello World');
+    await expect(
+      service.getBootstrap(SERIAL, 'dev-player-heartbeat-secret'),
+    ).rejects.toThrow(UnauthorizedException);
   });
 
   // ─── Test 6: getBootstrap with per-screen secret hash → success ────
@@ -287,26 +283,33 @@ describe('PlayerService (P1-T6)', () => {
 
   // ─── Test 8: getBootstrap on paused workspace → WORKSPACE_PAUSED ────
   it('throws WORKSPACE_PAUSED when workspace is paused', async () => {
+    const secretHash = await bcrypt.hash('test-secret', 10);
     const fake = createFakePrisma({
       screens: [
-        makeScreen({ workspace: { isPaused: true, name: 'Paused WS' } }),
+        makeScreen({
+          pairingSecretHash: secretHash,
+          workspace: { isPaused: true, name: 'Paused WS' },
+        }),
       ],
     });
     const service = makeService(fake);
 
-    await expect(
-      service.getBootstrap(SERIAL, 'dev-player-heartbeat-secret'),
-    ).rejects.toThrow(DomainException);
+    await expect(service.getBootstrap(SERIAL, 'test-secret')).rejects.toThrow(
+      DomainException,
+    );
   });
 
   // ─── Test 9: getCompiledCanvas success ──────────────────────────────
   it('returns compiled canvas for authenticated screen', async () => {
-    const fake = createFakePrisma({ screens: [makeScreen()] });
+    const secretHash = await bcrypt.hash('test-secret', 10);
+    const fake = createFakePrisma({
+      screens: [makeScreen({ pairingSecretHash: secretHash })],
+    });
     const service = makeService(fake);
 
     const result = await service.getCompiledCanvas(
       SERIAL,
-      'dev-player-heartbeat-secret',
+      'test-secret',
       'canvas-1',
     );
     expect(result.id).toBe('canvas-1');

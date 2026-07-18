@@ -112,7 +112,6 @@ export class S3StorageService implements IStorageService {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ensureDir(_keyPrefix: string): void {
     // No-op — S3 has no directories.
   }

@@ -614,6 +614,7 @@ export class AdminService {
         status: true,
         lastSeenAt: true,
         playerPlatform: true,
+        playerVersion: true,
         isOfflineCacheMode: true,
         workspace: { select: { id: true, name: true } },
       },
@@ -625,6 +626,7 @@ export class AdminService {
       status: s.status,
       lastSeenAt: s.lastSeenAt?.toISOString() ?? null,
       playerPlatform: s.playerPlatform,
+      playerVersion: s.playerVersion,
       workspaceId: s.workspace.id,
       workspaceName: s.workspace.name,
       isOfflineCacheMode: s.isOfflineCacheMode,
@@ -793,7 +795,7 @@ export class AdminService {
       throw new BadRequestException('No changes');
     }
 
-    return this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id: userId },
       data,
       select: {
@@ -807,6 +809,19 @@ export class AdminService {
         subscriptionEndDate: true,
       },
     });
+
+    // Invalidate all sessions when role-related fields change to prevent
+    // stale JWT-based privilege escalation.
+    // Official source: OWASP A07:2021
+    const roleChanged =
+      dto.isSuperAdmin !== undefined ||
+      dto.platformStaffRole !== undefined ||
+      dto.isActive !== undefined;
+    if (roleChanged) {
+      await this.auth.revokeAllSessions(userId);
+    }
+
+    return updated;
   }
 
   async createCustomerWorkspace(customerId: string, name: string) {

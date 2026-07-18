@@ -91,9 +91,7 @@ describe('StripeWebhookService T3.4 (PaymentRecord creation)', () => {
       select: { userId: true },
     });
     expect(paymentRecordCreate).toHaveBeenCalledTimes(1);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const callArg = paymentRecordCreate.mock.calls[0][0];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(callArg.data).toMatchObject({
       userId: 'user_owner',
       amountCents: 4900,
@@ -112,9 +110,7 @@ describe('StripeWebhookService T3.4 (PaymentRecord creation)', () => {
     await service.handleRawPayload(Buffer.from('{}'), 'sig');
 
     expect(paymentRecordCreate).toHaveBeenCalledTimes(1);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const callArg = paymentRecordCreate.mock.calls[0][0];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(callArg.data.invoiceRef).toBe('in_expanded_456');
   });
 
@@ -125,9 +121,7 @@ describe('StripeWebhookService T3.4 (PaymentRecord creation)', () => {
     await service.handleRawPayload(Buffer.from('{}'), 'sig');
 
     expect(paymentRecordCreate).toHaveBeenCalledTimes(1);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const callArg = paymentRecordCreate.mock.calls[0][0];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(callArg.data.invoiceRef).toBeUndefined();
   });
 
@@ -158,9 +152,7 @@ describe('StripeWebhookService T3.4 (PaymentRecord creation)', () => {
     await service.handleRawPayload(Buffer.from('{}'), 'sig');
 
     expect(paymentRecordCreate).toHaveBeenCalledTimes(1);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const callArg = paymentRecordCreate.mock.calls[0][0];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(callArg.data.amountCents).toBe(0);
   });
 });

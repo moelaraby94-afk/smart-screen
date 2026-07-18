@@ -151,6 +151,7 @@ function createMockEmailService(configured = true) {
   return {
     isConfigured: jest.fn(() => configured),
     sendMail: jest.fn(() => Promise.resolve()),
+    enqueue: jest.fn(() => Promise.resolve()),
   } as unknown as EmailService;
 }
 

@@ -29,7 +29,7 @@ describe('MaintenanceService — AuditLog retention', () => {
     } as unknown as ConfigService;
 
     return {
-      service: new MaintenanceService(prisma, config),
+      service: new MaintenanceService(prisma, config, {} as never),
       deleteMany: deleteMany as jest.MockedFunction<
         (args: DeleteManyArgs) => Promise<{ count: number }>
       >,

@@ -20,6 +20,7 @@ import { WorkspacesService } from '../workspaces/workspaces.service';
 import { AuditLogService } from '../../common/audit/audit-log.service';
 import { LoginLockoutService } from './login-lockout.service';
 import { TwoFactorService } from './two-factor.service';
+import { CryptoService } from '../../common/crypto/crypto.service';
 import { EmailService } from '../email/email.service';
 import {
   passwordResetEmail,
@@ -97,6 +98,7 @@ export class AuthService {
     private readonly auditLog: AuditLogService,
     private readonly loginLockout: LoginLockoutService,
     private readonly twoFactor: TwoFactorService,
+    private readonly cryptoService: CryptoService,
     private readonly configHelper: ConfigHelper,
     private readonly otpHelper: OtpHelper,
   ) {
@@ -146,7 +148,7 @@ export class AuthService {
     });
     if (this.email.isConfigured()) {
       const tpl = registerOtpEmail({ code });
-      await this.email.sendMail({
+      await this.email.enqueue({
         to: email,
         subject: tpl.subject,
         html: tpl.html,
@@ -189,7 +191,7 @@ export class AuthService {
     });
     if (this.email.isConfigured()) {
       const tpl = registerOtpEmail({ code });
-      await this.email.sendMail({
+      await this.email.enqueue({
         to: email,
         subject: tpl.subject,
         html: tpl.html,
@@ -272,7 +274,7 @@ export class AuthService {
         dashboardUrl,
       });
       this.email
-        .sendMail({
+        .enqueue({
           to: user.email,
           ...template,
         })
@@ -325,7 +327,7 @@ export class AuthService {
         );
       } else if (this.email.isConfigured()) {
         const tpl = passwordResetEmail({ resetUrl });
-        await this.email.sendMail({
+        await this.email.enqueue({
           to: email,
           subject: tpl.subject,
           html: tpl.html,
@@ -559,9 +561,10 @@ export class AuthService {
     }
 
     // Check TOTP token or backup code
+    const decryptedSecret = this.cryptoService.decrypt(user.twoFactorSecret);
     const isTotpValid = this.twoFactor.verifyToken(
       dto.twoFactorToken,
-      user.twoFactorSecret,
+      decryptedSecret,
     );
     if (!isTotpValid) {
       const isBackupCode = await this.twoFactor.verifyAndConsumeBackupCode(
@@ -623,82 +626,6 @@ export class AuthService {
         isSuperAdmin,
         platformStaffRole: user.platformStaffRole ?? null,
         emailVerified: user.emailVerified,
-      },
-      workspaces: workspaceList,
-      ...tokens,
-    };
-  }
-
-  /**
-   * Dev helper: authenticate as the seeded super admin when present, else the first
-   * eligible user (same response shape as login).
-   */
-  async devLoginAsFirstUser() {
-    const select = {
-      id: true,
-      email: true,
-      fullName: true,
-      locale: true,
-      isSuperAdmin: true,
-      platformStaffRole: true,
-    } as const;
-
-    const superUser = await this.prisma.user.findFirst({
-      where: { isActive: true, isSuperAdmin: true },
-      orderBy: { createdAt: 'asc' },
-      select,
-    });
-
-    const user =
-      superUser ??
-      (await this.prisma.user.findFirst({
-        where: {
-          isActive: true,
-          OR: [{ emailVerified: true }, { isSuperAdmin: true }],
-        },
-        orderBy: { createdAt: 'asc' },
-        select,
-      }));
-    if (!user) {
-      throw new BadRequestException(
-        'No active users in the database. Register an account first.',
-      );
-    }
-
-    const isSuperAdmin = user.isSuperAdmin === true;
-
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() },
-    });
-
-    const tokens = await this.issueTokenPair({
-      sub: user.id,
-      email: user.email,
-    });
-    await this.setRefreshTokenSession(
-      user.id,
-      tokens.refreshToken,
-      tokens.sessionId,
-    );
-
-    if (isSuperAdmin) {
-      await this.workspaces.ensureAdminControlEntry(user.id);
-    }
-
-    const workspaceList = await this.buildWorkspaceListForUser(
-      user.id,
-      isSuperAdmin,
-    );
-
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        fullName: user.fullName,
-        locale: user.locale,
-        isSuperAdmin,
-        platformStaffRole: user.platformStaffRole ?? null,
       },
       workspaces: workspaceList,
       ...tokens,
@@ -785,6 +712,24 @@ export class AuthService {
 
   async logout(userId: string): Promise<void> {
     await this.prisma.refreshToken.deleteMany({ where: { userId } });
+  }
+
+  /**
+   * Revoke all refresh token sessions for a user.
+   * Used when a user's role or permissions change to prevent
+   * stale JWT-based privilege escalation.
+   *
+   * Official source: OWASP A07:2021 — "When a user's role or permissions
+   * change, invalidate existing sessions."
+   */
+  async revokeAllSessions(userId: string): Promise<void> {
+    await this.prisma.$transaction([
+      this.prisma.refreshToken.deleteMany({ where: { userId } }),
+      this.prisma.user.update({
+        where: { id: userId },
+        data: { refreshTokenHash: null },
+      }),
+    ]);
   }
 
   /**
