@@ -1,0 +1,156 @@
+@import 'tailwindcss';
+
+/* ═══════════════════════════════════════════════════════════
+   ORCA DESIGN SYSTEM — Control Panel
+   Blue-600 primary · Gray neutrals · Clean surfaces
+   Same design tokens as dashboard
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  /* Spacing scale — 4/8/12/16/24/32/48/64 */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Density — comfortable (default) */
+  --density-card-px: 1.5rem;
+  --density-card-py: 1.5rem;
+  --density-row-py: 0.75rem;
+  --density-gap: 1.5rem;
+  --density-label-mb: 0.5rem;
+
+  /* Brand — Blue-600 matching ORCA */
+  --vc-navy: 221 83% 53%;
+  --vc-navy-mid: 221 83% 58%;
+  --vc-navy-soft: 221 83% 96%;
+
+  /* Semantic — light mode */
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: var(--vc-navy);
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 14% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 9% 46%;
+  --accent: 220 14% 96%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: var(--vc-navy);
+  --radius: 0.625rem;
+
+  /* z-index scale */
+  --z-content: 1;
+  --z-tooltip: 20;
+  --z-dropdown: 30;
+  --z-drawer-backdrop: 30;
+  --z-drawer: 35;
+  --z-modal: 40;
+  --z-toast: 50;
+
+  /* Animation durations */
+  --duration-fast: 100ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+
+  /* Easing */
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark {
+  --background: 222 47% 7%;
+  --foreground: 210 40% 98%;
+  --card: 222 47% 9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222 47% 9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: var(--vc-navy-mid);
+  --primary-foreground: 0 0% 100%;
+  --secondary: 217 33% 17%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 217 33% 17%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 217 33% 20%;
+  --input: 217 33% 20%;
+  --ring: var(--vc-navy-mid);
+}
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --z-content: var(--z-content);
+  --z-tooltip: var(--z-tooltip);
+  --z-dropdown: var(--z-dropdown);
+  --z-drawer-backdrop: var(--z-drawer-backdrop);
+  --z-drawer: var(--z-drawer);
+  --z-modal: var(--z-modal);
+  --z-toast: var(--z-toast);
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+/* Scrollbar */
+.vc-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.vc-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.vc-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+.vc-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* RTL font */
+.font-ar {
+  font-family: var(--font-cairo), 'Cairo', sans-serif;
+}

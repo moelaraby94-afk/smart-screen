@@ -1,0 +1,59 @@
+# syntax=docker/dockerfile:1
+## Multi-stage Next.js control-panel
+FROM node:20-bookworm-slim AS build
+WORKDIR /repo
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY package.json package-lock.json ./
+COPY apps/backend/package.json apps/backend/
+COPY apps/dashboard/package.json apps/dashboard/
+COPY apps/player/package.json apps/player/
+COPY apps/marketing/package.json apps/marketing/
+COPY apps/control-panel/package.json apps/control-panel/
+COPY packages/ ./packages/
+
+RUN npm ci
+
+COPY apps/control-panel ./apps/control-panel
+
+ARG NEXT_PUBLIC_API_BASE_URL=
+ARG INTERNAL_API_BASE_URL=http://backend:3000/api/v1
+ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+ENV INTERNAL_API_BASE_URL=${INTERNAL_API_BASE_URL}
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN npm run build -w apps/control-panel \
+  && npm prune --omit=dev
+
+FROM node:20-bookworm-slim AS runner
+WORKDIR /repo
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3002
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates curl \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /repo/package.json /repo/package-lock.json ./
+COPY --from=build /repo/node_modules ./node_modules
+COPY --from=build /repo/apps/control-panel ./apps/control-panel
+
+RUN addgroup --system --gid 1001 appgroup && \
+    adduser --system --uid 1001 --ingroup appgroup appuser
+
+RUN chown -R appuser:appgroup /repo/apps/control-panel/.next
+
+WORKDIR /repo/apps/control-panel
+EXPOSE 3002
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
+  CMD curl -fsS "http://127.0.0.1:3002/" >/dev/null || exit 1
+
+USER appuser
+
+CMD ["sh", "-c", "npx next start -p ${PORT:-3002} -H 0.0.0.0"]

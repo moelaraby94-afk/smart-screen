@@ -1,0 +1,160 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import { motion, useReducedMotion } from 'framer-motion';
+import { HardDrive, Link2, MonitorSmartphone, Activity, RefreshCw } from 'lucide-react';
+import { AdminCosmicLoader } from '@/components/admin/admin-cosmic-loader';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { fetchAdminStats } from './admin-api';
+import { ICON_STROKE } from '@/lib/icon-stroke';
+
+type AdminOverview = {
+  screensOnline: number;
+  screensTotal: number;
+  storageUsedBytes: number;
+  storageQuotaBytes: number | null;
+  pairingPendingActive: number;
+  healthOnline: number;
+  healthOffline: number;
+  healthMaintenance: number;
+  healthCacheMode: number;
+};
+
+type StatsPayload = {
+  adminOverview?: AdminOverview;
+};
+
+function formatBytes(n: number, locale: string): string {
+  const nf = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
+  if (n < 1024) return `${nf.format(n)} B`;
+  if (n < 1024 * 1024) return `${nf.format(n / 1024)} KB`;
+  if (n < 1024 * 1024 * 1024) return `${nf.format(n / (1024 * 1024))} MB`;
+  return `${nf.format(n / (1024 * 1024 * 1024))} GB`;
+}
+
+export function AdminHomeOverviewClient() {
+  const locale = useLocale();
+  const t = useTranslations('adminHomeOverview');
+  const prefersReduced = useReducedMotion();
+  const [overview, setOverview] = useState<AdminOverview | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    const res = await fetchAdminStats();
+    if (!res.ok) {
+      toast.error(t('loadFailed'));
+      setError(t('failed'));
+      return;
+    }
+    const body = (await res.json()) as StatsPayload;
+    if (!body.adminOverview) {
+      setError(t('failed'));
+      return;
+    }
+    setOverview(body.adminOverview);
+    setError(null);
+  }, [t]);
+
+  useEffect(() => {
+    void load();
+    const id = window.setInterval(() => void load(), 30_000);
+    return () => window.clearInterval(id);
+  }, [load]);
+
+  if (error && !overview) {
+    return (
+      <div role="alert" className="flex flex-col items-center gap-3 py-12 text-center">
+        <p className="text-sm text-destructive">{error}</p>
+        <Button variant="outline" size="sm" onClick={() => void load()}>
+          <RefreshCw className="me-1.5 h-4 w-4" />
+          {t('retry')}
+        </Button>
+      </div>
+    );
+  }
+
+  if (!overview) {
+    return <AdminCosmicLoader label={t('loading')} />;
+  }
+
+  const nf = (n: number) => new Intl.NumberFormat(locale).format(n);
+  const storageSub =
+    overview.storageQuotaBytes != null && overview.storageQuotaBytes > 0
+      ? t('cards.storageSubQuota', {
+          used: formatBytes(overview.storageUsedBytes, locale),
+          quota: formatBytes(overview.storageQuotaBytes, locale),
+        })
+      : t('cards.storageSubNoQuota', {
+          used: formatBytes(overview.storageUsedBytes, locale),
+        });
+
+  const cards = [
+    {
+      key: 'screens',
+      label: t('cards.screens'),
+      value: t('cards.screensValue', {
+        active: nf(overview.screensOnline),
+        total: nf(overview.screensTotal),
+      }),
+      sub: t('cards.screensSub'),
+      icon: MonitorSmartphone,
+    },
+    {
+      key: 'storage',
+      label: t('cards.storage'),
+      value: formatBytes(overview.storageUsedBytes, locale),
+      sub: storageSub,
+      icon: HardDrive,
+    },
+    {
+      key: 'pairing',
+      label: t('cards.pairing'),
+      value: nf(overview.pairingPendingActive),
+      sub: t('cards.pairingSub'),
+      icon: Link2,
+    },
+    {
+      key: 'health',
+      label: t('cards.health'),
+      value: t('cards.healthValue', {
+        online: nf(overview.healthOnline),
+        offline: nf(overview.healthOffline),
+      }),
+      sub: t('cards.healthSub', {
+        maintenance: nf(overview.healthMaintenance),
+        cache: nf(overview.healthCacheMode),
+      }),
+      icon: Activity,
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+      {cards.map((c, i) => (
+        <motion.div
+          key={c.key}
+          initial={prefersReduced ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={prefersReduced ? { duration: 0 } : { delay: 0.05 * i }}
+          className="vc-card-surface relative overflow-hidden rounded-3xl p-7"
+        >
+          <div className="absolute -end-6 -top-6 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
+          <div className="relative flex items-start justify-between gap-4">
+            <div>
+              <p className="vc-page-kicker">{c.label}</p>
+              <p className="mt-3 font-mono-nums text-2xl font-bold tracking-tight sm:text-3xl">
+                {c.value}
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">{c.sub}</p>
+            </div>
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+              <c.icon className="h-6 w-6 text-primary" strokeWidth={ICON_STROKE} />
+            </div>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
