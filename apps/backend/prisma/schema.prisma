@@ -422,6 +422,8 @@ model WorkspaceMember {
 
   @@unique([workspaceId, userId])
 
+  @@index([userId])
+
 }
 
 
@@ -546,6 +548,10 @@ model Screen {
   campaigns     Campaign[]     @relation("CampaignScreen")
 
   @@index([workspaceId, playlistGroupId])
+
+  @@index([workspaceId, status])
+
+  @@index([workspaceId, lastSeenAt])
 
 }
 
@@ -881,6 +887,8 @@ model Playlist {
 
   @@index([workspaceId])
 
+  @@index([workspaceId, isPublished])
+
 }
 
 
@@ -965,6 +973,9 @@ model Schedule {
 
   enabled     Boolean  @default(true)
 
+  /// If true, schedule is skipped on holidays defined for this workspace
+  excludeHolidays Boolean @default(false)
+
   createdAt   DateTime @default(now())
 
   updatedAt   DateTime @updatedAt
@@ -982,6 +993,8 @@ model Schedule {
   @@index([playlistId])
 
   @@index([screenId, startTime, endTime])
+
+  @@index([workspaceId, startDate])
 
 }
 
@@ -1106,6 +1119,8 @@ model Subscription {
   updatedAt        DateTime           @updatedAt
 
   workspace        Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([status, currentPeriodEnd])
 
 }
 
@@ -1621,5 +1636,254 @@ model CampaignHistory {
   campaign    Campaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@index([campaignId])
+
+}
+
+/// Platform-wide settings stored as key-value pairs with categories.
+/// Replaces the file-based admin-runtime.store.ts.
+model PlatformSettings {
+
+  id        String   @id @default(cuid())
+
+  key       String   @unique
+
+  value     String
+
+  category  String
+
+  updatedAt DateTime @updatedAt
+
+  updatedBy String?
+
+  @@index([category])
+
+}
+
+/// One-time, short-lived token for cross-domain impersonation.
+/// Platform admin generates a token, customer app redeems it.
+model ExchangeToken {
+
+  id           String    @id @default(cuid())
+
+  token        String    @unique
+
+  tokenHash    String    @unique
+
+  actorUserId  String
+
+  targetUserId String
+
+  workspaceId  String?
+
+  expiresAt    DateTime
+
+  usedAt       DateTime?
+
+  createdAt    DateTime  @default(now())
+
+  @@index([tokenHash])
+
+  @@index([expiresAt])
+
+}
+
+/// Security event log for tracking suspicious activities and security-critical actions.
+model SecurityEventLog {
+
+  id          String   @id @default(cuid())
+
+  /// Event type: FAILED_LOGIN, BRUTE_FORCE_LOCKOUT, PRIVILEGE_ESCALATION,
+  /// SUSPICIOUS_ACTIVITY, RATE_LIMIT_EXCEEDED, CSRF_FAILURE, JWT_INVALID,
+  /// IMPERSONATION_START, IMPERSONATION_EXIT, PASSWORD_RESET_REQUESTED
+  eventType   String
+
+  /// Severity: LOW, MEDIUM, HIGH, CRITICAL
+  severity    String   @default("MEDIUM")
+
+  /// User ID if authenticated, null for anonymous
+  userId      String?
+
+  /// Workspace ID if applicable
+  workspaceId String?
+
+  /// Client IP address
+  ipAddress   String?
+
+  /// User agent string
+  userAgent   String?
+
+  /// Additional context as JSON
+  metadata    Json?
+
+  createdAt   DateTime @default(now())
+
+  @@index([eventType, createdAt])
+
+  @@index([userId, createdAt])
+
+  @@index([severity, createdAt])
+
+}
+
+/// Proof-of-play tracking: records when content was displayed on a screen.
+model ProofOfPlay {
+
+  id          String   @id @default(cuid())
+
+  workspaceId String
+
+  screenId    String
+
+  /// Type of content: MEDIA, CANVAS, PLAYLIST
+  contentType String
+
+  /// ID of the content item
+  contentId   String?
+
+  /// Name of the content for reporting (denormalized)
+  contentName String?
+
+  /// Playlist ID if the item was part of a playlist
+  playlistId  String?
+
+  /// When playback started (UTC)
+  playedAt    DateTime @default(now())
+
+  /// Duration in seconds the content was displayed
+  durationSec Int      @default(0)
+
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId, playedAt])
+
+  @@index([screenId, playedAt])
+
+  @@index([contentId, playedAt])
+
+}
+
+/// Holiday definitions for schedule exclusion/inclusion.
+model Holiday {
+
+  id          String   @id @default(cuid())
+
+  workspaceId String
+
+  /// Holiday name (e.g. "National Day", "Eid al-Fitr")
+  name        String
+
+  /// Holiday date (date only, time portion ignored)
+  date        DateTime
+
+  /// Optional end date for multi-day holidays (inclusive)
+  endDate     DateTime?
+
+  /// If true, schedules with excludeHolidays=true will skip this day
+  isRecurring Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+
+  updatedAt   DateTime @updatedAt
+
+  @@index([workspaceId, date])
+
+}
+
+/// Command acknowledgment from player screens.
+model CommandAck {
+
+  id          String   @id @default(cuid())
+
+  screenId    String
+
+  /// Command type that was acknowledged
+  command     String
+
+  /// Unique message ID from the emitted command
+  messageId   String
+
+  /// ACK status: RECEIVED, EXECUTED, FAILED
+  status      String   @default("RECEIVED")
+
+  /// Optional error message if status is FAILED
+  errorMessage String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([screenId, createdAt])
+
+  @@index([messageId])
+
+}
+
+/// Crash report from a player device.
+model CrashReport {
+
+  id          String   @id @default(cuid())
+
+  screenId    String?
+
+  workspaceId String?
+
+  /// Player software version
+  playerVersion String?
+
+  /// Player platform
+  platform    String?
+
+  /// Crash stack trace or error message
+  stackTrace  String
+
+  /// Additional diagnostic data as JSON
+  diagnostics Json?
+
+  /// Client IP
+  ipAddress   String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([screenId, createdAt])
+
+  @@index([workspaceId, createdAt])
+
+}
+
+/// OTA (Over-The-Air) update for player software.
+model PlayerOtaUpdate {
+
+  id            String   @id @default(cuid())
+
+  /// Version string of the update
+  version       String   @unique
+
+  /// Platform: ANDROID, TIZEN, WEBOS, WEB, or ALL
+  platform      String   @default("ALL")
+
+  /// Download URL for the update package
+  downloadUrl   String
+
+  /// SHA-256 checksum of the update package
+  checksum      String?
+
+  /// Release notes
+  releaseNotes  String?
+
+  /// Minimum player version required to apply this update
+  minVersion    String?
+
+  /// Whether this update is mandatory (forces install)
+  isMandatory   Boolean  @default(false)
+
+  /// Whether the update is published and available to players
+  isPublished   Boolean  @default(false)
+
+  /// Rollout percentage (0-100) for staged rollouts
+  rolloutPercent Int     @default(100)
+
+  createdAt     DateTime @default(now())
+
+  updatedAt     DateTime @updatedAt
+
+  @@index([platform, isPublished])
 
 }
