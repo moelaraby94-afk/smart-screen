@@ -1,6 +1,7 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import importPlugin from "eslint-plugin-import";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -13,6 +14,25 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    plugins: { import: importPlugin },
+    rules: {
+      "import/no-restricted-paths": [
+        "error",
+        {
+          basePath: "./src",
+          zones: [
+            {
+              target: "./features/**",
+              from: ["./features/admin/**"],
+              message: "Customer features cannot import admin features",
+              except: ["./features/auth/**"],
+            },
+          ],
+        },
+      ],
+    },
+  },
   {
     rules: {
       // React Compiler / eslint-plugin-react-hooks: flags common data-fetch & reset patterns in effects.

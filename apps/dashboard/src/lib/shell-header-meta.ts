@@ -33,38 +33,8 @@ export function useShellHeaderMeta(pathname: string | null): ShellHeaderMeta {
     const join = (segments: string[]) => `${base}/${segments.join('/')}`;
 
     if (
-      rest[0] === 'admin' &&
-      rest[1] === 'customers' &&
-      rest[2] &&
-      rest[3] === 'workspace' &&
-      rest[4] &&
-      rest.length === 5
+      rest[0] === 'branches' && rest[1] && rest[2] === 'playlists' && rest[3]
     ) {
-      return {
-        pageTitle: t('pageTitles.adminCustomerBranch'),
-        kicker: '',
-        showBack: true,
-        backHref: join(['admin', 'customers', rest[2]]),
-        backLabel: t('backToCustomerProfile'),
-      };
-    }
-
-    if (
-      rest[0] === 'admin' &&
-      rest[1] === 'customers' &&
-      rest[2] &&
-      rest.length === 3
-    ) {
-      return {
-        pageTitle: t('pageTitles.adminCustomerProfile'),
-        kicker: '',
-        showBack: true,
-        backHref: join(['admin', 'customers']),
-        backLabel: t('backToCustomers'),
-      };
-    }
-
-    if (rest[0] === 'branches' && rest[1] && rest[2] === 'playlists' && rest[3]) {
       return {
         pageTitle: t('pageTitles.branchPlaylist'),
         kicker: '',
@@ -153,30 +123,6 @@ export function useShellHeaderMeta(pathname: string | null): ShellHeaderMeta {
       pageTitle = t('pageTitles.settingsBilling');
     } else if (rest[0] === 'settings' && rest[1] === 'workspace') {
       pageTitle = t('pageTitles.settingsWorkspace');
-    } else if (rest[0] === 'admin' && rest[1] === 'customers') {
-      pageTitle = t('pageTitles.adminCustomers');
-    } else if (rest[0] === 'admin' && rest[1] === 'users') {
-      pageTitle = t('pageTitles.adminUsers');
-    } else if (rest[0] === 'admin' && rest[1] === 'fleet') {
-      pageTitle = t('pageTitles.adminFleet');
-    } else if (rest[0] === 'admin' && rest[1] === 'screens') {
-      pageTitle = t('pageTitles.adminScreens');
-    } else if (rest[0] === 'admin' && rest[1] === 'workspaces') {
-      pageTitle = t('pageTitles.adminWorkspaces');
-    } else if (rest[0] === 'admin' && rest[1] === 'staff') {
-      pageTitle = t('pageTitles.adminStaff');
-    } else if (rest[0] === 'admin' && rest[1] === 'stats') {
-      pageTitle = t('pageTitles.adminStats');
-    } else if (rest[0] === 'admin' && rest[1] === 'logs') {
-      pageTitle = t('pageTitles.adminLogs');
-    } else if (rest[0] === 'admin' && rest[1] === 'settings') {
-      pageTitle = t('pageTitles.adminSettings');
-    } else if (rest[0] === 'admin' && rest[1] === 'billing') {
-      pageTitle = t('pageTitles.settingsBilling');
-    } else if (rest[0] === 'admin' && rest.length === 1) {
-      pageTitle = t('pageTitles.adminHome');
-    } else if (rest[0] === 'admin') {
-      pageTitle = t('pageTitles.adminOverview');
     }
 
     const clientMainWithBack = new Set([
