@@ -4,7 +4,11 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import request from 'supertest';
 import { WorkspacesController } from '../src/domains/workspaces/workspaces.controller';
-import { WorkspacesService } from '../src/domains/workspaces/workspaces.service';
+import { WorkspaceCrudService } from '../src/domains/workspaces/workspace-crud.service';
+import { WorkspaceBootstrapService } from '../src/domains/workspaces/workspace-bootstrap.service';
+import { WorkspaceMembersService } from '../src/domains/workspaces/workspace-members.service';
+import { WorkspaceInvitesService } from '../src/domains/workspaces/workspace-invites.service';
+import { WorkspaceAccountsService } from '../src/domains/workspaces/workspace-accounts.service';
 import { PairingService } from '../src/domains/pairing/pairing.service';
 import { WorkspaceAuthHelper } from '../src/common/auth/workspace-auth.helper';
 import { RolesGuard } from '../src/common/auth/roles.guard';
@@ -16,6 +20,7 @@ import { ConfigService } from '@nestjs/config';
 import { ScreenHeartbeatService } from '../src/domains/realtime/screen-heartbeat.service';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { UserThrottlerGuard } from '../src/common/throttler/user-throttler.guard';
+import { RedisService } from '../src/common/redis/redis.service';
 import { UserRole } from '@prisma/client';
 
 const JWT_SECRET = 'test-secret';
@@ -39,21 +44,52 @@ describe('Workspace flow (integration)', () => {
         RolesGuard,
         AccountContextHelper,
         UserThrottlerGuard,
-        PairingService,
         WorkspaceAuthHelper,
         {
-          provide: WorkspacesService,
+          provide: WorkspaceCrudService,
           useValue: {
-            listAccountWorkspaces: jest.fn().mockResolvedValue([]),
-            createForUser: jest
-              .fn()
-              .mockResolvedValue({ id: WS_ID, name: 'Test WS' }),
-            getWorkspace: jest
-              .fn()
-              .mockResolvedValue({ id: WS_ID, name: 'Test WS' }),
-            update: jest.fn().mockResolvedValue({ id: WS_ID, name: 'Updated' }),
-            remove: jest.fn().mockResolvedValue(undefined),
+            createForUser: jest.fn().mockResolvedValue({ id: WS_ID, name: 'Test WS' }),
+            getWorkspace: jest.fn().mockResolvedValue({ id: WS_ID, name: 'Test WS' }),
+            updateWorkspace: jest.fn().mockResolvedValue({ id: WS_ID, name: 'Updated' }),
+            deleteWorkspace: jest.fn().mockResolvedValue(undefined),
+            notifyPairingStarted: jest.fn().mockResolvedValue(undefined),
+            recentActivity: jest.fn().mockResolvedValue([]),
           },
+        },
+        {
+          provide: WorkspaceBootstrapService,
+          useValue: { bootstrapDemo: jest.fn().mockResolvedValue({ id: WS_ID }), seedDemoForMember: jest.fn().mockResolvedValue(undefined) },
+        },
+        {
+          provide: WorkspaceMembersService,
+          useValue: { listMembers: jest.fn().mockResolvedValue([]), updateMemberRole: jest.fn(), removeMember: jest.fn() },
+        },
+        {
+          provide: WorkspaceInvitesService,
+          useValue: { inviteMember: jest.fn(), listInvitations: jest.fn().mockResolvedValue([]), cancelInvitation: jest.fn(), resendInvitation: jest.fn(), acceptInvitation: jest.fn() },
+        },
+        {
+          provide: WorkspaceAccountsService,
+          useValue: {
+            listAccountMembers: jest.fn().mockResolvedValue([]),
+            listAccountWorkspaces: jest.fn().mockResolvedValue([]),
+            createAccountMember: jest.fn(),
+            addAccountMember: jest.fn(),
+            updateAccountMemberRole: jest.fn(),
+            removeAccountMember: jest.fn(),
+          },
+        },
+        {
+          provide: PairingService,
+          useValue: {
+            startPairing: jest.fn().mockResolvedValue({ pairingCode: '123456' }),
+            completePairing: jest.fn().mockResolvedValue({ screenId: 'screen-1' }),
+            claimSession: jest.fn().mockResolvedValue({ screenId: 'screen-1' }),
+          },
+        },
+        {
+          provide: RedisService,
+          useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn(), ping: jest.fn() },
         },
         {
           provide: PrismaService,

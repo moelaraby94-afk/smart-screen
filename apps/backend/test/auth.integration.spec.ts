@@ -4,7 +4,9 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import request from 'supertest';
 import { AuthController } from '../src/domains/auth/auth.controller';
-import { AuthService } from '../src/domains/auth/auth.service';
+import { AuthCredentialsService } from '../src/domains/auth/auth-credentials.service';
+import { AuthTokenService } from '../src/domains/auth/auth-token.service';
+import { AuthProfileService } from '../src/domains/auth/auth-profile.service';
 import { TwoFactorService } from '../src/domains/auth/two-factor.service';
 import { JwtStrategy } from '../src/domains/auth/jwt.strategy';
 import { PrismaService } from '../src/common/prisma/prisma.service';
@@ -14,19 +16,21 @@ import { EmailService } from '../src/domains/email/email.service';
 import { OtpHelper } from '../src/common/auth/otp.helper';
 import { AccountContextHelper } from '../src/common/auth/account-context.helper';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { RedisService } from '../src/common/redis/redis.service';
 
 const JWT_SECRET = 'test-secret';
 
 describe('Auth flow (integration)', () => {
   let app: INestApplication;
-  let authService: {
+  let credentialsService: {
     login: jest.Mock;
     registerStart: jest.Mock;
-    me: jest.Mock;
   };
+  let profileService: { me: jest.Mock };
+  let tokenService: { refreshTokens: jest.Mock; logout: jest.Mock };
 
   beforeAll(async () => {
-    authService = {
+    credentialsService = {
       login: jest.fn().mockResolvedValue({
         accessToken: 'access-token-123',
         refreshToken: 'refresh-token-123',
@@ -34,7 +38,16 @@ describe('Auth flow (integration)', () => {
         workspaces: [],
       }),
       registerStart: jest.fn().mockResolvedValue({ verificationSent: true }),
+    };
+    profileService = {
       me: jest.fn().mockResolvedValue({ id: 'user_1', email: 'test@test.com' }),
+    };
+    tokenService = {
+      refreshTokens: jest.fn().mockResolvedValue({
+        accessToken: 'access-token-123',
+        refreshToken: 'refresh-token-123',
+      }),
+      logout: jest.fn().mockResolvedValue(undefined),
     };
 
     const moduleRef = await Test.createTestingModule({
@@ -50,8 +63,20 @@ describe('Auth flow (integration)', () => {
         OtpHelper,
         LoginLockoutService,
         {
-          provide: AuthService,
-          useValue: authService,
+          provide: RedisService,
+          useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn(), ping: jest.fn() },
+        },
+        {
+          provide: AuthCredentialsService,
+          useValue: credentialsService,
+        },
+        {
+          provide: AuthTokenService,
+          useValue: tokenService,
+        },
+        {
+          provide: AuthProfileService,
+          useValue: profileService,
         },
         {
           provide: TwoFactorService,
@@ -122,7 +147,7 @@ describe('Auth flow (integration)', () => {
       expect(res.status).toBe(200);
       expect(res.body.accessToken).toBe('access-token-123');
       expect(res.body.user.email).toBe('test@test.com');
-      expect(authService.login).toHaveBeenCalledWith(
+      expect(credentialsService.login).toHaveBeenCalledWith(
         { email: 'test@test.com', password: 'Password123!' },
         expect.any(String),
       );
