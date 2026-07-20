@@ -9,7 +9,7 @@ import { CheckCircle2, ChevronRight, Radio, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { usePlayerPairing } from '@/features/branches/use-player-pairing';
-import { fetchPlaylistOptions, type PlaylistOption } from '@/features/screens/api/screens-api';
+// Branches come from workspace context, not playlist API
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,7 +33,6 @@ export function PairingWizardClient({ locale }: Props) {
   const [screenName, setScreenName] = useState('');
   const [nameError, setNameError] = useState<string | null>(null);
   const [branchId, setBranchId] = useState('');
-  const [branches, setBranches] = useState<PlaylistOption[]>([]);
   const autoAdvanceRef = useRef(false);
   const prefersReducedMotion = useReducedMotion();
 
@@ -50,18 +49,7 @@ export function PairingWizardClient({ locale }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (!workspaceId) {
-      setBranches([]);
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      const items = await fetchPlaylistOptions(workspaceId);
-      if (!cancelled) setBranches(items);
-    })();
-    return () => { cancelled = true; };
-  }, [workspaceId]);
+  // Branches (workspaces) come from workspace context — no API call needed
 
   useEffect(() => {
     if (step === 1 && pairing.code.length === 6 && !autoAdvanceRef.current) {
@@ -428,7 +416,7 @@ export function PairingWizardClient({ locale }: Props) {
                     autoFocus
                   >
                     <option value="">{t('branchNone')}</option>
-                    {branches.map((b) => (
+                    {workspaces.map((b) => (
                       <option key={b.id} value={b.id}>{b.name}</option>
                     ))}
                   </select>

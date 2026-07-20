@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { useWorkspace } from '@/features/workspace/workspace-context';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -138,6 +139,7 @@ export function ScreenSetupModal({
   const t = useTranslations('screenSetupModal');
   const activeLocale = useLocale();
   const router = useRouter();
+  const { workspaces } = useWorkspace();
 
   const [wizardStep, setWizardStep] = useState(1);
   const autoAdvanceRef = useRef(false);
@@ -187,7 +189,7 @@ export function ScreenSetupModal({
       fetchSchedules(workspaceId),
     ]);
     setPlaylists(pls);
-    setBranchOptions(pls.map((p) => ({ id: p.id, name: p.name })));
+    setBranchOptions(workspaces.map((w) => ({ id: w.id, name: w.name })));
     setSchedules(schsRes.ok ? await readPageItems<ScheduleOpt>(schsRes) : []);
   }, [workspaceId]);
 
