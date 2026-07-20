@@ -306,6 +306,10 @@
     "saved": "Design saved. Live players will update.",
     "saveFailed": "Could not save design.",
     "saveNeedCanvas": "Select or create a design first.",
+    "createPlaylist": "Create playlist",
+    "playlistSuffix": "Playlist",
+    "playlistCreated": "Playlist created from this design. Opening studio…",
+    "playlistCreateFailed": "Could not create playlist from design.",
     "createFailed": "Could not create design.",
     "created": "Design created.",
     "designName": "Design name",
@@ -411,7 +415,20 @@
     "preview": "Preview",
     "exitPreview": "Exit preview",
     "viewerNoAccess": "Studio access restricted",
-    "viewerNoAccessDesc": "You need Owner or Editor permissions to use the Canvas Studio."
+    "viewerNoAccessDesc": "You need Owner or Editor permissions to use the Canvas Studio.",
+    "undo": "Undo",
+    "redo": "Redo",
+    "duplicate": "Duplicate",
+    "copy": "Copy",
+    "paste": "Paste",
+    "deleteCanvas": "Delete canvas",
+    "canvasDeleted": "Canvas deleted.",
+    "deleteFailed": "Could not delete canvas.",
+    "confirmDeleteTitle": "Delete this canvas?",
+    "confirmDeleteDesc": "This action cannot be undone. The canvas and all its content will be permanently removed.",
+    "stroke": "Stroke",
+    "strokeWidth": "Stroke width",
+    "cornerRadius": "Corner radius"
   },
   "schedules": {
     "title": "Schedules",
@@ -1322,6 +1339,7 @@
       "team": "Team",
       "addScreen": "Add Screen",
       "createPlaylist": "Create Playlist",
+      "uploadMedia": "Upload Media",
       "viewSchedule": "View Schedule"
     },
     "workspaceSummary": {
@@ -1356,16 +1374,20 @@
       "seats": "Seats",
       "renewsOn": "Renews on",
       "daysLeft": "{count, plural, =1 {1 day left} other {# days left}}",
-      "empty": "No billing information available."
+      "empty": "No billing information available.",
+      "error": "Could not load subscription info.",
+      "retry": "Retry"
     }
   },
   "activeContent": {
     "title": "Active Content",
-    "subtitle": "What\u2019s playing on your screens right now",
+    "subtitle": "What's playing on your screens right now",
     "viewAll": "View all",
     "empty": "No screens active",
     "emptyDesc": "Screens will appear here once they are paired and online.",
-    "noPlaylist": "No playlist assigned"
+    "noPlaylist": "No playlist assigned",
+    "error": "Could not load active content.",
+    "retry": "Retry"
   },
   "onboardingCard": {
     "ariaLabel": "Getting started",
@@ -2809,6 +2831,9 @@
     "singleZone": "Single zone",
     "multiZone": "Multi-zone",
     "orientation": "Orientation",
+    "orientLandscape": "Landscape",
+    "orientPortrait": "Portrait",
+    "orientSquare": "Square",
     "layoutType": "Layout",
     "zonePreset": "Zone preset",
     "choosePreset": "Choose preset…",

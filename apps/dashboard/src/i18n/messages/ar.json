@@ -306,6 +306,10 @@
     "saved": "تم الحفظ. ستُحدّث الشاشات المباشرة.",
     "saveFailed": "تعذر حفظ التصميم.",
     "saveNeedCanvas": "اختر أو أنشئ تصميما أولا.",
+    "createPlaylist": "إنشاء قائمة تشغيل",
+    "playlistSuffix": "قائمة تشغيل",
+    "playlistCreated": "تم إنشاء قائمة تشغيل من هذا التصميم. جاري فتح الاستوديو…",
+    "playlistCreateFailed": "تعذر إنشاء قائمة تشغيل من التصميم.",
     "createFailed": "تعذر إنشاء التصميم.",
     "created": "تم إنشاء التصميم.",
     "designName": "اسم التصميم",
@@ -411,7 +415,20 @@
     "preview": "معاينة",
     "exitPreview": "إنهاء المعاينة",
     "viewerNoAccess": "الوصول للاستوديو محظور",
-    "viewerNoAccessDesc": "تحتاج إلى صلاحيات المالك أو المحرر لاستخدام استوديو اللوحات."
+    "viewerNoAccessDesc": "تحتاج إلى صلاحيات المالك أو المحرر لاستخدام استوديو اللوحات.",
+    "undo": "تراجع",
+    "redo": "إعادة",
+    "duplicate": "تكرار",
+    "copy": "نسخ",
+    "paste": "لصق",
+    "deleteCanvas": "حذف اللوحة",
+    "canvasDeleted": "تم حذف اللوحة.",
+    "deleteFailed": "تعذر حذف اللوحة.",
+    "confirmDeleteTitle": "حذف هذه اللوحة؟",
+    "confirmDeleteDesc": "لا يمكن التراجع عن هذا الإجراء. سيتم حذف اللوحة وكل محتواها نهائيًا.",
+    "stroke": "الحدود",
+    "strokeWidth": "سمك الحدود",
+    "cornerRadius": "زاوية الاستدارة"
   },
   "schedules": {
     "title": "الجدولة",
@@ -1322,6 +1339,7 @@
       "team": "الفريق",
       "addScreen": "إضافة شاشة",
       "createPlaylist": "إنشاء قائمة تشغيل",
+      "uploadMedia": "رفع وسائط",
       "viewSchedule": "عرض الجدولة"
     },
     "workspaceSummary": {
@@ -1356,7 +1374,9 @@
       "seats": "المقاعد",
       "renewsOn": "يتجدد في",
       "daysLeft": "{count, plural, =1 {يوم واحد متبقي} other {# أيام متبقية}}",
-      "empty": "لا تتوفر معلومات فوترة."
+      "empty": "لا تتوفر معلومات فوترة.",
+      "error": "تعذر تحميل معلومات الاشتراك.",
+      "retry": "إعادة المحاولة"
     }
   },
   "activeContent": {
@@ -1365,7 +1385,9 @@
     "viewAll": "عرض الكل",
     "empty": "لا توجد شاشات نشطة",
     "emptyDesc": "ستظهر الشاشات هنا بمجرد ربطها واتصالها.",
-    "noPlaylist": "لا توجد قائمة تشغيل معيّنة"
+    "noPlaylist": "لا توجد قائمة تشغيل معيّنة",
+    "error": "تعذر تحميل المحتوى النشط.",
+    "retry": "إعادة المحاولة"
   },
   "onboardingCard": {
     "ariaLabel": "البدء",
@@ -2809,6 +2831,9 @@
     "singleZone": "منطقة واحدة",
     "multiZone": "متعدد المناطق",
     "orientation": "الاتجاه",
+    "orientLandscape": "أفقي",
+    "orientPortrait": "عمودي",
+    "orientSquare": "مربع",
     "layoutType": "التخطيط",
     "zonePreset": "تقسيم المناطق",
     "choosePreset": "اختر تقسيمًا…",

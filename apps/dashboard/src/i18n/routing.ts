@@ -1,7 +1,2 @@
-import { defineRouting } from 'next-intl/routing';
+export { routing } from '@cloud-screen/shared';
 
-export const routing = defineRouting({
-  locales: ['ar', 'en'],
-  defaultLocale: 'en',
-  localePrefix: 'always',
-});
