@@ -93,7 +93,7 @@ export function PlaylistMediaLibrary({ library, canvasLibrary, onUploadComplete,
       </div>
 
       {/* Media library — scrollable */}
-      <div className="flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/40">
+      <div className="flex flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40">
         <div className="flex items-center gap-2 border-b border-border/40 px-3.5 py-2.5">
           <Library className="h-4 w-4 text-primary" />
           <h3 className="text-xs font-semibold tracking-tight text-foreground">
@@ -155,7 +155,7 @@ export function PlaylistMediaLibrary({ library, canvasLibrary, onUploadComplete,
       </div>
 
       {/* Canvas library */}
-      <div className="flex flex-col overflow-hidden rounded-2xl border border-primary/20 bg-primary/[0.02]">
+      <div className="flex flex-col overflow-hidden rounded-lg border border-primary/20 bg-primary/[0.02]">
         <div className="flex items-center gap-2 border-b border-border/40 px-3.5 py-2.5">
           <PenLine className="h-4 w-4 text-primary" />
           <h3 className="text-xs font-semibold tracking-tight text-foreground">

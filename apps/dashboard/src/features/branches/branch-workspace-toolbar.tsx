@@ -126,7 +126,7 @@ export function BranchWorkspaceToolbar({
     <div className="flex w-full justify-center px-0">
       <div
         className={cn(
-          'inline-flex w-full max-w-max flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:gap-2',
+          'inline-flex w-full max-w-max flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center sm:gap-2',
         )}
       >
         {inner}

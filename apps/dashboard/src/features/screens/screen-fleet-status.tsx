@@ -86,13 +86,13 @@ export function ScreenFleetStatusBadge({
     tone === 'overlay'
       ? {
           online:
-            'border border-emerald-400/40 bg-emerald-500/15 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.45)]',
+            'border border-success/40 bg-success/15 text-success',
           stale:
-            'border border-amber-400/40 bg-amber-500/15 text-amber-100 shadow-[0_0_14px_rgba(245,158,11,0.35)]',
+            'border border-warning/40 bg-warning/15 text-warning',
           offline:
-            'border border-red-400/35 bg-red-500/12 text-red-100 shadow-[0_0_16px_rgba(239,68,68,0.35)]',
+            'border border-destructive/35 bg-destructive/12 text-destructive',
           maintenance:
-            'border border-amber-400/35 bg-amber-500/12 text-amber-100 shadow-[0_0_14px_rgba(245,158,11,0.35)]',
+            'border border-warning/35 bg-warning/12 text-warning',
           sub: 'text-white/50',
         }
       : {
@@ -124,7 +124,7 @@ export function ScreenFleetStatusBadge({
           aria-hidden
           className={cn(
             'h-1.5 w-1.5 rounded-full',
-            reach === 'online' && 'animate-pulse bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]',
+            reach === 'online' && 'animate-pulse bg-success shadow-[0_0_8px_rgba(52,211,153,0.9)]',
             reach === 'stale' && 'bg-warning',
             reach === 'offline' && 'bg-destructive',
             reach === 'maintenance' && 'bg-warning',

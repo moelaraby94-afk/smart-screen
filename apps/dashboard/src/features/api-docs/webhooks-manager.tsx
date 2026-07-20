@@ -261,7 +261,7 @@ export function WebhooksManager() {
                     type="button"
                     onClick={() => setConfirmDeleteId(wh.id)}
                     disabled={busyId === wh.id}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:text-red-600 disabled:opacity-50"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:text-destructive disabled:opacity-50"
                     aria-label={t('webhooks.delete')}
                   >
                     <Trash2 className="h-4 w-4" />

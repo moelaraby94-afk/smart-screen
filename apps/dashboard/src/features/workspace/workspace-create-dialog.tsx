@@ -80,7 +80,7 @@ export function WorkspaceCreateDialog({ open, onOpenChange, onCreated }: Props) 
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-3xl border-border/80 sm:max-w-md">
+      <DialogContent className="rounded-lg border-border/80 sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t('title')}</DialogTitle>
           <DialogDescription>{t('description')}</DialogDescription>
@@ -103,7 +103,7 @@ export function WorkspaceCreateDialog({ open, onOpenChange, onCreated }: Props) 
           <Button
             type="button"
             variant="outline"
-            className="rounded-2xl"
+            className="rounded-lg"
             disabled={saving}
             onClick={() => onOpenChange(false)}
           >

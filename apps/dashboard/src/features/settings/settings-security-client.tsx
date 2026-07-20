@@ -134,7 +134,7 @@ export function SettingsSecurityClient() {
 
   return (
     <div className="space-y-8">
-      <div className="vc-card-surface rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
+      <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
         <h2 className="text-lg font-semibold tracking-tight">{t('changePasswordTitle')}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t('changePasswordSubtitle')}</p>
 
@@ -241,7 +241,7 @@ export function SettingsSecurityClient() {
 
       <TwoFactorSettings />
 
-      <div className="vc-card-surface rounded-2xl border border-destructive/20 bg-card p-6 shadow-sm md:p-8">
+      <div className="vc-card-surface rounded-lg border border-destructive/20 bg-card p-6 shadow-sm md:p-8">
         <h2 className="text-lg font-semibold tracking-tight">{tProfile('gdprTitle')}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{tProfile('gdprSubtitle')}</p>
         <div className="mt-6 flex flex-wrap gap-3">
@@ -266,7 +266,7 @@ export function SettingsSecurityClient() {
       </div>
 
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent className="rounded-3xl sm:max-w-md">
+        <DialogContent className="rounded-lg sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{tProfile('deleteAccountTitle')}</DialogTitle>
           </DialogHeader>
@@ -284,7 +284,7 @@ export function SettingsSecurityClient() {
             <Button
               type="button"
               variant="destructive"
-              className="rounded-2xl"
+              className="rounded-lg"
               disabled={deleting || deleteConfirm !== tProfile('deleteAccountConfirmWord')}
               onClick={() => void handleAnonymize()}
             >

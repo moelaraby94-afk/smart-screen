@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Gauge, LayoutGrid } from 'lucide-react';
+import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
 
 type Density = 'comfortable' | 'compact';
@@ -41,12 +42,13 @@ export function DensityToggle() {
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20',
       )}
       aria-label={isCompact ? t('switchToComfortable') : t('switchToCompact')}
+      aria-pressed={isCompact}
       title={isCompact ? t('switchToComfortable') : t('switchToCompact')}
     >
       {isCompact ? (
-        <LayoutGrid className="h-4 w-4" />
+        <LayoutGrid className="h-4 w-4" strokeWidth={ICON_STROKE} />
       ) : (
-        <Gauge className="h-4 w-4" />
+        <Gauge className="h-4 w-4" strokeWidth={ICON_STROKE} />
       )}
     </button>
   );

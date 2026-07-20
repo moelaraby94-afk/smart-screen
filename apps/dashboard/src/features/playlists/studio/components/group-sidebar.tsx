@@ -268,7 +268,7 @@ export function GroupSidebar({
   };
 
   return (
-    <aside className="flex w-full flex-col gap-3 rounded-2xl border border-border/60 bg-card/40 p-3 xl:w-[240px] xl:shrink-0">
+    <aside className="flex w-full flex-col gap-3 rounded-lg border border-border/60 bg-card/40 p-3 xl:w-[240px] xl:shrink-0">
       <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
         {t('groups')}
       </h3>

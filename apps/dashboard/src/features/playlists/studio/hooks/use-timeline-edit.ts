@@ -32,6 +32,7 @@ type UseTimelineEditReturn = {
   moveRow: (index: number, delta: -1 | 1) => void;
   duplicateRow: (clientId: string) => void;
   updateRowTransition: (clientId: string, transition: TransitionType) => void;
+  updateRowZone: (clientId: string, zoneName: string | null) => void;
 };
 
 export function useTimelineEdit({
@@ -280,6 +281,18 @@ export function useTimelineEdit({
     [setRows, playlistId],
   );
 
+  const updateRowZone = useCallback(
+    (clientId: string, zoneName: string | null) => {
+      setRows((prev) => {
+        pushHistory(prev);
+        return prev.map((r) =>
+          r.clientId === clientId ? { ...r, zoneName } : r,
+        );
+      });
+    },
+    [setRows, pushHistory],
+  );
+
   return {
     undoStack,
     redoStack,
@@ -291,5 +304,6 @@ export function useTimelineEdit({
     moveRow,
     duplicateRow,
     updateRowTransition,
+    updateRowZone,
   };
 }

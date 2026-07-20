@@ -9,9 +9,8 @@ import {
   useRef,
   useState,
 } from 'react';
-import { io } from 'socket.io-client';
-import { getStoredAccessToken } from '@/features/auth/session';
 import { fetchCurrentUser } from './workspace-api';
+import { useRealtimeSocket } from '@/features/realtime/realtime-provider';
 
 export type WorkspaceSummary = {
   id: string;
@@ -278,10 +277,6 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-function getRealtimeBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_REALTIME_URL ?? 'http://localhost:4000';
-}
-
 /** Workspace Socket.IO: subscription updates + pairing activity for Add Screen UX. */
 function WorkspaceSubscriptionRealtimeBridge() {
   const {
@@ -290,43 +285,23 @@ function WorkspaceSubscriptionRealtimeBridge() {
     bumpPairingActivityEpoch,
     isAuthenticated,
   } = useWorkspace();
+  const socket = useRealtimeSocket();
 
   useEffect(() => {
-    if (!isAuthenticated || !workspaceId) return;
+    if (!socket || !isAuthenticated || !workspaceId) return;
 
-    const token = getStoredAccessToken();
-    const socket = io(`${getRealtimeBaseUrl()}/realtime`, {
-      path: '/socket.io',
-      withCredentials: true,
-      auth: token ? { token } : undefined,
-      transports: ['websocket'],
-      reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 15000,
-      timeout: 20000,
-    });
-
-    const onConnect = () => {
-      socket.emit('dashboard:subscribe', { workspaceId });
-    };
-
-    socket.on('connect', onConnect);
     socket.on('workspace:subscription', () => {
       bumpWorkspaceDataEpoch();
     });
     socket.on('pairing:started', () => {
       bumpPairingActivityEpoch();
     });
-    socket.on('disconnect', (reason) => {
-      if (reason === 'io server disconnect') socket.connect();
-    });
 
     return () => {
-      socket.removeAllListeners();
-      socket.disconnect();
+      socket.off('workspace:subscription');
+      socket.off('pairing:started');
     };
-  }, [workspaceId, bumpWorkspaceDataEpoch, bumpPairingActivityEpoch, isAuthenticated]);
+  }, [socket, workspaceId, bumpWorkspaceDataEpoch, bumpPairingActivityEpoch, isAuthenticated]);
 
   return null;
 }

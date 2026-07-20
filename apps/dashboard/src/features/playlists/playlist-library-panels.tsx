@@ -27,7 +27,7 @@ export function MediaLibraryPanel({ library }: MediaLibraryPanelProps) {
   const t = useTranslations('playlistStudioClient');
 
   return (
-    <div className="rounded-2xl border border-border bg-muted/30 p-1">
+    <div className="rounded-lg border border-border bg-muted/30 p-1">
       <div className="flex items-center gap-2 border-b border-border/50 px-5 py-4">
         <Library className="h-5 w-5 text-primary" />
         <h3 className="text-sm font-semibold tracking-tight text-foreground">
@@ -51,7 +51,7 @@ export function MediaLibraryPanel({ library }: MediaLibraryPanelProps) {
                     ref={p.innerRef}
                     {...p.draggableProps}
                     {...p.dragHandleProps}
-                    className="flex items-center gap-3 rounded-2xl border border-border/80 bg-card/80 px-3 py-2.5 shadow-sm transition hover:scale-[1.01] hover:shadow-md dark:bg-card/50"
+                    className="flex items-center gap-3 rounded-lg border border-border/80 bg-card/80 px-3 py-2.5 shadow-sm transition hover:scale-[1.01] hover:shadow-md dark:bg-card/50"
                   >
                     <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
                     <div className="relative h-10 w-14 shrink-0 overflow-hidden rounded-lg bg-muted">
@@ -101,7 +101,7 @@ export function CanvasLibraryPanel({ canvasLibrary }: CanvasLibraryPanelProps) {
   const t = useTranslations('playlistStudioClient');
 
   return (
-    <div className="rounded-2xl border border-primary/20 bg-primary/[0.03] p-1">
+    <div className="rounded-lg border border-primary/20 bg-primary/[0.03] p-1">
       <div className="flex items-center gap-2 border-b border-border/50 px-5 py-4">
         <PenLine className="h-5 w-5 text-primary" />
         <h3 className="text-sm font-semibold tracking-tight text-foreground">
@@ -130,7 +130,7 @@ export function CanvasLibraryPanel({ canvasLibrary }: CanvasLibraryPanelProps) {
                       ref={p.innerRef}
                       {...p.draggableProps}
                       {...p.dragHandleProps}
-                      className="flex items-center gap-3 rounded-2xl border border-border/80 bg-card/80 px-3 py-2.5 shadow-sm transition hover:scale-[1.01] hover:shadow-md dark:bg-card/50"
+                      className="flex items-center gap-3 rounded-lg border border-border/80 bg-card/80 px-3 py-2.5 shadow-sm transition hover:scale-[1.01] hover:shadow-md dark:bg-card/50"
                     >
                       <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary">

@@ -135,7 +135,7 @@ export function QuickPublishDialog({ media, children }: Props) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="rounded-3xl sm:max-w-md">
+      <DialogContent className="rounded-lg sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-primary" />
@@ -243,7 +243,7 @@ export function QuickPublishDialog({ media, children }: Props) {
         <DialogFooter>
           <Button
             type="button"
-            className="rounded-2xl font-semibold"
+            className="rounded-lg font-semibold"
             variant="cta"
             disabled={busy || !screenId || loading}
             onClick={() => void publish()}

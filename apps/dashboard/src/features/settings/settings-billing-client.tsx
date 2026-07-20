@@ -217,7 +217,7 @@ export function SettingsBillingClient() {
   return (
     <div className="space-y-8">
       {showRetention && (
-        <div className={`rounded-2xl border p-6 shadow-sm ${isCancelled ? 'border-destructive/30 bg-destructive/5' : 'border-warning/30 bg-warning/5'}`}>
+        <div className={`rounded-lg border p-6 shadow-sm ${isCancelled ? 'border-destructive/30 bg-destructive/5' : 'border-warning/30 bg-warning/5'}`}>
           <div className="flex items-start gap-3">
             <AlertTriangle className={`mt-0.5 h-5 w-5 ${isCancelled ? 'text-destructive' : 'text-warning'}`} />
             <div className="flex-1">
@@ -257,7 +257,7 @@ export function SettingsBillingClient() {
         </div>
       )}
 
-      <div className="vc-card-surface rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
+      <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
         <h2 className="text-lg font-semibold tracking-tight">{t('currentPlan')}</h2>
         <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
           <div>
@@ -295,7 +295,7 @@ export function SettingsBillingClient() {
             <Button
               type="button"
               variant="outline"
-              className="rounded-2xl"
+              className="rounded-lg"
               disabled={portalBusy}
               onClick={() => void openBillingPortal()}
             >
@@ -307,7 +307,7 @@ export function SettingsBillingClient() {
 
       {/* Usage bars */}
       {!subLoading && sub && (
-        <div className="vc-card-surface rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
+        <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
           <h2 className="text-lg font-semibold tracking-tight">{t('usageTitle')}</h2>
           <div className="mt-6 space-y-5">
             {/* Screens usage */}
@@ -376,7 +376,7 @@ export function SettingsBillingClient() {
         </div>
       )}
 
-      <div className="vc-card-surface overflow-hidden rounded-2xl border border-border">
+      <div className="vc-card-surface overflow-hidden rounded-lg border border-border">
         <div className="border-b border-border/60 px-6 py-4">
           <h3 className="font-semibold">{t('paymentHistory')}</h3>
         </div>
@@ -435,7 +435,7 @@ export function SettingsBillingClient() {
         id="plans-section"
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="vc-glass vc-card-surface rounded-3xl p-8"
+        className="vc-glass vc-card-surface rounded-lg p-8"
       >
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div>
@@ -446,7 +446,7 @@ export function SettingsBillingClient() {
             </p>
           </div>
           <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-3 rounded-2xl border border-border/80 bg-muted/30 px-5 py-4">
+            <div className="flex items-center gap-3 rounded-lg border border-border/80 bg-muted/30 px-5 py-4">
               <CreditCard className="h-8 w-8 text-primary" />
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -461,7 +461,7 @@ export function SettingsBillingClient() {
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 shrink-0 rounded-2xl border-border/80"
+                className="h-11 shrink-0 rounded-lg border-border/80"
                 disabled={!!savingPlan || portalBusy}
                 onClick={() => void openBillingPortal()}
               >
@@ -474,7 +474,7 @@ export function SettingsBillingClient() {
         <div className="mt-10 grid gap-6 lg:grid-cols-4">
           <div
             className={cn(
-              'relative overflow-hidden rounded-3xl border p-6',
+              'relative overflow-hidden rounded-lg border p-6',
               !isPro
                 ? 'border-primary/40 bg-gradient-to-br from-primary/10 to-transparent shadow-md'
                 : 'border-border bg-card',
@@ -486,7 +486,7 @@ export function SettingsBillingClient() {
               </span>
             ) : null}
             <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
                 <Zap className="h-6 w-6 text-muted-foreground" />
               </div>
               <div>
@@ -528,7 +528,7 @@ export function SettingsBillingClient() {
 
           <div
             className={cn(
-              'relative overflow-hidden rounded-3xl border p-6',
+              'relative overflow-hidden rounded-lg border p-6',
               plan === 'STARTER'
                 ? 'border-primary/40 bg-gradient-to-br from-primary/10 to-transparent shadow-md'
                 : 'border-border bg-card',
@@ -540,7 +540,7 @@ export function SettingsBillingClient() {
               </span>
             ) : null}
             <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
                 <Zap className="h-6 w-6 text-muted-foreground" />
               </div>
               <div>
@@ -572,7 +572,7 @@ export function SettingsBillingClient() {
 
           <div
             className={cn(
-              'relative overflow-hidden rounded-3xl border p-6',
+              'relative overflow-hidden rounded-lg border p-6',
               isPro
                 ? 'border-primary/45 bg-gradient-to-br from-primary/15 to-accent/10 shadow-lg'
                 : 'border-border bg-gradient-to-br from-muted/40 to-card',
@@ -633,7 +633,7 @@ export function SettingsBillingClient() {
 
           <div
             className={cn(
-              'relative overflow-hidden rounded-3xl border p-6',
+              'relative overflow-hidden rounded-lg border p-6',
               plan === 'ENTERPRISE'
                 ? 'border-primary/45 bg-gradient-to-br from-primary/15 to-accent/10 shadow-lg'
                 : 'border-border bg-gradient-to-br from-muted/40 to-card',
@@ -676,7 +676,7 @@ export function SettingsBillingClient() {
           </div>
         </div>
 
-        <div className="mt-10 rounded-2xl border border-dashed border-border/80 bg-muted/30 p-6">
+        <div className="mt-10 rounded-lg border border-dashed border-border/80 bg-muted/30 p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             {tBilling('usageSnapshot')}
           </p>
@@ -701,7 +701,7 @@ export function SettingsBillingClient() {
         </div>
 
         {sub?.perScreenPricing && (
-          <div className="mt-6 rounded-2xl border border-border bg-card p-6">
+          <div className="mt-6 rounded-lg border border-border bg-card p-6">
             <div className="mb-4 flex items-center gap-2">
               <Monitor className="h-5 w-5 text-primary" />
               <h3 className="text-sm font-semibold tracking-tight">{tBilling('perScreenBilling')}</h3>
@@ -783,7 +783,7 @@ export function SettingsBillingClient() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="vc-card-surface overflow-hidden rounded-2xl border border-border"
+        className="vc-card-surface overflow-hidden rounded-lg border border-border"
       >
         <div className="border-b border-border/60 px-6 py-4">
           <h3 className="text-lg font-semibold tracking-tight">{tBilling('comparisonTitle')}</h3>

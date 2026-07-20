@@ -68,6 +68,8 @@ type PlaylistEditorViewProps = {
   onMoveRow: (index: number, delta: -1 | 1) => void;
   onDuplicateRow: (clientId: string) => void;
   onUpdateRowTransition: (clientId: string, transition: TransitionType) => void;
+  onSelectRow?: (clientId: string | null) => void;
+  selectedRowClientId?: string | null;
 
   // Inspector
   playlistMeta: PlaylistLocalMeta;
@@ -78,6 +80,7 @@ type PlaylistEditorViewProps = {
   setSelectedZoneId: (id: string) => void;
   selectionContext: SelectionContext;
   selectedRow: Row | null;
+  onUpdateRowZone?: (clientId: string, zoneName: string | null) => void;
 
   // Drag
   onDragEnd: (result: DropResult) => void;
@@ -123,7 +126,7 @@ export function PlaylistEditorView(props: PlaylistEditorViewProps) {
       <DragDropContext onDragEnd={props.onDragEnd}>
         <div className="grid gap-3 xl:grid-cols-[280px_1fr_280px]">
           {/* Left: Media Library */}
-          <div className="rounded-2xl border border-border/60 bg-card/40 p-3 xl:order-1" role="region" aria-label={t('mediaLibrary')}>
+          <div className="rounded-lg border border-border/60 bg-card/40 p-3 xl:order-1" role="region" aria-label={t('mediaLibrary')}>
             <MediaLibrary
               library={props.library}
               canvasLibrary={props.canvasLibrary}
@@ -165,6 +168,8 @@ export function PlaylistEditorView(props: PlaylistEditorViewProps) {
               onMoveRow={props.onMoveRow}
               onDuplicateRow={props.onDuplicateRow}
               onUpdateTransition={props.onUpdateRowTransition}
+              onSelectRow={props.onSelectRow}
+              selectedRowClientId={props.selectedRowClientId}
               defaultTransition={props.defaultTransition}
             />
           </div>
@@ -185,6 +190,7 @@ export function PlaylistEditorView(props: PlaylistEditorViewProps) {
               selectedRow={props.selectedRow}
               onUpdateRowTransition={props.onUpdateRowTransition}
               onUpdateRowDuration={props.onUpdateDuration}
+              onUpdateRowZone={props.onUpdateRowZone}
             />
           </div>
         </div>

@@ -150,9 +150,9 @@ export function PlaylistZonePreview({
       {/* Preview canvas — aspect-ratio is the single source of truth for proportions.
           One max-width constraint per orientation; height derives from the ratio.
           No maxHeight, no arbitrary sizing — the preview is geometrically accurate. */}
-      <div className="flex justify-center rounded-2xl border border-border/40 bg-muted/20 p-3">
+      <div className="flex justify-center rounded-lg border border-border/40 bg-muted/20 p-3">
         <div
-          className="relative overflow-hidden rounded-xl border-2 border-border bg-black shadow-xl"
+          className="relative overflow-hidden rounded-lg border-2 border-border bg-black shadow-xl"
           style={{
             aspectRatio: ORIENTATION_ASPECT[orientation],
             width: '100%',

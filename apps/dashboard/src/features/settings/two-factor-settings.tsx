@@ -114,14 +114,14 @@ export function TwoFactorSettings() {
 
   if (loading) {
     return (
-      <div className="vc-card-surface rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
+      <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="vc-card-surface rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
+    <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
       <div className="flex items-center gap-3">
         {enabled ? (
           <ShieldCheck className="h-6 w-6 text-success" />

@@ -28,6 +28,8 @@ import { fetchPlaylists } from '@/features/studio/studio-api';
 import { readPageItems } from '@/features/api/page';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { useLocale } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { ICON_STROKE } from '@/lib/icon-stroke';
 
 type SearchResult = {
   id: string;
@@ -64,6 +66,7 @@ export function GlobalSearch() {
   const [loading, setLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -156,7 +159,7 @@ export function GlobalSearch() {
           label: s.name,
           sublabel: s.serialNumber,
           type: 'screen',
-          href: `/${locale}/screens` as string,
+          href: `/${locale}/screens/${s.id}` as string,
         });
       }
     }
@@ -168,7 +171,7 @@ export function GlobalSearch() {
           label: p.name,
           sublabel: p.isPublished ? t('published') : t('unpublished'),
           type: 'playlist',
-          href: `/${locale}/content/playlists` as string,
+          href: `/${locale}/playlists` as string,
         });
       }
     }
@@ -201,16 +204,16 @@ export function GlobalSearch() {
       setActiveIndex((prev) => Math.max(prev - 1, 0));
     } else if (e.key === 'Enter' && results[activeIndex]) {
       e.preventDefault();
-      window.location.href = results[activeIndex].href;
+      router.push(results[activeIndex].href as Route);
       setOpen(false);
     }
   };
 
   const iconForType = (type: SearchResult['type']) => {
-    if (type === 'screen') return <Monitor className="h-4 w-4 text-primary" />;
-    if (type === 'playlist') return <Clapperboard className="h-4 w-4 text-primary" />;
-    if (type === 'command') return <Search className="h-4 w-4 text-primary" />;
-    return <ImageIcon className="h-4 w-4 text-primary" />;
+    if (type === 'screen') return <Monitor className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />;
+    if (type === 'playlist') return <Clapperboard className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />;
+    if (type === 'command') return <Search className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />;
+    return <ImageIcon className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />;
   };
 
   return (
@@ -218,10 +221,10 @@ export function GlobalSearch() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="hidden items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/40 lg:flex"
+        className="hidden items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/40 lg:flex"
         aria-label={t('openSearch')}
       >
-        <Search className="h-4 w-4" />
+        <Search className="h-4 w-4" strokeWidth={ICON_STROKE} />
         <span className="text-xs">{t('placeholder')}</span>
         <kbd className="ms-4 rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
           Ctrl K
@@ -230,10 +233,10 @@ export function GlobalSearch() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground lg:hidden"
+        className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground lg:hidden"
         aria-label={t('openSearch')}
       >
-        <Search className="h-4 w-4" />
+        <Search className="h-4 w-4" strokeWidth={ICON_STROKE} />
       </button>
 
       <AnimatePresence>
@@ -258,9 +261,9 @@ export function GlobalSearch() {
               exit={prefersReduced ? undefined : { opacity: 0, y: -20 }}
               transition={prefersReduced ? { duration: 0 } : { duration: 0.2 }}
             >
-              <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+              <div className="overflow-hidden rounded-lg border border-border bg-card shadow-2xl">
                 <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-                  <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
+                  <Search className="h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={ICON_STROKE} />
                   <input
                     ref={inputRef}
                     type="text"
@@ -277,7 +280,7 @@ export function GlobalSearch() {
                     className="rounded-lg p-1 text-muted-foreground hover:bg-muted"
                     aria-label={t('close')}
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-4 w-4" strokeWidth={ICON_STROKE} />
                   </button>
                 </div>
 
@@ -291,15 +294,15 @@ export function GlobalSearch() {
                       <p className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                         {t('quickNav')}
                       </p>
-                      <ul>
+                      <ul role="listbox" aria-label={t('placeholder')}>
                         {navCommands.map((cmd) => (
-                          <li key={cmd.id}>
+                          <li key={cmd.id} role="option" aria-selected={false}>
                             <Link
                               href={cmd.href as Route}
                               onClick={() => setOpen(false)}
                               className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/80 transition-colors hover:bg-muted/40"
                             >
-                              <cmd.icon className="h-4 w-4 text-primary" />
+                              <cmd.icon className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
                               <span className="flex-1 truncate font-medium">{tNav(cmd.labelKey)}</span>
                               <span className="shrink-0 rounded-md border border-border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                                 {t('command')}
@@ -314,9 +317,9 @@ export function GlobalSearch() {
                       {t('noResults', { query })}
                     </div>
                   ) : (
-                    <ul className="py-2">
+                    <ul className="py-2" role="listbox" aria-label={t('placeholder')}>
                       {results.map((r, i) => (
-                        <li key={`${r.type}-${r.id}`}>
+                        <li key={`${r.type}-${r.id}`} role="option" aria-selected={i === activeIndex}>
                           <Link
                             href={r.href as Route}
                             onClick={() => setOpen(false)}

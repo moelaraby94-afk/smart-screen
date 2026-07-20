@@ -103,7 +103,7 @@ export function ScheduleCalendar({
   }, []);
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6">
+    <section className="relative overflow-hidden rounded-lg border border-border bg-card p-4 shadow-sm sm:p-6">
       <div className="mb-4 flex items-center justify-between">
         <div className="inline-flex rounded-xl border border-border bg-muted/30 p-0.5">
           <button
@@ -221,7 +221,7 @@ function WeekView({
             {dayOrder.map((dow) => (
               <div
                 key={dow}
-                className="relative min-w-[100px] flex-1 rounded-2xl border border-border bg-muted/20"
+                className="relative min-w-[100px] flex-1 rounded-lg border border-border bg-muted/20"
                 style={{ height: TOTAL_H + 28 }}
               >
                 <div className="sticky top-0 z-sticky mb-1 flex h-7 items-center justify-center rounded-t-xl bg-muted/50 text-center text-xs font-semibold text-foreground">
@@ -375,7 +375,7 @@ function DayView({
           ))}
         </div>
 
-        <div className="relative min-w-0 flex-1 rounded-2xl border border-border bg-muted/20" style={{ height: TOTAL_H + 28 }}>
+        <div className="relative min-w-0 flex-1 rounded-lg border border-border bg-muted/20" style={{ height: TOTAL_H + 28 }}>
           <div className="sticky top-0 z-sticky mb-1 flex h-7 items-center justify-center rounded-t-xl bg-muted/50 text-center text-sm font-semibold text-foreground">
             {dayShort(selectedDow)}
           </div>
@@ -703,7 +703,7 @@ export function ScheduleList({ schedules, overlapIds, dayShort, onDelete, onEdit
   }, [schedules, overlapIds]);
 
   return (
-    <section className="vc-glass vc-card-surface rounded-3xl p-6">
+    <section className="vc-glass vc-card-surface rounded-lg p-6">
       <h3 className="mb-4 text-base font-semibold">{t('listTitle')}</h3>
       <ul className="space-y-2">
         {sorted.map((s) => {
@@ -713,7 +713,7 @@ export function ScheduleList({ schedules, overlapIds, dayShort, onDelete, onEdit
             <li
               key={s.id}
               className={cn(
-                'flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm',
+                'flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm',
                 isOver
                   ? 'border-destructive/40 bg-destructive/5'
                   : 'border-border/60 bg-muted/20',

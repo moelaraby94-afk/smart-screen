@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import type { Route } from 'next';
 import { useTranslations, useLocale } from 'next-intl';
 import { toast } from 'sonner';
-import { io, type Socket } from 'socket.io-client';
+import { useRealtimeSocket } from '@/features/realtime/realtime-provider';
 import {
   MapPin, Monitor, RefreshCw, BadgeAlert, Activity, Clock, Film, Zap,
   Megaphone, ListMusic, CalendarClock, ChevronRight, MoreHorizontal,
@@ -14,7 +14,6 @@ import {
   Wifi, WifiOff, Radio, Wrench, ArrowLeft,
 } from 'lucide-react';
 import { useWorkspace } from '@/features/workspace/workspace-context';
-import { getStoredAccessToken } from '@/features/auth/session';
 import {
   fetchScreenById, fetchScreenAnalytics, fetchPlaylistOptions,
   sendRemoteCommand, updateScreen, setScreenOverride,
@@ -134,10 +133,6 @@ function useScreenEventLog() {
 }
 
 const EDITABLE_ROLES = ['OWNER', 'ADMIN', 'EDITOR'];
-
-function getRealtimeBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_REALTIME_URL ?? 'http://localhost:4000';
-}
 
 export function ScreenDetailClient({ screenId, locale }: Props) {
   const t = useTranslations('screensClient');
@@ -266,28 +261,10 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
   }, [editingLocation]);
 
   // Realtime: screen:status for this specific screen
+  const realtimeSocket = useRealtimeSocket();
   useEffect(() => {
-    if (!workspaceId || !screen) return;
-    const token = getStoredAccessToken();
-    const socket: Socket = io(`${getRealtimeBaseUrl()}/realtime`, {
-      path: '/socket.io',
-      withCredentials: true,
-      auth: token ? { token } : undefined,
-      transports: ['websocket'],
-      reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 15000,
-      timeout: 20000,
-    });
-    let hasConnectedBefore = false;
-    socket.on('connect', () => {
-      socket.emit('dashboard:subscribe', { workspaceId });
-      if (hasConnectedBefore) {
-        addEvent('reconnect', 'success');
-      }
-      hasConnectedBefore = true;
-    });
+    if (!workspaceId || !screen || !realtimeSocket) return;
+    const socket = realtimeSocket;
     socket.on('screen:status', (payload: { screenId: string; status: string; lastSeenAt: string }) => {
       if (payload.screenId !== screenId) return;
       const prevStatus = prevStatusRef.current;
@@ -312,11 +289,11 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
       void loadAll();
     });
     return () => {
-      socket.removeAllListeners();
-      socket.disconnect();
+      socket.off('screen:status');
+      socket.off('screen:content');
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspaceId, screenId, tDetail]);
+  }, [workspaceId, screenId, tDetail, realtimeSocket]);
 
   const handleSaveName = async () => {
     if (!workspaceId || !screen || savingName) return;

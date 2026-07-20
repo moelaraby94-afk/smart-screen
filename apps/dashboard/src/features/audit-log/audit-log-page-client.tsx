@@ -12,17 +12,17 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const ACTION_COLORS: Record<string, string> = {
-  SCREEN_DELETE: 'bg-red-500/15 text-red-600',
-  SCREEN_CREATE: 'bg-emerald-500/15 text-emerald-600',
-  SCREEN_UPDATE: 'bg-blue-500/15 text-blue-600',
-  PLAYLIST_PUBLISH: 'bg-purple-500/15 text-purple-600',
-  PLAYLIST_DELETE: 'bg-red-500/15 text-red-600',
-  SCHEDULE_CHANGE: 'bg-indigo-500/15 text-indigo-600',
-  MEMBER_ROLE_CHANGE: 'bg-amber-500/15 text-amber-600',
-  MEMBER_INVITE: 'bg-cyan-500/15 text-cyan-600',
-  MEMBER_REMOVE: 'bg-red-500/15 text-red-600',
-  SUBSCRIPTION_CHANGE: 'bg-purple-500/15 text-purple-600',
-  IMPERSONATE_USER: 'bg-red-500/15 text-red-600',
+  SCREEN_DELETE: 'bg-destructive/15 text-destructive',
+  SCREEN_CREATE: 'bg-success/15 text-success',
+  SCREEN_UPDATE: 'bg-primary/15 text-primary',
+  PLAYLIST_PUBLISH: 'bg-primary/15 text-primary',
+  PLAYLIST_DELETE: 'bg-destructive/15 text-destructive',
+  SCHEDULE_CHANGE: 'bg-primary/15 text-primary',
+  MEMBER_ROLE_CHANGE: 'bg-warning/15 text-warning',
+  MEMBER_INVITE: 'bg-primary/15 text-primary',
+  MEMBER_REMOVE: 'bg-destructive/15 text-destructive',
+  SUBSCRIPTION_CHANGE: 'bg-primary/15 text-primary',
+  IMPERSONATE_USER: 'bg-destructive/15 text-destructive',
 };
 
 const ACTION_LABEL_KEYS: Record<string, string> = {
@@ -123,7 +123,7 @@ export function AuditLogPageClient() {
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center">
+      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16 text-center">
         <ScrollText className="mb-3 h-8 w-8 text-muted-foreground/50" />
         <p className="text-sm text-muted-foreground">{t('empty')}</p>
       </div>
@@ -179,7 +179,7 @@ export function AuditLogPageClient() {
 
       {/* List */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16 text-center">
           <Search className="mb-3 h-8 w-8 text-muted-foreground/50" />
           <p className="text-sm text-muted-foreground">{t('noSearchResults')}</p>
         </div>

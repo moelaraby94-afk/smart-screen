@@ -9,6 +9,7 @@ import {
   ChevronDown,
   LogOut,
   Moon,
+  Settings,
   SlidersHorizontal,
   Sun,
   UserRound,
@@ -65,6 +66,8 @@ export function UserMenu({ rtl }: Props) {
             'border-border bg-card hover:bg-muted',
           )}
           aria-label={t('accountMenu')}
+          aria-expanded
+          aria-haspopup="menu"
         >
           <span
             className={cn(
@@ -81,7 +84,7 @@ export function UserMenu({ rtl }: Props) {
         align={rtl ? 'start' : 'end'}
         sideOffset={8}
         className={cn(
-          'z-dropdown min-w-[14rem] rounded-xl border border-border bg-card p-2',
+          'z-dropdown min-w-[14rem] rounded-lg border border-border bg-card p-2',
           rtl && 'rtl',
         )}
       >
@@ -129,13 +132,13 @@ export function UserMenu({ rtl }: Props) {
         </div>
 
         <DropdownMenuItem
-          className="cursor-pointer gap-2 rounded-xl"
+          className="cursor-pointer gap-2 rounded-lg"
           onSelect={(e) => {
             e.preventDefault();
             setTheme(isDark ? 'light' : 'dark');
           }}
         >
-          <span className={cn('inline-flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10', accentIcon)}>
+          <span className={cn('inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10', accentIcon)}>
             {isDark ? <Moon className="h-4 w-4" strokeWidth={ICON_STROKE} /> : <Sun className="h-4 w-4" strokeWidth={ICON_STROKE} />}
           </span>
           <span className="flex-1">{isDark ? t('switchToLight') : t('switchToDark')}</span>
@@ -156,6 +159,12 @@ export function UserMenu({ rtl }: Props) {
           <Link href={`/${activeLocale}/settings/billing` as Route} className="flex items-center gap-2">
             <SlidersHorizontal className={cn('h-4 w-4', accentIcon)} strokeWidth={ICON_STROKE} />
             {t('settingsBilling')}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="cursor-pointer gap-2 rounded-lg">
+          <Link href={`/${activeLocale}/settings` as Route} className="flex items-center gap-2">
+            <Settings className={cn('h-4 w-4', accentIcon)} strokeWidth={ICON_STROKE} />
+            {t('settingsLabel')}
           </Link>
         </DropdownMenuItem>
 

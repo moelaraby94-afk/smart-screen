@@ -55,7 +55,7 @@ export function UsageIndicator({ screenCount, storageUsedBytes }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-4">
       {showScreen && (
-        <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/20 px-4 py-2">
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-4 py-2">
           <div className="flex-1 min-w-[120px]">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
               {t('screens')}
@@ -63,14 +63,14 @@ export function UsageIndicator({ screenCount, storageUsedBytes }: Props) {
             <p className="text-sm font-medium">
               {screenCount} / {sub.screenLimit}
               {screenPct != null && screenPct >= 70 && (
-                <span className={`ms-2 text-xs font-semibold ${screenPct >= 90 ? 'text-destructive' : 'text-amber-600'}`}>{t('nearLimit')}</span>
+                <span className={`ms-2 text-xs font-semibold ${screenPct >= 90 ? 'text-destructive' : 'text-warning'}`}>{t('nearLimit')}</span>
               )}
             </p>
           </div>
           {screenPct != null && (
             <div className="h-2 w-20 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={screenPct} aria-valuemin={0} aria-valuemax={100}>
               <div
-                className={`h-full rounded-full transition-[width] duration-500 ${screenPct >= 90 ? 'bg-destructive' : screenPct >= 70 ? 'bg-amber-500' : 'bg-success'}`}
+                className={`h-full rounded-full transition-[width] duration-500 ${screenPct >= 90 ? 'bg-destructive' : screenPct >= 70 ? 'bg-warning' : 'bg-success'}`}
                 style={{ width: `${screenPct}%` }}
               />
             </div>
@@ -78,7 +78,7 @@ export function UsageIndicator({ screenCount, storageUsedBytes }: Props) {
         </div>
       )}
       {showStorage && (
-        <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/20 px-4 py-2">
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-4 py-2">
           <div className="flex-1 min-w-[120px]">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
               {t('storage')}
@@ -88,14 +88,14 @@ export function UsageIndicator({ screenCount, storageUsedBytes }: Props) {
                 ? `${formatBytesLocale(storageUsedBytes!, locale)} / ${formatBytesLocale(sub.storageLimitBytes, locale)}`
                 : formatBytesLocale(storageUsedBytes!, locale)}
               {storagePct != null && storagePct >= 70 && (
-                <span className={`ms-2 text-xs font-semibold ${storagePct >= 90 ? 'text-destructive' : 'text-amber-600'}`}>{t('nearLimit')}</span>
+                <span className={`ms-2 text-xs font-semibold ${storagePct >= 90 ? 'text-destructive' : 'text-warning'}`}>{t('nearLimit')}</span>
               )}
             </p>
           </div>
           {storagePct != null && (
             <div className="h-2 w-20 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={storagePct} aria-valuemin={0} aria-valuemax={100}>
               <div
-                className={`h-full rounded-full transition-[width] duration-500 ${storagePct >= 90 ? 'bg-destructive' : storagePct >= 70 ? 'bg-amber-500' : 'bg-success'}`}
+                className={`h-full rounded-full transition-[width] duration-500 ${storagePct >= 90 ? 'bg-destructive' : storagePct >= 70 ? 'bg-warning' : 'bg-success'}`}
                 style={{ width: `${storagePct}%` }}
               />
             </div>

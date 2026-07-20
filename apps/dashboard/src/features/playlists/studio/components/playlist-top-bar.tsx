@@ -86,7 +86,7 @@ export function PlaylistTopBar({
     : t('savePlaylist');
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-card/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 rounded-lg border border-border/60 bg-card/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-2.5">
         <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-xl" onClick={onBack} title={t('backToList')} aria-label={t('backToList')}>
           <ArrowLeft className="h-5 w-5" />

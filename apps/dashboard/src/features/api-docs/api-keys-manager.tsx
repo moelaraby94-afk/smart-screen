@@ -188,7 +188,7 @@ export function ApiKeysManager() {
                 type="button"
                 onClick={() => setConfirmRevokeId(key.id)}
                 disabled={revokingId === key.id}
-                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:text-red-600 disabled:opacity-50"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:text-destructive disabled:opacity-50"
                 aria-label={t('keys.revokeAria', { name: key.name })}
               >
                 {revokingId === key.id ? (
@@ -224,12 +224,12 @@ export function ApiKeysManager() {
                   onClick={copyKey}
                   className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:text-foreground"
                 >
-                  {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                  {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
                 </button>
               </div>
-              <div className="flex items-start gap-2 rounded-xl bg-amber-500/10 p-3">
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-                <p className="text-xs text-amber-700 dark:text-amber-400">{t('keys.warning')}</p>
+              <div className="flex items-start gap-2 rounded-lg bg-warning/10 p-3">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                <p className="text-xs text-warning">{t('keys.warning')}</p>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => {

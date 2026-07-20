@@ -291,7 +291,7 @@ export function SchedulesClient({ locale }: { locale: string }) {
 
   return (
     <div className="space-y-8">
-      <section className="vc-card-surface rounded-2xl border border-border p-6 shadow-sm">
+      <section className="vc-card-surface rounded-lg border border-border p-6 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
@@ -385,7 +385,7 @@ export function SchedulesClient({ locale }: { locale: string }) {
         </div>
       </section>
 
-      <section className="vc-card-surface rounded-2xl border border-border p-6 shadow-sm">
+      <section className="vc-card-surface rounded-lg border border-border p-6 shadow-sm">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 className="text-base font-semibold tracking-tight">{t('filterTitle')}</h3>
@@ -418,7 +418,7 @@ export function SchedulesClient({ locale }: { locale: string }) {
       </section>
 
       {canEdit && (
-        <section className="vc-card-surface rounded-2xl border border-border p-6 shadow-sm">
+        <section className="vc-card-surface rounded-lg border border-border p-6 shadow-sm">
           <h3 className="mb-4 text-base font-semibold tracking-tight">{t('overrideTitle')}</h3>
           <p className="mb-4 text-sm text-muted-foreground">{t('overrideDesc')}</p>
           <div className="flex flex-wrap items-end gap-3">
@@ -484,7 +484,7 @@ export function SchedulesClient({ locale }: { locale: string }) {
       )}
 
       {error ? (
-        <div className="flex flex-col items-center gap-4 rounded-2xl border border-destructive/30 bg-destructive/5 p-12 text-center">
+        <div className="flex flex-col items-center gap-4 rounded-lg border border-destructive/30 bg-destructive/5 p-12 text-center">
           <AlertCircle className="h-10 w-10 text-destructive" />
           <p className="text-sm text-destructive">{t('errorFetch')}</p>
           <Button variant="outline" onClick={() => void load()}>

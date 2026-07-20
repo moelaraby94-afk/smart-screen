@@ -198,7 +198,7 @@ export function PlaylistPreviewOverlay({ open, onClose, rows, defaultTransition,
                 )
               ) : (
                 <div className="flex flex-col items-center gap-4 text-white/80">
-                  <div className="flex h-32 w-32 items-center justify-center rounded-2xl border border-white/20 bg-white/5">
+                  <div className="flex h-32 w-32 items-center justify-center rounded-lg border border-white/20 bg-white/5">
                     <span className="text-3xl font-bold">{current.canvas.name.charAt(0)}</span>
                   </div>
                   <p className="text-lg font-semibold">{current.canvas.name}</p>

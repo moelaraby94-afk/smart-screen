@@ -223,7 +223,7 @@ export function CreateScheduleForm({
   };
 
   return (
-    <DialogContent className="max-w-[600px] rounded-3xl border border-white/10 bg-card/95 backdrop-blur-xl">
+    <DialogContent className="max-w-[600px] rounded-lg border border-white/10 bg-card/95 backdrop-blur-xl">
       <DialogHeader>
         <DialogTitle>{isEdit ? t('editTitle') : t('createTitle')}</DialogTitle>
         <DialogDescription>{isEdit ? t('editDesc') : t('createDesc')}</DialogDescription>
@@ -426,7 +426,7 @@ export function CreateScheduleForm({
             </Button>
           </>
         ) : null}
-        <Button type="button" variant="outline" className="rounded-2xl" onClick={onCancel}>
+        <Button type="button" variant="outline" className="rounded-lg" onClick={onCancel}>
           {t('cancel')}
         </Button>
         <Button

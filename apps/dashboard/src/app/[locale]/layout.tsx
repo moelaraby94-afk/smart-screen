@@ -8,6 +8,7 @@ import { DocumentLocaleRoot } from '@/components/document-locale-root';
 import { IntlErrorHandlingProvider } from '@/components/intl-error-handling-provider';
 import { SwrProvider } from '@/components/swr-provider';
 import { WorkspaceProvider } from '@/features/workspace/workspace-context';
+import { RealtimeProvider } from '@/features/realtime/realtime-provider';
 import { NotificationProvider } from '@/features/notifications/notification-provider';
 import { routing } from '@/i18n/routing';
 
@@ -44,12 +45,14 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
       <IntlErrorHandlingProvider locale={locale} messages={messages as Record<string, unknown>}>
         <SwrProvider>
           <WorkspaceProvider>
-            <NotificationProvider>
-              <MotionConfig reducedMotion="user">
-                {children}
-              </MotionConfig>
-            </NotificationProvider>
-            <AppToaster />
+            <RealtimeProvider>
+              <NotificationProvider>
+                <MotionConfig reducedMotion="user">
+                  {children}
+                </MotionConfig>
+              </NotificationProvider>
+              <AppToaster />
+            </RealtimeProvider>
           </WorkspaceProvider>
         </SwrProvider>
       </IntlErrorHandlingProvider>

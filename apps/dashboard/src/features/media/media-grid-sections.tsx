@@ -46,7 +46,7 @@ export function FolderSection(props: FolderSectionProps) {
   const t = useTranslations('mediaClient');
 
   return (
-    <div className="vc-card-surface rounded-2xl border border-border/70 p-4">
+    <div className="vc-card-surface rounded-lg border border-border/70 p-4">
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <Folder className="h-4 w-4 text-primary" />
         <p className="text-sm font-semibold text-foreground">{t('foldersTitle')}</p>
@@ -218,7 +218,7 @@ export function MediaGrid(props: MediaGridProps) {
         </div>
       </div>
       {viewMode === 'table' ? (
-        <div className="overflow-x-auto rounded-2xl border border-border">
+        <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-sm">
             <thead className="vc-table-head-surface">
               <tr>
@@ -313,7 +313,7 @@ export function MediaGrid(props: MediaGridProps) {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
               transition={{ delay: i * 0.02, duration: 0.25 }}
-              className="ngl-media-tile group relative overflow-hidden rounded-2xl"
+              className="ngl-media-tile group relative overflow-hidden rounded-lg"
               role="img"
               aria-label={`${m.originalName}, ${m.mimeType.startsWith('video/') ? t('video') : t('image')}, ${new Intl.NumberFormat(props.locale, { maximumFractionDigits: 2 }).format(m.sizeBytes / 1024 / 1024)} MB`}
             >

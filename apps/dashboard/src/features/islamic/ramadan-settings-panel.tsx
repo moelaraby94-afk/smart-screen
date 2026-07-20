@@ -114,8 +114,8 @@ export function RamadanSettingsPanel({
   return (
     <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
       <div className="flex items-center gap-2.5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 ring-1 ring-ring/20">
-          <Moon className="h-[18px] w-[18px] text-emerald-600" strokeWidth={ICON_STROKE} />
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-success/10 ring-1 ring-ring/20">
+          <Moon className="h-[18px] w-[18px] text-success" strokeWidth={ICON_STROKE} />
         </div>
         <div>
           <h2 className="text-lg font-semibold tracking-tight">{t('title')}</h2>
@@ -134,7 +134,7 @@ export function RamadanSettingsPanel({
             type="button"
             onClick={() => setEnabled(!enabled)}
             className={`relative h-7 w-12 rounded-full transition ${
-              enabled ? 'bg-emerald-500' : 'bg-muted'
+              enabled ? 'bg-success' : 'bg-muted'
             }`}
             aria-label={t('enableRamadan')}
           >
@@ -174,7 +174,7 @@ export function RamadanSettingsPanel({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label className="flex items-center gap-1.5">
-              <Sunset className="h-3.5 w-3.5 text-emerald-600" strokeWidth={ICON_STROKE} />
+              <Sunset className="h-3.5 w-3.5 text-success" strokeWidth={ICON_STROKE} />
               {t('iftarPlaylist')}
             </Label>
             <select
@@ -191,7 +191,7 @@ export function RamadanSettingsPanel({
           </div>
           <div className="space-y-2">
             <Label className="flex items-center gap-1.5">
-              <Sunrise className="h-3.5 w-3.5 text-emerald-600" strokeWidth={ICON_STROKE} />
+              <Sunrise className="h-3.5 w-3.5 text-success" strokeWidth={ICON_STROKE} />
               {t('suhoorPlaylist')}
             </Label>
             <select
@@ -247,7 +247,7 @@ export function RamadanSettingsPanel({
               type="button"
               onClick={() => setShowHijriDate(!showHijriDate)}
               className={`relative h-7 w-12 rounded-full transition ${
-                showHijriDate ? 'bg-emerald-500' : 'bg-muted'
+                showHijriDate ? 'bg-success' : 'bg-muted'
               }`}
               aria-label={t('showHijriDate')}
             >
@@ -267,7 +267,7 @@ export function RamadanSettingsPanel({
               type="button"
               onClick={() => setShowPrayerTimes(!showPrayerTimes)}
               className={`relative h-7 w-12 rounded-full transition ${
-                showPrayerTimes ? 'bg-emerald-500' : 'bg-muted'
+                showPrayerTimes ? 'bg-success' : 'bg-muted'
               }`}
               aria-label={t('showPrayerTimes')}
             >

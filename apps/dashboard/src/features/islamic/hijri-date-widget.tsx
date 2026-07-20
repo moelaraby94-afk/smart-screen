@@ -92,12 +92,12 @@ export function HijriDateWidget() {
       className="vc-card-surface relative overflow-hidden rounded-lg border border-border p-5"
       dir={locale === 'ar' ? 'rtl' : 'ltr'}
     >
-      <div className="pointer-events-none absolute -end-8 -top-8 h-28 w-28 rounded-full bg-emerald-500/8 blur-3xl" />
+      <div className="pointer-events-none absolute -end-8 -top-8 h-28 w-28 rounded-full bg-success/8 blur-3xl" />
 
       <div className="relative flex items-center gap-2.5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 ring-1 ring-ring/20">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-success/10 ring-1 ring-ring/20">
           <Calendar
-            className="h-[18px] w-[18px] text-emerald-600"
+            className="h-[18px] w-[18px] text-success"
             strokeWidth={ICON_STROKE}
           />
         </div>
@@ -108,7 +108,7 @@ export function HijriDateWidget() {
 
       <div className="relative mt-4 text-center">
         <p className="text-3xl font-bold text-foreground">{data.day}</p>
-        <p className="mt-1 text-lg font-medium text-emerald-700">{monthName}</p>
+        <p className="mt-1 text-lg font-medium text-success">{monthName}</p>
         <p className="mt-0.5 text-sm text-muted-foreground">{data.year} AH</p>
         {weekday && (
           <p className="mt-2 text-xs text-muted-foreground">{weekday}</p>

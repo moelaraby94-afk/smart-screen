@@ -252,7 +252,7 @@ export function BranchPlaylistDialogs(props: PlaylistDialogsProps) {
           }
         }}
       >
-        <AlertDialogContent className="rounded-2xl">
+        <AlertDialogContent className="rounded-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>{t('playlistDeleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
@@ -272,12 +272,12 @@ export function BranchPlaylistDialogs(props: PlaylistDialogsProps) {
             </span>
           </label>
           <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
-            <AlertDialogCancel className="rounded-xl" disabled={props.isDeleting}>
+            <AlertDialogCancel className="rounded-lg" disabled={props.isDeleting}>
               {t('cancel')}
             </AlertDialogCancel>
             <Button
               type="button"
-              className="rounded-xl bg-red-600 font-semibold text-white hover:bg-red-600/90"
+              className="rounded-lg bg-destructive font-semibold text-white hover:bg-destructive/90"
               disabled={props.isDeleting}
               onClick={() => void props.confirmDeletePlaylist()}
             >

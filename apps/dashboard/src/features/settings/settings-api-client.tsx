@@ -13,7 +13,7 @@ export function SettingsApiClient() {
 
   return (
     <div className="space-y-6">
-      <div className="vc-card-surface rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
+      <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
         <h2 className="text-lg font-semibold tracking-tight">{t('title')}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t('subtitle')}</p>
       </div>

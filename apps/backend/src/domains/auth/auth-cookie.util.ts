@@ -50,16 +50,19 @@ const CUSTOMER_REFRESH = '__Host-cs_customer_refresh';
 const CUSTOMER_CSRF = 'csrf_customer';
 
 export function getCookieNames(audience: JwtAudience) {
+  const config = getCookieConfig();
+  const useHostPrefix = config.secure;
+
   if (audience === 'platform') {
     return {
-      access: PLATFORM_ACCESS,
-      refresh: PLATFORM_REFRESH,
+      access: useHostPrefix ? PLATFORM_ACCESS : 'cs_platform_access',
+      refresh: useHostPrefix ? PLATFORM_REFRESH : 'cs_platform_refresh',
       csrf: PLATFORM_CSRF,
     };
   }
   return {
-    access: CUSTOMER_ACCESS,
-    refresh: CUSTOMER_REFRESH,
+    access: useHostPrefix ? CUSTOMER_ACCESS : 'cs_customer_access',
+    refresh: useHostPrefix ? CUSTOMER_REFRESH : 'cs_customer_refresh',
     csrf: CUSTOMER_CSRF,
   };
 }
@@ -123,6 +126,12 @@ export function clearAuthCookies(
   response.clearCookie(LEGACY_ACCESS, common);
   response.clearCookie(LEGACY_REFRESH, common);
   response.clearCookie(LEGACY_CSRF, { ...common, httpOnly: false });
+
+  // Clear dev-mode (non-__Host-) cookies in case they were set
+  response.clearCookie('cs_customer_access', common);
+  response.clearCookie('cs_customer_refresh', common);
+  response.clearCookie('cs_platform_access', common);
+  response.clearCookie('cs_platform_refresh', common);
 }
 
 export function extractAccessTokenFromCookies(
@@ -131,6 +140,8 @@ export function extractAccessTokenFromCookies(
   return (
     cookies?.[PLATFORM_ACCESS] ??
     cookies?.[CUSTOMER_ACCESS] ??
+    cookies?.['cs_platform_access'] ??
+    cookies?.['cs_customer_access'] ??
     cookies?.[LEGACY_ACCESS] ??
     null
   );
@@ -142,6 +153,8 @@ export function extractRefreshTokenFromCookies(
   return (
     cookies?.[PLATFORM_REFRESH] ??
     cookies?.[CUSTOMER_REFRESH] ??
+    cookies?.['cs_platform_refresh'] ??
+    cookies?.['cs_customer_refresh'] ??
     cookies?.[LEGACY_REFRESH] ??
     null
   );

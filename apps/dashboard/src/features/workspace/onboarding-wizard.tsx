@@ -104,7 +104,7 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else onOpenChange(v); }}>
-      <DialogContent className="rounded-3xl border-border/80 sm:max-w-lg">
+      <DialogContent className="rounded-lg border-border/80 sm:max-w-lg">
         <DialogTitle className="sr-only">{t('title')}</DialogTitle>
 
         {/* Progress indicator */}
@@ -134,7 +134,7 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
               className="px-6 pb-6 pt-4"
             >
               <div className="mb-6 text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
                   <CheckCircle2 className="h-8 w-8 text-primary" strokeWidth={1.75} />
                 </div>
                 <h2 className="text-xl font-semibold tracking-tight text-foreground">
@@ -150,7 +150,7 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
                   type="button"
                   onClick={() => void handleSeedDemo()}
                   disabled={seeding}
-                  className="vc-card-surface flex w-full items-center gap-4 rounded-2xl border border-border p-4 text-start transition hover:border-primary/40 hover:bg-primary/5 disabled:opacity-60"
+                  className="vc-card-surface flex w-full items-center gap-4 rounded-lg border border-border p-4 text-start transition hover:border-primary/40 hover:bg-primary/5 disabled:opacity-60"
                 >
                   <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
                     {seeding ? <Loader2 className="h-6 w-6 animate-spin text-primary" /> : <Wand2 className="h-6 w-6 text-primary" />}
@@ -165,7 +165,7 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
                   type="button"
                   onClick={handleSkip}
                   disabled={seeding}
-                  className="vc-card-surface flex w-full items-center gap-4 rounded-2xl border border-border p-4 text-start transition hover:border-primary/40 hover:bg-primary/5 disabled:opacity-60"
+                  className="vc-card-surface flex w-full items-center gap-4 rounded-lg border border-border p-4 text-start transition hover:border-primary/40 hover:bg-primary/5 disabled:opacity-60"
                 >
                   <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted">
                     <Rocket className="h-6 w-6 text-muted-foreground" />
@@ -188,7 +188,7 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
               className="px-6 pb-6 pt-4"
             >
               <div className="mb-6 text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
                   <Rocket className="h-8 w-8 text-primary" strokeWidth={1.75} />
                 </div>
                 <h2 className="text-xl font-semibold tracking-tight text-foreground">
@@ -209,7 +209,7 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
                       router.push(link.href as never as Route);
                       router.refresh();
                     }}
-                    className="vc-card-surface flex w-full items-center gap-4 rounded-2xl border border-border p-4 text-start transition hover:border-primary/40 hover:bg-primary/5"
+                    className="vc-card-surface flex w-full items-center gap-4 rounded-lg border border-border p-4 text-start transition hover:border-primary/40 hover:bg-primary/5"
                   >
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
                       <link.icon className="h-5 w-5 text-primary" />

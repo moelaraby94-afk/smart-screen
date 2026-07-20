@@ -11,19 +11,18 @@ import {
   FolderTree,
   HardDrive,
   Image as ImageIcon,
-  LayoutGrid,
   Link2,
   Loader2,
   Monitor,
   MoreVertical,
   PenLine,
+  Play,
   Plus,
   Power,
   Radio,
   Settings,
   Trash2,
   Users,
-  Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -43,6 +42,7 @@ import { type BranchScreenStats } from '@/features/branches/branch-stats';
 import type { BranchPlaylistRow } from '@/features/branches/use-branch-playlists';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { useWorkspaceStats } from '@/features/workspace/use-workspace-stats';
+import { useBranchActivity } from '@/features/branches/use-branch-activity';
 
 type StatsSectionProps = {
   stats: BranchScreenStats;
@@ -56,6 +56,7 @@ export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
   const { workspaceId, workspaces } = useWorkspace();
   const wsCounts = useWorkspaceStats(workspaceId, 0);
   const branch = workspaces.find((w) => w.id === workspaceId);
+  const activity = useBranchActivity(workspaceId);
 
   const onlinePct = stats.total > 0 ? Math.round((stats.online / stats.total) * 100) : 0;
   const inactivePct = stats.total > 0 ? Math.round((stats.inactive / stats.total) * 100) : 0;
@@ -72,8 +73,8 @@ export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
       label: t('statOnline'),
       value: loading ? '…' : String(stats.online),
       icon: Radio,
-      accent: 'from-emerald-600/20 to-emerald-900/5',
-      iconBg: 'bg-emerald-500/15 text-emerald-400',
+      accent: 'from-success/20 to-success/5',
+      iconBg: 'bg-success/15 text-success',
       progress: onlinePct,
     },
     {
@@ -94,15 +95,15 @@ export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
       label: t('statPlaylists'),
       value: String(wsCounts.playlists),
       icon: Clapperboard,
-      accent: 'from-blue-600/20 to-blue-900/5',
-      iconBg: 'bg-blue-500/15 text-blue-400',
+      accent: 'from-primary/20 to-primary/5',
+      iconBg: 'bg-primary/15 text-primary',
     },
     {
       label: t('statMedia'),
       value: String(wsCounts.media),
       icon: ImageIcon,
-      accent: 'from-amber-600/20 to-amber-900/5',
-      iconBg: 'bg-amber-500/15 text-amber-400',
+      accent: 'from-warning/20 to-warning/5',
+      iconBg: 'bg-warning/15 text-warning',
     },
   ];
 
@@ -123,12 +124,12 @@ export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-primary/5 p-6 lg:p-8"
+          className="relative overflow-hidden rounded-lg border border-border bg-gradient-to-br from-card via-card to-primary/5 p-6 lg:p-8"
         >
           <div className="pointer-events-none absolute -end-12 -top-12 h-48 w-48 rounded-full bg-primary/8 blur-3xl" />
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
                 <FolderTree className="h-8 w-8 text-primary" strokeWidth={ICON_STROKE} />
               </div>
               <div>
@@ -137,10 +138,10 @@ export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
                   <span className={cn(
                     'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold',
                     branch.isPaused
-                      ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-                      : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+                      ? 'bg-warning/15 text-warning'
+                      : 'bg-success/15 text-success',
                   )}>
-                    <span className={cn('h-1.5 w-1.5 rounded-full', branch.isPaused ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse')} />
+                    <span className={cn('h-1.5 w-1.5 rounded-full', branch.isPaused ? 'bg-warning' : 'bg-success animate-pulse')} />
                     {branch.isPaused ? tWs('statusPaused') : tWs('statusActive')}
                   </span>
                   {branch.role && (
@@ -180,7 +181,7 @@ export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 * i, duration: 0.35 }}
-            className="group relative overflow-hidden rounded-2xl border border-border bg-card p-4 transition-all duration-200 hover:border-primary/30 hover:shadow-lg"
+            className="group relative overflow-hidden rounded-lg border border-border bg-card p-4 transition-all duration-200 hover:border-primary/30 hover:shadow-lg"
           >
             <div className={cn('pointer-events-none absolute inset-0 bg-gradient-to-br opacity-60', item.accent)} />
             <div className="relative flex items-start justify-between gap-2">
@@ -199,7 +200,7 @@ export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
                     <div
                       className={cn(
                         'h-full rounded-full transition-all duration-500',
-                        item.progress > 60 ? 'bg-emerald-500' : item.progress > 30 ? 'bg-amber-500' : 'bg-rose-500',
+                        item.progress > 60 ? 'bg-success' : item.progress > 30 ? 'bg-warning' : 'bg-destructive',
                       )}
                       style={{ width: `${item.progress}%` }}
                     />
@@ -225,7 +226,7 @@ export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
           >
             <Link
               href={action.href}
-              className="group flex flex-col items-center gap-2.5 rounded-2xl border border-border bg-card p-4 text-center transition-all duration-200 hover:border-primary/30 hover:bg-primary/[0.03] hover:shadow-md"
+              className="group flex flex-col items-center gap-2.5 rounded-lg border border-border bg-card p-4 text-center transition-all duration-200 hover:border-primary/30 hover:bg-primary/[0.03] hover:shadow-md"
             >
               <div className={cn('flex h-11 w-11 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-110', action.color)}>
                 <action.icon className="h-5 w-5" strokeWidth={ICON_STROKE} />
@@ -239,7 +240,7 @@ export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
       {/* ── Screen health + workspace info ── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Screen health bar */}
-        <div className="rounded-2xl border border-border bg-card p-5 lg:col-span-2">
+        <div className="rounded-lg border border-border bg-card p-5 lg:col-span-2">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-foreground">{t('screenHealthTitle')}</h3>
             <span className="text-xs text-muted-foreground">
@@ -251,16 +252,16 @@ export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
           ) : stats.total > 0 ? (
             <>
               <div className="mt-4 flex h-3 w-full overflow-hidden rounded-full bg-muted/50">
-                <div className="bg-emerald-500 transition-all duration-500" style={{ width: `${onlinePct}%` }} />
-                <div className="bg-rose-500/70 transition-all duration-500" style={{ width: `${inactivePct}%` }} />
+                <div className="bg-success transition-all duration-500" style={{ width: `${onlinePct}%` }} />
+                <div className="bg-destructive/70 transition-all duration-500" style={{ width: `${inactivePct}%` }} />
               </div>
               <div className="mt-3 flex flex-wrap gap-4 text-xs">
                 <span className="flex items-center gap-1.5 text-muted-foreground">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <span className="h-2 w-2 rounded-full bg-success" />
                   {t('statOnline')}: <span className="font-bold text-foreground">{stats.online}</span>
                 </span>
                 <span className="flex items-center gap-1.5 text-muted-foreground">
-                  <span className="h-2 w-2 rounded-full bg-rose-500/70" />
+                  <span className="h-2 w-2 rounded-full bg-destructive/70" />
                   {t('statInactive')}: <span className="font-bold text-foreground">{stats.inactive}</span>
                 </span>
                 <span className="flex items-center gap-1.5 text-muted-foreground">
@@ -268,7 +269,7 @@ export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
                   {t('offlineLabel')}: <span className="font-bold text-foreground">{stats.offline}</span>
                 </span>
                 <span className="flex items-center gap-1.5 text-muted-foreground">
-                  <span className="h-2 w-2 rounded-full bg-amber-500/70" />
+                  <span className="h-2 w-2 rounded-full bg-warning/70" />
                   {t('maintenanceLabel')}: <span className="font-bold text-foreground">{stats.maintenance}</span>
                 </span>
               </div>
@@ -279,11 +280,11 @@ export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
         </div>
 
         {/* Storage & resources */}
-        <div className="rounded-2xl border border-border bg-card p-5">
+        <div className="rounded-lg border border-border bg-card p-5">
           <h3 className="text-sm font-bold text-foreground">{t('resourcesTitle')}</h3>
           <div className="mt-4 space-y-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Clapperboard className="h-4 w-4" strokeWidth={ICON_STROKE} />
               </div>
               <div className="flex-1">
@@ -292,7 +293,7 @@ export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-warning/10 text-warning">
                 <ImageIcon className="h-4 w-4" strokeWidth={ICON_STROKE} />
               </div>
               <div className="flex-1">
@@ -311,6 +312,57 @@ export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ── Recent activity ── */}
+      <div className="rounded-lg border border-border bg-card p-5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-foreground">{t('activityTitle')}</h3>
+          {activity.isLoading && <span className="text-xs text-muted-foreground">…</span>}
+        </div>
+        {activity.isLoading && activity.items.length === 0 ? (
+          <div className="mt-4 space-y-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="h-7 w-7 shrink-0 animate-pulse rounded-lg bg-muted" />
+                <div className="flex-1 space-y-1">
+                  <div className="h-3 w-32 animate-pulse rounded bg-muted" />
+                  <div className="h-2 w-20 animate-pulse rounded bg-muted/60" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : activity.items.length === 0 ? (
+          <p className="mt-4 text-sm text-muted-foreground">{t('activityEmpty')}</p>
+        ) : (
+          <ul className="mt-4 space-y-2">
+            {activity.items.slice(0, 8).map((item) => (
+              <li key={`${item.type}-${item.id}`} className="flex items-center gap-3 text-sm">
+                <span className={cn(
+                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg',
+                  item.type === 'screen' ? 'bg-violet-500/10 text-violet-400'
+                    : item.type === 'media' ? 'bg-amber-500/10 text-amber-400'
+                    : item.type === 'playlist' ? 'bg-blue-500/10 text-blue-400'
+                    : item.type === 'schedule' ? 'bg-cyan-500/10 text-cyan-400'
+                    : 'bg-pink-500/10 text-pink-400',
+                )}>
+                  {item.type === 'screen' ? <Monitor className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
+                    : item.type === 'media' ? <ImageIcon className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
+                    : item.type === 'playlist' ? <Clapperboard className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
+                    : item.type === 'schedule' ? <CalendarClock className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
+                    : <Users className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-foreground">{item.title}</p>
+                  <p className="text-xs text-muted-foreground">{item.subtitle}</p>
+                </div>
+                <time className="shrink-0 text-xs text-muted-foreground">
+                  {new Date(item.timestamp).toLocaleDateString()}
+                </time>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </section>
   );
@@ -384,7 +436,7 @@ export function BranchPlaylistsSection(props: PlaylistsSectionProps) {
             {t('addPlaylist')}
           </button>
         </div>
-        <div className="vc-card-surface rounded-2xl border border-dashed border-border p-10 text-center">
+        <div className="vc-card-surface rounded-lg border border-dashed border-border p-10 text-center">
           <Clapperboard className="mx-auto h-10 w-10 text-muted-foreground" strokeWidth={ICON_STROKE} />
           <p className="mt-3 text-sm font-medium text-foreground">{t('noPlaylists')}</p>
           <p className="mt-1 text-sm text-muted-foreground">{t('noPlaylistsHint')}</p>
@@ -430,7 +482,7 @@ export function BranchPlaylistsSection(props: PlaylistsSectionProps) {
               <Link
                 href={`/${props.locale}/branches/${props.workspaceIdParam}/playlists/${pl.id}` as Route}
                 className={cn(
-                  'flex flex-col rounded-2xl border border-border bg-card p-5 pe-12 transition-all duration-200',
+                  'flex flex-col rounded-lg border border-border bg-card p-5 pe-12 transition-all duration-200',
                   'hover:border-primary/30 hover:bg-primary/[0.03] hover:shadow-md',
                   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
                 )}
@@ -472,18 +524,17 @@ export function BranchPlaylistsSection(props: PlaylistsSectionProps) {
                   <DropdownMenuContent align="end" className="min-w-[12rem]">
                     <DropdownMenuItem
                       className="gap-2 font-semibold"
-                      disabled={dupBusy}
-                      onClick={() => void props.onDuplicate(pl)}
-                    >
-                      <Copy className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
-                      {t('playlistDuplicate')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="gap-2 font-semibold"
                       onClick={() => props.onEdit(pl)}
                     >
                       <PenLine className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
                       {t('playlistEdit')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="gap-2 font-semibold"
+                      onClick={() => void props.onDuplicate(pl)}
+                    >
+                      <Copy className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
+                      {t('playlistDuplicate')}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className="gap-2 font-semibold"
@@ -492,11 +543,20 @@ export function BranchPlaylistsSection(props: PlaylistsSectionProps) {
                       <Monitor className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
                       {t('playlistMoveToBranch')}
                     </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="gap-2 font-semibold"
+                      asChild
+                    >
+                      <Link href={`/${props.locale}/content/playlists/${pl.id}/studio` as Route} className="flex items-center gap-2">
+                        <Play className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
+                        {t('openInStudio')}
+                      </Link>
+                    </DropdownMenuItem>
                     {props.canDeletePlaylist ? (
                       <>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          className="gap-2 font-semibold text-red-600 focus:text-red-600"
+                          className="gap-2 font-semibold text-destructive focus:text-destructive"
                           onClick={() => props.onDelete(pl)}
                         >
                           <Trash2 className="h-4 w-4" strokeWidth={ICON_STROKE} />
@@ -554,7 +614,7 @@ export function BranchScreensSection(props: ScreensSectionProps) {
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">{t('screensSub')}</p>
         </div>
-        <div className="vc-card-surface rounded-2xl border border-dashed border-border p-10 text-center">
+        <div className="vc-card-surface rounded-lg border border-dashed border-border p-10 text-center">
           <Monitor className="mx-auto h-10 w-10 text-muted-foreground" strokeWidth={ICON_STROKE} />
           <p className="mt-3 text-sm font-medium text-foreground">{t('noScreens')}</p>
         </div>
@@ -574,7 +634,7 @@ export function BranchScreensSection(props: ScreensSectionProps) {
         {props.screens.map((screen) => (
           <div
             key={screen.id}
-            className="vc-card-surface rounded-2xl border border-border/60 p-4 dark:border-white/10"
+            className="vc-card-surface rounded-lg border border-border/60 p-4 dark:border-white/10"
           >
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
@@ -640,18 +700,18 @@ export function BranchScreensSection(props: ScreensSectionProps) {
                 size="sm"
                 variant="outline"
                 className="rounded-lg"
-                onClick={() => {
-                  window.location.assign(`/${props.locale}/studio`);
-                }}
+                asChild
               >
-                <PenLine className="me-1 h-3.5 w-3.5" />
-                {t('screenFullEditor')}
+                <Link href={`/${props.locale}/screens/${screen.id}` as Route}>
+                  <PenLine className="me-1 h-3.5 w-3.5" />
+                  {t('screenFullEditor')}
+                </Link>
               </Button>
               <Button
                 type="button"
                 size="sm"
                 variant="ghost"
-                className="rounded-lg text-red-500 hover:bg-red-500/10 hover:text-red-600"
+                className="rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive"
                 onClick={() => void props.onDeleteScreen(screen)}
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -665,9 +725,25 @@ export function BranchScreensSection(props: ScreensSectionProps) {
 }
 
 type MediaSectionProps = {
-  mediaItems: { id: string; originalName: string; mimeType: string }[];
+  mediaItems: { id: string; originalName: string; mimeType: string; sizeBytes?: number; publicUrl?: string; createdAt?: string }[];
   isLoading: boolean;
 };
+
+function formatFileSize(bytes?: number): string {
+  if (!bytes || bytes <= 0) return '—';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+}
+
+function isImageMime(mime: string): boolean {
+  return mime.startsWith('image/');
+}
+
+function isVideoMime(mime: string): boolean {
+  return mime.startsWith('video/');
+}
 
 export function BranchMediaSection({ mediaItems, isLoading }: MediaSectionProps) {
   const t = useTranslations('branchDetail');
@@ -695,7 +771,7 @@ export function BranchMediaSection({ mediaItems, isLoading }: MediaSectionProps)
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">{t('mediaSub')}</p>
         </div>
-        <div className="vc-card-surface rounded-2xl border border-dashed border-border p-10 text-center">
+        <div className="vc-card-surface rounded-lg border border-dashed border-border p-10 text-center">
           <ImageIcon className="mx-auto h-10 w-10 text-muted-foreground" strokeWidth={ICON_STROKE} />
           <p className="mt-3 text-sm font-medium text-foreground">{t('noMedia')}</p>
         </div>
@@ -711,16 +787,57 @@ export function BranchMediaSection({ mediaItems, isLoading }: MediaSectionProps)
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">{t('mediaSub')}</p>
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {mediaItems.map((item) => (
-          <div
-            key={item.id}
-            className="vc-card-surface rounded-2xl border border-border/60 p-4 dark:border-white/10"
-          >
-            <p className="truncate text-sm font-semibold text-foreground dark:text-white">{item.originalName}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{item.mimeType}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {mediaItems.map((item) => {
+          const hasThumb = item.publicUrl && (isImageMime(item.mimeType) || isVideoMime(item.mimeType));
+          return (
+            <div
+              key={item.id}
+              className="vc-card-surface overflow-hidden rounded-lg border border-border/60 dark:border-white/10"
+            >
+              <div className="relative aspect-video w-full overflow-hidden bg-muted/30">
+                {hasThumb && item.publicUrl ? (
+                  isImageMime(item.mimeType) ? (
+                    <img
+                      src={item.publicUrl}
+                      alt={item.originalName}
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <video
+                      src={item.publicUrl}
+                      muted
+                      preload="metadata"
+                      className="h-full w-full object-cover"
+                    />
+                  )
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center">
+                    {isVideoMime(item.mimeType) ? (
+                      <Monitor className="h-8 w-8 text-muted-foreground" strokeWidth={ICON_STROKE} />
+                    ) : (
+                      <ImageIcon className="h-8 w-8 text-muted-foreground" strokeWidth={ICON_STROKE} />
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="p-3">
+                <p className="truncate text-sm font-semibold text-foreground dark:text-white">{item.originalName}</p>
+                <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{formatFileSize(item.sizeBytes)}</span>
+                  <span aria-hidden>·</span>
+                  <span className="truncate">{item.mimeType}</span>
+                </div>
+                {item.createdAt ? (
+                  <p className="mt-1 text-[10px] text-muted-foreground/80">
+                    {new Date(item.createdAt).toLocaleDateString()}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

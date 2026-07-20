@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
   BarChart3,
+  Building2,
   CalendarClock,
   Clapperboard,
   LayoutDashboard,
@@ -43,7 +44,7 @@ const STROKE = 1.5;
 
 const CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE = new Set<
   string
->(['overview', 'screens', 'media', 'templates', 'team', 'playlists', 'schedules', 'campaigns', 'ai', 'analytics', 'emergency', 'help', 'apiDocs', 'notifications', 'auditLog', 'studio']);
+>(['overview', 'screens', 'media', 'templates', 'team', 'playlists', 'schedules', 'campaigns', 'ai', 'analytics', 'emergency', 'help', 'api-docs', 'notifications', 'audit-log', 'studio']);
 
 function hrefFor(
   locale: string,
@@ -112,7 +113,7 @@ function NavItem({
       aria-current={active ? 'page' : undefined}
       title={label}
       className={cn(
-        'group relative flex h-11 cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm md:h-9 md:justify-center lg:justify-start',
+        'group relative flex h-11 cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm md:h-9 md:justify-center lg:justify-start',
         'transition-all duration-fast ease-out',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2',
         active
@@ -146,15 +147,6 @@ function NavItem({
         </span>
       ) : null}
     </Link>
-  );
-}
-
-/* ── Section Label ── */
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="px-3 pt-5 pb-1 text-xs font-bold uppercase tracking-wide text-muted-foreground/40 md:hidden lg:block">
-      {children}
-    </p>
   );
 }
 
@@ -262,7 +254,7 @@ export function ShellSidebar({
           {shellNavLoading ? (
             <div className="flex flex-col gap-1 px-3 pt-4" aria-hidden aria-busy="true">
               {Array.from({ length: 7 }).map((_, i) => (
-                <Skeleton key={i} className="h-9 rounded-xl bg-muted/40" />
+                <Skeleton key={i} className="h-9 rounded-lg bg-muted/40" />
               ))}
             </div>
           ) : (
@@ -276,6 +268,13 @@ export function ShellSidebar({
                 onClick={(e) => {
                   if (isLoading) { e.preventDefault(); return; }
                 }}
+              />
+
+              <NavItem
+                href={`/${navLocale}/branches` as Route}
+                label={t('branches')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/branches`))}
+                icon={Building2}
               />
 
               <NavItem

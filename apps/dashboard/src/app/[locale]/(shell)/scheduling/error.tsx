@@ -21,8 +21,8 @@ export default function SchedulingRouteError({ error, reset }: Props) {
 
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-amber-500/10">
-        <AlertTriangle className="h-8 w-8 text-amber-500" strokeWidth={1.5} />
+      <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-warning/10">
+        <AlertTriangle className="h-8 w-8 text-warning" strokeWidth={1.5} />
       </div>
       <div className="space-y-1.5">
         <p className="text-lg font-semibold text-foreground">{t('title')}</p>

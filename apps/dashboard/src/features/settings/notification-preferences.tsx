@@ -117,7 +117,7 @@ export function NotificationPreferences() {
       <p className="text-sm text-muted-foreground">{t('prefsSubtitle')}</p>
 
       {CATEGORIES.map((category) => (
-        <div key={category.key} className="vc-card-surface rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
+        <div key={category.key} className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
           <h3 className="text-sm font-semibold tracking-tight text-foreground">{t(category.key)}</h3>
           <ul className="mt-4 space-y-3">
             {category.types.map((type) => (

@@ -327,14 +327,7 @@ export function ScreenSetupModal({
     } finally { setBusy(false); }
   };
 
-  const handleWizardCreate = async (data: {
-    name: string;
-    orientation: string;
-    layoutType: string;
-    templateId?: string;
-    zonePresetId?: string;
-    defaultTransition: string;
-  }) => {
+  const handleWizardCreate = async (data: { name: string }) => {
     const res = await apiCreatePlaylist(workspaceId || null, data.name);
     if (!res.ok) {
       toast.error(t('wizardCreateFailed'));

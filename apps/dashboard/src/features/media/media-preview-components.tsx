@@ -90,7 +90,7 @@ export function EmptyMediaIllustration() {
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center pt-8">
-        <div className="rounded-2xl border border-border bg-card px-6 py-4 shadow-sm">
+        <div className="rounded-lg border border-border bg-card px-6 py-4 shadow-sm">
           <Sparkles className="mx-auto h-10 w-10 text-primary" strokeWidth={1.5} />
         </div>
       </div>

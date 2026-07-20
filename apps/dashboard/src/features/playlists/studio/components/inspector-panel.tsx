@@ -27,6 +27,7 @@ type InspectorPanelProps = {
   selectedRow: Row | null;
   onUpdateRowTransition?: (clientId: string, transition: TransitionType) => void;
   onUpdateRowDuration?: (clientId: string, value: number) => void;
+  onUpdateRowZone?: (clientId: string, zoneName: string | null) => void;
 };
 
 export function InspectorPanel({
@@ -43,12 +44,13 @@ export function InspectorPanel({
   selectedRow,
   onUpdateRowTransition,
   onUpdateRowDuration,
+  onUpdateRowZone,
 }: InspectorPanelProps) {
   const t = useTranslations('playlistStudioClient');
   const locale = useLocale();
 
   return (
-    <div className="flex h-full flex-col gap-4 overflow-y-auto rounded-2xl border border-border/60 bg-card/40 p-4">
+    <div className="flex h-full flex-col gap-4 overflow-y-auto rounded-lg border border-border/60 bg-card/40 p-4">
       <div className="flex items-center gap-2">
         <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
           {t('inspector')}
@@ -244,6 +246,22 @@ export function InspectorPanel({
               </select>
             </div>
           </div>
+
+          {playlistMeta.layoutType === 'multi_zone' && selectedZonePreset && (
+            <div className="space-y-2">
+              <Label className="text-[11px] font-medium text-muted-foreground">{t('zoneAssignment')}</Label>
+              <select
+                className="h-8 w-full rounded-lg border border-border bg-background px-2.5 text-xs font-medium outline-none focus:border-primary/40"
+                value={selectedRow.zoneName ?? ''}
+                onChange={(e) => onUpdateRowZone?.(selectedRow.clientId, e.target.value || null)}
+              >
+                <option value="">{t('unassigned')}</option>
+                {selectedZonePreset.zones.map((z) => (
+                  <option key={z.name} value={z.name}>{z.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       )}
 

@@ -40,8 +40,8 @@ const STEP_META: Record<
   { icon: typeof Monitor; href: string; key: string }
 > = {
   create_screen: { icon: Monitor, href: '/screens', key: 'stepCreateScreen' },
-  upload_media: { icon: Upload, href: '/content?tab=media', key: 'stepUploadMedia' },
-  create_playlist: { icon: ListVideo, href: '/content?tab=playlists', key: 'stepCreatePlaylist' },
+  upload_media: { icon: Upload, href: '/content/media', key: 'stepUploadMedia' },
+  create_playlist: { icon: ListVideo, href: '/content/playlists', key: 'stepCreatePlaylist' },
   schedule_content: { icon: CalendarClock, href: '/scheduling', key: 'stepScheduleContent' },
   invite_team: { icon: UserPlus, href: '/team', key: 'stepInviteTeam' },
 };
@@ -98,7 +98,7 @@ export function OnboardingProgressWidget() {
       }
 
       // Navigate to the step page
-      router.push(`/${locale}${meta.href}` as never as Route);
+      router.push(`/${locale}${meta.href}` as Route);
     },
     [workspaceId, progress, router, locale],
   );
@@ -178,17 +178,17 @@ export function OnboardingProgressWidget() {
               onClick={() => void handleStepClick(step)}
               className={`flex items-center gap-3 rounded-lg border p-3 text-start transition ${
                 isDone
-                  ? 'border-emerald-500/30 bg-emerald-500/5'
+                  ? 'border-success/30 bg-success/5'
                   : 'border-border bg-card hover:border-primary/40 hover:bg-primary/5'
               }`}
             >
               <span
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                  isDone ? 'bg-emerald-500/10' : 'bg-primary/10'
+                  isDone ? 'bg-success/10' : 'bg-primary/10'
                 }`}
               >
                 {isDone ? (
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600" strokeWidth={ICON_STROKE} />
+                  <CheckCircle2 className="h-5 w-5 text-success" strokeWidth={ICON_STROKE} />
                 ) : (
                   <Icon className="h-5 w-5 text-primary" strokeWidth={ICON_STROKE} />
                 )}

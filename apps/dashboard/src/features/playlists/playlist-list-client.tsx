@@ -42,7 +42,6 @@ import { PlaylistCreateWizard } from '@/features/playlists/playlist-create-wizar
 import { PlaylistPreviewOverlay } from '@/features/playlists/playlist-preview-overlay';
 import type { PlaylistSummary } from '@/features/playlists/studio/types';
 import type { Row } from '@/features/playlists/playlist-timeline';
-import type { PlaylistOrientation, PlaylistLayoutType, TransitionType } from '@/features/playlists/playlist-transitions';
 
 type StatusFilter = 'all' | 'published' | 'draft';
 type ExpiryFilter = 'all' | 'expiring' | 'expired';
@@ -145,14 +144,7 @@ export function PlaylistListClient() {
     return sorted;
   }, [playlists, debouncedSearch, statusFilter, expiryFilter, sortBy]);
 
-  const handleCreate = async (data: {
-    name: string;
-    orientation: PlaylistOrientation;
-    layoutType: PlaylistLayoutType;
-    templateId?: string;
-    zonePresetId?: string;
-    defaultTransition: TransitionType;
-  }) => {
+  const handleCreate = async (data: { name: string }) => {
     if (!workspaceId) return;
     const res = await apiCreatePlaylist(workspaceId, data.name);
     if (!res.ok) {

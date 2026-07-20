@@ -120,7 +120,7 @@ export function SettingsProfileClient() {
 
   return (
     <div className="space-y-8">
-      <div className="vc-card-surface rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
+      <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
         <h2 className="text-lg font-semibold tracking-tight">{t('title')}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t('subtitle')}</p>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -168,7 +168,7 @@ export function SettingsProfileClient() {
       </div>
 
       <Dialog open={emailOpen} onOpenChange={setEmailOpen}>
-        <DialogContent className="rounded-3xl sm:max-w-md">
+        <DialogContent className="rounded-lg sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{t('verifyNewEmail')}</DialogTitle>
           </DialogHeader>
@@ -191,7 +191,7 @@ export function SettingsProfileClient() {
                 {newEmailError && <p className="text-sm text-destructive" role="alert">{newEmailError}</p>}
               </div>
               <DialogFooter>
-                <Button type="button" className="rounded-2xl" onClick={() => void requestEmailChange()}>
+                <Button type="button" className="rounded-lg" onClick={() => void requestEmailChange()}>
                   {t('sendCode')}
                 </Button>
               </DialogFooter>
@@ -208,7 +208,7 @@ export function SettingsProfileClient() {
                 />
               </div>
               <DialogFooter>
-                <Button type="button" className="rounded-2xl" onClick={() => void verifyEmailChange()}>
+                <Button type="button" className="rounded-lg" onClick={() => void verifyEmailChange()}>
                   {t('confirmEmail')}
                 </Button>
               </DialogFooter>

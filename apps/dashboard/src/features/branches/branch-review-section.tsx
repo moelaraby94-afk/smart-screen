@@ -38,7 +38,7 @@ export function BranchReviewSection({ playlists, workspaceId, onReviewed }: Prop
     onReviewed();
   };
 
-  const reject = async (pl: BranchPlaylistRow) => {
+  const reject = async (_pl: BranchPlaylistRow) => {
     toast.info(t('reviewRejected'));
     onReviewed();
   };
@@ -47,11 +47,11 @@ export function BranchReviewSection({ playlists, workspaceId, onReviewed }: Prop
     <motion.section
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="vc-card-surface rounded-2xl border border-border p-6 shadow-sm"
+      className="vc-card-surface rounded-lg border border-border p-6 shadow-sm"
     >
       <div className="mb-4 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 ring-1 ring-amber-500/20">
-          <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10 ring-1 ring-warning/20">
+          <Clock className="h-5 w-5 text-warning" />
         </div>
         <div>
           <h2 className="text-base font-semibold tracking-tight text-foreground">
@@ -61,7 +61,7 @@ export function BranchReviewSection({ playlists, workspaceId, onReviewed }: Prop
             {t('reviewDescription')}
           </p>
         </div>
-        <span className="ms-auto rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
+        <span className="ms-auto rounded-full bg-warning/10 px-3 py-1 text-xs font-semibold text-warning">
           {pending.length}
         </span>
       </div>
@@ -70,7 +70,7 @@ export function BranchReviewSection({ playlists, workspaceId, onReviewed }: Prop
         {pending.map((pl) => (
           <div
             key={pl.id}
-            className="flex items-center gap-3 rounded-xl border border-border bg-muted/20 px-4 py-3"
+            className="flex items-center gap-3 rounded-lg border border-border bg-muted/20 px-4 py-3"
           >
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium text-foreground">{pl.name}</p>

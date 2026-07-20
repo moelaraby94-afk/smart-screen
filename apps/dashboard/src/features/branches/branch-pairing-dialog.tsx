@@ -46,7 +46,7 @@ export function BranchPairingDialog({ pairing, branchName, canClaim }: Props) {
         if (!open) pairing.close();
       }}
     >
-      <DialogContent className="max-h-[min(90vh,560px)] overflow-y-auto rounded-2xl border-border sm:max-w-md">
+      <DialogContent className="max-h-[min(90vh,560px)] overflow-y-auto rounded-lg border-border sm:max-w-md">
         <DialogHeader className="space-y-1 text-center sm:text-center">
           <DialogTitle className="text-xl font-semibold">{t('pairingModalTitle')}</DialogTitle>
           <DialogDescription className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
@@ -56,7 +56,7 @@ export function BranchPairingDialog({ pairing, branchName, canClaim }: Props) {
         {pairing.showProgressBanner ? (
           <p
             role="status"
-            className="rounded-xl border border-primary/40 bg-primary/12 px-3 py-2 text-center text-xs font-medium leading-relaxed text-foreground"
+            className="rounded-lg border border-primary/40 bg-primary/12 px-3 py-2 text-center text-xs font-medium leading-relaxed text-foreground"
           >
             {t('pairingProgressBanner')}
           </p>
@@ -65,7 +65,7 @@ export function BranchPairingDialog({ pairing, branchName, canClaim }: Props) {
           {pairing.success ? (
             <div className="flex flex-col items-center gap-4 py-6 text-center">
               <CheckCircle2
-                className="h-14 w-14 text-emerald-500"
+                className="h-14 w-14 text-success"
                 strokeWidth={ICON_STROKE}
                 aria-hidden
               />

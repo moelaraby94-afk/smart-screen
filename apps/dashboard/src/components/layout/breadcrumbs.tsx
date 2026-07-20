@@ -60,9 +60,13 @@ function buildCrumbs(
     fleet: t('adminFleet'),
     screens: t('adminScreens'),
     playlists: t('playlists'),
+    media: t('media'),
     groups: t('displayGroups'),
     workspaces: t('adminWorkspaces'),
     users: t('adminCustomers'),
+    api: t('apiSettings'),
+    security: t('securitySettings'),
+    notifications: t('notificationsSettings'),
   };
 
   if (rest[0] === 'admin') {
@@ -94,7 +98,8 @@ function buildCrumbs(
         crumbs.push({ label, href: rest.length > 3 ? `${base}/branches/${rest[1]}/${rest[2]}` : null });
       }
       if (rest[3]) {
-        crumbs.push({ label: rest[3], href: null });
+        const label = subLabels[rest[3]] ?? rest[3];
+        crumbs.push({ label, href: null });
       }
     }
     return crumbs;
@@ -103,6 +108,7 @@ function buildCrumbs(
   if (rest[0] === 'settings') {
     if (rest.length === 1) return [];
     if (rest[1]) {
+      crumbs.push({ label: t('settings'), href: `${base}/settings` });
       const label = subLabels[rest[1]] ?? rest[1];
       crumbs.push({ label, href: null });
     }

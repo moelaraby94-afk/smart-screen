@@ -598,11 +598,11 @@ export function MediaLibraryClient() {
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col gap-4 rounded-2xl border border-border p-6 sm:flex-row sm:items-center sm:justify-between"
+        className="flex flex-col gap-4 rounded-lg border border-border p-6 sm:flex-row sm:items-center sm:justify-between"
       >
         <div className="min-w-0 flex-1">
           {workspaces.length > 1 ? (
-            <div className="mt-4 inline-flex flex-wrap gap-1 rounded-xl border border-border bg-muted/50 p-1">
+            <div className="mt-4 inline-flex flex-wrap gap-1 rounded-lg border border-border bg-muted/50 p-1">
               <button
                 type="button"
                 onClick={() => setScope('branch')}
@@ -643,7 +643,7 @@ export function MediaLibraryClient() {
           <Button
             type="button"
             variant="cta"
-            className="rounded-xl font-semibold"
+            className="rounded-lg font-semibold"
             onClick={onPickClick}
             disabled={pending || scope === 'all'}
           >
@@ -653,7 +653,7 @@ export function MediaLibraryClient() {
           <Button
             type="button"
             variant="outline"
-            className="rounded-xl"
+            className="rounded-lg"
             onClick={open}
             disabled={pending || scope === 'all'}
           >
@@ -687,11 +687,11 @@ export function MediaLibraryClient() {
               placeholder={t('searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="rounded-xl ps-9"
+              className="rounded-lg ps-9"
             />
           </div>
           <select
-            className="h-10 rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+            className="h-10 rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
             aria-label={t('filterByType')}
@@ -701,7 +701,7 @@ export function MediaLibraryClient() {
             <option value="video">{t('filterVideos')}</option>
           </select>
           <select
-            className="h-10 rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+            className="h-10 rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
             value={expiryFilter}
             onChange={(e) => setExpiryFilter(e.target.value)}
             aria-label={t('filterByExpiry')}
@@ -711,7 +711,7 @@ export function MediaLibraryClient() {
             <option value="expired">{t('expiryFilterExpired')}</option>
           </select>
           <select
-            className="h-10 rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+            className="h-10 rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             aria-label={t('sortBy')}
@@ -727,7 +727,7 @@ export function MediaLibraryClient() {
       <div
         {...getRootProps()}
         className={cn(
-          'relative flex min-h-[320px] flex-1 flex-col rounded-3xl border-2 border-dashed transition-colors',
+          'relative flex min-h-[320px] flex-1 flex-col rounded-lg border-2 border-dashed transition-colors',
           isDragActive
             ? 'border-primary/50 bg-primary/[0.04]'
             : 'border-border bg-muted/20',
@@ -736,7 +736,7 @@ export function MediaLibraryClient() {
         <input {...getInputProps()} />
 
         {isDragActive && (
-          <div className="pointer-events-none absolute inset-0 z-card flex items-center justify-center rounded-3xl bg-primary/5 backdrop-blur-sm">
+          <div className="pointer-events-none absolute inset-0 z-card flex items-center justify-center rounded-lg bg-primary/5 backdrop-blur-sm">
             <div className="flex flex-col items-center gap-2">
               <Upload className="h-10 w-10 text-primary" strokeWidth={1.5} />
               <p className="text-lg font-semibold text-primary">{t('dropHere')}</p>
@@ -770,7 +770,7 @@ export function MediaLibraryClient() {
               <Button
                 type="button"
                 variant="cta"
-                className="rounded-xl font-semibold"
+                className="rounded-lg font-semibold"
                 onClick={onPickClick}
               >
                 <Upload className="h-4 w-4 shrink-0" strokeWidth={2} />
@@ -815,7 +815,7 @@ export function MediaLibraryClient() {
             <Button
               type="button"
               variant="outline"
-              className="rounded-xl font-semibold"
+              className="rounded-lg font-semibold"
               disabled={loadingMore}
               onClick={() => void loadMore()}
             >
@@ -829,7 +829,7 @@ export function MediaLibraryClient() {
       </div>
 
       <AlertDialog open={deleteTarget !== null} onOpenChange={() => setDeleteTarget(null)}>
-        <AlertDialogContent className="rounded-2xl border-border">
+        <AlertDialogContent className="rounded-lg border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>{t('deleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
@@ -842,10 +842,10 @@ export function MediaLibraryClient() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel autoFocus className="rounded-xl">{t('cancel')}</AlertDialogCancel>
+            <AlertDialogCancel autoFocus className="rounded-lg">{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => void confirmDelete()}
-              className="rounded-xl bg-destructive hover:bg-destructive"
+              className="rounded-lg bg-destructive hover:bg-destructive"
             >
               {t('delete')}
             </AlertDialogAction>
@@ -854,7 +854,7 @@ export function MediaLibraryClient() {
       </AlertDialog>
 
       <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
-        <AlertDialogContent className="rounded-2xl border-border">
+        <AlertDialogContent className="rounded-lg border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>{t('bulkDeleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
@@ -862,11 +862,11 @@ export function MediaLibraryClient() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">{t('cancel')}</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-lg">{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => void confirmBulkDelete()}
               disabled={bulkDeleting}
-              className="rounded-xl bg-destructive hover:bg-destructive"
+              className="rounded-lg bg-destructive hover:bg-destructive"
             >
               {bulkDeleting ? t('deleting') : t('delete')}
             </AlertDialogAction>
@@ -875,7 +875,7 @@ export function MediaLibraryClient() {
       </AlertDialog>
 
       <Dialog open={infoTarget !== null} onOpenChange={() => setInfoTarget(null)}>
-        <DialogContent className="rounded-2xl border-border sm:max-w-md">
+        <DialogContent className="rounded-lg border-border sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <InfoIcon className="h-5 w-5 text-primary" />
@@ -885,9 +885,9 @@ export function MediaLibraryClient() {
           {infoTarget && (
             <div className="space-y-3 py-2">
               {infoTarget.mimeType.startsWith('image/') ? (
-                <img src={infoTarget.publicUrl} alt={infoTarget.originalName} className="max-h-48 w-full rounded-xl object-contain bg-black/10" />
+                <img src={infoTarget.publicUrl} alt={infoTarget.originalName} className="max-h-48 w-full rounded-lg object-contain bg-black/10" />
               ) : (
-                <video src={infoTarget.publicUrl} className="max-h-48 w-full rounded-xl bg-black" controls />
+                <video src={infoTarget.publicUrl} className="max-h-48 w-full rounded-lg bg-black" controls />
               )}
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between gap-4">
@@ -930,13 +930,13 @@ export function MediaLibraryClient() {
                     type="date"
                     value={expiryDate}
                     onChange={(e) => setExpiryDate(e.target.value)}
-                    className="rounded-xl"
+                    className="rounded-lg"
                   />
                   <Button
                     type="button"
                     variant="cta"
                     size="sm"
-                    className="rounded-xl shrink-0"
+                    className="rounded-lg shrink-0"
                     disabled={savingExpiry}
                     onClick={() => void handleSaveExpiry()}
                   >
@@ -956,7 +956,7 @@ export function MediaLibraryClient() {
       </Dialog>
 
       <Dialog open={addToPlaylistTarget !== null} onOpenChange={() => setAddToPlaylistTarget(null)}>
-        <DialogContent className="rounded-2xl border-border sm:max-w-md">
+        <DialogContent className="rounded-lg border-border sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ListPlus className="h-5 w-5 text-primary" />
@@ -969,7 +969,7 @@ export function MediaLibraryClient() {
                 {t('addToPlaylistDescription', { name: addToPlaylistTarget.originalName })}
               </p>
               <select
-                className="h-11 w-full rounded-xl border border-border bg-card px-4 text-[15px] text-foreground outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
+                className="h-11 w-full rounded-lg border border-border bg-card px-4 text-[15px] text-foreground outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
                 value={selectedPlaylistId}
                 onChange={(e) => setSelectedPlaylistId(e.target.value)}
                 aria-label={t('selectPlaylist')}
@@ -984,7 +984,7 @@ export function MediaLibraryClient() {
               <Button
                 type="button"
                 variant="cta"
-                className="w-full rounded-xl font-semibold"
+                className="w-full rounded-lg font-semibold"
                 disabled={!selectedPlaylistId || addingToPlaylist}
                 onClick={() => void confirmAddToPlaylist()}
               >
@@ -996,7 +996,7 @@ export function MediaLibraryClient() {
       </Dialog>
 
       {uploads.length > 0 && (
-        <div className="fixed bottom-4 end-4 z-toast w-full max-w-sm rounded-2xl border border-border bg-card p-4 shadow-lg" role="status" aria-live="polite">
+        <div className="fixed bottom-4 end-4 z-toast w-full max-w-sm rounded-lg border border-border bg-card p-4 shadow-lg" role="status" aria-live="polite">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-sm font-semibold text-foreground">{t('uploadProgress')}</p>
             <button

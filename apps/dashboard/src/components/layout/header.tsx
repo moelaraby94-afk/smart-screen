@@ -4,10 +4,12 @@ import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
-import { ArrowLeft, LogOut, Menu, MoreVertical, Search, Settings, X } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { ArrowLeft, LogOut, Menu, Moon, MoreVertical, Search, Settings, SlidersHorizontal, Sun, UserRound, X } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import { useLocale, useTranslations } from 'next-intl';
+import { pathWithLocale } from '@/components/language-switcher';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { UserMenu } from '@/components/user-menu';
 import { WorkspaceSwitcher } from '@/features/workspace/workspace-switcher';
 import { NotificationBell } from '@/features/notifications/notification-provider';
@@ -15,7 +17,7 @@ import { GlobalSearch } from '@/features/search/global-search';
 import { DensityToggle } from '@/components/density-toggle';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { setStoredAccessToken } from '@/features/auth/session';
 import { logout as apiLogout } from '@/features/auth/auth-api';
 import { toast } from 'sonner';
@@ -202,22 +204,31 @@ function MobileMoreMenu({ navLocale, rtl }: { navLocale: 'ar' | 'en'; rtl: boole
   const t = useTranslations('nav');
   const tUser = useTranslations('userMenu');
   const router = useRouter();
+  const pathname = usePathname();
+  const { resolvedTheme, setTheme } = useTheme();
+  const activeLocale = useLocale();
+  const isDark = resolvedTheme !== 'light';
+
+  const switchLocale = (locale: 'ar' | 'en') => {
+    router.replace(pathWithLocale(pathname, locale) as Route);
+    router.refresh();
+  };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-foreground transition hover:bg-muted"
+          className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground transition hover:bg-muted"
           aria-label={t('moreMenu')}
           aria-haspopup="menu"
         >
           <MoreVertical className="h-4 w-4" strokeWidth={ICON_STROKE} />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align={rtl ? 'start' : 'end'} className="w-48">
+      <DropdownMenuContent align={rtl ? 'start' : 'end'} className="w-56">
         <DropdownMenuItem
-          className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm"
+          className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm"
           onSelect={(e) => {
             e.preventDefault();
             const event = new KeyboardEvent('keydown', { key: 'k', metaKey: true });
@@ -227,8 +238,72 @@ function MobileMoreMenu({ navLocale, rtl }: { navLocale: 'ar' | 'en'; rtl: boole
           <Search className="h-4 w-4 text-muted-foreground" strokeWidth={ICON_STROKE} />
           {t('search')}
         </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        <div className="flex items-center justify-between gap-2 rounded-lg px-3 py-2">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            {tUser('language')}
+          </span>
+          <div
+            className="inline-flex rounded-full border border-primary/20 bg-muted/40 p-0.5"
+            role="group"
+            aria-label={tUser('language')}
+          >
+            <button
+              type="button"
+              onClick={() => switchLocale('ar')}
+              className={cn(
+                'rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all',
+                activeLocale === 'ar'
+                  ? 'bg-primary text-white'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {tUser('langArabic')}
+            </button>
+            <button
+              type="button"
+              onClick={() => switchLocale('en')}
+              className={cn(
+                'rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all',
+                activeLocale === 'en'
+                  ? 'bg-primary text-white'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {tUser('langEnglish')}
+            </button>
+          </div>
+        </div>
+
         <DropdownMenuItem
-          className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm"
+          className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm"
+          onSelect={(e) => {
+            e.preventDefault();
+            setTheme(isDark ? 'light' : 'dark');
+          }}
+        >
+          {isDark ? <Moon className="h-4 w-4 text-muted-foreground" strokeWidth={ICON_STROKE} /> : <Sun className="h-4 w-4 text-muted-foreground" strokeWidth={ICON_STROKE} />}
+          {isDark ? tUser('switchToLight') : tUser('switchToDark')}
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem asChild className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm">
+          <Link href={`/${navLocale}/settings/profile` as Route} className="flex items-center gap-2">
+            <UserRound className="h-4 w-4 text-muted-foreground" strokeWidth={ICON_STROKE} />
+            {tUser('profile')}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm">
+          <Link href={`/${navLocale}/settings/billing` as Route} className="flex items-center gap-2">
+            <SlidersHorizontal className="h-4 w-4 text-muted-foreground" strokeWidth={ICON_STROKE} />
+            {tUser('settingsBilling')}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm"
           onSelect={(e) => {
             e.preventDefault();
             router.push(`/${navLocale}/settings` as Route);
@@ -237,8 +312,11 @@ function MobileMoreMenu({ navLocale, rtl }: { navLocale: 'ar' | 'en'; rtl: boole
           <Settings className="h-4 w-4 text-muted-foreground" strokeWidth={ICON_STROKE} />
           {t('settings')}
         </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
         <DropdownMenuItem
-          className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-destructive"
+          className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-destructive"
           onSelect={async (e) => {
             e.preventDefault();
             const res = await apiLogout();
@@ -260,6 +338,7 @@ function MobileMoreMenu({ navLocale, rtl }: { navLocale: 'ar' | 'en'; rtl: boole
 }
 
 function OfflineIndicator() {
+  const t = useTranslations('nav');
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
@@ -279,9 +358,9 @@ function OfflineIndicator() {
 
   return (
     <span
-      className="h-2 w-2 shrink-0 rounded-full bg-amber-500"
-      title="Offline"
-      aria-label="Offline"
+      className="h-2 w-2 shrink-0 rounded-full bg-warning"
+      title={t('offline')}
+      aria-label={t('offline')}
       role="status"
     />
   );

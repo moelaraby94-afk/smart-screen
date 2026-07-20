@@ -3,10 +3,20 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { deleteBranchScreen as apiDeleteBranchScreen } from '@/features/branches/branches-api';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { useWorkspace } from '@/features/workspace/workspace-context';
@@ -39,6 +49,7 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
   const t = useTranslations('branchDetail');
   const { toastResponseError } = useApiErrorToast();
   const params = useParams();
+  const router = useRouter();
   const workspaceIdParam = workspaceIdOverride ?? (typeof params.workspaceId === 'string' ? params.workspaceId : '');
   const {
     workspaces,
@@ -78,6 +89,8 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
   const [playlistToEdit, setPlaylistToEdit] = useState<BranchPlaylistRow | null>(null);
   const [editPlaylistName, setEditPlaylistName] = useState('');
   const [editPlaylistPublished, setEditPlaylistPublished] = useState(false);
+  const [screenToDelete, setScreenToDelete] = useState<ScreenRow | null>(null);
+  const [screenDeleting, setScreenDeleting] = useState(false);
 
   const canDeletePlaylist = Boolean(
     branch && (branch.role === 'OWNER' || branch.role === 'ADMIN'),
@@ -114,12 +127,12 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
         onNewPlaylist={() => setCreateOpen(true)}
         onNewScreen={() => setScreenDialogOpen(true)}
         onNewMedia={() => {
-          window.location.assign(`/${locale}/media`);
+          router.push(`/${locale}/media` as Route);
         }}
         onOpenPairingModal={pairing.open}
       />
     ),
-    [activeTab, locale, pairing.open],
+    [activeTab, locale, pairing.open, router],
   );
 
   useLayoutEffect(() => {
@@ -175,24 +188,28 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
 
   const onDeleteScreen = useCallback(
     async (screen: ScreenRow) => {
-      const ok = window.confirm(t('screenDeleteConfirm'));
-      if (!ok) return;
-      const res = await apiDeleteBranchScreen(workspaceIdParam, screen.id);
-      if (!res.ok) {
-        await toastResponseError(res);
-        return;
+      setScreenDeleting(true);
+      try {
+        const res = await apiDeleteBranchScreen(workspaceIdParam, screen.id);
+        if (!res.ok) {
+          await toastResponseError(res);
+          return;
+        }
+        toast.success(t('screenDeleted'));
+        setScreenToDelete(null);
+        await reloadScreens();
+      } finally {
+        setScreenDeleting(false);
       }
-      toast.success(t('screenDeleted'));
-      await reloadScreens();
     },
-    [t, toastResponseError, workspaceIdParam, reloadScreens],
+    [workspaceIdParam, reloadScreens, t, toastResponseError],
   );
 
   if (!branch) {
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 px-4 text-center">
         <p className="text-sm font-medium text-muted-foreground">{t('notFound')}</p>
-        <Button type="button" variant="outline" className="rounded-xl" asChild>
+        <Button type="button" variant="outline" className="rounded-lg" asChild>
           <Link href={`/${locale}/overview` as Route}>{t('backOverview')}</Link>
         </Button>
       </div>
@@ -203,6 +220,20 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
 
   return (
     <main className="space-y-8 pb-12">
+      {/* Inline toolbar for branches page (header inset is skipped when workspaceIdOverride is set) */}
+      {workspaceIdOverride && (
+        <BranchWorkspaceToolbar
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onNewPlaylist={() => setCreateOpen(true)}
+          onNewScreen={() => setScreenDialogOpen(true)}
+          onNewMedia={() => {
+            router.push(`/${locale}/media` as Route);
+          }}
+          onOpenPairingModal={pairing.open}
+        />
+      )}
+
       <CreateScreenDialog
         open={screenDialogOpen}
         onOpenChange={setScreenDialogOpen}
@@ -263,7 +294,7 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
             setEditScreen(screen);
             setEditOpen(true);
           }}
-          onDeleteScreen={onDeleteScreen}
+          onDeleteScreen={async (screen) => setScreenToDelete(screen)}
         />
       ) : null}
 
@@ -325,9 +356,44 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
         locale={locale}
         onSaved={reloadScreens}
         onEditScreen={() => {
-          window.location.assign(`/${locale}/studio`);
+          if (editScreen) {
+            router.push(`/${locale}/screens/${editScreen.id}` as Route);
+          } else {
+            router.push(`/${locale}/screens` as Route);
+          }
         }}
       />
+
+      <AlertDialog
+        open={screenToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setScreenToDelete(null);
+        }}
+      >
+        <AlertDialogContent className="rounded-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('screenDeleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('screenDeleteConfirm', { name: screenToDelete?.name ?? '' })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
+            <AlertDialogCancel className="rounded-lg" disabled={screenDeleting}>
+              {t('cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-lg bg-destructive font-semibold text-white hover:bg-destructive/90"
+              disabled={screenDeleting}
+              onClick={(e) => {
+                e.preventDefault();
+                if (screenToDelete) void onDeleteScreen(screenToDelete);
+              }}
+            >
+              {t('screenDelete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }

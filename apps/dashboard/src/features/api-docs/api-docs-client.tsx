@@ -29,10 +29,10 @@ type EndpointGroup = {
 };
 
 const methodColor: Record<Endpoint['method'], string> = {
-  GET: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 ring-blue-500/20',
-  POST: 'bg-green-500/10 text-green-600 dark:text-green-400 ring-green-500/20',
-  PATCH: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-amber-500/20',
-  DELETE: 'bg-red-500/10 text-red-600 dark:text-red-400 ring-red-500/20',
+  GET: 'bg-primary/10 text-primary ring-primary/20',
+  POST: 'bg-success/10 text-success ring-success/20',
+  PATCH: 'bg-warning/10 text-warning ring-warning/20',
+  DELETE: 'bg-destructive/10 text-destructive ring-destructive/20',
 };
 
 export function ApiDocsClient() {

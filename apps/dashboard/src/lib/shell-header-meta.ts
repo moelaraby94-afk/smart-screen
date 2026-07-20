@@ -60,20 +60,35 @@ export function useShellHeaderMeta(pathname: string | null): ShellHeaderMeta {
         kicker: '',
         showBack: true,
         backHref: `${base}/screens`,
-        backLabel: t('backToOverview'),
+        backLabel: t('backToScreens'),
       };
     }
 
     if (
       rest[0] === 'settings' &&
-      (rest[1] === 'profile' || rest[1] === 'billing') &&
+      (rest[1] === 'profile' || rest[1] === 'billing' || rest[1] === 'api' || rest[1] === 'security' || rest[1] === 'notifications' || rest[1] === 'workspace') &&
       rest.length === 2
     ) {
+      const titleMap: Record<string, string> = {
+        profile: t('pageTitles.settingsProfile'),
+        billing: t('pageTitles.settingsBilling'),
+        api: t('pageTitles.settingsApi'),
+        security: t('pageTitles.settingsSecurity'),
+        notifications: t('pageTitles.settingsNotifications'),
+        workspace: t('pageTitles.settingsWorkspace'),
+      };
       return {
-        pageTitle:
-          rest[1] === 'profile'
-            ? t('pageTitles.settingsProfile')
-            : t('pageTitles.settingsBilling'),
+        pageTitle: titleMap[rest[1]] ?? t('pageTitles.settingsIndex'),
+        kicker: '',
+        showBack: true,
+        backHref: `${base}/settings`,
+        backLabel: t('backToSettings'),
+      };
+    }
+
+    if (rest[0] === 'settings' && rest.length === 1) {
+      return {
+        pageTitle: t('pageTitles.settingsIndex'),
         kicker: '',
         showBack: true,
         backHref: `${base}/overview`,
@@ -101,6 +116,16 @@ export function useShellHeaderMeta(pathname: string | null): ShellHeaderMeta {
       pageTitle = t('pageTitles.notifications');
     } else if (rest[0] === 'api-docs') {
       pageTitle = t('pageTitles.apiDocs');
+    } else if (rest[0] === 'billing') {
+      pageTitle = t('pageTitles.billing');
+    } else if (rest[0] === 'campaigns') {
+      pageTitle = t('pageTitles.campaigns');
+    } else if (rest[0] === 'displays') {
+      pageTitle = t('pageTitles.displays');
+    } else if (rest[0] === 'proof-of-play') {
+      pageTitle = t('pageTitles.proofOfPlay');
+    } else if (rest[0] === 'branches' && rest.length === 1) {
+      pageTitle = t('pageTitles.branches');
     } else if (rest[0] === 'help') {
       pageTitle = t('pageTitles.help');
     } else if (rest[0] === 'media') {
@@ -108,6 +133,10 @@ export function useShellHeaderMeta(pathname: string | null): ShellHeaderMeta {
     } else if (rest[0] === 'studio') {
       pageTitle = t('pageTitles.studio');
     } else if (rest[0] === 'playlists') {
+      pageTitle = t('pageTitles.playlists');
+    } else if (rest[0] === 'content' && rest[1] === 'media') {
+      pageTitle = t('pageTitles.media');
+    } else if (rest[0] === 'content' && rest[1] === 'playlists') {
       pageTitle = t('pageTitles.playlists');
     } else if (rest[0] === 'content') {
       pageTitle = t('pageTitles.content');
@@ -117,12 +146,6 @@ export function useShellHeaderMeta(pathname: string | null): ShellHeaderMeta {
       pageTitle = t('pageTitles.schedules');
     } else if (rest[0] === 'team') {
       pageTitle = t('pageTitles.team');
-    } else if (rest[0] === 'settings' && rest[1] === 'profile') {
-      pageTitle = t('pageTitles.settingsProfile');
-    } else if (rest[0] === 'settings' && rest[1] === 'billing') {
-      pageTitle = t('pageTitles.settingsBilling');
-    } else if (rest[0] === 'settings' && rest[1] === 'workspace') {
-      pageTitle = t('pageTitles.settingsWorkspace');
     }
 
     const clientMainWithBack = new Set([
@@ -142,6 +165,11 @@ export function useShellHeaderMeta(pathname: string | null): ShellHeaderMeta {
       'notifications',
       'api-docs',
       'help',
+      'billing',
+      'campaigns',
+      'displays',
+      'proof-of-play',
+      'branches',
     ]);
     if (rest.length === 1 && clientMainWithBack.has(rest[0])) {
       return {

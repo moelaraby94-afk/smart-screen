@@ -129,7 +129,7 @@ export function WorkspaceSettingsClient() {
 
   return (
     <div className="space-y-8">
-      <div className="vc-card-surface rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
+      <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
         <h2 className="text-lg font-semibold tracking-tight">{t('generalTitle')}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t('generalDesc')}</p>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -210,7 +210,7 @@ export function WorkspaceSettingsClient() {
         </Button>
       </div>
 
-      <div className="vc-card-surface rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
+      <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
         <h2 className="text-lg font-semibold tracking-tight">{t('pauseTitle')}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t('pauseDesc')}</p>
         <div className="mt-4 flex items-center gap-3">

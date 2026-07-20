@@ -94,7 +94,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
 
   const {
     undoStack, redoStack, undo, redo, onDragEnd,
-    updateDuration, removeRow, moveRow, duplicateRow, updateRowTransition,
+    updateDuration, removeRow, moveRow, duplicateRow, updateRowTransition, updateRowZone,
   } = useTimelineEdit({
     rows, setRows, playlistMeta, selectedZoneId, playlistId,
     mediaLibrary: library, canvasLibrary, skipHistoryRef,
@@ -285,7 +285,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
   // Mobile guard — Studio editor is desktop-only
   if (viewportWidth < 768) {
     return (
-      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-2xl border border-border p-8 text-center">
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-lg border border-border p-8 text-center">
         <MonitorOff className="h-12 w-12 text-muted-foreground" />
         <div className="space-y-1">
           <p className="text-base font-semibold">{t('mobileNotSupported')}</p>
@@ -358,8 +358,11 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
       setSelectedZoneId={setSelectedZoneId}
       selectionContext={selectionContext}
       selectedRow={selectedRow}
+      onUpdateRowZone={updateRowZone}
       onDragEnd={onDragEnd}
       onPreview={() => setPreviewOpen(true)}
+      onSelectRow={setSelectedRowClientId}
+      selectedRowClientId={selectedRowClientId}
     />
 
       <PlaylistPreviewOverlay

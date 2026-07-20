@@ -30,22 +30,22 @@ function StatusBadge({ status }: { status: ScreenRow['status'] }) {
       className={cn(
         'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em]',
         live &&
-          'border border-emerald-400/40 bg-emerald-500/15 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.45)]',
+          'border border-success/40 bg-success/15 text-success',
         !live &&
           maintenance &&
-          'border border-amber-400/35 bg-amber-500/12 text-amber-100 shadow-[0_0_14px_rgba(245,158,11,0.35)]',
+          'border border-warning/35 bg-warning/12 text-warning',
         !live &&
           !maintenance &&
-          'border border-red-400/35 bg-red-500/12 text-red-100 shadow-[0_0_16px_rgba(239,68,68,0.35)]',
+          'border border-destructive/35 bg-destructive/12 text-destructive',
       )}
     >
       <span
         aria-hidden
         className={cn(
           'h-1.5 w-1.5 rounded-full',
-          live && 'animate-pulse bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]',
-          maintenance && 'bg-amber-400',
-          !live && !maintenance && 'bg-red-400',
+          live && 'animate-pulse bg-success',
+          maintenance && 'bg-warning',
+          !live && !maintenance && 'bg-destructive',
         )}
       />
       {live ? t('status.live') : maintenance ? t('status.maintenance') : t('status.offline')}
@@ -128,7 +128,7 @@ export function PlaylistScreensClient({ locale }: Props) {
       {isLoading ? (
         <CardGridSkeleton />
       ) : screens.length === 0 ? (
-        <div className="vc-card-surface rounded-2xl border border-dashed border-border p-10 text-center">
+        <div className="vc-card-surface rounded-lg border border-dashed border-border p-10 text-center">
           <Monitor className="mx-auto h-10 w-10 text-muted-foreground" strokeWidth={ICON_STROKE} />
           <p className="mt-3 text-sm font-medium text-foreground">{t('empty')}</p>
           <Button
@@ -149,7 +149,7 @@ export function PlaylistScreensClient({ locale }: Props) {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.03 * i, duration: 0.3 }}
-              className="vc-card-surface flex flex-col rounded-2xl border border-border/60 p-5 dark:border-white/10"
+              className="vc-card-surface flex flex-col rounded-lg border border-border/60 p-5 dark:border-white/10"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">

@@ -108,7 +108,7 @@ export function PlaylistLivePreview({
       </div>
 
       <div
-        className="relative overflow-hidden rounded-2xl border-2 border-border bg-black shadow-lg"
+        className="relative overflow-hidden rounded-lg border-2 border-border bg-black shadow-lg"
         style={{ aspectRatio: ORIENTATION_ASPECT[orientation] }}
       >
         {rows.length === 0 ? (
@@ -147,7 +147,7 @@ export function PlaylistLivePreview({
                 )
               ) : (
                 <div className="flex flex-col items-center gap-3 text-white/70">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-white/20 bg-white/5">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-lg border border-white/20 bg-white/5">
                     <span className="text-2xl font-bold">{current.canvas.name.charAt(0)}</span>
                   </div>
                   <p className="text-sm font-semibold">{current.canvas.name}</p>

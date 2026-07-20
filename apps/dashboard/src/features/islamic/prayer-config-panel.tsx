@@ -136,8 +136,8 @@ export function PrayerConfigPanel() {
   return (
     <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
       <div className="flex items-center gap-2.5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 ring-1 ring-ring/20">
-          <Compass className="h-4 w-4 text-emerald-600" strokeWidth={ICON_STROKE} />
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-success/10 ring-1 ring-ring/20">
+          <Compass className="h-4 w-4 text-success" strokeWidth={ICON_STROKE} />
         </div>
         <div>
           <h2 className="text-lg font-semibold tracking-tight">{t('title')}</h2>
@@ -150,7 +150,7 @@ export function PrayerConfigPanel() {
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-2">
             <Label className="flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5 text-emerald-600" strokeWidth={ICON_STROKE} />
+              <MapPin className="h-3.5 w-3.5 text-success" strokeWidth={ICON_STROKE} />
               {t('latitude')}
             </Label>
             <Input
@@ -254,7 +254,7 @@ export function PrayerConfigPanel() {
                   onClick={() => togglePrayer(prayer)}
                   className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
                     isActive
-                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700'
+                      ? 'border-success/30 bg-success/10 text-success'
                       : 'border-border bg-card text-muted-foreground'
                   }`}
                 >
@@ -275,7 +275,7 @@ export function PrayerConfigPanel() {
             type="button"
             onClick={() => setAutoPauseEnabled(!autoPauseEnabled)}
             className={`relative h-7 w-12 rounded-full transition ${
-              autoPauseEnabled ? 'bg-emerald-500' : 'bg-muted'
+              autoPauseEnabled ? 'bg-success' : 'bg-muted'
             }`}
             aria-label={t('autoPause')}
           >

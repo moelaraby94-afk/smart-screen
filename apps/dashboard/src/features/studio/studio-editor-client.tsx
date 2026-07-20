@@ -910,7 +910,7 @@ export function StudioEditorClient() {
   // Viewer permission guard — Studio is Owner/Editor only
   if (viewerBlocked) {
     return (
-      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-2xl border border-border p-8 text-center">
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-lg border border-border p-8 text-center">
         <AlertCircle className="h-12 w-12 text-muted-foreground" />
         <div className="space-y-1">
           <p className="text-base font-semibold">{t('viewerNoAccess')}</p>
@@ -923,7 +923,7 @@ export function StudioEditorClient() {
   // Mobile guard — Studio is desktop-only
   if (viewportWidth < 768) {
     return (
-      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-2xl border border-border p-8 text-center">
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-lg border border-border p-8 text-center">
         <MonitorOff className="h-12 w-12 text-muted-foreground" />
         <div className="space-y-1">
           <p className="text-base font-semibold">{t('mobileNotSupported')}</p>
@@ -936,7 +936,7 @@ export function StudioEditorClient() {
   // Load error state
   if (loadError) {
     return (
-      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-2xl border border-border p-8 text-center">
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-lg border border-border p-8 text-center">
         <AlertCircle className="h-12 w-12 text-destructive" />
         <div className="space-y-1">
           <p className="text-base font-semibold">{t('loadErrorTitle')}</p>
@@ -960,7 +960,7 @@ export function StudioEditorClient() {
         transition={prefersReduced ? { duration: 0 } : { duration: 0.3, ease: [0, 0, 0.2, 1] }}
         role="status"
         aria-live="polite"
-        className="flex min-h-[400px] flex-col items-center justify-center gap-6 rounded-2xl bg-neutral-900 p-8"
+        className="flex min-h-[400px] flex-col items-center justify-center gap-6 rounded-lg bg-neutral-900 p-8"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={logoSrc} alt="Cloud-Screen" className="max-h-12 w-auto object-contain" />
@@ -982,14 +982,14 @@ export function StudioEditorClient() {
       <motion.div
         initial={prefersReduced ? false : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="vc-card-surface rounded-2xl border border-border p-5 shadow-sm"
+        className="vc-card-surface rounded-lg border border-border p-5 shadow-sm"
       >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-2">
             <Label htmlFor="canvas-select">{t('canvasSelect')}</Label>
             <select
               id="canvas-select"
-              className="h-11 w-full max-w-md rounded-2xl border border-border bg-card px-4 text-[15px] outline-none focus:ring-4 focus:ring-primary/15"
+              className="h-11 w-full max-w-md rounded-lg border border-border bg-card px-4 text-[15px] outline-none focus:ring-4 focus:ring-primary/15"
               value={canvasId}
               onChange={(e) => setCanvasId(e.target.value)}
             >
@@ -1174,7 +1174,7 @@ export function StudioEditorClient() {
         <motion.div
           initial={prefersReduced ? false : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="vc-card-surface rounded-2xl border border-border p-5 shadow-sm"
+          className="vc-card-surface rounded-lg border border-border p-5 shadow-sm"
         >
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold tracking-tight">{t('zonePresets')}</h3>
@@ -1214,7 +1214,7 @@ export function StudioEditorClient() {
         <motion.div
           initial={prefersReduced ? false : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="vc-card-surface rounded-2xl border border-border p-5 shadow-sm"
+          className="vc-card-surface rounded-lg border border-border p-5 shadow-sm"
         >
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold tracking-tight">{t('templateGallery')}</h3>
@@ -1253,7 +1253,7 @@ export function StudioEditorClient() {
         <motion.div
           initial={prefersReduced ? false : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="vc-card-surface rounded-2xl border border-border p-5 shadow-sm"
+          className="vc-card-surface rounded-lg border border-border p-5 shadow-sm"
           role="region"
           aria-label={t('versionHistory')}
         >
@@ -1372,7 +1372,7 @@ export function StudioEditorClient() {
 
         {/* Center: Canvas + Tools */}
         <div className="flex min-h-0 flex-col gap-3">
-          <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-muted/30 p-2" role="toolbar" aria-label={t('insertTools')}>
+          <div className="flex flex-wrap gap-2 rounded-lg border border-border bg-muted/30 p-2" role="toolbar" aria-label={t('insertTools')}>
             <Button type="button" size="sm" variant="ghost" onClick={addText}>
               <Type className="me-1 h-4 w-4 text-primary" />
               {t('toolText')}
@@ -1403,7 +1403,7 @@ export function StudioEditorClient() {
             layout
             role="application"
             aria-label={t('canvasArea')}
-            className="relative min-h-0 flex-1 overflow-hidden rounded-3xl border border-primary/15 bg-neutral-900 p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+            className="relative min-h-0 flex-1 overflow-hidden rounded-lg border border-primary/15 bg-neutral-900 p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
             style={{ minHeight: 420, cursor: isPanning ? 'grabbing' : 'default' }}
             onMouseDown={(e) => {
               if (e.button === 1 || (e.button === 0 && e.shiftKey)) {

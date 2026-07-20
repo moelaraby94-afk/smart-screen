@@ -55,8 +55,8 @@ function getInitials(name: string): string {
 
 const ROLE_COLORS: Record<string, string> = {
   OWNER: 'bg-primary/15 text-primary',
-  ADMIN: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-  EDITOR: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+  ADMIN: 'bg-primary/15 text-primary',
+  EDITOR: 'bg-success/15 text-success',
   VIEWER: 'bg-muted text-muted-foreground',
 };
 
@@ -414,7 +414,7 @@ export function TeamClient() {
             animate={{ opacity: 1, y: 0 }}
             role="region"
             aria-label={t('pendingInvites')}
-            className="rounded-2xl border border-border bg-card p-6"
+            className="rounded-lg border border-border bg-card p-6"
           >
             <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
               <Clock className="h-4 w-4 text-primary" />
@@ -479,7 +479,7 @@ export function TeamClient() {
           animate={{ opacity: 1, y: 0 }}
           role="region"
           aria-label={t('activeMembers')}
-          className="rounded-2xl border border-border bg-card p-6"
+          className="rounded-lg border border-border bg-card p-6"
         >
           <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
             <Shield className="h-4 w-4 text-primary" />
@@ -607,7 +607,7 @@ export function TeamClient() {
             animate={{ opacity: 1, y: 0 }}
             role="region"
             aria-label={t('accountMembers')}
-            className="rounded-2xl border border-border bg-card p-6"
+            className="rounded-lg border border-border bg-card p-6"
           >
             <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
               <div className="space-y-4">

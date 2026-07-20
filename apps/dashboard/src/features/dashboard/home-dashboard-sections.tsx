@@ -69,7 +69,7 @@ export function WorkspaceCardsSection(props: WorkspaceCardsSectionProps) {
         {props.branches.map((row, i) => {
           const w = props.workspaces.find((x: WorkspaceSummary) => x.id === row.workspaceId);
           if (!w) return null;
-          const branchHref = `/${props.locale}/branches`;
+          const branchHref = `/${props.locale}/branches/${row.workspaceId}`;
           const h = branchHealth(row);
           const showMenu = canManageBranch(row.role);
           const pauseBusy = props.pauseBusyId === row.workspaceId;

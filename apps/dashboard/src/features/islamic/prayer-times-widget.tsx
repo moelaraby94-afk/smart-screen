@@ -97,12 +97,12 @@ export function PrayerTimesWidget() {
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       className="vc-card-surface relative overflow-hidden rounded-lg border border-border p-5"
     >
-      <div className="pointer-events-none absolute -end-8 -top-8 h-28 w-28 rounded-full bg-emerald-500/8 blur-3xl" />
+      <div className="pointer-events-none absolute -end-8 -top-8 h-28 w-28 rounded-full bg-success/8 blur-3xl" />
 
       <div className="relative flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 ring-1 ring-ring/20">
-            <Moon className="h-[18px] w-[18px] text-emerald-600" strokeWidth={ICON_STROKE} />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-success/10 ring-1 ring-ring/20">
+            <Moon className="h-[18px] w-[18px] text-success" strokeWidth={ICON_STROKE} />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-foreground">{t('title')}</h3>
@@ -128,15 +128,15 @@ export function PrayerTimesWidget() {
 
       {/* Next prayer countdown */}
       {data.nextPrayer && data.nextPrayerTime && (
-        <div className="relative mt-4 flex items-center gap-2 rounded-lg bg-emerald-500/5 px-3 py-2.5">
-          <Clock className="h-4 w-4 text-emerald-600" strokeWidth={ICON_STROKE} />
+        <div className="relative mt-4 flex items-center gap-2 rounded-lg bg-success/5 px-3 py-2.5">
+          <Clock className="h-4 w-4 text-success" strokeWidth={ICON_STROKE} />
           <span className="text-xs text-muted-foreground">{t('nextPrayer')}</span>
           <span className="text-sm font-semibold text-foreground">
             {t(`prayers.${data.nextPrayer.toLowerCase()}`)}
           </span>
           <span className="text-xs text-muted-foreground">— {data.nextPrayerTime}</span>
           {data.minutesUntilNext > 0 && (
-            <span className="ms-auto rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+            <span className="ms-auto rounded-full bg-success/15 px-2.5 py-0.5 text-xs font-medium text-success">
               {formatCountdown(data.minutesUntilNext)}
             </span>
           )}
@@ -153,12 +153,12 @@ export function PrayerTimesWidget() {
               key={key}
               className={`flex flex-col items-center gap-1 rounded-lg border p-2.5 text-center transition ${
                 isNext
-                  ? 'border-emerald-500/30 bg-emerald-500/5'
+                  ? 'border-success/30 bg-success/5'
                   : 'border-border bg-card'
               }`}
             >
               <Icon
-                className={`h-4 w-4 ${isNext ? 'text-emerald-600' : 'text-muted-foreground'}`}
+                className={`h-4 w-4 ${isNext ? 'text-success' : 'text-muted-foreground'}`}
                 strokeWidth={ICON_STROKE}
               />
               <span className="text-xs font-medium text-muted-foreground">

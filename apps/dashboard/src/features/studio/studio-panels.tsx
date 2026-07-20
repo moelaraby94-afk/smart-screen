@@ -89,7 +89,7 @@ export function StudioLayersPanel({ objects, selectedId, onSelect, onReorder, on
     <motion.div
       initial={prefersReduced ? false : { opacity: 0, x: 20 * dir }}
       animate={{ opacity: 1, x: 0 }}
-      className="vc-card-surface flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border p-3"
+      className="vc-card-surface flex min-h-0 flex-col overflow-hidden rounded-lg border border-border p-3"
       role="listbox"
       aria-label={t('layers')}
     >
@@ -188,7 +188,7 @@ export function StudioMediaPanel({ library, onUpload, uploading, onAddMedia }: M
     <motion.aside
       initial={prefersReduced ? false : { opacity: 0, x: -20 * dir }}
       animate={{ opacity: 1, x: 0 }}
-      className="vc-card-surface flex h-full flex-col rounded-2xl border border-border p-3"
+      className="vc-card-surface flex h-full flex-col rounded-lg border border-border p-3"
       role="region"
       aria-label={t('mediaPanel')}
     >
@@ -278,7 +278,7 @@ export function StudioPropertiesPanel({ selected, onUpdateObject, onRemoveObject
     <motion.aside
       initial={prefersReduced ? false : { opacity: 0, x: 20 * dir }}
       animate={{ opacity: 1, x: 0 }}
-      className="vc-card-surface h-fit rounded-2xl border border-border p-3"
+      className="vc-card-surface h-fit rounded-lg border border-border p-3"
     >
       <p className="mb-4 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
         <Layers className="h-4 w-4 text-primary" />

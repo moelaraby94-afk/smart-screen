@@ -24,17 +24,17 @@ import { useNotifications } from './notification-provider';
 const iconForType = (type: string) => {
   switch (type) {
     case 'screen_offline':
-      return { icon: AlertTriangle, class: 'bg-amber-500/15 text-amber-600' };
+      return { icon: AlertTriangle, class: 'bg-warning/15 text-warning' };
     case 'screen_online':
-      return { icon: Monitor, class: 'bg-emerald-500/15 text-emerald-600' };
+      return { icon: Monitor, class: 'bg-success/15 text-success' };
     case 'upload_complete':
-      return { icon: Upload, class: 'bg-blue-500/15 text-blue-600' };
+      return { icon: Upload, class: 'bg-primary/15 text-primary' };
     case 'subscription_updated':
-      return { icon: CreditCard, class: 'bg-purple-500/15 text-purple-600' };
+      return { icon: CreditCard, class: 'bg-primary/15 text-primary' };
     case 'schedule_changed':
-      return { icon: CalendarClock, class: 'bg-indigo-500/15 text-indigo-600' };
+      return { icon: CalendarClock, class: 'bg-primary/15 text-primary' };
     case 'pairing_started':
-      return { icon: UserPlus, class: 'bg-cyan-500/15 text-cyan-600' };
+      return { icon: UserPlus, class: 'bg-primary/15 text-primary' };
     default:
       return { icon: CheckCircle, class: 'bg-muted text-muted-foreground' };
   }
@@ -112,7 +112,7 @@ export function NotificationsPageClient() {
             >
               {btn.label}
               {btn.value === 'unread' && unreadCount > 0 && (
-                <span className="ms-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                <span className="ms-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
@@ -165,7 +165,7 @@ export function NotificationsPageClient() {
       {/* List */}
       <div role="list" aria-label={tPage('listLabel')}>
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16 text-center">
           <Bell className="mb-3 h-8 w-8 text-muted-foreground/50" />
           <p className="text-sm text-muted-foreground">
             {notifications.length === 0 ? tPage('empty') : tPage('noFilterResults')}

@@ -34,7 +34,7 @@ export function PlaylistCard({ playlist: p, workspace: ws, index, onOpen, onDupl
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.15, delay: Math.min(index * 0.03, 0.2) }}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:border-primary/30 hover:shadow-lg"
+      className="group relative flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm transition-all hover:border-primary/30 hover:shadow-lg"
     >
       <button
         type="button"

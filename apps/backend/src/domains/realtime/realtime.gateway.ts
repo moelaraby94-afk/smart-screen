@@ -570,7 +570,13 @@ export class RealtimeGateway
 
     const raw = client.handshake.headers.cookie;
     if (!raw) return null;
-    const token = cookieParse(raw).cs_access_token;
+    const cookies = cookieParse(raw);
+    const token =
+      cookies['__Host-cs_customer_access'] ??
+      cookies['__Host-cs_platform_access'] ??
+      cookies['cs_customer_access'] ??
+      cookies['cs_platform_access'] ??
+      cookies['cs_access_token'];
     return token ? verifyAccessToken(token) : null;
   }
 }

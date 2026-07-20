@@ -15,6 +15,7 @@ import {
   Wand2,
 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { MediaItem } from '@/features/media/media-library-client';
@@ -51,6 +52,8 @@ type PlaylistTimelineProps = {
   onMoveRow: (index: number, delta: -1 | 1) => void;
   onDuplicateRow: (clientId: string) => void;
   onUpdateTransition: (clientId: string, transition: TransitionType) => void;
+  onSelectRow?: (clientId: string | null) => void;
+  selectedRowClientId?: string | null;
   defaultTransition: TransitionType;
 };
 
@@ -61,13 +64,15 @@ export function PlaylistTimeline({
   onMoveRow,
   onDuplicateRow,
   onUpdateTransition,
+  onSelectRow,
+  selectedRowClientId,
   defaultTransition,
 }: PlaylistTimelineProps) {
   const t = useTranslations('playlistStudioClient');
   const locale = useLocale();
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/40" role="listbox" aria-label={t('programTimeline')}>
+    <div className="flex flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40" role="listbox" aria-label={t('programTimeline')}>
       <div className="flex items-center gap-2 border-b border-border/40 px-4 py-3">
         <Layers className="h-4 w-4 text-primary" />
         <h3 className="text-sm font-semibold tracking-tight text-foreground">
@@ -99,8 +104,12 @@ export function PlaylistTimeline({
                       ref={p.innerRef}
                       {...p.draggableProps}
                       role="option"
-                      aria-selected={false}
-                      className="rounded-xl border border-border/60 bg-background p-3 transition hover:border-primary/30 hover:shadow-sm"
+                      aria-selected={selectedRowClientId === row.clientId}
+                      onClick={() => onSelectRow?.(selectedRowClientId === row.clientId ? null : row.clientId)}
+                      className={cn(
+                        'cursor-pointer rounded-xl border bg-background p-3 transition hover:border-primary/30 hover:shadow-sm',
+                        selectedRowClientId === row.clientId ? 'border-primary ring-1 ring-primary/20' : 'border-border/60',
+                      )}
                     >
                       <div className="flex items-center gap-3">
                         {/* Drag handle + index */}
