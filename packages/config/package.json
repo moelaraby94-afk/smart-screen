@@ -1,0 +1,7 @@
+{
+  "name": "@cloud-screen/config",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./index.ts",
+  "files": ["tsconfig.json", "tailwind.config.ts", "eslint.config.mjs", "prettier.config.json"]
+}
