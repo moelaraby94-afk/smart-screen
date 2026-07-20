@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import { CreditCard, Calendar, Users } from 'lucide-react';
 import { apiFetch } from '@/features/auth/session';
+import { Button } from '@/components/ui/button';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,18 +26,22 @@ export function SubscriptionSummarySection() {
   const locale = useLocale();
   const [data, setData] = useState<BillingData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(false);
     try {
       const res = await apiFetch('/account/billing');
       if (res.ok) {
         setData(await res.json());
       } else {
         setData(null);
+        setError(true);
       }
     } catch {
       setData(null);
+      setError(true);
     }
     setLoading(false);
   }, []);
@@ -92,6 +97,13 @@ export function SubscriptionSummarySection() {
           <Skeleton className="h-14 rounded-lg" />
           <Skeleton className="h-14 rounded-lg" />
           <Skeleton className="h-14 rounded-lg" />
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center gap-2 py-4 text-center">
+          <p className="text-xs text-muted-foreground">{t('error')}</p>
+          <Button variant="ghost" size="sm" onClick={() => void load()} className="text-xs">
+            {t('retry')}
+          </Button>
         </div>
       ) : !data ? (
         <div className="flex items-center justify-center gap-2 py-4 text-center">

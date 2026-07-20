@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { Monitor, ChevronRight } from 'lucide-react';
 import { apiFetch } from '@/features/auth/session';
 import { useWorkspace } from '@/features/workspace/workspace-context';
+import { Button } from '@/components/ui/button';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,6 +24,7 @@ export function ActiveContentWidget() {
   const { workspaceId, workspaceDataEpoch } = useWorkspace();
   const [screens, setScreens] = useState<ScreenRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     if (!workspaceId) {
@@ -31,6 +33,7 @@ export function ActiveContentWidget() {
       return;
     }
     setLoading(true);
+    setError(false);
     try {
       const res = await apiFetch(`/screens?workspaceId=${encodeURIComponent(workspaceId)}&page=1&limit=10`);
       if (res.ok) {
@@ -39,9 +42,11 @@ export function ActiveContentWidget() {
         setScreens(Array.isArray(items) ? items : []);
       } else {
         setScreens([]);
+        setError(true);
       }
     } catch {
       setScreens([]);
+      setError(true);
     }
     setLoading(false);
   }, [workspaceId]);
@@ -89,6 +94,13 @@ export function ActiveContentWidget() {
               <Skeleton className="h-5 w-16 rounded-full" />
             </div>
           ))}
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center gap-2 py-6 text-center">
+          <p className="text-xs text-muted-foreground">{t('error')}</p>
+          <Button variant="ghost" size="sm" onClick={() => void load()} className="text-xs">
+            {t('retry')}
+          </Button>
         </div>
       ) : screens.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-6 text-center">

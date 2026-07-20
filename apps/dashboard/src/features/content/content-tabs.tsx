@@ -13,7 +13,6 @@ type TabDef = {
 
 const ALL_TABS: TabDef[] = [
   { key: 'tabPlaylists', segment: 'playlists' },
-  { key: 'tabMedia', segment: 'media' },
 ];
 
 export function ContentTabs() {

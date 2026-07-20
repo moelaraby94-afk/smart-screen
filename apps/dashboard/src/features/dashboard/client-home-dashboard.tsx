@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import {
@@ -41,6 +41,7 @@ import { fetchMediaStats } from '@/features/dashboard/dashboard-api';
 
 export function ClientHomeDashboard() {
   const t = useTranslations('clientHome');
+  const locale = useLocale();
   const router = useRouter();
   const { toastResponseError } = useApiErrorToast();
   const {
@@ -114,7 +115,6 @@ export function ClientHomeDashboard() {
   const onOpenBranch = useCallback(
     (wsId: string) => {
       setWorkspaceId(wsId);
-      const locale = typeof window !== 'undefined' ? document.documentElement.lang || 'en' : 'en';
       router.push(`/${locale}/branches` as never as Route);
     },
     [setWorkspaceId, router],
@@ -290,7 +290,7 @@ export function ClientHomeDashboard() {
             branches={insights.branches}
             workspaces={workspaces}
             loading={loading}
-            locale={typeof window !== 'undefined' ? document.documentElement.lang || 'en' : 'en'}
+            locale={locale}
             isSuperAdmin={isSuperAdmin}
             pauseBusyId={pauseBusyId}
             onOpenBranch={onOpenBranch}

@@ -394,7 +394,7 @@ export function ScreensClient({ locale }: Props) {
   return (
     <div className="mx-auto max-w-[1400px] px-6 py-6 space-y-6" role="region" aria-label={t('pageTitle')}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-xl font-bold tracking-tight">{t('pageTitle')}</h1>
+        <h2 className="sr-only">{t('pageTitle')}</h2>
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-mono-nums text-xs text-muted-foreground">
             <span className="text-foreground">{new Intl.NumberFormat(locale).format(screens.length)}</span> {t('screensCount')}

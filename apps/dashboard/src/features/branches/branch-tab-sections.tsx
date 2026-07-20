@@ -109,7 +109,7 @@ export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
   const quickActions = [
     { label: t('quickNewScreen'), href: `/${locale}/screens` as Route, icon: Monitor, color: 'text-violet-400 bg-violet-500/10' },
     { label: t('quickNewPlaylist'), href: `/${locale}/studio` as Route, icon: Clapperboard, color: 'text-blue-400 bg-blue-500/10' },
-    { label: t('quickUploadMedia'), href: `/${locale}/content/media` as Route, icon: ImageIcon, color: 'text-amber-400 bg-amber-500/10' },
+    { label: t('quickUploadMedia'), href: `/${locale}/media` as Route, icon: ImageIcon, color: 'text-amber-400 bg-amber-500/10' },
     { label: t('quickLinkDisplay'), href: `/${locale}/screens` as Route, icon: Link2, color: 'text-emerald-400 bg-emerald-500/10' },
     { label: t('quickSchedule'), href: `/${locale}/schedules` as Route, icon: CalendarClock, color: 'text-cyan-400 bg-cyan-500/10' },
     { label: t('quickTeam'), href: `/${locale}/team` as Route, icon: Users, color: 'text-pink-400 bg-pink-500/10' },

@@ -469,7 +469,7 @@ export function PlaylistListClient() {
                     </div>
                     <div className="mt-1 flex items-center gap-1.5">
                       <Badge variant="muted" className="text-[9px]">
-                        {meta.orientation === 'portrait' ? t('orientation') : meta.orientation === 'square' ? t('orientation') : t('orientation')}
+                        {meta.orientation === 'portrait' ? t('orientPortrait') : meta.orientation === 'square' ? t('orientSquare') : t('orientLandscape')}
                       </Badge>
                       <Badge variant="muted" className="text-[9px]">
                         {meta.layoutType === 'single' ? t('singleZone') : t('multiZone')}

@@ -8,25 +8,19 @@ import { useTheme } from 'next-themes';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
-  Activity,
   BarChart3,
-  Building2,
   CalendarClock,
   Clapperboard,
-  Flag,
   LayoutDashboard,
-  LayoutGrid,
-  Layers,
   Megaphone,
   LogOut,
   Monitor,
-  MonitorSmartphone,
   Moon,
-  ScrollText,
+  Palette,
   Settings,
   Sun,
-  UserCog,
   Users,
+  ImageIcon,
 } from 'lucide-react';
 import { ShellLogo } from '@/components/layout/shell-logo';
 import { pathWithLocale } from '@/components/language-switcher';
@@ -49,22 +43,12 @@ const STROKE = 1.5;
 
 const CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE = new Set<
   string
->(['overview', 'screens', 'media', 'templates', 'team', 'playlists', 'schedules', 'campaigns', 'ai', 'analytics', 'emergency', 'help', 'apiDocs', 'notifications', 'auditLog']);
+>(['overview', 'screens', 'media', 'templates', 'team', 'playlists', 'schedules', 'campaigns', 'ai', 'analytics', 'emergency', 'help', 'apiDocs', 'notifications', 'auditLog', 'studio']);
 
 function hrefFor(
   locale: string,
   hrefKey:
     | 'overview'
-    | 'adminHome'
-    | 'adminCustomers'
-    | 'adminStaff'
-    | 'adminStats'
-    | 'adminLogs'
-    | 'adminSettings'
-    | 'adminFeatureFlags'
-    | 'adminWorkspaces'
-    | 'adminFleet'
-    | 'adminScreens'
     | 'help'
     | 'apiDocs'
     | 'notifications'
@@ -76,31 +60,23 @@ function hrefFor(
     | 'templates'
     | 'ai'
     | 'emergency'
-    | 'campaigns',
+    | 'campaigns'
+    | 'studio',
 ): string {
   if (hrefKey === 'overview') return `/${locale}/overview`;
-  if (hrefKey === 'adminHome') return `/${locale}/admin`;
-  if (hrefKey === 'adminCustomers') return `/${locale}/admin/customers`;
-  if (hrefKey === 'adminWorkspaces') return `/${locale}/admin/workspaces`;
-  if (hrefKey === 'adminFleet') return `/${locale}/admin/fleet`;
-  if (hrefKey === 'adminScreens') return `/${locale}/admin/screens`;
-  if (hrefKey === 'adminStaff') return `/${locale}/admin/staff`;
-  if (hrefKey === 'adminStats') return `/${locale}/admin/stats`;
-  if (hrefKey === 'adminLogs') return `/${locale}/admin/logs`;
-  if (hrefKey === 'adminSettings') return `/${locale}/admin/settings`;
-  if (hrefKey === 'adminFeatureFlags') return `/${locale}/admin/feature-flags`;
   if (hrefKey === 'help') return `/${locale}/help`;
   if (hrefKey === 'apiDocs') return `/${locale}/api-docs`;
   if (hrefKey === 'notifications') return `/${locale}/notifications`;
   if (hrefKey === 'analytics') return `/${locale}/analytics`;
   if (hrefKey === 'auditLog') return `/${locale}/audit-log`;
-  if (hrefKey === 'media') return `/${locale}/content/media`;
+  if (hrefKey === 'media') return `/${locale}/media`;
   if (hrefKey === 'team') return `/${locale}/team`;
   if (hrefKey === 'screens') return `/${locale}/screens`;
   if (hrefKey === 'templates') return `/${locale}/templates`;
   if (hrefKey === 'ai') return `/${locale}/ai`;
   if (hrefKey === 'emergency') return `/${locale}/emergency`;
   if (hrefKey === 'campaigns') return `/${locale}/campaigns`;
+  if (hrefKey === 'studio') return `/${locale}/studio`;
   return `/${locale}/${hrefKey}`;
 }
 
@@ -111,45 +87,6 @@ function isOverviewPath(pathname: string | null, locale: string): boolean {
     pathname === `/${locale}` ||
     pathname === `/${locale}/`
   );
-}
-
-function sovereignLinkActive(
-  pathname: string | null,
-  locale: string,
-  hrefKey:
-    | 'overview'
-    | 'adminHome'
-    | 'adminCustomers'
-    | 'adminStaff'
-    | 'adminStats'
-    | 'adminLogs'
-    | 'adminSettings'
-    | 'adminFeatureFlags'
-    | 'adminFleet'
-    | 'adminScreens'
-    | 'help'
-    | 'apiDocs'
-    | 'notifications'
-    | 'analytics'
-    | 'auditLog',
-): boolean {
-  if (!pathname) return false;
-  if (hrefKey === 'overview') return isOverviewPath(pathname, locale);
-  if (hrefKey === 'adminHome') return pathname === `/${locale}/admin` || pathname === `/${locale}/admin/`;
-  if (hrefKey === 'adminCustomers') return pathname.startsWith(`/${locale}/admin/customers`) || pathname.startsWith(`/${locale}/admin/users`);
-  if (hrefKey === 'adminFleet') return pathname.startsWith(`/${locale}/admin/fleet`);
-  if (hrefKey === 'adminScreens') return pathname.startsWith(`/${locale}/admin/screens`);
-  if (hrefKey === 'adminStaff') return pathname.startsWith(`/${locale}/admin/staff`);
-  if (hrefKey === 'adminStats') return pathname.startsWith(`/${locale}/admin/stats`);
-  if (hrefKey === 'adminLogs') return pathname.startsWith(`/${locale}/admin/logs`);
-  if (hrefKey === 'adminSettings') return pathname.startsWith(`/${locale}/admin/settings`);
-  if (hrefKey === 'adminFeatureFlags') return pathname.startsWith(`/${locale}/admin/feature-flags`);
-  if (hrefKey === 'help') return pathname.startsWith(`/${locale}/help`);
-  if (hrefKey === 'apiDocs') return pathname.startsWith(`/${locale}/api-docs`);
-  if (hrefKey === 'notifications') return pathname.startsWith(`/${locale}/notifications`);
-  if (hrefKey === 'analytics') return pathname.startsWith(`/${locale}/analytics`);
-  if (hrefKey === 'auditLog') return pathname.startsWith(`/${locale}/audit-log`);
-  return false;
 }
 
 /* ── Nav Item ── */
@@ -260,7 +197,6 @@ export type ShellSidebarProps = {
   navLocale: 'ar' | 'en';
   rtl: boolean;
   pathname: string | null;
-  sovereign: boolean;
   shellNavLoading: boolean;
   workspaceId: string | null;
   counts: { media: number; screens: number; playlists: number };
@@ -274,7 +210,6 @@ export function ShellSidebar({
   navLocale,
   rtl,
   pathname,
-  sovereign,
   shellNavLoading,
   workspaceId,
   counts,
@@ -293,7 +228,7 @@ export function ShellSidebar({
 
   return (
     <aside
-      key={`sidebar-${navLocale}-${sovereign ? 'admin' : 'workspace'}`}
+      key={`sidebar-${navLocale}`}
       className={cn(
         'fixed inset-y-0 z-drawer flex w-[280px] flex-col [inset-inline-start:0]',
         prefersReducedMotion ? 'transition-opacity duration-0' : 'transition-transform duration-normal',
@@ -330,67 +265,6 @@ export function ShellSidebar({
                 <Skeleton key={i} className="h-9 rounded-xl bg-muted/40" />
               ))}
             </div>
-          ) : sovereign ? (
-            <>
-              <NavItem
-                href={hrefFor(navLocale, 'adminHome') as Route}
-                label={t('adminHome')}
-                active={sovereignLinkActive(pathname, navLocale, 'adminHome')}
-                icon={LayoutGrid}
-              />
-
-              <SectionLabel>{t('managementSection')}</SectionLabel>
-              <NavItem
-                href={hrefFor(navLocale, 'adminCustomers') as Route}
-                label={t('adminCustomers')}
-                active={sovereignLinkActive(pathname, navLocale, 'adminCustomers')}
-                icon={Building2}
-              />
-              <NavItem
-                href={hrefFor(navLocale, 'adminStaff') as Route}
-                label={t('adminStaff')}
-                active={sovereignLinkActive(pathname, navLocale, 'adminStaff')}
-                icon={UserCog}
-              />
-              <NavItem
-                href={`/${navLocale}/admin/users` as Route}
-                label={t('adminUsers')}
-                active={pathname?.startsWith(`/${navLocale}/admin/users`) ?? false}
-                icon={Users}
-              />
-
-              <SectionLabel>{t('systemSection')}</SectionLabel>
-              <NavItem
-                href={hrefFor(navLocale, 'adminWorkspaces') as Route}
-                label={t('adminWorkspaces')}
-                active={pathname?.startsWith(`/${navLocale}/admin/workspaces`) ?? false}
-                icon={Layers}
-              />
-              <NavItem
-                href={hrefFor(navLocale, 'adminFleet') as Route}
-                label={t('adminFleet')}
-                active={sovereignLinkActive(pathname, navLocale, 'adminFleet')}
-                icon={MonitorSmartphone}
-              />
-              <NavItem
-                href={`/${navLocale}/admin/health` as Route}
-                label={t('adminHealth')}
-                active={pathname?.startsWith(`/${navLocale}/admin/health`) ?? false}
-                icon={Activity}
-              />
-              <NavItem
-                href={hrefFor(navLocale, 'adminLogs') as Route}
-                label={t('adminLogs')}
-                active={sovereignLinkActive(pathname, navLocale, 'adminLogs')}
-                icon={ScrollText}
-              />
-              <NavItem
-                href={hrefFor(navLocale, 'adminFeatureFlags') as Route}
-                label={t('adminFeatureFlags')}
-                active={sovereignLinkActive(pathname, navLocale, 'adminFeatureFlags')}
-                icon={Flag}
-              />
-            </>
           ) : (
             <>
               {/* ── 7-item sidebar per IA sitemap ── */}
@@ -425,7 +299,6 @@ export function ShellSidebar({
                 active={
                   Boolean(pathname?.startsWith(`/${navLocale}/content`)) ||
                   Boolean(pathname?.startsWith(`/${navLocale}/playlists`)) ||
-                  Boolean(pathname?.startsWith(`/${navLocale}/media`)) ||
                   Boolean(pathname?.startsWith(`/${navLocale}/templates`))
                 }
                 icon={Clapperboard}
@@ -433,6 +306,35 @@ export function ShellSidebar({
                 onClick={(e) => {
                   if (isLoading) { e.preventDefault(); return; }
                   if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('playlists')) {
+                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
+                  }
+                }}
+              />
+
+              {/* Media — standalone page */}
+              <NavItem
+                href={hrefFor(navLocale, 'media') as Route}
+                label={t('media')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/media`))}
+                icon={ImageIcon}
+                count={counts.media}
+                onClick={(e) => {
+                  if (isLoading) { e.preventDefault(); return; }
+                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('media')) {
+                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
+                  }
+                }}
+              />
+
+              {/* Studio — Canvas Editor */}
+              <NavItem
+                href={hrefFor(navLocale, 'studio') as Route}
+                label={t('studio')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/studio`))}
+                icon={Palette}
+                onClick={(e) => {
+                  if (isLoading) { e.preventDefault(); return; }
+                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('studio')) {
                     e.preventDefault(); toast.error(t('selectWorkspaceToast'));
                   }
                 }}

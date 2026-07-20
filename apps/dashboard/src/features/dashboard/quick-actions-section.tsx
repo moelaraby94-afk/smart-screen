@@ -4,14 +4,15 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Monitor, ListVideo, CalendarClock, ArrowRight } from 'lucide-react';
+import { Monitor, ListVideo, CalendarClock, ArrowRight, Image as ImageIcon } from 'lucide-react';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
 
 const actions = [
   { key: 'addScreen', icon: Monitor, href: '/screens/pair', accent: 'bg-primary/10 text-primary ring-primary/20' },
-  { key: 'createPlaylist', icon: ListVideo, href: '/content?tab=playlists', accent: 'bg-success/10 text-success ring-success/20' },
+  { key: 'createPlaylist', icon: ListVideo, href: '/content/playlists', accent: 'bg-success/10 text-success ring-success/20' },
+  { key: 'uploadMedia', icon: ImageIcon, href: '/media', accent: 'bg-warning/10 text-warning ring-warning/20' },
   { key: 'viewSchedule', icon: CalendarClock, href: '/scheduling', accent: 'bg-primary/10 text-primary ring-primary/20' },
 ] as const;
 
@@ -26,7 +27,7 @@ export function QuickActionsSection() {
   if (isViewer) return null;
 
   return (
-    <section className="grid grid-cols-1 gap-3 sm:grid-cols-3" role="region" aria-label={t('quickActionsAria')}>
+    <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" role="region" aria-label={t('quickActionsAria')}>
       {actions.map((action, i) => (
         <motion.div
           key={action.key}

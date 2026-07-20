@@ -1,8 +1,6 @@
 'use client';
 
-import { useLocale } from 'next-intl';
 import { HomeOverview } from '@/features/dashboard/home-overview';
-import { AdminOverview } from '@/features/dashboard/admin-overview';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { CardGridSkeleton } from '@/components/ui/skeleton-patterns';
 
@@ -13,8 +11,7 @@ type Props = {
 };
 
 export function OverviewPageClient({ appTitle, headline, description }: Props) {
-  const locale = useLocale();
-  const { isSuperAdmin, isLoading } = useWorkspace();
+  const { isLoading } = useWorkspace();
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -25,9 +22,6 @@ export function OverviewPageClient({ appTitle, headline, description }: Props) {
         <CardGridSkeleton count={4} />
       </div>
     );
-  }
-  if (isSuperAdmin) {
-    return <AdminOverview locale={locale} />;
   }
   return <HomeOverview appTitle={appTitle} headline={headline} description={description} />;
 }

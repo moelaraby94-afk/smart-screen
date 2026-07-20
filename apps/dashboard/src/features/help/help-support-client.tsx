@@ -55,7 +55,7 @@ export function HelpSupportClient() {
       icon: ImageIcon,
       title: t('guides.media'),
       description: t('guides.mediaDesc'),
-      href: `/${locale}/content/media`,
+      href: `/${locale}/media`,
     },
     {
       icon: Clapperboard,

@@ -7,6 +7,9 @@ import {
   AlertCircle,
   ArrowRight,
   Circle as CircleIcon,
+  Clapperboard,
+  Copy,
+  Clipboard,
   History,
   LayoutTemplate,
   Loader2,
@@ -20,6 +23,7 @@ import {
   Save,
   Shapes,
   SquareStack,
+  Trash2,
   Type,
   X,
   ZoomIn,
@@ -28,7 +32,8 @@ import {
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { useTranslations, useLocale } from 'next-intl';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
+import type { Route } from 'next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,9 +43,12 @@ import {
   fetchCanvas as apiFetchCanvas,
   updateCanvas as apiUpdateCanvas,
   createCanvas as apiCreateCanvas,
+  deleteCanvas as apiDeleteCanvas,
   fetchPlaylists as apiFetchPlaylists,
   fetchCanvasVersions as apiFetchCanvasVersions,
   restoreCanvasVersion as apiRestoreCanvasVersion,
+  createPlaylist as apiCreatePlaylist,
+  updatePlaylistItems as apiUpdatePlaylistItems,
 } from '@/features/studio/studio-api';
 import { fetchMedia, uploadMedia } from '@/features/media/api/media-api';
 import { readPageItems } from '@/features/api/page';
@@ -120,6 +128,7 @@ function parseLayout(raw: unknown): CanvasLayoutV1 {
 export function StudioEditorClient() {
   const t = useTranslations('studio');
   const locale = useLocale();
+  const router = useRouter();
   const { resolvedTheme } = useTheme();
   const prefersReduced = useReducedMotion();
   const { workspaceId, workspaces } = useWorkspace();
@@ -151,9 +160,15 @@ export function StudioEditorClient() {
   const [splashVisible, setSplashVisible] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1280);
+  const [durationSec, setDurationSec] = useState(15);
+  const [editingTextId, setEditingTextId] = useState<string | null>(null);
+  const [clipboard, setClipboard] = useState<CanvasObjectJson | null>(null);
+  const undoStack = useRef<CanvasLayoutV1[]>([]);
+  const redoStack = useRef<CanvasLayoutV1[]>([]);
 
   const viewerBlocked = (() => {
     const ws = workspaces.find((w) => w.id === workspaceId);
@@ -211,6 +226,7 @@ export function StudioEditorClient() {
         setName(c.name);
         setDw(c.width);
         setDh(c.height);
+        setDurationSec(c.durationSec ?? 15);
         setLayout(parseLayout(c.layoutData));
         setSelectedId(null);
       } catch {
@@ -301,23 +317,36 @@ export function StudioEditorClient() {
     [layout.objects, selectedId],
   );
 
+  const pushUndo = useCallback((prev: CanvasLayoutV1) => {
+    undoStack.current.push(JSON.parse(JSON.stringify(prev)));
+    if (undoStack.current.length > 50) undoStack.current.shift();
+    redoStack.current = [];
+  }, []);
+
   const updateObject = (id: string, patch: Partial<CanvasObjectJson>) => {
-    setLayout((prev) => ({
-      ...prev,
-      objects: prev.objects.map((o) => (o.id === id ? { ...o, ...patch } : o)),
-    }));
+    setLayout((prev) => {
+      pushUndo(prev);
+      return {
+        ...prev,
+        objects: prev.objects.map((o) => (o.id === id ? { ...o, ...patch } : o)),
+      };
+    });
   };
 
   const removeObject = (id: string) => {
-    setLayout((prev) => ({
-      ...prev,
-      objects: prev.objects.filter((o) => o.id !== id),
-    }));
+    setLayout((prev) => {
+      pushUndo(prev);
+      return {
+        ...prev,
+        objects: prev.objects.filter((o) => o.id !== id),
+      };
+    });
     setSelectedId(null);
   };
 
   const reorderObject = (fromIndex: number, toIndex: number) => {
     setLayout((prev) => {
+      pushUndo(prev);
       const objs = [...prev.objects];
       const [moved] = objs.splice(fromIndex, 1);
       objs.splice(toIndex, 0, moved);
@@ -333,6 +362,75 @@ export function StudioEditorClient() {
     updateObject(id, { locked });
   };
 
+  const undo = useCallback(() => {
+    if (undoStack.current.length === 0) return;
+    const prev = undoStack.current.pop()!;
+    redoStack.current.push(JSON.parse(JSON.stringify(layout)));
+    setLayout(prev);
+  }, [layout]);
+
+  const redo = useCallback(() => {
+    if (redoStack.current.length === 0) return;
+    const next = redoStack.current.pop()!;
+    undoStack.current.push(JSON.parse(JSON.stringify(layout)));
+    setLayout(next);
+  }, [layout]);
+
+  const duplicateObject = useCallback((id: string) => {
+    const obj = layout.objects.find((o) => o.id === id);
+    if (!obj) return;
+    const copy: CanvasObjectJson = {
+      ...JSON.parse(JSON.stringify(obj)),
+      id: crypto.randomUUID(),
+      x: obj.x + 20,
+      y: obj.y + 20,
+    };
+    setLayout((prev) => {
+      pushUndo(prev);
+      return { ...prev, objects: [...prev.objects, copy] };
+    });
+    setSelectedId(copy.id);
+  }, [layout, pushUndo]);
+
+  const copyObject = useCallback((id: string) => {
+    const obj = layout.objects.find((o) => o.id === id);
+    if (obj) setClipboard(JSON.parse(JSON.stringify(obj)));
+  }, [layout]);
+
+  const pasteObject = useCallback(() => {
+    if (!clipboard) return;
+    const copy: CanvasObjectJson = {
+      ...JSON.parse(JSON.stringify(clipboard)),
+      id: crypto.randomUUID(),
+      x: clipboard.x + 20,
+      y: clipboard.y + 20,
+    };
+    setLayout((prev) => {
+      pushUndo(prev);
+      return { ...prev, objects: [...prev.objects, copy] };
+    });
+    setSelectedId(copy.id);
+  }, [clipboard, pushUndo]);
+
+  const deleteCanvas = async () => {
+    if (!workspaceId || !canvasId) return;
+    try {
+      const res = await apiDeleteCanvas(workspaceId, canvasId);
+      if (res.ok) {
+        toast.success(t('canvasDeleted'));
+        setCanvasId('');
+        setName('Untitled');
+        setLayout(emptyLayout());
+        setSelectedId(null);
+        await loadCanvases();
+      } else {
+        toast.error(t('deleteFailed'));
+      }
+    } catch {
+      toast.error(t('deleteFailed'));
+    }
+  };
+
   const save = async (silent = false) => {
     if (!workspaceId || !canvasId) {
       if (!silent) toast.error(t('saveNeedCanvas'));
@@ -345,7 +443,7 @@ export function StudioEditorClient() {
         width: dw,
         height: dh,
         layoutData: layout,
-        durationSec: 15,
+        durationSec,
       });
       if (!res.ok) throw new Error('fail');
       if (!silent) toast.success(t('saved'));
@@ -355,6 +453,30 @@ export function StudioEditorClient() {
       if (!silent) toast.error(t('saveFailed'));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const createPlaylistFromCanvas = async () => {
+    if (!workspaceId || !canvasId) {
+      toast.error(t('saveNeedCanvas'));
+      return;
+    }
+    // Save the canvas first to ensure latest changes are persisted
+    await save(true);
+    try {
+      const playlistName = name.trim() || 'Untitled';
+      const res = await apiCreatePlaylist(workspaceId, `${playlistName} — ${t('playlistSuffix')}`);
+      if (!res.ok) throw new Error('fail');
+      const created = (await res.json()) as { id: string };
+      // Add the canvas as the first item in the playlist
+      const itemsRes = await apiUpdatePlaylistItems(workspaceId, created.id, {
+        items: [{ type: 'CANVAS', canvasId, durationSec }],
+      });
+      if (!itemsRes.ok) throw new Error('fail-items');
+      toast.success(t('playlistCreated'));
+      router.push(`/${locale}/content/playlists/${created.id}/studio` as never as Route);
+    } catch {
+      toast.error(t('playlistCreateFailed'));
     }
   };
 
@@ -376,7 +498,10 @@ export function StudioEditorClient() {
   }, [canvasId, name, layout, dw, dh]);
 
   const restoreSnapshot = (snap: VersionSnapshot) => {
-    setLayout(JSON.parse(JSON.stringify(snap.layout)));
+    setLayout((prev) => {
+      pushUndo(prev);
+      return JSON.parse(JSON.stringify(snap.layout));
+    });
     setDw(snap.dw);
     setDh(snap.dh);
     setName(snap.name);
@@ -411,7 +536,10 @@ export function StudioEditorClient() {
         return;
       }
       const restored = await res.json();
-      setLayout(restored.layoutData ?? emptyLayout());
+      setLayout((prev) => {
+        pushUndo(prev);
+        return restored.layoutData ?? emptyLayout();
+      });
       setDw(restored.width ?? 1920);
       setDh(restored.height ?? 1080);
       setName(restored.name ?? 'Untitled');
@@ -474,10 +602,13 @@ export function StudioEditorClient() {
       zonePlaylistId: null,
       zoneMediaId: null,
     }));
-    setLayout((prev) => ({
-      ...prev,
-      objects: [...prev.objects, ...newObjects],
-    }));
+    setLayout((prev) => {
+      pushUndo(prev);
+      return {
+        ...prev,
+        objects: [...prev.objects, ...newObjects],
+      };
+    });
     setShowZones(false);
     toast.success(t('zonesAdded'));
   };
@@ -521,130 +652,148 @@ export function StudioEditorClient() {
 
   const addText = () => {
     const id = crypto.randomUUID();
-    setLayout((prev) => ({
-      ...prev,
-      objects: [
-        ...prev.objects,
-        {
-          id,
-          type: 'text',
-          x: 120,
-          y: 120,
-          text: 'Headline',
-          fontSize: 72,
-          fill: 'hsl(var(--primary))',
-          fontFamily:
-            '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif',
-          opacity: 1,
-        },
-      ],
-    }));
+    setLayout((prev) => {
+      pushUndo(prev);
+      return {
+        ...prev,
+        objects: [
+          ...prev.objects,
+          {
+            id,
+            type: 'text',
+            x: 120,
+            y: 120,
+            text: 'Headline',
+            fontSize: 72,
+            fill: 'hsl(var(--primary))',
+            fontFamily:
+              '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif',
+            opacity: 1,
+          },
+        ],
+      };
+    });
     setSelectedId(id);
   };
 
   const addRect = () => {
     const id = crypto.randomUUID();
-    setLayout((prev) => ({
-      ...prev,
-      objects: [
-        ...prev.objects,
-        {
-          id,
-          type: 'rect',
-          x: 200,
-          y: 200,
-          width: 400,
-          height: 220,
-          fill: 'hsl(var(--primary))',
-          opacity: 0.95,
-          cornerRadius: 12,
-        },
-      ],
-    }));
+    setLayout((prev) => {
+      pushUndo(prev);
+      return {
+        ...prev,
+        objects: [
+          ...prev.objects,
+          {
+            id,
+            type: 'rect',
+            x: 200,
+            y: 200,
+            width: 400,
+            height: 220,
+            fill: 'hsl(var(--primary))',
+            opacity: 0.95,
+            cornerRadius: 12,
+          },
+        ],
+      };
+    });
     setSelectedId(id);
   };
 
   const addEllipse = () => {
     const id = crypto.randomUUID();
-    setLayout((prev) => ({
-      ...prev,
-      objects: [
-        ...prev.objects,
-        {
-          id,
-          type: 'ellipse',
-          x: 300,
-          y: 300,
-          width: 280,
-          height: 180,
-          fill: 'hsl(var(--primary))',
-          opacity: 0.9,
-        },
-      ],
-    }));
+    setLayout((prev) => {
+      pushUndo(prev);
+      return {
+        ...prev,
+        objects: [
+          ...prev.objects,
+          {
+            id,
+            type: 'ellipse',
+            x: 300,
+            y: 300,
+            width: 280,
+            height: 180,
+            fill: 'hsl(var(--primary))',
+            opacity: 0.9,
+          },
+        ],
+      };
+    });
     setSelectedId(id);
   };
 
   const addLine = () => {
     const id = crypto.randomUUID();
-    setLayout((prev) => ({
-      ...prev,
-      objects: [
-        ...prev.objects,
-        {
-          id,
-          type: 'line',
-          x: 200,
-          y: 300,
-          points: [0, 0, 300, 0],
-          stroke: 'hsl(var(--primary))',
-          strokeWidth: 4,
-          opacity: 1,
-        },
-      ],
-    }));
+    setLayout((prev) => {
+      pushUndo(prev);
+      return {
+        ...prev,
+        objects: [
+          ...prev.objects,
+          {
+            id,
+            type: 'line',
+            x: 200,
+            y: 300,
+            points: [0, 0, 300, 0],
+            stroke: 'hsl(var(--primary))',
+            strokeWidth: 4,
+            opacity: 1,
+          },
+        ],
+      };
+    });
     setSelectedId(id);
   };
 
   const addArrow = () => {
     const id = crypto.randomUUID();
-    setLayout((prev) => ({
-      ...prev,
-      objects: [
-        ...prev.objects,
-        {
-          id,
-          type: 'arrow',
-          x: 200,
-          y: 300,
-          points: [0, 0, 300, 0],
-          stroke: 'hsl(var(--primary))',
-          strokeWidth: 4,
-          opacity: 1,
-        },
-      ],
-    }));
+    setLayout((prev) => {
+      pushUndo(prev);
+      return {
+        ...prev,
+        objects: [
+          ...prev.objects,
+          {
+            id,
+            type: 'arrow',
+            x: 200,
+            y: 300,
+            points: [0, 0, 300, 0],
+            stroke: 'hsl(var(--primary))',
+            strokeWidth: 4,
+            opacity: 1,
+          },
+        ],
+      };
+    });
     setSelectedId(id);
   };
 
   const addQrCode = () => {
     const id = crypto.randomUUID();
-    setLayout((prev) => ({
-      ...prev,
-      objects: [
-        ...prev.objects,
-        {
-          id,
-          type: 'qrcode',
-          x: 350,
-          y: 250,
-          width: 200,
-          height: 200,
-          qrData: 'https://cloudscreen.app',
-          opacity: 1,
-        },
-      ],
-    }));
+    setLayout((prev) => {
+      pushUndo(prev);
+      return {
+        ...prev,
+        objects: [
+          ...prev.objects,
+          {
+            id,
+            type: 'qrcode',
+            x: 350,
+            y: 250,
+            width: 200,
+            height: 200,
+            qrData: 'https://cloudscreen.app',
+            opacity: 1,
+          },
+        ],
+      };
+    });
     setSelectedId(id);
   };
 
@@ -669,23 +818,26 @@ export function StudioEditorClient() {
 
   const addMediaItem = (publicUrl: string, mediaId: string) => {
     const id = crypto.randomUUID();
-    setLayout((prev) => ({
-      ...prev,
-      objects: [
-        ...prev.objects,
-        {
-          id,
-          type: 'image',
-          x: 160,
-          y: 160,
-          width: 640,
-          height: 360,
-          imageUrl: publicUrl,
-          mediaId,
-          opacity: 1,
-        },
-      ],
-    }));
+    setLayout((prev) => {
+      pushUndo(prev);
+      return {
+        ...prev,
+        objects: [
+          ...prev.objects,
+          {
+            id,
+            type: 'image',
+            x: 160,
+            y: 160,
+            width: 640,
+            height: 360,
+            imageUrl: publicUrl,
+            mediaId,
+            opacity: 1,
+          },
+        ],
+      };
+    });
     setSelectedId(id);
   };
 
@@ -709,15 +861,32 @@ export function StudioEditorClient() {
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      const mod = e.ctrlKey || e.metaKey;
+      if (mod && e.key === 's') {
         e.preventDefault();
         void save();
         takeSnapshot();
+      } else if (mod && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if (mod && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        redo();
+      } else if (mod && e.key === 'c' && selectedId) {
+        e.preventDefault();
+        copyObject(selectedId);
+      } else if (mod && e.key === 'v' && clipboard) {
+        e.preventDefault();
+        pasteObject();
+      } else if (mod && e.key === 'd' && selectedId) {
+        e.preventDefault();
+        duplicateObject(selectedId);
       } else if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
         e.preventDefault();
         removeObject(selectedId);
       } else if (e.key === 'Escape') {
         setSelectedId(null);
+        setEditingTextId(null);
       } else if (selectedId && (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
         e.preventDefault();
         const step = e.shiftKey ? 10 : 1;
@@ -732,7 +901,7 @@ export function StudioEditorClient() {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId, canvasId, layout, name, dw, dh]);
+  }, [selectedId, canvasId, layout, name, dw, dh, clipboard, undo, redo, copyObject, pasteObject, duplicateObject]);
 
   if (!workspaceId) {
     return <p className="text-muted-foreground">{t('needWorkspace')}</p>;
@@ -839,6 +1008,75 @@ export function StudioEditorClient() {
             </Button>
             <Button
               type="button"
+              variant="ghost"
+              size="icon"
+              onClick={undo}
+              title={t('undo')}
+              aria-label={t('undo')}
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={redo}
+              title={t('redo')}
+              aria-label={t('redo')}
+            >
+              <RotateCcw className="h-4 w-4 scale-x-[-1]" />
+            </Button>
+            {selectedId && (
+              <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => duplicateObject(selectedId)}
+                  title={t('duplicate')}
+                  aria-label={t('duplicate')}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => copyObject(selectedId)}
+                  title={t('copy')}
+                  aria-label={t('copy')}
+                >
+                  <Clipboard className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+            {clipboard && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={pasteObject}
+                title={t('paste')}
+                aria-label={t('paste')}
+              >
+                <Clipboard className="h-4 w-4 text-primary" />
+              </Button>
+            )}
+            {canvasId && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowDeleteDialog(true)}
+                title={t('deleteCanvas')}
+                aria-label={t('deleteCanvas')}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              type="button"
               variant="outline"
               onClick={() => setShowZones((v) => !v)}
             >
@@ -875,6 +1113,15 @@ export function StudioEditorClient() {
               {saving ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Save className="me-2 h-4 w-4" />}
               {saving ? t('saving') : t('save')}
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!canvasId || viewerBlocked}
+              onClick={() => void createPlaylistFromCanvas()}
+            >
+              <Clapperboard className="me-2 h-4 w-4" />
+              {t('createPlaylist')}
+            </Button>
           </div>
         </div>
         <div className="mt-4 flex flex-wrap gap-3">
@@ -902,6 +1149,16 @@ export function StudioEditorClient() {
               min={480}
               onChange={(e) => setDh(Number(e.target.value) || 1080)}
             />
+            <Label className="text-xs text-muted-foreground">{t('duration')}</Label>
+            <Input
+              type="number"
+              className="h-10 w-24"
+              value={durationSec}
+              min={5}
+              max={3600}
+              onChange={(e) => setDurationSec(Number(e.target.value) || 15)}
+            />
+            <span className="text-xs text-muted-foreground">s</span>
           </div>
         </div>
       </motion.div>
@@ -1181,14 +1438,46 @@ export function StudioEditorClient() {
               dw={dw}
               dh={dh}
               layout={layout}
+              selectedId={selectedId}
               onSelect={setSelectedId}
               onUpdateObject={updateObject}
               onStageClick={() => setSelectedId(null)}
+              onTextDblClick={(id) => setEditingTextId(id)}
               onDrop={onDropMedia}
               onDragOver={onDragOver}
               containerRef={containerRef}
               dropHint={t('dropHint')}
             />
+            {editingTextId && selected && selected.type === 'text' && (
+              <textarea
+                autoFocus
+                className="absolute z-50 rounded-md border-2 border-primary bg-background px-2 py-1 text-foreground shadow-lg outline-none"
+                style={{
+                  left: ox + selected.x * scale + 32,
+                  top: oy + selected.y * scale + 32,
+                  width: Math.max((selected.width ?? 200) * scale, 120),
+                  height: Math.max((selected.height ?? 60) * scale, 40),
+                  fontSize: (selected.fontSize ?? 48) * scale,
+                  fontFamily: selected.fontFamily ?? 'inherit',
+                  fontStyle: selected.fontStyle ?? 'normal',
+                  textAlign: selected.align ?? 'left',
+                  color: selected.fill ?? 'inherit',
+                  lineHeight: 1.2,
+                  resize: 'none',
+                  overflow: 'hidden',
+                }}
+                value={selected.text ?? ''}
+                onChange={(e) => updateObject(editingTextId, { text: e.target.value })}
+                onBlur={() => setEditingTextId(null)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    e.preventDefault();
+                    setEditingTextId(null);
+                  }
+                  e.stopPropagation();
+                }}
+              />
+            )}
             {layout.objects.length === 0 && (
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/30">
                 <p className="text-sm font-medium">{t('emptyCanvasHint')}</p>
@@ -1239,8 +1528,10 @@ export function StudioEditorClient() {
               </button>
             </div>
           </motion.div>
+        </div>
 
-          {/* Bottom: Timeline (Layers) */}
+        {/* Right: Layers + Properties Panel */}
+        <div className="flex min-h-0 flex-col gap-4" role="region" aria-label={t('properties')}>
           <StudioLayersPanel
             objects={layout.objects}
             selectedId={selectedId}
@@ -1249,10 +1540,6 @@ export function StudioEditorClient() {
             onToggleVisibility={toggleVisibility}
             onToggleLock={toggleLock}
           />
-        </div>
-
-        {/* Right: Properties Panel */}
-        <div className="flex flex-col gap-4" role="region" aria-label={t('properties')}>
           <StudioPropertiesPanel
             selected={selected}
             onUpdateObject={updateObject}
@@ -1288,6 +1575,7 @@ export function StudioEditorClient() {
             dw={dw}
             dh={dh}
             layout={layout}
+            selectedId={null}
             onSelect={() => {}}
             onUpdateObject={() => {}}
             onStageClick={() => {}}
@@ -1295,9 +1583,29 @@ export function StudioEditorClient() {
             onDragOver={() => {}}
             containerRef={containerRef}
             dropHint=""
+            readOnly
           />
         </div>
       )}
+
+      {/* Delete canvas confirmation dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('confirmDeleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('confirmDeleteDesc')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { void deleteCanvas(); setShowDeleteDialog(false); }}
+            >
+              {t('deleteCanvas')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Unsaved changes dialog */}
       <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>

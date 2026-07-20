@@ -23,7 +23,6 @@ import { toast } from 'sonner';
 type ShellHeaderProps = {
   navLocale: 'ar' | 'en';
   rtl: boolean;
-  sovereign: boolean;
   pageTitle: string;
   kicker: string;
   showBack: boolean;
@@ -39,7 +38,6 @@ type ShellHeaderProps = {
 export function ShellHeader({
   navLocale,
   rtl,
-  sovereign,
   pageTitle,
   kicker,
   showBack,
@@ -128,7 +126,7 @@ export function ShellHeader({
         </div>
       ) : null}
       <NotificationBell />
-      <UserMenu rtl={rtl} variant={sovereign ? 'sovereign' : 'workspace'} />
+      <UserMenu rtl={rtl} />
     </div>
   );
 

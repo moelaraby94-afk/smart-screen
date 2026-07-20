@@ -1,53 +1,18 @@
 'use client';
 
-import { useEffect } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
-import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { WorkspaceWelcome } from '@/features/workspace/workspace-welcome';
 
-const CLIENT_ROUTE_SEGMENTS = new Set([
-  'media',
-  'screens',
-  'studio',
-  'playlists',
-  'schedules',
-  'team',
-  'branches',
-  'templates',
-  'ai',
-  'emergency',
-  'analytics',
-  'audit-log',
-  'notifications',
-  'api-docs',
-  'help',
-  'settings',
-]);
-
 export function WorkspaceGate({ children }: { children: React.ReactNode }) {
   const t = useTranslations('workspaceGate');
-  const locale = useLocale();
   const pathname = usePathname();
-  const router = useRouter();
-  const { isLoading, workspaces, isAuthenticated, isSuperAdmin } = useWorkspace();
+  const { isLoading, workspaces, isAuthenticated } = useWorkspace();
 
   const isAuthPage =
     pathname?.includes('/login') || pathname?.includes('/register');
-
-  useEffect(() => {
-    if (!isAuthenticated || isLoading || !isSuperAdmin || !pathname) return;
-    const segments = pathname.split('/').filter(Boolean);
-    const routeSeg = segments[1];
-    if (routeSeg && CLIENT_ROUTE_SEGMENTS.has(routeSeg)) {
-      toast.info(t('impersonationHint'), {
-        id: 'sovereign-client-route',
-      });
-      router.replace(`/${locale}/overview`);
-    }
-  }, [isAuthenticated, isLoading, isSuperAdmin, pathname, router, locale, t]);
 
   if (isAuthPage) {
     return <>{children}</>;
@@ -66,7 +31,7 @@ export function WorkspaceGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (isAuthenticated && workspaces.length === 0 && !isSuperAdmin) {
+  if (isAuthenticated && workspaces.length === 0) {
     return <WorkspaceWelcome />;
   }
 

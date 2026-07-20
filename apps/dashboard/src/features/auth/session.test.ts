@@ -24,14 +24,14 @@ describe('session.ts — pure functions (P1-T5)', () => {
       expect(getApiBaseUrl()).toBe('https://api.example.com/api/v1');
     });
 
-    it('falls back to localhost:4000 when env is empty string', () => {
+    it('falls back to /api/v1 when env is empty string', () => {
       process.env.NEXT_PUBLIC_API_BASE_URL = '';
-      expect(getApiBaseUrl()).toBe('http://localhost:4000/api/v1');
+      expect(getApiBaseUrl()).toBe('/api/v1');
     });
 
-    it('falls back to localhost:4000 when env is unset', () => {
+    it('falls back to /api/v1 when env is unset', () => {
       delete process.env.NEXT_PUBLIC_API_BASE_URL;
-      expect(getApiBaseUrl()).toBe('http://localhost:4000/api/v1');
+      expect(getApiBaseUrl()).toBe('/api/v1');
     });
   });
 

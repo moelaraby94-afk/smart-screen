@@ -115,7 +115,7 @@ export function GlobalSearch() {
       { id: 'nav-overview', labelKey: 'nav.overview', href: `/${locale}/overview`, icon: LayoutDashboard },
       { id: 'nav-screens', labelKey: 'nav.screens', href: `/${locale}/screens`, icon: Monitor },
       { id: 'nav-emergency', labelKey: 'nav.emergency', href: `/${locale}/emergency`, icon: AlertTriangle },
-      { id: 'nav-media', labelKey: 'nav.media', href: `/${locale}/content/media`, icon: FolderOpen },
+      { id: 'nav-media', labelKey: 'nav.media', href: `/${locale}/media`, icon: FolderOpen },
       { id: 'nav-templates', labelKey: 'nav.templates', href: `/${locale}/templates`, icon: LayoutTemplate },
       { id: 'nav-playlists', labelKey: 'nav.playlists', href: `/${locale}/content/playlists`, icon: Clapperboard },
       { id: 'nav-schedules', labelKey: 'nav.schedules', href: `/${locale}/schedules`, icon: CalendarClock },
@@ -180,7 +180,7 @@ export function GlobalSearch() {
           label: m.originalName,
           sublabel: m.mimeType,
           type: 'media',
-          href: `/${locale}/content/media` as string,
+          href: `/${locale}/media` as string,
         });
       }
     }

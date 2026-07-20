@@ -57,6 +57,16 @@ export async function restoreCanvasVersion(
   );
 }
 
+export async function deleteCanvas(
+  workspaceId: string,
+  canvasId: string,
+): Promise<Response> {
+  return apiFetch(
+    `/canvases/${canvasId}?workspaceId=${encodeURIComponent(workspaceId)}`,
+    { method: 'DELETE' },
+  );
+}
+
 // ─── Playlists ────────────────────────────────────────────────────
 export async function fetchPlaylists(workspaceId?: string, groupId?: string): Promise<Response> {
   const params = new URLSearchParams();

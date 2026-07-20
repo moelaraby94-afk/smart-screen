@@ -9,9 +9,10 @@ import {
   Rect,
   Stage,
   Text,
+  Transformer,
 } from 'react-konva';
 import useImage from 'use-image';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import type { CanvasLayoutV1, CanvasObjectJson } from '@/features/studio/canvas-layout';
 
@@ -87,15 +88,27 @@ function computeSnapGuides(
   return { snappedX, snappedY, guides };
 }
 
-export function QrCodeShape({
-  obj,
-  onSelect,
-  onMove,
-}: {
+type ExtendedShapeProps = {
   obj: CanvasObjectJson;
+  objects: CanvasObjectJson[];
+  canvasW: number;
+  canvasH: number;
   onSelect: () => void;
   onMove: (id: string, x: number, y: number) => void;
-}) {
+  onUpdateObject: (id: string, patch: Partial<CanvasObjectJson>) => void;
+  onGuidesChange: (guides: GuideLine[]) => void;
+};
+
+export function QrCodeShape({
+  obj,
+  objects,
+  canvasW,
+  canvasH,
+  onSelect,
+  onMove,
+  onUpdateObject,
+  onGuidesChange,
+}: ExtendedShapeProps) {
   const [dataUrl, setDataUrl] = useState<string>('');
   const [img] = useImage(dataUrl, 'anonymous');
 
@@ -127,9 +140,36 @@ export function QrCodeShape({
         e.cancelBubble = true;
         onSelect();
       }}
+      onDragMove={(e) => {
+        const n = e.target;
+        const { snappedX, snappedY, guides } = computeSnapGuides(
+          obj.id, n.x(), n.y(), obj, objects, canvasW, canvasH,
+        );
+        if (snappedX !== n.x()) n.x(snappedX);
+        if (snappedY !== n.y()) n.y(snappedY);
+        onGuidesChange(guides);
+      }}
       onDragEnd={(e) => {
         const n = e.target;
         onMove(obj.id, n.x(), n.y());
+        onGuidesChange([]);
+      }}
+      onTransformEnd={(e) => {
+        const n = e.target;
+        const sx = n.scaleX();
+        const sy = n.scaleY();
+        const updates: Partial<CanvasObjectJson> = {
+          x: n.x(), y: n.y(), rotation: n.rotation(),
+        };
+        if (sx !== 1 || sy !== 1) {
+          updates.width = (obj.width ?? n.width()) * sx;
+          updates.height = (obj.height ?? n.height()) * sy;
+          updates.scaleX = 1;
+          updates.scaleY = 1;
+          n.scaleX(1);
+          n.scaleY(1);
+        }
+        onUpdateObject(obj.id, updates);
       }}
     />
   );
@@ -137,13 +177,14 @@ export function QrCodeShape({
 
 export function ImageShape({
   obj,
+  objects,
+  canvasW,
+  canvasH,
   onSelect,
   onMove,
-}: {
-  obj: CanvasObjectJson;
-  onSelect: () => void;
-  onMove: (id: string, x: number, y: number) => void;
-}) {
+  onUpdateObject,
+  onGuidesChange,
+}: ExtendedShapeProps) {
   const [img] = useImage(obj.imageUrl ?? '', 'anonymous');
   if (!img || !obj.width || !obj.height) return null;
 
@@ -197,9 +238,36 @@ export function ImageShape({
         e.cancelBubble = true;
         onSelect();
       }}
+      onDragMove={(e) => {
+        const n = e.target;
+        const { snappedX, snappedY, guides } = computeSnapGuides(
+          obj.id, n.x() - offsetX, n.y() - offsetY, obj, objects, canvasW, canvasH,
+        );
+        if (snappedX !== n.x() - offsetX) n.x(snappedX + offsetX);
+        if (snappedY !== n.y() - offsetY) n.y(snappedY + offsetY);
+        onGuidesChange(guides);
+      }}
       onDragEnd={(e) => {
         const n = e.target;
         onMove(obj.id, n.x() - offsetX, n.y() - offsetY);
+        onGuidesChange([]);
+      }}
+      onTransformEnd={(e) => {
+        const n = e.target;
+        const sx = n.scaleX();
+        const sy = n.scaleY();
+        const updates: Partial<CanvasObjectJson> = {
+          x: n.x() - offsetX, y: n.y() - offsetY, rotation: n.rotation(),
+        };
+        if (sx !== 1 || sy !== 1) {
+          updates.width = (obj.width ?? n.width()) * sx;
+          updates.height = (obj.height ?? n.height()) * sy;
+          updates.scaleX = 1;
+          updates.scaleY = 1;
+          n.scaleX(1);
+          n.scaleY(1);
+        }
+        onUpdateObject(obj.id, updates);
       }}
     />
   );
@@ -212,9 +280,10 @@ type CanvasRendererProps = {
   canvasW: number;
   canvasH: number;
   onGuidesChange: (guides: GuideLine[]) => void;
+  onTextDblClick?: (id: string) => void;
 };
 
-export function CanvasObjectsRenderer({ objects, onSelect, onUpdateObject, canvasW, canvasH, onGuidesChange }: CanvasRendererProps) {
+export function CanvasObjectsRenderer({ objects, onSelect, onUpdateObject, canvasW, canvasH, onGuidesChange, onTextDblClick }: CanvasRendererProps) {
   return (
     <>
       {objects.map((obj) => {
@@ -253,6 +322,39 @@ export function CanvasObjectsRenderer({ objects, onSelect, onUpdateObject, canva
             onGuidesChange([]);
             n.getLayer();
           },
+          onTransformEnd: (e: {
+            target: {
+              x: (val?: number) => number;
+              y: (val?: number) => number;
+              rotation: (val?: number) => number;
+              scaleX: (val?: number) => number;
+              scaleY: (val?: number) => number;
+              width: (val?: number) => number;
+              height: (val?: number) => number;
+            };
+          }) => {
+            const n = e.target;
+            const sx = n.scaleX();
+            const sy = n.scaleY();
+            const updates: Partial<CanvasObjectJson> = {
+              x: n.x(),
+              y: n.y(),
+              rotation: n.rotation(),
+            };
+            if (sx !== 1 || sy !== 1) {
+              if (obj.type === 'text') {
+                updates.fontSize = Math.round((obj.fontSize ?? 48) * Math.min(sx, sy));
+              } else {
+                updates.width = (obj.width ?? n.width()) * sx;
+                updates.height = (obj.height ?? n.height()) * sy;
+              }
+              updates.scaleX = 1;
+              updates.scaleY = 1;
+              n.scaleX(1);
+              n.scaleY(1);
+            }
+            onUpdateObject(obj.id, updates);
+          },
         };
 
         if (obj.type === 'rect') {
@@ -275,29 +377,18 @@ export function CanvasObjectsRenderer({ objects, onSelect, onUpdateObject, canva
           const rw = (obj.width ?? 120) / 2;
           const rh = (obj.height ?? 80) / 2;
           return (
-            <Ellipse
-              key={obj.id}
-              id={obj.id}
-              name={obj.id}
-              x={obj.x + rw}
-              y={obj.y + rh}
-              radiusX={rw}
-              radiusY={rh}
-              fill={obj.fill ?? 'hsl(var(--primary))'}
-              stroke={obj.stroke}
-              strokeWidth={obj.strokeWidth ?? 0}
-              rotation={obj.rotation ?? 0}
-              opacity={obj.opacity ?? 1}
-              draggable
-              onClick={(e) => {
-                e.cancelBubble = true;
-                onSelect(obj.id);
-              }}
-              onDragEnd={(e) => {
-                const n = e.target;
-                onUpdateObject(obj.id, { x: n.x() - rw, y: n.y() - rh });
-              }}
-            />
+            <Group key={obj.id} x={obj.x} y={obj.y} {...common}>
+              <Ellipse
+                x={rw}
+                y={rh}
+                radiusX={rw}
+                radiusY={rh}
+                fill={obj.fill ?? 'hsl(var(--primary))'}
+                stroke={obj.stroke}
+                strokeWidth={obj.strokeWidth ?? 0}
+                listening={false}
+              />
+            </Group>
           );
         }
         if (obj.type === 'text') {
@@ -318,6 +409,8 @@ export function CanvasObjectsRenderer({ objects, onSelect, onUpdateObject, canva
               fill={obj.fill ?? 'hsl(var(--primary))'}
               width={obj.width}
               height={obj.height}
+              onDblClick={() => onTextDblClick?.(obj.id)}
+              onDblTap={() => onTextDblClick?.(obj.id)}
               {...common}
             />
           );
@@ -327,8 +420,13 @@ export function CanvasObjectsRenderer({ objects, onSelect, onUpdateObject, canva
             <ImageShape
               key={obj.id}
               obj={obj}
+              objects={objects}
+              canvasW={canvasW}
+              canvasH={canvasH}
               onSelect={() => onSelect(obj.id)}
               onMove={(id, x, y) => onUpdateObject(id, { x, y })}
+              onUpdateObject={onUpdateObject}
+              onGuidesChange={onGuidesChange}
             />
           );
         }
@@ -385,8 +483,13 @@ export function CanvasObjectsRenderer({ objects, onSelect, onUpdateObject, canva
             <QrCodeShape
               key={obj.id}
               obj={obj}
+              objects={objects}
+              canvasW={canvasW}
+              canvasH={canvasH}
               onSelect={() => onSelect(obj.id)}
               onMove={(id, x, y) => onUpdateObject(id, { x, y })}
+              onUpdateObject={onUpdateObject}
+              onGuidesChange={onGuidesChange}
             />
           );
         }
@@ -404,17 +507,42 @@ type CanvasStageProps = {
   dw: number;
   dh: number;
   layout: CanvasLayoutV1;
+  selectedId: string | null;
   onSelect: (id: string) => void;
   onUpdateObject: (id: string, patch: Partial<CanvasObjectJson>) => void;
   onStageClick: () => void;
+  onTextDblClick?: (id: string) => void;
   onDrop: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   containerRef: React.RefObject<HTMLDivElement | null>;
   dropHint: string;
+  readOnly?: boolean;
 };
 
 export function CanvasStageView(props: CanvasStageProps) {
   const [guides, setGuides] = useState<GuideLine[]>([]);
+  const trRef = useRef<React.ComponentRef<typeof Transformer> | null>(null);
+  const layerRef = useRef<React.ComponentRef<typeof Layer> | null>(null);
+
+  useEffect(() => {
+    const tr = trRef.current;
+    const layer = layerRef.current;
+    if (!tr || !layer) return;
+    if (props.readOnly || !props.selectedId) {
+      tr.nodes([]);
+      tr.getLayer()?.batchDraw();
+      return;
+    }
+    const node = layer.findOne(`#${props.selectedId}`);
+    if (node) {
+      tr.nodes([node]);
+      tr.getLayer()?.batchDraw();
+    } else {
+      tr.nodes([]);
+      tr.getLayer()?.batchDraw();
+    }
+  }, [props.selectedId, props.layout, props.readOnly]);
+
   return (
     <div
       ref={props.containerRef}
@@ -429,7 +557,7 @@ export function CanvasStageView(props: CanvasStageProps) {
           if (e.target === e.target.getStage()) props.onStageClick();
         }}
       >
-        <Layer>
+        <Layer ref={layerRef}>
           <Rect x={0} y={0} width={props.size.w} height={props.size.h} fill="transparent" />
           <Group x={props.ox} y={props.oy} scaleX={props.scale} scaleY={props.scale}>
             <Rect x={0} y={0} width={props.dw} height={props.dh} fill="hsl(var(--background))" stroke="hsl(var(--primary))" strokeWidth={2} />
@@ -440,6 +568,7 @@ export function CanvasStageView(props: CanvasStageProps) {
               canvasW={props.dw}
               canvasH={props.dh}
               onGuidesChange={setGuides}
+              onTextDblClick={props.onTextDblClick}
             />
             {guides.map((g, i) => (
               <KonvaLine
@@ -452,6 +581,27 @@ export function CanvasStageView(props: CanvasStageProps) {
               />
             ))}
           </Group>
+          {!props.readOnly && (
+            <Transformer
+              ref={trRef}
+              rotateEnabled
+              enabledAnchors={[
+                'top-left', 'top-right', 'bottom-left', 'bottom-right',
+                'middle-left', 'middle-right', 'top-center', 'bottom-center',
+              ]}
+              borderStroke="hsl(var(--primary))"
+              borderStrokeWidth={1.5}
+              anchorStroke="hsl(var(--primary))"
+              anchorFill="hsl(var(--background))"
+              anchorSize={8}
+              anchorCornerRadius={4}
+              rotateAnchorOffset={28}
+              boundBoxFunc={(oldBox, newBox) => {
+                if (Math.abs(newBox.width) < 12 || Math.abs(newBox.height) < 12) return oldBox;
+                return newBox;
+              }}
+            />
+          )}
         </Layer>
       </Stage>
     </div>

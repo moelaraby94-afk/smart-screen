@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { Activity, Monitor } from 'lucide-react';
 import { apiFetch } from '@/features/auth/session';
 import { useWorkspace } from '@/features/workspace/workspace-context';
+import { Button } from '@/components/ui/button';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -28,6 +29,7 @@ export function ScreenHealthSection() {
   const { workspaceId, workspaceDataEpoch } = useWorkspace();
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     if (!workspaceId) {
@@ -36,15 +38,18 @@ export function ScreenHealthSection() {
       return;
     }
     setLoading(true);
+    setError(false);
     try {
       const res = await apiFetch(`/screens/analytics?workspaceId=${encodeURIComponent(workspaceId)}`);
       if (res.ok) {
         setData(await res.json());
       } else {
         setData(null);
+        setError(true);
       }
     } catch {
       setData(null);
+      setError(true);
     }
     setLoading(false);
   }, [workspaceId]);
@@ -124,6 +129,13 @@ export function ScreenHealthSection() {
           <Skeleton className="h-20 rounded-lg" />
           <Skeleton className="h-20 rounded-lg" />
           <Skeleton className="h-20 rounded-lg" />
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center gap-2 py-6 text-center">
+          <p className="text-xs text-muted-foreground">{t('error')}</p>
+          <Button variant="ghost" size="sm" onClick={() => void load()} className="text-xs">
+            {t('retry')}
+          </Button>
         </div>
       ) : !data || data.total === 0 ? (
         <div className="flex items-center justify-center gap-2 py-6 text-center">

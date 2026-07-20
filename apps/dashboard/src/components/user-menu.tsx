@@ -31,10 +31,9 @@ import { cn } from '@/lib/utils';
 
 type Props = {
   rtl: boolean;
-  variant: 'sovereign' | 'workspace';
 };
 
-export function UserMenu({ rtl, variant }: Props) {
+export function UserMenu({ rtl }: Props) {
   const t = useTranslations('userMenu');
   const activeLocale = useLocale();
   const router = useRouter();

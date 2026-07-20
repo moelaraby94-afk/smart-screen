@@ -1,11 +1,32 @@
-import { redirect } from 'next/navigation';
-import type { Route } from 'next';
+import { Suspense } from 'react';
+import { getTranslations } from 'next-intl/server';
+import { MediaLibraryClient } from '@/features/media/media-library-client';
 
-type Props = {
-  params: Promise<{ locale: string }>;
-};
+type Props = { params: Promise<{ locale: string }> };
 
 export default async function MediaPage({ params }: Props) {
   const { locale } = await params;
-  redirect(`/${locale}/content/media` as Route);
+  const t = await getTranslations({ locale, namespace: 'mediaClient' });
+  const tCommon = await getTranslations({ locale, namespace: 'common' });
+
+  return (
+    <main className="space-y-6">
+      <header className="space-y-1 border-b border-border pb-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {tCommon('media')}
+        </p>
+        <h1 className="text-xl font-semibold tracking-tight">{t('title')}</h1>
+        <p className="max-w-2xl text-sm text-muted-foreground">{t('description')}</p>
+      </header>
+      <Suspense
+        fallback={
+          <div className="flex min-h-[200px] items-center justify-center text-sm text-muted-foreground">
+            …
+          </div>
+        }
+      >
+        <MediaLibraryClient />
+      </Suspense>
+    </main>
+  );
 }

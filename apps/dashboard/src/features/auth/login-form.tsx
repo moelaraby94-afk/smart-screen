@@ -18,7 +18,6 @@ import { useApiErrorMessage } from '@/features/api/use-api-error-message';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 
 type AuthSuccessPayload = {
-  user?: { isSuperAdmin?: boolean };
   workspaces?: Array<{ id: string; name: string; role: string }>;
   accessToken?: string;
 };
@@ -54,12 +53,9 @@ export function LoginForm() {
     }
     await refreshWorkspaces(workspaceId ?? null);
     const returnTo = searchParams.get('returnTo');
-    const isSuper = Boolean(payload.user?.isSuperAdmin);
     let dest: string;
     if (returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//')) {
       dest = returnTo;
-    } else if (isSuper) {
-      dest = `/${activeLocale}/overview`;
     } else if (workspaceId) {
       dest = `/${activeLocale}/overview`;
     } else {

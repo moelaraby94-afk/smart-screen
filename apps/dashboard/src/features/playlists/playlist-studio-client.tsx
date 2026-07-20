@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import type { Route } from 'next';
 import { AlertCircle, Monitor, MonitorOff, Smartphone, Square } from 'lucide-react';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { makeZonePresets, type ZonePreset } from '@/features/studio/canvas-layout';
@@ -28,8 +30,10 @@ import { usePlaylistMeta } from './studio/hooks/use-playlist-meta';
 
 import type { Row, Zone, SaveState, SelectionContext } from './studio/types';
 
-export function PlaylistStudioClient() {
+export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?: string } = {}) {
   const t = useTranslations('playlistStudioClient');
+  const locale = useLocale();
+  const router = useRouter();
   const { workspaceId, workspaces, bumpWorkspaceDataEpoch } = useWorkspace();
   const currentWs = workspaces.find((w) => w.id === workspaceId);
   const canPublish = Boolean(
@@ -37,11 +41,11 @@ export function PlaylistStudioClient() {
   );
 
   // ── State ──────────────────────────────────────────────
-  const [playlistId, setPlaylistId] = useState<string>('');
+  const [playlistId, setPlaylistId] = useState<string>(initialPlaylistId ?? '');
   const [newName, setNewName] = useState('');
   const [rows, setRows] = useState<Row[]>([]);
   const [playlistSort, setPlaylistSort] = useState<string>('name');
-  const [viewMode, setViewMode] = useState<'grid' | 'editor'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'editor'>(initialPlaylistId ? 'editor' : 'grid');
   const [selectedZonePreset, setSelectedZonePreset] = useState<ZonePreset | null>(null);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>('full');
   const [cloneTargetWs, setCloneTargetWs] = useState('');
@@ -188,6 +192,11 @@ export function PlaylistStudioClient() {
     if (saveState === 'unsaved') {
       pendingBackRef.current = true;
       setShowUnsavedDialog(true);
+      return;
+    }
+    if (initialPlaylistId) {
+      // In preset mode, go back to playlist detail page
+      router.push(`/${locale}/content/playlists/${initialPlaylistId}` as never as Route);
       return;
     }
     setPlaylistId('');
@@ -372,9 +381,13 @@ export function PlaylistStudioClient() {
             <AlertDialogCancel onClick={() => {
               if (pendingBackRef.current) {
                 pendingBackRef.current = false;
-                setPlaylistId('');
-                setViewMode('grid');
-                setSelectedRowClientId(null);
+                if (initialPlaylistId) {
+                  router.push(`/${locale}/content/playlists/${initialPlaylistId}` as never as Route);
+                } else {
+                  setPlaylistId('');
+                  setViewMode('grid');
+                  setSelectedRowClientId(null);
+                }
               }
               setShowUnsavedDialog(false);
             }}>{t('discard')}</AlertDialogCancel>
@@ -382,9 +395,13 @@ export function PlaylistStudioClient() {
               await handleSave();
               if (pendingBackRef.current) {
                 pendingBackRef.current = false;
-                setPlaylistId('');
-                setViewMode('grid');
-                setSelectedRowClientId(null);
+                if (initialPlaylistId) {
+                  router.push(`/${locale}/content/playlists/${initialPlaylistId}` as never as Route);
+                } else {
+                  setPlaylistId('');
+                  setViewMode('grid');
+                  setSelectedRowClientId(null);
+                }
               }
               setShowUnsavedDialog(false);
             }}>{t('save')}</AlertDialogAction>

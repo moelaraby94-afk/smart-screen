@@ -8,7 +8,7 @@ import { ShellHeader } from '@/components/layout/header';
 import { ShellHeaderInsetSetterContext } from '@/components/layout/shell-header-inset-context';
 import { ShellSidebar } from '@/components/layout/shell-sidebar';
 import { PageTransition } from '@/components/page-transition';
-import { ImpersonationReturnButton } from '@/features/admin/impersonation-return-button';
+import { ImpersonationReturnButton } from '@/features/auth/impersonation-return-button';
 import { WorkspaceGate } from '@/features/workspace/workspace-gate';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { useWorkspaceStats } from '@/features/workspace/use-workspace-stats';
@@ -28,8 +28,6 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
     workspaceDataEpoch,
     isLoading,
     isAuthenticated,
-    isSuperAdmin,
-    impersonatedBySuperAdminId,
   } = useWorkspace();
   const counts = useWorkspaceStats(workspaceId, workspaceDataEpoch);
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
@@ -37,15 +35,6 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
   const setHeaderInsetStable = React.useCallback((node: React.ReactNode | null) => {
     setHeaderInset(node);
   }, []);
-  const [hintSuperAdmin, setHintSuperAdmin] = React.useState(false);
-  React.useLayoutEffect(() => {
-    try {
-      setHintSuperAdmin(sessionStorage.getItem('cs_super_admin') === '1');
-    } catch {
-      setHintSuperAdmin(false);
-    }
-  }, []);
-
   // Close mobile nav after route changes.
   React.useEffect(() => {
     setMobileNavOpen(false);
@@ -80,7 +69,6 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [mobileNavOpen]);
 
-  const isImpersonating = Boolean(impersonatedBySuperAdminId);
   const pathSegment = pathname?.split('/').filter(Boolean)[0];
   const pathLocale =
     pathSegment === 'ar' || pathSegment === 'en' ? pathSegment : locale;
@@ -97,13 +85,7 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
     return headerMeta.pageTitle;
   }, [pathname, navLocale, workspaces, headerMeta.pageTitle]);
 
-  const pathIsAdmin = Boolean(pathname?.startsWith(`/${navLocale}/admin`));
-  const sovereign =
-    !isImpersonating &&
-    (pathIsAdmin || isSuperAdmin || (isLoading && hintSuperAdmin));
-
-  const shellNavLoading =
-    isLoading && !pathIsAdmin && !isSuperAdmin && !hintSuperAdmin;
+  const shellNavLoading = isLoading;
 
   const rtl = navLocale === 'ar';
 
@@ -119,14 +101,13 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
         navLocale={navLocale}
         rtl={rtl}
         pathname={pathname}
-        sovereign={sovereign}
         shellNavLoading={shellNavLoading}
         workspaceId={workspaceId}
         counts={counts}
         isLoading={isLoading}
         isAuthenticated={isAuthenticated}
         mobileNavOpen={mobileNavOpen}
-        showWorkspaceSwitcher={!sovereign}
+        showWorkspaceSwitcher={true}
       />
 
       {mobileNavOpen ? (
@@ -143,7 +124,6 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
         <ShellHeader
           navLocale={navLocale}
           rtl={rtl}
-          sovereign={sovereign}
           pageTitle={pageTitle}
           kicker={headerMeta.kicker}
           showBack={headerMeta.showBack}
@@ -151,18 +131,18 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
           backLabel={headerMeta.backLabel}
           mobileNavOpen={mobileNavOpen}
           onToggleMobileNav={() => setMobileNavOpen((v) => !v)}
-          showWorkspaceSwitcher={!sovereign}
+          showWorkspaceSwitcher={true}
           headerInset={headerInset}
         />
         <Breadcrumbs pathname={pathname} locale={navLocale} rtl={rtl} />
         <ShellHeaderInsetSetterContext.Provider value={setHeaderInsetStable}>
           <main id="main-content" className="vc-scrollbar relative z-content mx-auto min-h-0 w-full max-w-[1400px] flex-1 overflow-y-auto overscroll-y-contain px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-6">
+            <ImpersonationReturnButton />
             <PageTransition>
               <WorkspaceGate>{children}</WorkspaceGate>
             </PageTransition>
           </main>
         </ShellHeaderInsetSetterContext.Provider>
-        <ImpersonationReturnButton />
       </div>
     </div>
   );
