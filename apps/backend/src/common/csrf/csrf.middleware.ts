@@ -1,5 +1,6 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
+import { extractCsrfTokenFromCookies } from '../../domains/auth/auth-cookie.util';
 
 @Injectable()
 export class CsrfMiddleware implements NestMiddleware {
@@ -34,7 +35,9 @@ export class CsrfMiddleware implements NestMiddleware {
       return;
     }
 
-    const cookieToken = req.cookies?.csrf_token as string | undefined;
+    const cookieToken = extractCsrfTokenFromCookies(
+      req.cookies as Record<string, string | undefined>,
+    );
     const headerToken = req.headers['x-csrf-token'] as string | undefined;
     if (!cookieToken || !headerToken || cookieToken !== headerToken) {
       res.status(403).json({ message: 'Invalid CSRF token' });

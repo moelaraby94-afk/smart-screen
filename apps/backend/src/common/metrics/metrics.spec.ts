@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { MetricsService } from './metrics.service';
 import { MetricsController } from './metrics.controller';
+import { MetricsAuthGuard } from './metrics-auth.guard';
 
 describe('MetricsService', () => {
   let service: MetricsService;
@@ -72,7 +74,19 @@ describe('MetricsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [MetricsController],
-      providers: [MetricsService],
+      providers: [
+        MetricsService,
+        MetricsAuthGuard,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string) => {
+              if (key === 'METRICS_AUTH_TOKEN') return undefined;
+              return undefined;
+            }),
+          },
+        },
+      ],
     }).compile();
 
     controller = module.get<MetricsController>(MetricsController);

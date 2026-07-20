@@ -34,6 +34,9 @@ export const ErrorCode = {
   TOO_MANY_LOGIN_ATTEMPTS: 'TOO_MANY_LOGIN_ATTEMPTS',
   EMAIL_NOT_CONFIGURED: 'EMAIL_NOT_CONFIGURED',
 
+  // --- two-factor authentication
+  TWO_FACTOR_REQUIRED: 'TWO_FACTOR_REQUIRED',
+
   // --- workspace access
   NO_WORKSPACE_ACCESS: 'NO_WORKSPACE_ACCESS',
   INSUFFICIENT_WORKSPACE_ROLE: 'INSUFFICIENT_WORKSPACE_ROLE',
@@ -44,6 +47,8 @@ export const ErrorCode = {
   SCREEN_LIMIT_REACHED: 'SCREEN_LIMIT_REACHED',
   /** details: { limitBytes: number; usedBytes: number; requestedBytes: number } */
   STORAGE_LIMIT_REACHED: 'STORAGE_LIMIT_REACHED',
+  /** details: { storageUsed: number; storageLimit: number } — 413 */
+  STORAGE_QUOTA_EXCEEDED: 'STORAGE_QUOTA_EXCEEDED',
 
   // --- screen pairing
   INVALID_OR_EXPIRED_PAIRING_CODE: 'INVALID_OR_EXPIRED_PAIRING_CODE',

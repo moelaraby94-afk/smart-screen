@@ -85,4 +85,17 @@ export class DomainException extends HttpException {
       details,
     );
   }
+
+  static payloadTooLarge(
+    code: ErrorCode,
+    message: string,
+    details?: Record<string, unknown>,
+  ): DomainException {
+    return new DomainException(
+      code,
+      HttpStatus.PAYLOAD_TOO_LARGE,
+      message,
+      details,
+    );
+  }
 }

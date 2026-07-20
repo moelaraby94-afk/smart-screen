@@ -8,12 +8,17 @@ export class CsrfController {
   issue(@Res({ passthrough: true }) res: Response): { csrfToken: string } {
     const token = randomBytes(32).toString('hex');
     const secure = process.env.NODE_ENV === 'production';
-    res.cookie('csrf_token', token, {
+    const common = {
       httpOnly: false,
-      sameSite: 'lax',
+      sameSite: 'lax' as const,
       secure,
       path: '/',
-    });
+    };
+
+    res.cookie('csrf_platform', token, common);
+    res.cookie('csrf_customer', token, common);
+    res.cookie('csrf_token', token, common);
+
     return { csrfToken: token };
   }
 }

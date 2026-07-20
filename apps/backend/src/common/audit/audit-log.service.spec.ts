@@ -76,19 +76,21 @@ describe('AuditLogService', () => {
   it('exposes createdAt as an ISO `timestamp` for the admin UI', async () => {
     const { service, findMany } = build();
 
-    const logs = await service.list();
+    const result = await service.list();
 
-    expect(findMany).toHaveBeenCalledWith({
-      orderBy: { createdAt: 'desc' },
-      take: 1000,
-    });
-    expect(logs[0]).toEqual({
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      }),
+    );
+    expect(result.items[0]).toEqual({
       id: 'log_2',
       action: 'IMPERSONATION_START',
       adminName: 'Root',
       targetCustomer: 'Acme',
       ipAddress: '203.0.113.9',
       timestamp: '2026-07-09T10:00:00.000Z',
+      createdAt: new Date('2026-07-09T10:00:00.000Z'),
     });
   });
 });

@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import {
+  buildCursorWhere,
+  buildPaginatedResult,
+  resolveLimit,
+  type PaginatedResult,
+} from '../pagination/cursor-pagination';
 
 export type AdminAuditLogItem = {
   id: string;
@@ -30,10 +36,6 @@ export type AppendWorkspaceAuditInput = {
   metadata?: Record<string, unknown> | null;
 };
 
-/** Matches the previous file-backed store's cap, so the admin UI is unchanged. */
-const AUDIT_LOG_PAGE_SIZE = 1000;
-const WORKSPACE_AUDIT_PAGE_SIZE = 200;
-
 /**
  * The audit trail records impersonation and other privileged actions across
  * every tenant. It previously lived in `.data/admin-runtime.json` and was
@@ -56,20 +58,28 @@ export class AuditLogService {
     await this.prisma.auditLog.create({ data: input });
   }
 
-  async list(): Promise<AdminAuditLogItem[]> {
+  async list(
+    cursor?: string,
+    limit?: number,
+  ): Promise<PaginatedResult<AdminAuditLogItem>> {
+    const resolvedLimit = resolveLimit(limit);
     const rows = await this.prisma.auditLog.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: AUDIT_LOG_PAGE_SIZE,
+      where: buildCursorWhere(cursor),
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: resolvedLimit + 1,
     });
 
-    return rows.map((row) => ({
+    const items = rows.map((row) => ({
       id: row.id,
       action: row.action,
       adminName: row.adminName,
       targetCustomer: row.targetCustomer,
       ipAddress: row.ipAddress,
       timestamp: row.createdAt.toISOString(),
+      createdAt: row.createdAt,
     }));
+
+    return buildPaginatedResult(items, resolvedLimit);
   }
 
   async appendWorkspace(input: AppendWorkspaceAuditInput): Promise<void> {
@@ -88,20 +98,39 @@ export class AuditLogService {
 
   async listForWorkspace(
     workspaceId: string,
-  ): Promise<WorkspaceAuditLogItem[]> {
+    cursor?: string,
+    limit?: number,
+  ): Promise<PaginatedResult<WorkspaceAuditLogItem>> {
+    const resolvedLimit = resolveLimit(limit);
     const rows = await this.prisma.auditLog.findMany({
-      where: { workspaceId },
-      orderBy: { createdAt: 'desc' },
-      take: WORKSPACE_AUDIT_PAGE_SIZE,
+      where: { workspaceId, ...buildCursorWhere(cursor) },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: resolvedLimit + 1,
     });
 
-    return rows.map((row) => ({
-      id: row.id,
-      action: row.action,
-      actorName: row.adminName,
-      ipAddress: row.ipAddress,
-      metadata: (row.metadata as Record<string, unknown> | null) ?? null,
-      createdAt: row.createdAt.toISOString(),
-    }));
+    const hasMore = rows.length > resolvedLimit;
+    const sliced = hasMore ? rows.slice(0, resolvedLimit) : rows;
+    const nextCursor =
+      hasMore && sliced.length > 0
+        ? Buffer.from(
+            JSON.stringify({
+              id: sliced[sliced.length - 1].id,
+              createdAt: sliced[sliced.length - 1].createdAt.toISOString(),
+            }),
+          ).toString('base64')
+        : null;
+
+    return {
+      items: sliced.map((row) => ({
+        id: row.id,
+        action: row.action,
+        actorName: row.adminName,
+        ipAddress: row.ipAddress,
+        metadata: (row.metadata as Record<string, unknown> | null) ?? null,
+        createdAt: row.createdAt.toISOString(),
+      })),
+      nextCursor,
+      hasMore,
+    };
   }
 }

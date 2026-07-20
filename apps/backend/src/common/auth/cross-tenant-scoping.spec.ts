@@ -1,12 +1,14 @@
 import { NotFoundException } from '@nestjs/common';
 import { CanvasesService } from '../../domains/canvases/canvases.service';
 import { MediaService } from '../../domains/media/media.service';
+import { MediaFoldersService } from '../../domains/media/media-folders.service';
 import { SchedulesService } from '../../domains/schedules/schedules.service';
 import { ScreensService } from '../../domains/screens/screens.service';
-import { ScreenHeartbeatService } from '../../domains/realtime/screen-heartbeat.service';
+import { ScreenAssignmentsService } from '../../domains/screens/screen-assignments.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 
-const mockHeartbeat = {} as unknown as ScreenHeartbeatService;
+const mockHeartbeat = { emit: () => {} } as unknown as EventEmitter2;
 
 /**
  * The second tenant boundary. RolesGuard proves the caller belongs to the
@@ -89,14 +91,20 @@ describe('cross-tenant scoping of by-id getters', () => {
     {
       name: 'SchedulesService.getOne',
       build: (prisma) => {
-        const svc = new SchedulesService(prisma, stub(), stub(), stub());
+        const svc = new SchedulesService(prisma, stub(), stub());
         return { get: (ws, id) => svc.getOne(ws, id) };
       },
     },
     {
       name: 'ScreensService.getById',
       build: (prisma) => {
-        const svc = new ScreensService(prisma, stub(), stub(), stub());
+        const svc = new ScreensService(
+          prisma,
+          stub(),
+          stub(),
+          stub(),
+          stub() as unknown as ScreenAssignmentsService,
+        );
         return { get: (ws, id) => svc.getById(ws, id) };
       },
     },
@@ -115,6 +123,7 @@ describe('cross-tenant scoping of by-id getters', () => {
             ensureDir: () => {},
             providerName: 'local',
           } as never,
+          {} as MediaFoldersService,
         );
         return { get: (ws, id) => svc.getById(ws, id) };
       },

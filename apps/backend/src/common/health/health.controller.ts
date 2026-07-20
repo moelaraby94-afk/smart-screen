@@ -12,8 +12,9 @@ export class HealthController {
   /**
    * Liveness probe — always returns 200 if the process is running.
    * Registered before the global prefix so it's reachable at `/health`.
+   * Also reachable at `/api/v1/public/health` via the global prefix.
    */
-  @Get('health')
+  @Get(['health', 'public/health'])
   liveness(): { status: 'ok' } {
     return { status: 'ok' };
   }
@@ -25,8 +26,9 @@ export class HealthController {
    * - Storage (local or S3)
    *
    * Returns 503 if any dependency fails.
+   * Also reachable at `/api/v1/public/ready` via the global prefix.
    */
-  @Get('ready')
+  @Get(['ready', 'public/ready'])
   @HealthCheck()
   readiness() {
     return this.health.check([

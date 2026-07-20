@@ -12,6 +12,14 @@ import { PrismaClient } from '@prisma/client';
  *
  * Official source: Prisma docs — https://www.prisma.io/docs/orm/overview/databases/postgresql
  * "The default connection pool size is 10 (determined by the underlying driver)."
+ *
+ * Tenant Isolation (D-05): The tenant isolation Prisma extension is defined in
+ * `tenant-isolation.extension.ts` and uses Prisma's `$extends` API. Since `$extends`
+ * returns a new client instance (not mutating `this`), it cannot be applied inside
+ * a class that extends `PrismaClient` with NestJS DI. The extension is applied via
+ * a factory pattern in `tenant-prisma.service.ts` for services that opt into
+ * automatic tenant isolation. All other services continue to manually inject
+ * `workspaceId` in their queries (the existing pattern).
  */
 @Injectable()
 export class PrismaService

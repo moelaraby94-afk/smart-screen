@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 
 export type ResolvedAccountContext = {
   /** The user who owns the account (the OWNER of the workspace(s)). */
@@ -30,28 +31,45 @@ export type ResolvedAccountContext = {
  */
 @Injectable()
 export class AccountContextHelper {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly log = new Logger(AccountContextHelper.name);
+  private readonly CACHE_TTL = 60; // seconds
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+  ) {}
 
   /**
    * Resolve the effective ownerId for a user.
    * Returns the user's own id if they are the account owner or a standalone user.
    */
   async resolveOwnerId(userId: string): Promise<string> {
+    const cacheKey = `account-context:${userId}:owner`;
+    const cached = await this.redisGet(cacheKey);
+    if (cached !== null) return cached;
+
     // Fast path: is this user an account owner?
     const asOwner = await this.prisma.accountMember.findFirst({
       where: { ownerId: userId },
       select: { ownerId: true },
     });
-    if (asOwner) return userId;
+    if (asOwner) {
+      await this.redisSet(cacheKey, userId);
+      return userId;
+    }
 
     // Is this user an account member of someone else?
     const asMember = await this.prisma.accountMember.findFirst({
       where: { userId },
       select: { ownerId: true },
     });
-    if (asMember) return asMember.ownerId;
+    if (asMember) {
+      await this.redisSet(cacheKey, asMember.ownerId);
+      return asMember.ownerId;
+    }
 
     // Standalone user (no account members yet)
+    await this.redisSet(cacheKey, userId);
     return userId;
   }
 
@@ -63,6 +81,23 @@ export class AccountContextHelper {
    * Returns null when the user has no access to the workspace.
    */
   async resolveForWorkspace(
+    userId: string,
+    workspaceId: string,
+  ): Promise<ResolvedAccountContext | null> {
+    const cacheKey = `account-context:${userId}:${workspaceId}`;
+    const cached = await this.redisGet(cacheKey);
+    if (cached !== null) {
+      return JSON.parse(cached) as ResolvedAccountContext;
+    }
+
+    const result = await this.resolveForWorkspaceFromDB(userId, workspaceId);
+    if (result) {
+      await this.redisSet(cacheKey, JSON.stringify(result));
+    }
+    return result;
+  }
+
+  private async resolveForWorkspaceFromDB(
     userId: string,
     workspaceId: string,
   ): Promise<ResolvedAccountContext | null> {
@@ -149,6 +184,29 @@ export class AccountContextHelper {
   }
 
   /**
+   * Invalidate all cached account context for a user.
+   * Call when the user's role, membership, or account changes.
+   */
+  async invalidateUserContext(userId: string): Promise<void> {
+    const client = this.redis.getClient();
+    if (!client) return;
+
+    try {
+      const keys = await client.keys(`account-context:${userId}:*`);
+      if (keys.length > 0) {
+        await client.del(...keys);
+        this.log.debug(
+          `Invalidated ${keys.length} cache keys for user ${userId}`,
+        );
+      }
+    } catch (err) {
+      this.log.warn(
+        `Failed to invalidate cache for user ${userId}: ${(err as Error).message}`,
+      );
+    }
+  }
+
+  /**
    * Check if a user has access to a workspace and return their role.
    * Throws ForbiddenException if no access.
    */
@@ -158,5 +216,26 @@ export class AccountContextHelper {
   ): Promise<UserRole | null> {
     const ctx = await this.resolveForWorkspace(userId, workspaceId);
     return ctx?.role ?? null;
+  }
+
+  private async redisGet(key: string): Promise<string | null> {
+    const client = this.redis.getClient();
+    if (!client) return null;
+    try {
+      return await client.get(key);
+    } catch (err) {
+      this.log.warn(`Redis GET failed for ${key}: ${(err as Error).message}`);
+      return null;
+    }
+  }
+
+  private async redisSet(key: string, value: string): Promise<void> {
+    const client = this.redis.getClient();
+    if (!client) return;
+    try {
+      await client.setex(key, this.CACHE_TTL, value);
+    } catch (err) {
+      this.log.warn(`Redis SET failed for ${key}: ${(err as Error).message}`);
+    }
   }
 }
