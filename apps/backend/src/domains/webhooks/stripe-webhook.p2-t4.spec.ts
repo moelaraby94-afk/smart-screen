@@ -5,6 +5,7 @@ import Stripe from 'stripe';
 import { StripeWebhookService } from './stripe-webhook.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { SubscriptionEmailService } from '../email/subscription-email.service';
 
 jest.mock('stripe', () => ({
   __esModule: true,
@@ -54,6 +55,12 @@ describe('StripeWebhookService P2-T4 (reconciliation)', () => {
           useValue: {
             applyTrustedCheckoutUsingClient: applyTrusted,
             syncFromStripeSubscription: syncFromStripe,
+          },
+        },
+        {
+          provide: SubscriptionEmailService,
+          useValue: {
+            sendPaymentFailed: jest.fn().mockResolvedValue(undefined),
           },
         },
       ],
@@ -211,6 +218,12 @@ describe('StripeWebhookService P2-T4 (reconciliation)', () => {
             syncFromStripeSubscription: syncFromStripe,
           },
         },
+        {
+          provide: SubscriptionEmailService,
+          useValue: {
+            sendPaymentFailed: jest.fn().mockResolvedValue(undefined),
+          },
+        },
       ],
     }).compile();
     const dupService = moduleRef.get(StripeWebhookService);
@@ -247,6 +260,12 @@ describe('StripeWebhookService P2-T4 (reconciliation)', () => {
             syncFromStripeSubscription: syncFromStripe,
           },
         },
+        {
+          provide: SubscriptionEmailService,
+          useValue: {
+            sendPaymentFailed: jest.fn().mockResolvedValue(undefined),
+          },
+        },
       ],
     }).compile();
     const errService = moduleRef.get(StripeWebhookService);
@@ -268,6 +287,12 @@ describe('StripeWebhookService P2-T4 (reconciliation)', () => {
           useValue: {
             applyTrustedCheckoutUsingClient: applyTrusted,
             syncFromStripeSubscription: syncFromStripe,
+          },
+        },
+        {
+          provide: SubscriptionEmailService,
+          useValue: {
+            sendPaymentFailed: jest.fn().mockResolvedValue(undefined),
           },
         },
       ],

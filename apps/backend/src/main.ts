@@ -2,8 +2,10 @@ import './instrument';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { Response } from 'express';
 import express from 'express';
+import compression from 'compression';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { AppLogger } from './common/request-context/app-logger';
@@ -11,6 +13,8 @@ import { createCorsOriginChecker } from './common/config/cors-config';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { assertProductionSecretsAreSet } from './common/config/assert-production-secrets';
+import { SensitiveFieldInterceptor } from './common/serialization/sensitive-field.interceptor';
+import { AdminIpGuard } from './common/auth/admin-ip.guard';
 
 async function bootstrap() {
   if (process.env.DATABASE_URL?.trim()) {
@@ -81,9 +85,15 @@ async function bootstrap() {
     }),
   );
 
+  app.use(compression());
+
   const http = app.getHttpAdapter().getInstance();
   http.use(
     '/api/v1/webhooks/stripe',
+    express.raw({ type: 'application/json' }),
+  );
+  http.use(
+    '/api/v1/internal/webhooks/stripe',
     express.raw({ type: 'application/json' }),
   );
   http.use(express.json({ limit: '50mb' }));
@@ -115,6 +125,7 @@ async function bootstrap() {
       setHeaders: (res: Response) => {
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
       },
     });
   }
@@ -144,6 +155,23 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+
+  app.useGlobalInterceptors(new SensitiveFieldInterceptor());
+
+  const adminIpGuard = app.get(AdminIpGuard);
+  app.useGlobalGuards(adminIpGuard);
+
+  if (process.env.ENABLE_SWAGGER === 'true') {
+    const config = new DocumentBuilder()
+      .setTitle('Cloud Screen API')
+      .setDescription('Cloud Screen backend API documentation')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+    new Logger('Bootstrap').log('Swagger UI enabled at /api/docs');
+  }
 
   /**
    * Graceful shutdown: enable NestJS lifecycle hooks (OnModuleDestroy,

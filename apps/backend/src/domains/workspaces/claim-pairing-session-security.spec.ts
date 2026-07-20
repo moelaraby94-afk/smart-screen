@@ -16,9 +16,14 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 import { UserThrottlerGuard } from '../../common/throttler/user-throttler.guard';
 import { JwtStrategy } from '../auth/jwt.strategy';
 import { PairingService } from '../pairing/pairing.service';
-import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
+import { PairingLockoutService } from '../pairing/pairing-lockout.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WorkspacesController } from './workspaces.controller';
-import { WorkspacesService } from './workspaces.service';
+import { WorkspaceCrudService } from './workspace-crud.service';
+import { WorkspaceBootstrapService } from './workspace-bootstrap.service';
+import { WorkspaceMembersService } from './workspace-members.service';
+import { WorkspaceInvitesService } from './workspace-invites.service';
+import { WorkspaceAccountsService } from './workspace-accounts.service';
 
 /**
  * Minimal in-memory stand-in for PrismaService covering only the delegate
@@ -176,17 +181,32 @@ describe('POST /workspaces/:workspaceId/pairing-sessions/claim — brute-force d
       providers: [
         JwtStrategy,
         RolesGuard,
-        AccountContextHelper,
+        {
+          provide: AccountContextHelper,
+          useValue: {
+            resolveForWorkspace: jest.fn().mockResolvedValue({
+              ownerId: userId,
+              role: UserRole.OWNER,
+              isOwner: true,
+            }),
+            resolveOwnerId: jest.fn().mockResolvedValue(userId),
+            invalidateUserContext: jest.fn(),
+          },
+        },
         UserThrottlerGuard,
         PairingService,
+        PairingLockoutService,
         WorkspaceAuthHelper,
-        { provide: WorkspacesService, useValue: {} },
+        { provide: WorkspaceCrudService, useValue: {} },
+        { provide: WorkspaceBootstrapService, useValue: {} },
+        { provide: WorkspaceMembersService, useValue: {} },
+        { provide: WorkspaceInvitesService, useValue: {} },
+        { provide: WorkspaceAccountsService, useValue: {} },
         { provide: PrismaService, useValue: fakePrisma },
         {
-          provide: ScreenHeartbeatService,
+          provide: EventEmitter2,
           useValue: {
-            emitPairingSessionComplete: jest.fn(),
-            emitPairingStarted: jest.fn(),
+            emit: jest.fn(),
           },
         },
         {

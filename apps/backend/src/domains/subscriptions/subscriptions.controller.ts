@@ -6,8 +6,9 @@ import { RolesGuard } from '../../common/auth/roles.guard';
 import { Roles } from '../../common/auth/roles.decorator';
 import { SetMockPlanDto } from './dto/set-mock-plan.dto';
 import { SubscriptionsService } from './subscriptions.service';
+import { CUSTOMER_ROUTES } from '../../common/constants/route-prefixes';
 
-@Controller('subscriptions')
+@Controller({ path: [...CUSTOMER_ROUTES.SUBSCRIPTIONS] })
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class SubscriptionsController {
   constructor(private readonly subscriptions: SubscriptionsService) {}

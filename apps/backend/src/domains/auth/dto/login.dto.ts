@@ -1,5 +1,11 @@
 import { Transform } from 'class-transformer';
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsIn,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 /**
  * Login accepts shorthand usernames for seeded dev accounts.
@@ -23,4 +29,8 @@ export class LoginDto {
   @IsString()
   @MinLength(3)
   password!: string;
+
+  @IsOptional()
+  @IsIn(['platform', 'customer'])
+  audience?: 'platform' | 'customer';
 }

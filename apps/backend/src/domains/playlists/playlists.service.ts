@@ -13,7 +13,8 @@ import {
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AccountContextHelper } from '../../common/auth/account-context.helper';
 
-import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PlatformEvents } from '../../common/events/platform-events';
 
 import { MediaService } from '../media/media.service';
 
@@ -25,13 +26,15 @@ import type { Playlist, PlaylistItem, Media, Canvas } from '@prisma/client';
 
 import type { ReplacePlaylistItemsDto } from './dto/replace-playlist-items.dto';
 import type { UpdatePlaylistDto } from './dto/update-playlist.dto';
+import { PlaylistGroupsService } from './playlist-groups.service';
+import { PlaylistResolutionService } from './playlist-resolution.service';
 
 @Injectable()
 export class PlaylistsService {
   constructor(
     private readonly prisma: PrismaService,
 
-    private readonly heartbeat: ScreenHeartbeatService,
+    private readonly eventEmitter: EventEmitter2,
 
     private readonly mediaService: MediaService,
 
@@ -40,6 +43,10 @@ export class PlaylistsService {
     private readonly scheduling: SchedulingService,
 
     private readonly accountContext: AccountContextHelper,
+
+    private readonly groupsService: PlaylistGroupsService,
+
+    private readonly resolutionService: PlaylistResolutionService,
   ) {}
 
   async create(
@@ -124,7 +131,7 @@ export class PlaylistsService {
 
     if (!playlist) throw new NotFoundException('Playlist not found');
 
-    return this.serializePlaylist(playlist);
+    return this.resolutionService.serializePlaylist(playlist);
   }
 
   async update(workspaceId: string, id: string, dto: UpdatePlaylistDto) {
@@ -240,7 +247,11 @@ export class PlaylistsService {
       // Circular reference detection: check that none of the nested playlists
       // contain this playlist at any depth.
       for (const nestedId of nestedPlaylistIds) {
-        await this.assertNoCircularReference(nestedId, playlistId, new Set());
+        await this.resolutionService.assertNoCircularReference(
+          nestedId,
+          playlistId,
+          new Set(),
+        );
       }
     }
 
@@ -278,6 +289,39 @@ export class PlaylistsService {
     await this.emitForPlaylist(playlistId);
 
     return this.getOne(workspaceId, playlistId);
+  }
+
+  // ─── Delegated to PlaylistResolutionService ────────────────────
+
+  private async buildRotationPayload(
+    screen: { workspaceId: string; id: string },
+    screenId: string,
+  ) {
+    return this.resolutionService.buildRotationPayload(screen, screenId);
+  }
+
+  private async buildPayload(
+    workspaceId: string,
+    screenId: string | null,
+    playlist: Playlist & {
+      items: (PlaylistItem & {
+        media: Media | null;
+        canvas: Canvas | null;
+        nestedPlaylist: {
+          id: string;
+          name: string;
+          isPublished: boolean;
+        } | null;
+      })[];
+    },
+    activeSource: 'override' | 'schedule' | 'rotation' | 'default' = 'default',
+  ) {
+    return this.resolutionService.buildPayload(
+      workspaceId,
+      screenId,
+      playlist,
+      activeSource,
+    );
   }
 
   async remove(
@@ -642,9 +686,15 @@ export class PlaylistsService {
     const payload = await this.getPlaylistPayloadForScreen(screenId);
 
     if (payload) {
-      this.heartbeat.emitContentSync(screenId, payload);
+      this.eventEmitter.emit(PlatformEvents.CONTENT_SYNC, {
+        screenId,
+        payload,
+      });
       if (options?.alsoEmitScheduleSignal) {
-        this.heartbeat.emitScheduleChanged(screenId, payload);
+        this.eventEmitter.emit(PlatformEvents.SCHEDULE_CHANGED, {
+          screenId,
+          payload,
+        });
       }
     }
   }
@@ -680,9 +730,9 @@ export class PlaylistsService {
       else workspaceWide.add(row.workspaceId);
     }
 
-    for (const workspaceId of workspaceWide) {
+    if (workspaceWide.size > 0) {
       const inWs = await this.prisma.screen.findMany({
-        where: { workspaceId },
+        where: { workspaceId: { in: [...workspaceWide] } },
         select: { id: true },
       });
 
@@ -719,387 +769,10 @@ export class PlaylistsService {
     return p;
   }
 
-  private static readonly MAX_NESTING_DEPTH = 5;
-
-  private async assertNoCircularReference(
-    nestedPlaylistId: string,
-    targetPlaylistId: string,
-    visited: Set<string>,
-  ): Promise<void> {
-    if (nestedPlaylistId === targetPlaylistId) {
-      throw new BadRequestException(
-        'Circular reference detected: nested playlist would create a loop.',
-      );
-    }
-
-    if (visited.has(nestedPlaylistId)) {
-      throw new BadRequestException(
-        'Circular reference detected: nested playlist would create a loop.',
-      );
-    }
-
-    visited.add(nestedPlaylistId);
-
-    const items = await this.prisma.playlistItem.findMany({
-      where: { playlistId: nestedPlaylistId, nestedPlaylistId: { not: null } },
-      select: { nestedPlaylistId: true },
-    });
-
-    for (const item of items) {
-      if (item.nestedPlaylistId) {
-        await this.assertNoCircularReference(
-          item.nestedPlaylistId,
-          targetPlaylistId,
-          new Set(visited),
-        );
-      }
-    }
-  }
-
-  private async resolvePlaylistItemsRecursive(
-    playlist: Playlist & {
-      items: (PlaylistItem & {
-        media: Media | null;
-        canvas: Canvas | null;
-        nestedPlaylist: {
-          id: string;
-          name: string;
-          isPublished: boolean;
-        } | null;
-      })[];
-    },
-    visited: Set<string>,
-    depth: number,
-  ): Promise<
-    Array<{
-      kind: 'media' | 'canvas';
-      orderIndex: number;
-      durationSec: number;
-      zoneName: string | null;
-      media?: ReturnType<MediaService['toResponse']>;
-      canvas?: ReturnType<CanvasesService['toCompiledPayload']>;
-    }>
-  > {
-    if (depth >= PlaylistsService.MAX_NESTING_DEPTH) {
-      return [];
-    }
-
-    const result: Array<{
-      kind: 'media' | 'canvas';
-      orderIndex: number;
-      durationSec: number;
-      zoneName: string | null;
-      media?: ReturnType<MediaService['toResponse']>;
-      canvas?: ReturnType<CanvasesService['toCompiledPayload']>;
-    }> = [];
-
-    for (const item of playlist.items) {
-      if (item.mediaId && item.media) {
-        result.push({
-          kind: 'media',
-          orderIndex: item.orderIndex,
-          durationSec: item.durationSec,
-          zoneName: item.zoneName ?? null,
-          media: this.mediaService.toResponse(item.media),
-        });
-      } else if (item.canvasId && item.canvas) {
-        result.push({
-          kind: 'canvas',
-          orderIndex: item.orderIndex,
-          durationSec: item.durationSec,
-          zoneName: item.zoneName ?? null,
-          canvas: this.canvasesService.toCompiledPayload(item.canvas),
-        });
-      } else if (
-        item.nestedPlaylistId &&
-        item.nestedPlaylist &&
-        item.nestedPlaylist.isPublished &&
-        !visited.has(item.nestedPlaylistId)
-      ) {
-        const nestedPlaylist = await this.prisma.playlist.findFirst({
-          where: { id: item.nestedPlaylistId },
-          include: {
-            items: {
-              orderBy: { orderIndex: 'asc' },
-              include: {
-                media: true,
-                canvas: true,
-                nestedPlaylist: {
-                  select: { id: true, name: true, isPublished: true },
-                },
-              },
-            },
-          },
-        });
-
-        if (nestedPlaylist) {
-          const nestedVisited = new Set(visited);
-          nestedVisited.add(item.nestedPlaylistId);
-          const nestedItems = await this.resolvePlaylistItemsRecursive(
-            nestedPlaylist,
-            nestedVisited,
-            depth + 1,
-          );
-          result.push(...nestedItems);
-        }
-      }
-    }
-
-    return result;
-  }
-
-  private serializePlaylist(
-    playlist: Playlist & {
-      items: (PlaylistItem & {
-        media: Media | null;
-        canvas: Canvas | null;
-        nestedPlaylist: {
-          id: string;
-          name: string;
-          isPublished: boolean;
-        } | null;
-      })[];
-    },
-  ) {
-    return {
-      id: playlist.id,
-
-      workspaceId: playlist.workspaceId ?? null,
-
-      name: playlist.name,
-
-      isPublished: playlist.isPublished,
-
-      createdAt: playlist.createdAt.toISOString(),
-
-      updatedAt: playlist.updatedAt.toISOString(),
-
-      items: playlist.items.map((item) => this.serializeItem(item)),
-    };
-  }
-
-  private serializeItem(
-    item: PlaylistItem & {
-      media: Media | null;
-      canvas: Canvas | null;
-      nestedPlaylist: { id: string; name: string; isPublished: boolean } | null;
-    },
-  ) {
-    const base = {
-      id: item.id,
-
-      orderIndex: item.orderIndex,
-
-      durationSec: item.durationSec,
-
-      zoneName: item.zoneName ?? null,
-    };
-
-    if (item.mediaId && item.media) {
-      return {
-        ...base,
-
-        kind: 'media' as const,
-
-        media: this.mediaService.toResponse(item.media),
-      };
-    }
-
-    if (item.canvasId && item.canvas) {
-      return {
-        ...base,
-
-        kind: 'canvas' as const,
-
-        canvas: this.canvasesService.toCompiledPayload(item.canvas),
-      };
-    }
-
-    if (item.nestedPlaylistId && item.nestedPlaylist) {
-      return {
-        ...base,
-
-        kind: 'playlist' as const,
-
-        playlist: {
-          id: item.nestedPlaylist.id,
-          name: item.nestedPlaylist.name,
-          isPublished: item.nestedPlaylist.isPublished,
-        },
-      };
-    }
-
-    return {
-      ...base,
-
-      kind: 'unknown' as const,
-    };
-  }
-
-  private async buildRotationPayload(
-    screen: { workspaceId: string; id: string },
-    screenId: string,
-  ) {
-    const assignments = await this.prisma.screenPlaylistAssignment.findMany({
-      where: { screenId },
-      orderBy: { orderIndex: 'asc' },
-      include: {
-        playlist: {
-          include: {
-            items: {
-              orderBy: { orderIndex: 'asc' },
-              include: {
-                media: true,
-                canvas: true,
-                nestedPlaylist: {
-                  select: { id: true, name: true, isPublished: true },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    const published = assignments.filter(
-      (a) => a.playlist.isPublished && a.playlist.items.length > 0,
-    );
-
-    if (published.length === 0) {
-      return {
-        workspaceId: screen.workspaceId,
-        screenId,
-        playlistId: null,
-        name: null,
-        isPublished: false,
-        activeSource: 'rotation' as const,
-        items: [],
-      };
-    }
-
-    let globalOrder = 0;
-    const mergedItems: Array<{
-      kind: 'media' | 'canvas';
-      orderIndex: number;
-      durationSec: number;
-      zoneName?: string | null;
-      media?: ReturnType<MediaService['toResponse']>;
-      canvas?: ReturnType<CanvasesService['toCompiledPayload']>;
-    }> = [];
-
-    for (const assignment of published) {
-      const resolved = await this.resolvePlaylistItemsRecursive(
-        assignment.playlist,
-        new Set([assignment.playlist.id]),
-        0,
-      );
-      for (const item of resolved) {
-        if (item.kind === 'media') {
-          mergedItems.push({
-            kind: 'media' as const,
-            orderIndex: globalOrder++,
-            durationSec: item.durationSec,
-            zoneName: item.zoneName ?? null,
-            media: item.media!,
-          });
-        } else if (item.kind === 'canvas') {
-          mergedItems.push({
-            kind: 'canvas' as const,
-            orderIndex: globalOrder++,
-            durationSec: item.durationSec,
-            zoneName: item.zoneName ?? null,
-            canvas: item.canvas!,
-          });
-        }
-      }
-    }
-
-    return {
-      workspaceId: screen.workspaceId,
-      screenId,
-      playlistId: published[0].playlist.id,
-      name: published.map((a) => a.playlist.name).join(' → '),
-      isPublished: true,
-      activeSource: 'rotation' as const,
-      items: mergedItems,
-    };
-  }
-
-  private async buildPayload(
-    workspaceId: string,
-
-    screenId: string | null,
-
-    playlist: Playlist & {
-      items: (PlaylistItem & {
-        media: Media | null;
-        canvas: Canvas | null;
-        nestedPlaylist: {
-          id: string;
-          name: string;
-          isPublished: boolean;
-        } | null;
-      })[];
-    },
-
-    activeSource: 'override' | 'schedule' | 'rotation' | 'default' = 'default',
-  ) {
-    const resolvedItems = await this.resolvePlaylistItemsRecursive(
-      playlist,
-      new Set([playlist.id]),
-      0,
-    );
-
-    return {
-      workspaceId,
-
-      screenId,
-
-      playlistId: playlist.id,
-
-      name: playlist.name,
-
-      isPublished: playlist.isPublished,
-
-      activeSource,
-
-      items: resolvedItems.map((item) => {
-        if (item.kind === 'media') {
-          return {
-            kind: 'media' as const,
-            orderIndex: item.orderIndex,
-            durationSec: item.durationSec,
-            zoneName: item.zoneName ?? null,
-            media: item.media!,
-          };
-        }
-        return {
-          kind: 'canvas' as const,
-          orderIndex: item.orderIndex,
-          durationSec: item.durationSec,
-          zoneName: item.zoneName ?? null,
-          canvas: item.canvas!,
-        };
-      }),
-    };
-  }
-
-  // ─── Playlist Groups (account-level) ──────────────────────────────
+  // ─── Playlist Groups — delegated to PlaylistGroupsService ──────
 
   async listGroups(ownerId: string) {
-    const effectiveOwnerId = await this.accountContext.resolveOwnerId(ownerId);
-    return this.prisma.playlistGroup.findMany({
-      where: { ownerId: effectiveOwnerId },
-      orderBy: { createdAt: 'asc' },
-      select: {
-        id: true,
-        name: true,
-        parentGroupId: true,
-        createdAt: true,
-        updatedAt: true,
-        _count: { select: { playlists: true, children: true } },
-      },
-    });
+    return this.groupsService.listGroups(ownerId);
   }
 
   async createGroup(
@@ -1107,70 +780,15 @@ export class PlaylistsService {
     name: string,
     parentGroupId?: string | null,
   ) {
-    const effectiveOwnerId = await this.accountContext.resolveOwnerId(ownerId);
-    const trimmed = name.trim();
-    if (trimmed.length < 2) {
-      throw new BadRequestException('Group name is too short');
-    }
-    if (parentGroupId) {
-      const parent = await this.prisma.playlistGroup.findFirst({
-        where: { id: parentGroupId, ownerId: effectiveOwnerId },
-        select: { id: true },
-      });
-      if (!parent) throw new NotFoundException('Parent group not found');
-    }
-    return this.prisma.playlistGroup.create({
-      data: {
-        ownerId: effectiveOwnerId,
-        name: trimmed,
-        parentGroupId: parentGroupId ?? null,
-      },
-      select: {
-        id: true,
-        name: true,
-        parentGroupId: true,
-        createdAt: true,
-        updatedAt: true,
-        _count: { select: { playlists: true, children: true } },
-      },
-    });
+    return this.groupsService.createGroup(ownerId, name, parentGroupId);
   }
 
   async renameGroup(ownerId: string, groupId: string, name: string) {
-    const effectiveOwnerId = await this.accountContext.resolveOwnerId(ownerId);
-    const trimmed = name.trim();
-    if (trimmed.length < 2) {
-      throw new BadRequestException('Group name is too short');
-    }
-    const group = await this.prisma.playlistGroup.findFirst({
-      where: { id: groupId, ownerId: effectiveOwnerId },
-      select: { id: true },
-    });
-    if (!group) throw new NotFoundException('Playlist group not found');
-    return this.prisma.playlistGroup.update({
-      where: { id: groupId },
-      data: { name: trimmed },
-      select: {
-        id: true,
-        name: true,
-        parentGroupId: true,
-        createdAt: true,
-        updatedAt: true,
-        _count: { select: { playlists: true, children: true } },
-      },
-    });
+    return this.groupsService.renameGroup(ownerId, groupId, name);
   }
 
   async deleteGroup(ownerId: string, groupId: string) {
-    const effectiveOwnerId = await this.accountContext.resolveOwnerId(ownerId);
-    const group = await this.prisma.playlistGroup.findFirst({
-      where: { id: groupId, ownerId: effectiveOwnerId },
-      select: { id: true },
-    });
-    if (!group) throw new NotFoundException('Playlist group not found');
-    // Playlists in this group get groupId = null (SetNull in schema).
-    // Child groups are cascade-deleted via the parentGroupId self-relation (onDelete: Cascade).
-    await this.prisma.playlistGroup.delete({ where: { id: groupId } });
+    return this.groupsService.deleteGroup(ownerId, groupId);
   }
 
   async moveGroup(
@@ -1178,51 +796,6 @@ export class PlaylistsService {
     groupId: string,
     newParentId: string | null,
   ) {
-    const effectiveOwnerId = await this.accountContext.resolveOwnerId(ownerId);
-    const group = await this.prisma.playlistGroup.findFirst({
-      where: { id: groupId, ownerId: effectiveOwnerId },
-      select: { id: true },
-    });
-    if (!group) throw new NotFoundException('Playlist group not found');
-    if (newParentId === groupId) {
-      throw new BadRequestException('A group cannot be its own parent');
-    }
-    if (newParentId) {
-      const parent = await this.prisma.playlistGroup.findFirst({
-        where: { id: newParentId, ownerId: effectiveOwnerId },
-        select: { id: true, parentGroupId: true },
-      });
-      if (!parent) throw new NotFoundException('Parent group not found');
-      // Prevent circular references: check that groupId is not an ancestor of newParentId
-      let current: { id: string; parentGroupId: string | null } | null = parent;
-      const visited = new Set<string>([groupId]);
-      while (current && current.parentGroupId) {
-        if (visited.has(current.parentGroupId)) {
-          throw new BadRequestException('Circular reference detected');
-        }
-        visited.add(current.parentGroupId);
-        if (current.parentGroupId === groupId) {
-          throw new BadRequestException(
-            'Cannot move a group into one of its own descendants',
-          );
-        }
-        current = await this.prisma.playlistGroup.findFirst({
-          where: { id: current.parentGroupId, ownerId: effectiveOwnerId },
-          select: { id: true, parentGroupId: true },
-        });
-      }
-    }
-    return this.prisma.playlistGroup.update({
-      where: { id: groupId },
-      data: { parentGroupId: newParentId },
-      select: {
-        id: true,
-        name: true,
-        parentGroupId: true,
-        createdAt: true,
-        updatedAt: true,
-        _count: { select: { playlists: true, children: true } },
-      },
-    });
+    return this.groupsService.moveGroup(ownerId, groupId, newParentId);
   }
 }

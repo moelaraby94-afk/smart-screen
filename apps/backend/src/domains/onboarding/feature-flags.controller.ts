@@ -3,8 +3,9 @@ import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { SuperAdminDbGuard } from '../../common/auth/super-admin-db.guard';
 import { FeatureFlagsService } from './feature-flags.service';
 import { SetFeatureFlagDto } from './dto/set-feature-flag.dto';
+import { PLATFORM_ROUTES } from '../../common/constants/route-prefixes';
 
-@Controller('admin/feature-flags')
+@Controller({ path: [...PLATFORM_ROUTES.FEATURE_FLAGS] })
 @UseGuards(JwtAuthGuard, SuperAdminDbGuard)
 export class FeatureFlagsController {
   constructor(private readonly flags: FeatureFlagsService) {}

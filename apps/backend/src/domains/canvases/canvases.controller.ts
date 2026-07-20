@@ -23,9 +23,10 @@ import { CreateCanvasDto } from './dto/create-canvas.dto';
 import { UpdateCanvasDto } from './dto/update-canvas.dto';
 import { ListCanvasesDto } from './dto/list-canvases.dto';
 import { CanvasesService } from './canvases.service';
+import { CUSTOMER_ROUTES } from '../../common/constants/route-prefixes';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('canvases')
+@Controller({ path: [...CUSTOMER_ROUTES.CANVASES] })
 export class CanvasesController {
   constructor(private readonly canvasesService: CanvasesService) {}
 

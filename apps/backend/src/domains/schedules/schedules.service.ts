@@ -13,7 +13,6 @@ import {
 } from '../../common/pagination/pagination-query.dto';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { PlaylistsService } from '../playlists/playlists.service';
-import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { SchedulingService } from './scheduling.service';
@@ -23,7 +22,6 @@ export class SchedulesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly scheduling: SchedulingService,
-    private readonly heartbeat: ScreenHeartbeatService,
     @Inject(forwardRef(() => PlaylistsService))
     private readonly playlists: PlaylistsService,
   ) {}
@@ -170,6 +168,7 @@ export class SchedulesService {
           : {}),
         ...(dto.priority !== undefined ? { priority: dto.priority } : {}),
         ...(dto.enabled !== undefined ? { enabled: dto.enabled } : {}),
+        ...(dto.excludeHolidays !== undefined ? { excludeHolidays: dto.excludeHolidays } : {}),
       },
       include: {
         playlist: { select: { id: true, name: true } },
@@ -186,6 +185,79 @@ export class SchedulesService {
     const existing = await this.getOne(workspaceId, id);
     await this.prisma.schedule.delete({ where: { id } });
     await this.broadcastAffected(workspaceId, existing.screenId);
+  }
+
+  async preview(workspaceId: string, screenId?: string, dateStr?: string) {
+    const workspace = await this.prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { timezone: true },
+    });
+    const tz = workspace?.timezone || 'UTC';
+    const targetDate = dateStr ? new Date(dateStr) : new Date();
+
+    const where: Record<string, unknown> = { workspaceId, enabled: true };
+    if (screenId) {
+      where.OR = [{ screenId: null }, { screenId }];
+    }
+
+    const schedules = await this.prisma.schedule.findMany({
+      where,
+      orderBy: [{ priority: 'desc' }, { startTime: 'asc' }],
+      include: {
+        playlist: { select: { id: true, name: true, isPublished: true } },
+        screen: { select: { id: true, name: true } },
+      },
+    });
+
+    const { formatInTimeZone } = await import('date-fns-tz');
+    const { enUS } = await import('date-fns/locale');
+    const timeStr = formatInTimeZone(targetDate, tz, 'HH:mm');
+    const [hh, mm] = timeStr.split(':').map((x: string) => parseInt(x, 10));
+    const minutes = hh * 60 + mm;
+    const dayName = formatInTimeZone(targetDate, tz, 'EEEE', { locale: enUS });
+    const dowMap: Record<string, number> = {
+      Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3,
+      Thursday: 4, Friday: 5, Saturday: 6,
+    };
+    const dow = dowMap[dayName] ?? 0;
+    const dom = parseInt(formatInTimeZone(targetDate, tz, 'd'), 10) || 1;
+
+    const matching = schedules.filter((s) =>
+      this.scheduling.scheduleMatches(s, targetDate, tz, minutes, dow, dom),
+    );
+
+    return {
+      date: targetDate.toISOString(),
+      timezone: tz,
+      screenId: screenId ?? null,
+      activeSchedules: matching.map((s) => ({
+        id: s.id,
+        playlistId: s.playlistId,
+        playlistName: s.playlist.name,
+        screenId: s.screenId,
+        screenName: s.screen?.name ?? null,
+        startTime: s.startTime,
+        endTime: s.endTime,
+        priority: s.priority,
+        recurrence: s.recurrence,
+        daysOfWeek: s.daysOfWeek,
+        daysOfMonth: s.daysOfMonth,
+      })),
+      allSchedules: schedules.map((s) => ({
+        id: s.id,
+        playlistId: s.playlistId,
+        playlistName: s.playlist.name,
+        screenId: s.screenId,
+        screenName: s.screen?.name ?? null,
+        startTime: s.startTime,
+        endTime: s.endTime,
+        priority: s.priority,
+        recurrence: s.recurrence,
+        daysOfWeek: s.daysOfWeek,
+        daysOfMonth: s.daysOfMonth,
+        enabled: s.enabled,
+      })),
+    };
   }
 
   private async ensureRefs(

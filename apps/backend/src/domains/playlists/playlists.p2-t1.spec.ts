@@ -1,8 +1,10 @@
 import { BadRequestException } from '@nestjs/common';
 import { PlaylistsService } from './playlists.service';
+import { PlaylistGroupsService } from './playlist-groups.service';
+import { PlaylistResolutionService } from './playlist-resolution.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AccountContextHelper } from '../../common/auth/account-context.helper';
-import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MediaService } from '../media/media.service';
 import { CanvasesService } from '../canvases/canvases.service';
 import { SchedulingService } from '../schedules/scheduling.service';
@@ -247,10 +249,8 @@ function createFakePrisma(opts: {
 
 function createMockHeartbeat() {
   return {
-    emitContentSync: jest.fn(),
-    emitScheduleChanged: jest.fn(),
-    emitPairingStarted: jest.fn(),
-  } as unknown as ScreenHeartbeatService;
+    emit: jest.fn(),
+  } as unknown as EventEmitter2;
 }
 
 function createMockMediaService() {
@@ -349,15 +349,25 @@ describe('PlaylistsService P2-T1 (duplicate/clone/orphan/orderIndex)', () => {
   function makeService(fake: ReturnType<typeof createFakePrisma>) {
     const media = createMockMediaService();
     const canvases = createMockCanvasesService();
+    const prisma = fake as unknown as PrismaService;
+    const accountContext = {
+      resolveOwnerId: jest.fn().mockResolvedValue('owner-1'),
+    } as unknown as AccountContextHelper;
+    const groupsService = new PlaylistGroupsService(prisma, accountContext);
+    const resolutionService = new PlaylistResolutionService(
+      prisma,
+      media,
+      canvases,
+    );
     const service = new PlaylistsService(
-      fake as unknown as PrismaService,
+      prisma,
       createMockHeartbeat(),
       media,
       canvases,
       createMockScheduling(),
-      {
-        resolveOwnerId: jest.fn().mockResolvedValue('owner-1'),
-      } as unknown as AccountContextHelper,
+      accountContext,
+      groupsService,
+      resolutionService,
     );
     return { service, media, canvases };
   }

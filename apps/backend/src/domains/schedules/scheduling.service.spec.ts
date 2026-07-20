@@ -104,6 +104,7 @@ function makeSchedule(overrides: Partial<FakeSchedule> = {}): FakeSchedule {
     endDate: null,
     priority: 0,
     enabled: true,
+    excludeHolidays: false,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
@@ -118,7 +119,7 @@ describe('SchedulingService (P1-T3)', () => {
     const screen = makeScreen();
     const schedule = makeSchedule({ startTime: '09:00', endTime: '17:00' });
     const fake = createFakePrisma(screen, [schedule]);
-    service = new SchedulingService(fake as unknown as PrismaService);
+    service = new SchedulingService(fake as unknown as PrismaService, { isHoliday: jest.fn(() => false) } as any);
 
     // 12:00 UTC — inside
     const inside = await service.resolveEffectivePlaylistId(
@@ -148,7 +149,7 @@ describe('SchedulingService (P1-T3)', () => {
     const screen = makeScreen();
     const schedule = makeSchedule({ startTime: '22:00', endTime: '06:00' });
     const fake = createFakePrisma(screen, [schedule]);
-    service = new SchedulingService(fake as unknown as PrismaService);
+    service = new SchedulingService(fake as unknown as PrismaService, { isHoliday: jest.fn(() => false) } as any);
 
     // 23:00 UTC — inside (before midnight)
     const lateNight = await service.resolveEffectivePlaylistId(
@@ -180,7 +181,7 @@ describe('SchedulingService (P1-T3)', () => {
     });
     const schedule = makeSchedule({ startTime: '00:00', endTime: '23:59' });
     const fake = createFakePrisma(screen, [schedule]);
-    service = new SchedulingService(fake as unknown as PrismaService);
+    service = new SchedulingService(fake as unknown as PrismaService, { isHoliday: jest.fn(() => false) } as any);
 
     // Override is active → source = override
     const withOverride = await service.resolveEffectivePlaylistId(
@@ -203,7 +204,7 @@ describe('SchedulingService (P1-T3)', () => {
       makeScreen({ overridePlaylistId: null, overrideExpiresAt: null }),
       [],
     );
-    service = new SchedulingService(noSchedFake as unknown as PrismaService);
+    service = new SchedulingService(noSchedFake as unknown as PrismaService, { isHoliday: jest.fn(() => false) } as any);
     const fallback = await service.resolveEffectivePlaylistId(
       SCREEN_ID,
       new Date('2026-07-13T12:00:00Z'),
@@ -224,7 +225,7 @@ describe('SchedulingService (P1-T3)', () => {
       endDate: new Date('2026-07-15T23:59:59Z'),
     });
     const fake = createFakePrisma(screen, [schedule]);
-    service = new SchedulingService(fake as unknown as PrismaService);
+    service = new SchedulingService(fake as unknown as PrismaService, { isHoliday: jest.fn(() => false) } as any);
 
     // Before start date → default
     const before = await service.resolveEffectivePlaylistId(
@@ -256,7 +257,7 @@ describe('SchedulingService (P1-T3)', () => {
     // Schedule 09:00–17:00 local, all days
     const schedule = makeSchedule({ startTime: '09:00', endTime: '17:00' });
     const fake = createFakePrisma(screen, [schedule]);
-    service = new SchedulingService(fake as unknown as PrismaService);
+    service = new SchedulingService(fake as unknown as PrismaService, { isHoliday: jest.fn(() => false) } as any);
 
     // 2026-03-08 is the day before DST starts (spring forward on March 8, 2026 at 2 AM).
     // At 14:00 UTC on March 8, NY local time is 09:00 EST (before spring forward).
@@ -288,7 +289,7 @@ describe('SchedulingService (P1-T3)', () => {
       endTime: '23:59',
     });
     const fake = createFakePrisma(screen, [schedule]);
-    service = new SchedulingService(fake as unknown as PrismaService);
+    service = new SchedulingService(fake as unknown as PrismaService, { isHoliday: jest.fn(() => false) } as any);
 
     // 2026-07-13 is a Monday
     const monday = await service.resolveEffectivePlaylistId(
@@ -316,7 +317,7 @@ describe('SchedulingService (P1-T3)', () => {
       endTime: '23:59',
     });
     const fake = createFakePrisma(screen, [schedule]);
-    service = new SchedulingService(fake as unknown as PrismaService);
+    service = new SchedulingService(fake as unknown as PrismaService, { isHoliday: jest.fn(() => false) } as any);
 
     // 2026-07-14 → day-of-month 14 → matches (even though it's a Tuesday, dow ignored)
     const onDay = await service.resolveEffectivePlaylistId(

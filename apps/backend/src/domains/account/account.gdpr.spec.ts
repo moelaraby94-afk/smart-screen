@@ -1,5 +1,6 @@
 import { ForbiddenException } from '@nestjs/common';
 import { AccountService } from './account.service';
+import { AccountInsightsService } from './account-insights.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { ConfigHelper } from '../../common/config/config.helper';
 import { OtpHelper } from '../../common/auth/otp.helper';
@@ -142,6 +143,7 @@ describe('AccountService — GDPR flows', () => {
       {} as unknown as EmailService,
       {} as unknown as ConfigHelper,
       {} as unknown as OtpHelper,
+      {} as unknown as AccountInsightsService,
     );
   }
 

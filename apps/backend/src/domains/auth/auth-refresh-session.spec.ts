@@ -1,9 +1,11 @@
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { AuthService } from './auth.service';
+import { AuthTokenService } from './auth-token.service';
+import { AuthCredentialsService } from './auth-credentials.service';
+import { AuthRegistrationService } from './auth-registration.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { LoginLockoutService } from './login-lockout.service';
+import { SessionRevocationService } from '../../common/auth/session-revocation.service';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 
 /**
@@ -156,17 +158,11 @@ function createMockJwtService(): JwtService {
   } as unknown as JwtService;
 }
 
-function createMockLoginLockoutService(): LoginLockoutService {
-  return {
-    assertNotLockedOut: jest.fn().mockResolvedValue(undefined),
-  } as unknown as LoginLockoutService;
-}
-
 const USER_ID = 'user-1';
 const EMAIL = 'test@example.com';
-describe('AuthService — multi-session refresh tokens (P1-T1)', () => {
+describe('AuthTokenService — multi-session refresh tokens (P1-T1)', () => {
   let fake: ReturnType<typeof createFakePrisma>;
-  let authService: AuthService;
+  let tokenService: AuthTokenService;
   let jwtService: JwtService;
 
   beforeEach(() => {
@@ -185,42 +181,34 @@ describe('AuthService — multi-session refresh tokens (P1-T1)', () => {
       refreshTokenHash: null,
     });
 
-    authService = new AuthService(
+    const sessionRevocation = {
+      revokeAllSessions: jest.fn(async (userId: string) => {
+        for (const [key, row] of fake.tokens) {
+          if (row.userId === userId) fake.tokens.delete(key);
+        }
+      }),
+    } as unknown as SessionRevocationService;
+
+    tokenService = new AuthTokenService(
       fake as unknown as PrismaService,
       jwtService,
       configService,
-      null as never, // email — not used in these paths
-      null as never, // workspaces — not used
-      null as never, // auditLog — not used
-      createMockLoginLockoutService(),
-      null as never, // twoFactor — not used in these paths
-      null as never, // cryptoService — not used in these paths
-      null as never, // configHelper — not used in these paths
-      null as never, // otpHelper — not used in these paths
+      sessionRevocation,
     );
   });
 
   // ─── Helper: issue a real token pair via the service ───────────────────
   // Mirrors what login/refreshTokens do: issueTokenPair then setRefreshTokenSession.
   async function issueTokens() {
-    const result = await (
-      authService as unknown as {
-        issueTokenPair: (p: { sub: string; email: string }) => Promise<{
-          accessToken: string;
-          refreshToken: string;
-          sessionId: string;
-        }>;
-      }
-    ).issueTokenPair({ sub: USER_ID, email: EMAIL });
-    await (
-      authService as unknown as {
-        setRefreshTokenSession: (
-          userId: string,
-          refreshToken: string,
-          sessionId: string,
-        ) => Promise<void>;
-      }
-    ).setRefreshTokenSession(USER_ID, result.refreshToken, result.sessionId);
+    const result = await tokenService.issueTokenPair({
+      sub: USER_ID,
+      email: EMAIL,
+    });
+    await tokenService.setRefreshTokenSession(
+      USER_ID,
+      result.refreshToken,
+      result.sessionId,
+    );
     return result;
   }
 
@@ -229,7 +217,7 @@ describe('AuthService — multi-session refresh tokens (P1-T1)', () => {
     const tokens = await issueTokens();
     // The token string from our mock JwtService is base64url JSON.
     // refreshTokens() will verifyAsync it and read sid from the payload.
-    const result = (await authService.refreshTokens(tokens.refreshToken)) as {
+    const result = (await tokenService.refreshTokens(tokens.refreshToken)) as {
       accessToken: string;
       refreshToken: string;
       sessionId: string;
@@ -256,10 +244,10 @@ describe('AuthService — multi-session refresh tokens (P1-T1)', () => {
   it('rejects a refresh token that was already rotated (replay)', async () => {
     const tokens = await issueTokens();
     // First refresh succeeds and rotates.
-    await authService.refreshTokens(tokens.refreshToken);
+    await tokenService.refreshTokens(tokens.refreshToken);
     // Second use of the same token must fail — the old session was deleted.
     await expect(
-      authService.refreshTokens(tokens.refreshToken),
+      tokenService.refreshTokens(tokens.refreshToken),
     ).rejects.toThrow('Invalid refresh token');
   });
 
@@ -274,7 +262,7 @@ describe('AuthService — multi-session refresh tokens (P1-T1)', () => {
     const legacyHash = await bcrypt.hash(legacyToken, 12);
     fake.users.get(USER_ID)!.refreshTokenHash = legacyHash;
 
-    const result = await authService.refreshTokens(legacyToken);
+    const result = await tokenService.refreshTokens(legacyToken);
     expect(result.accessToken).toBeDefined();
     expect(result.refreshToken).toBeDefined();
   });
@@ -288,15 +276,42 @@ describe('AuthService — multi-session refresh tokens (P1-T1)', () => {
     const legacyHash = await bcrypt.hash(legacyToken, 12);
     fake.users.get(USER_ID)!.refreshTokenHash = legacyHash;
 
-    await authService.refreshTokens(legacyToken);
+    await tokenService.refreshTokens(legacyToken);
 
     // The legacy hash must be cleared so the old token can't be reused.
     expect(fake.users.get(USER_ID)!.refreshTokenHash).toBeNull();
 
     // A second refresh with the same legacy token must now fail.
-    await expect(authService.refreshTokens(legacyToken)).rejects.toThrow(
+    await expect(tokenService.refreshTokens(legacyToken)).rejects.toThrow(
       'Invalid refresh token',
     );
+  });
+
+  // ─── Test 2b: refresh token reuse revokes ALL sessions ────────────────
+  it('revokes all sessions when a reused refresh token is detected', async () => {
+    // Create two independent sessions.
+    const tokens1 = await issueTokens();
+    const tokens2 = await issueTokens();
+    expect(fake.tokens.size).toBeGreaterThanOrEqual(2);
+
+    // Use tokens1 once (rotates it).
+    await tokenService.refreshTokens(tokens1.refreshToken);
+
+    // Reuse tokens1 again — must fail AND revoke all sessions.
+    await expect(
+      tokenService.refreshTokens(tokens1.refreshToken),
+    ).rejects.toThrow('Invalid refresh token');
+
+    // All sessions for this user must be revoked.
+    const remaining = [...fake.tokens.values()].filter(
+      (t) => t.userId === USER_ID,
+    );
+    expect(remaining).toHaveLength(0);
+
+    // tokens2 must also be invalid now (its session was revoked).
+    await expect(
+      tokenService.refreshTokens(tokens2.refreshToken),
+    ).rejects.toThrow('Invalid refresh token');
   });
 
   // ─── Test 4: logout deletes all RefreshToken rows ─────────────────────
@@ -306,7 +321,7 @@ describe('AuthService — multi-session refresh tokens (P1-T1)', () => {
     await issueTokens();
     expect(fake.tokens.size).toBeGreaterThanOrEqual(2);
 
-    await authService.logout(USER_ID);
+    await tokenService.logout(USER_ID);
 
     const remaining = [...fake.tokens.values()].filter(
       (t) => t.userId === USER_ID,
@@ -339,7 +354,22 @@ describe('AuthService — multi-session refresh tokens (P1-T1)', () => {
       newPassword: 'NewPass123!',
     };
 
-    await authService.resetPassword(dto);
+    const credentialsService = new AuthCredentialsService(
+      fake as unknown as PrismaService,
+      createMockConfigService(),
+      null as never, // email
+      null as never, // workspaces
+      null as never, // auditLog
+      null as never, // workspaceResolver
+      null as never, // loginLockout
+      null as never, // twoFactor
+      null as never, // cryptoService
+      null as never, // configHelper
+      null as never, // otpHelper
+      tokenService,
+      null as never, // registrationService
+    );
+    await credentialsService.resetPassword(dto);
 
     // All sessions deleted.
     const remaining = [...fake.tokens.values()].filter(

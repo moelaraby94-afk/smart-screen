@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { RedisService } from '../../common/redis/redis.service';
 
 const ALL_MODULES = [
   'billing',
@@ -15,7 +16,14 @@ const ALL_MODULES = [
 
 @Injectable()
 export class FeatureFlagsService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(FeatureFlagsService.name);
+  private readonly CACHE_TTL = 60;
+  private readonly CACHE_PREFIX = 'feature-flags';
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+  ) {}
 
   async listForWorkspace(workspaceId: string) {
     const flags = await this.prisma.featureFlag.findMany({
@@ -73,6 +81,8 @@ export class FeatureFlagsService {
       update: { enabled, setBy },
     });
 
+    await this.invalidateFlag(workspaceId, module);
+
     return { module: flag.module, enabled: flag.enabled };
   }
 
@@ -92,15 +102,71 @@ export class FeatureFlagsService {
         }),
       ),
     );
+    await this.invalidateWorkspace(workspaceId);
     return this.listForWorkspace(workspaceId);
   }
 
   async isModuleEnabled(workspaceId: string, module: string): Promise<boolean> {
+    const cacheKey = `${this.CACHE_PREFIX}:${workspaceId}:${module}`;
+    const client = this.redis.getClient();
+
+    if (client) {
+      try {
+        const cached = await client.get(cacheKey);
+        if (cached !== null) {
+          return cached === '1';
+        }
+      } catch (err) {
+        this.logger.warn(
+          `Redis GET failed for ${cacheKey}: ${(err as Error).message}`,
+        );
+      }
+    }
+
     const flag = await this.prisma.featureFlag.findUnique({
       where: {
         workspaceId_module: { workspaceId, module },
       },
     });
-    return flag?.enabled ?? true;
+    const enabled = flag?.enabled ?? true;
+
+    if (client) {
+      try {
+        await client.setex(cacheKey, this.CACHE_TTL, enabled ? '1' : '0');
+      } catch (err) {
+        this.logger.warn(
+          `Redis SET failed for ${cacheKey}: ${(err as Error).message}`,
+        );
+      }
+    }
+
+    return enabled;
+  }
+
+  async invalidateFlag(workspaceId: string, module: string): Promise<void> {
+    const client = this.redis.getClient();
+    if (!client) return;
+    try {
+      await client.del(`${this.CACHE_PREFIX}:${workspaceId}:${module}`);
+    } catch (err) {
+      this.logger.warn(
+        `Failed to invalidate cache for ${workspaceId}:${module}: ${(err as Error).message}`,
+      );
+    }
+  }
+
+  async invalidateWorkspace(workspaceId: string): Promise<void> {
+    const client = this.redis.getClient();
+    if (!client) return;
+    try {
+      const keys = await client.keys(`${this.CACHE_PREFIX}:${workspaceId}:*`);
+      if (keys.length > 0) {
+        await client.del(...keys);
+      }
+    } catch (err) {
+      this.logger.warn(
+        `Failed to invalidate cache for workspace ${workspaceId}: ${(err as Error).message}`,
+      );
+    }
   }
 }

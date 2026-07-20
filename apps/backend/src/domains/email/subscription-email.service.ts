@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigHelper } from '../../common/config/config.helper';
 import { EmailService } from './email.service';
-import { subscriptionReminderEmail } from './email-templates';
+import {
+  subscriptionReminderEmail,
+  paymentFailedEmail,
+} from './email-templates';
 
 @Injectable()
 export class SubscriptionEmailService {
@@ -22,6 +25,27 @@ export class SubscriptionEmailService {
     if (!this.email.isConfigured()) {
       this.log.warn(
         `[subscription reminder] Email not configured; would send to ${toEmail}`,
+      );
+      return;
+    }
+    await this.email.enqueue({ to: toEmail, subject, html, text });
+  }
+
+  async sendPaymentFailed(
+    toEmail: string,
+    fullName: string,
+    gracePeriodDays?: number,
+  ): Promise<void> {
+    const base = this.configHelper.getFrontendBaseUrl();
+    const dashboardUrl = `${base}/en/billing`;
+    const { subject, html, text } = paymentFailedEmail({
+      fullName,
+      dashboardUrl,
+      gracePeriodDays,
+    });
+    if (!this.email.isConfigured()) {
+      this.log.warn(
+        `[payment failed] Email not configured; would send to ${toEmail}`,
       );
       return;
     }

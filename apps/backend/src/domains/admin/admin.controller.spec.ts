@@ -1,13 +1,17 @@
 import { Test } from '@nestjs/testing';
 import { Reflector } from '@nestjs/core';
-import { AdminController } from './admin.controller';
+import { PlatformManagementController } from './platform-management.controller';
+import { PlatformOperationsController } from './platform-operations.controller';
 import { AdminService } from './admin.service';
 import { BrandingAssetsService } from './branding-assets.service';
+import { ExchangeTokenService } from '../auth/exchange-token.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AccountContextHelper } from '../../common/auth/account-context.helper';
+import { TwoFactorRequiredGuard } from '../../common/auth/two-factor-required.guard';
+import { TwoFactorService } from '../auth/two-factor.service';
 
-describe('AdminController', () => {
-  let controller: AdminController;
+describe('PlatformManagementController', () => {
+  let controller: PlatformManagementController;
   let adminService: AdminService;
 
   beforeEach(async () => {
@@ -16,27 +20,41 @@ describe('AdminController', () => {
       listStaff: jest.fn().mockResolvedValue([]),
       createStaff: jest.fn().mockResolvedValue({ id: 'u1' }),
       updateStaffRole: jest.fn().mockResolvedValue({ ok: true }),
-      listCustomers: jest.fn().mockResolvedValue([]),
+      listCustomers: jest
+        .fn()
+        .mockResolvedValue({ items: [], nextCursor: null, hasMore: false }),
       getCustomerProfile: jest.fn().mockResolvedValue({}),
       getCustomerWorkspaceDetail: jest.fn().mockResolvedValue({}),
       sendSubscriptionReminder: jest.fn().mockResolvedValue({ ok: true }),
-      listWorkspaces: jest.fn().mockResolvedValue([]),
-      listGlobalFleetScreens: jest.fn().mockResolvedValue([]),
+      listWorkspaces: jest
+        .fn()
+        .mockResolvedValue({ items: [], nextCursor: null, hasMore: false }),
+      listGlobalFleetScreens: jest
+        .fn()
+        .mockResolvedValue({ items: [], nextCursor: null, hasMore: false }),
       mockWorkspaceSubscriptionPlan: jest.fn().mockResolvedValue({}),
       getGlobalStats: jest.fn().mockResolvedValue({}),
     } as unknown as AdminService;
 
     const moduleRef = await Test.createTestingModule({
-      controllers: [AdminController],
+      controllers: [PlatformManagementController],
       providers: [
         Reflector,
-        AccountContextHelper,
+        { provide: AccountContextHelper, useValue: {} },
         { provide: PrismaService, useValue: {} },
         { provide: AdminService, useValue: adminService },
-        { provide: BrandingAssetsService, useValue: {} },
+        { provide: ExchangeTokenService, useValue: {} },
+        {
+          provide: TwoFactorService,
+          useValue: { isTwoFactorEnabled: jest.fn().mockResolvedValue(true) },
+        },
+        {
+          provide: TwoFactorRequiredGuard,
+          useValue: { canActivate: jest.fn().mockResolvedValue(true) },
+        },
       ],
     }).compile();
-    controller = moduleRef.get(AdminController);
+    controller = moduleRef.get(PlatformManagementController);
   });
 
   it('listUsers delegates to service', async () => {
@@ -68,7 +86,12 @@ describe('AdminController', () => {
 
   it('listCustomers delegates to service', async () => {
     await controller.listCustomers();
-    expect(adminService.listCustomers).toHaveBeenCalledWith(undefined, 'all');
+    expect(adminService.listCustomers).toHaveBeenCalledWith(
+      undefined,
+      'all',
+      undefined,
+      undefined,
+    );
   });
 
   it('getCustomer delegates to service', async () => {
@@ -79,6 +102,38 @@ describe('AdminController', () => {
   it('listWorkspaces delegates to service', async () => {
     await controller.listWorkspaces();
     expect(adminService.listWorkspaces).toHaveBeenCalled();
+  });
+});
+
+describe('PlatformOperationsController', () => {
+  let controller: PlatformOperationsController;
+  let adminService: AdminService;
+
+  beforeEach(async () => {
+    adminService = {
+      listGlobalFleetScreens: jest
+        .fn()
+        .mockResolvedValue({ items: [], nextCursor: null, hasMore: false }),
+      getGlobalStats: jest.fn().mockResolvedValue({}),
+      listLogs: jest
+        .fn()
+        .mockResolvedValue({ items: [], nextCursor: null, hasMore: false }),
+      getSettings: jest.fn().mockResolvedValue({}),
+      patchSettings: jest.fn().mockResolvedValue({}),
+      mockWorkspaceSubscriptionPlan: jest.fn().mockResolvedValue({}),
+    } as unknown as AdminService;
+
+    const moduleRef = await Test.createTestingModule({
+      controllers: [PlatformOperationsController],
+      providers: [
+        Reflector,
+        { provide: AccountContextHelper, useValue: {} },
+        { provide: PrismaService, useValue: {} },
+        { provide: AdminService, useValue: adminService },
+        { provide: BrandingAssetsService, useValue: {} },
+      ],
+    }).compile();
+    controller = moduleRef.get(PlatformOperationsController);
   });
 
   it('listGlobalFleetScreens delegates to service', async () => {

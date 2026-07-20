@@ -4,6 +4,7 @@ import Stripe from 'stripe';
 import { StripeWebhookService } from './stripe-webhook.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { SubscriptionEmailService } from '../email/subscription-email.service';
 
 jest.mock('stripe', () => ({
   __esModule: true,
@@ -26,7 +27,10 @@ describe('StripeWebhookService T3.5 (missing webhook handlers)', () => {
     const prismaTx = {
       processedWebhookEvent: { create: jest.fn().mockResolvedValue({}) },
       workspaceMember: {
-        findFirst: jest.fn().mockResolvedValue({ userId: 'user_1' }),
+        findFirst: jest.fn().mockResolvedValue({
+          userId: 'user_1',
+          user: { email: 'owner@example.com', fullName: 'Owner' },
+        }),
       },
       paymentRecord: { create: jest.fn().mockResolvedValue({}) },
       subscription: {
@@ -52,6 +56,12 @@ describe('StripeWebhookService T3.5 (missing webhook handlers)', () => {
           useValue: {
             applyTrustedCheckoutUsingClient: jest.fn(),
             syncFromStripeSubscription: syncFromStripe,
+          },
+        },
+        {
+          provide: SubscriptionEmailService,
+          useValue: {
+            sendPaymentFailed: jest.fn().mockResolvedValue(undefined),
           },
         },
       ],

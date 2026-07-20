@@ -16,8 +16,9 @@ import { AccountService } from './account.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { RequestEmailChangeDto } from './dto/request-email-change.dto';
 import { VerifyEmailChangeDto } from './dto/verify-email-change.dto';
+import { CUSTOMER_ROUTES } from '../../common/constants/route-prefixes';
 
-@Controller('account')
+@Controller({ path: [...CUSTOMER_ROUTES.ACCOUNT] })
 @UseGuards(JwtAuthGuard)
 export class AccountController {
   constructor(private readonly account: AccountService) {}

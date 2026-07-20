@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { AccountService } from './account.service';
+import { AccountInsightsService } from './account-insights.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { OtpHelper } from '../../common/auth/otp.helper';
@@ -182,6 +183,7 @@ describe('AccountService (P1-T6)', () => {
       createMockEmailService(),
       null as never, // configHelper — not used in these paths
       new OtpHelper(),
+      null as never, // insightsService — not used in these paths
     );
   }
 

@@ -27,24 +27,23 @@ import type { Redis } from 'ioredis';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { RedisService } from '../../common/redis/redis.service';
 import { createCorsOriginChecker } from '../../common/config/cors-config';
+import type { JwtAudience } from '../../common/auth/current-user.decorator';
 import { ScreenHeartbeatService } from './screen-heartbeat.service';
 import { ScreenRegisterDto } from './dto/screen-register.dto';
 import { ScreenHeartbeatDto } from './dto/screen-heartbeat.dto';
+import { DashboardSubscribeDto } from './dto/dashboard-subscribe.dto';
+import { PairingWatchDto } from './dto/pairing-watch.dto';
+import { PlayerBindScreenDto } from './dto/player-bind-screen.dto';
+import { ScreenClientErrorDto } from './dto/screen-client-error.dto';
 import { OfflineEventQueueService } from './offline-event-queue.service';
 import { WsThrottlerGuard } from '../../common/throttler/ws-throttler.guard';
-
-type DashboardSubscribePayload = {
-  workspaceId: string;
-};
-
-type PairingWatchPayload = {
-  sessionId: string;
-  pollSecret: string;
-};
 
 type JwtAccessPayload = {
   sub: string;
   email: string;
+  aud?: JwtAudience;
+  isSuperAdmin?: boolean;
+  platformStaffRole?: import('@prisma/client').PlatformStaffRole;
   /** See TokenPayload in auth.service.ts. Absent on pre-`typ` tokens. */
   typ?: 'access' | 'refresh';
 };
@@ -207,7 +206,7 @@ export class RealtimeGateway
   @SubscribeMessage('player:bind_screen')
   async handlePlayerBindScreen(
     @ConnectedSocket() client: Socket,
-    @MessageBody() body: { screenId?: string },
+    @MessageBody() body: PlayerBindScreenDto,
   ): Promise<void> {
     const user = this.parseUserFromSocket(client);
     if (!user) {
@@ -228,23 +227,29 @@ export class RealtimeGateway
       client.emit('screen:error', { code: 'SCREEN_NOT_FOUND' });
       return;
     }
-    const [actor, membership] = await Promise.all([
-      this.prisma.user.findUnique({
-        where: { id: user.sub },
-        select: { isSuperAdmin: true },
-      }),
-      this.prisma.workspaceMember.findUnique({
-        where: {
-          workspaceId_userId: {
-            workspaceId: screen.workspaceId,
-            userId: user.sub,
-          },
+
+    // Backward compat: old tokens without aud default to 'customer'
+    const aud: JwtAudience = user.aud ?? 'customer';
+
+    // Platform staff can bind to any screen
+    if (aud === 'platform' && (user.isSuperAdmin || user.platformStaffRole)) {
+      this.markAuthed(client);
+      await client.join(`screen:${screen.id}`);
+      client.emit('player:bound', { screenId: screen.id });
+      return;
+    }
+
+    // Customer users must be a member of the screen's workspace
+    const membership = await this.prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId: screen.workspaceId,
+          userId: user.sub,
         },
-        select: { userId: true },
-      }),
-    ]);
-    const allowed = Boolean(actor?.isSuperAdmin || membership);
-    if (!allowed) {
+      },
+      select: { userId: true },
+    });
+    if (!membership) {
       client.emit('screen:error', { code: 'FORBIDDEN_BIND' });
       return;
     }
@@ -321,7 +326,9 @@ export class RealtimeGateway
         status: ScreenStatus.ONLINE,
         lastSeenAt: now,
         isOfflineCacheMode: false,
-        ...(payload.playerVersion ? { playerVersion: payload.playerVersion } : {}),
+        ...(payload.playerVersion
+          ? { playerVersion: payload.playerVersion }
+          : {}),
       },
     });
 
@@ -359,7 +366,7 @@ export class RealtimeGateway
   @SubscribeMessage('screen:error')
   handleScreenClientErrorReport(
     @ConnectedSocket() client: Socket,
-    @MessageBody() body: unknown,
+    @MessageBody() body?: ScreenClientErrorDto,
   ): void {
     const binding = this.heartbeat.getBinding(client.id);
     if (!binding) return;
@@ -443,7 +450,7 @@ export class RealtimeGateway
   @SubscribeMessage('pairing:watch')
   async handlePairingWatch(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: PairingWatchPayload,
+    @MessageBody() payload: PairingWatchDto,
   ): Promise<void> {
     const sessionId = payload?.sessionId?.trim();
     const pollSecret = payload?.pollSecret?.trim();
@@ -471,7 +478,7 @@ export class RealtimeGateway
   @SubscribeMessage('dashboard:subscribe')
   async handleDashboardSubscribe(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: DashboardSubscribePayload,
+    @MessageBody() payload: DashboardSubscribeDto,
   ): Promise<void> {
     const user = this.parseUserFromSocket(client);
     if (!user) {
@@ -484,6 +491,19 @@ export class RealtimeGateway
       return;
     }
 
+    // Backward compat: old tokens without aud default to 'customer'
+    const aud: JwtAudience = user.aud ?? 'customer';
+
+    // Platform staff can subscribe to any workspace
+    if (aud === 'platform' && (user.isSuperAdmin || user.platformStaffRole)) {
+      this.markAuthed(client);
+      await client.join(`workspace:${payload.workspaceId}`);
+      await client.join(`user:${user.sub}`);
+      client.emit('dashboard:subscribed', { workspaceId: payload.workspaceId });
+      return;
+    }
+
+    // Customer users must be a member of the workspace
     const membership = await this.prisma.workspaceMember.findUnique({
       where: {
         workspaceId_userId: {
@@ -491,17 +511,12 @@ export class RealtimeGateway
           userId: user.sub,
         },
       },
+      select: { userId: true },
     });
 
     if (!membership) {
-      const u = await this.prisma.user.findUnique({
-        where: { id: user.sub },
-        select: { isSuperAdmin: true },
-      });
-      if (!u?.isSuperAdmin) {
-        client.emit('dashboard:error', { code: 'FORBIDDEN' });
-        return;
-      }
+      client.emit('dashboard:error', { code: 'FORBIDDEN' });
+      return;
     }
 
     this.markAuthed(client);

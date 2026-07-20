@@ -228,3 +228,23 @@ export function limitWarningEmail(params: {
   const text = `Hi ${params.fullName},\n\nYou are using ${params.current} of ${params.limit} ${resource} units (${params.percentage}%).\nConsider upgrading your plan to avoid hitting the limit.${params.dashboardUrl ? `\n\nView usage: ${params.dashboardUrl}` : ''}`;
   return { subject, html, text };
 }
+
+export function paymentFailedEmail(params: {
+  fullName: string;
+  brandName?: string;
+  dashboardUrl?: string;
+  gracePeriodDays?: number;
+}): { subject: string; html: string; text: string } {
+  const brand = params.brandName ?? 'Cloud Signage';
+  const subject = `${brand}: payment failed — action required`;
+  const name = esc(params.fullName);
+  const grace = params.gracePeriodDays
+    ? `<p>You have a <strong>${params.gracePeriodDays}-day grace period</strong> to update your payment method before your subscription is downgraded to the Free plan.</p>`
+    : '<p>Please update your payment method to avoid service interruption.</p>';
+  const dash = params.dashboardUrl
+    ? `<p><a href="${esc(params.dashboardUrl)}">Update billing in your dashboard</a></p>`
+    : '';
+  const html = `<p>Hi ${name},</p><p>We were unable to process your recent payment for your ${brand} subscription.</p>${grace}${dash}<p style="color:#666;margin-top:16px">If you believe this is an error, please contact support.</p>`;
+  const text = `Hi ${params.fullName},\n\nWe were unable to process your recent payment for your ${brand} subscription.\n${params.gracePeriodDays ? `You have a ${params.gracePeriodDays}-day grace period to update your payment method before your subscription is downgraded to the Free plan.` : 'Please update your payment method to avoid service interruption.'}${params.dashboardUrl ? `\n\nUpdate billing: ${params.dashboardUrl}` : ''}\n\nIf you believe this is an error, please contact support.`;
+  return { subject, html, text };
+}

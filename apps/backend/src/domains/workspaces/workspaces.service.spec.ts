@@ -4,13 +4,19 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { WorkspacesService } from './workspaces.service';
+import { WorkspaceCrudService } from './workspace-crud.service';
+import { WorkspaceBootstrapService } from './workspace-bootstrap.service';
+import { WorkspaceMembersService } from './workspace-members.service';
+import { WorkspaceInvitesService } from './workspace-invites.service';
+import { WorkspaceAccountsService } from './workspace-accounts.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { WorkspaceAuthHelper } from '../../common/auth/workspace-auth.helper';
 import { ConfigHelper } from '../../common/config/config.helper';
 import { MediaService } from '../media/media.service';
-import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EmailService } from '../email/email.service';
-import { AuthService } from '../auth/auth.service';
+import { SessionRevocationService } from '../../common/auth/session-revocation.service';
+import { AccountContextHelper } from '../../common/auth/account-context.helper';
 import { ConfigService } from '@nestjs/config';
 
 /**
@@ -232,9 +238,8 @@ function createMockMediaService() {
 
 function createMockHeartbeat() {
   return {
-    emitPairingStarted: jest.fn(),
-    emitContentSync: jest.fn(),
-  } as unknown as ScreenHeartbeatService;
+    emit: jest.fn(),
+  } as unknown as EventEmitter2;
 }
 
 function createMockEmailService() {
@@ -262,17 +267,42 @@ describe('WorkspacesService (P1-T6)', () => {
     const configHelper = new ConfigHelper(
       createMockConfigService() as unknown as import('@nestjs/config').ConfigService,
     );
-    return new WorkspacesService(
+    const sessionRevocation = {
+      revokeAllSessions: jest.fn().mockResolvedValue(undefined),
+    } as unknown as SessionRevocationService;
+    const accountContext = {
+      invalidateUserContext: jest.fn().mockResolvedValue(undefined),
+    } as unknown as AccountContextHelper;
+
+    const crud = new WorkspaceCrudService(
+      fake as unknown as PrismaService,
+      workspaceAuth,
+      createMockHeartbeat(),
+    );
+    const bootstrap = new WorkspaceBootstrapService(
       fake as unknown as PrismaService,
       workspaceAuth,
       createMockMediaService(),
-      createMockHeartbeat(),
+      crud,
+    );
+    const members = new WorkspaceMembersService(
+      fake as unknown as PrismaService,
+      workspaceAuth,
+      sessionRevocation,
+      accountContext,
+    );
+    const invites = new WorkspaceInvitesService(
+      fake as unknown as PrismaService,
       createMockEmailService(),
       configHelper,
-      {
-        revokeAllSessions: jest.fn().mockResolvedValue(undefined),
-      } as unknown as AuthService,
     );
+    const accounts = new WorkspaceAccountsService(
+      fake as unknown as PrismaService,
+      sessionRevocation,
+      accountContext,
+    );
+
+    return new WorkspacesService(crud, bootstrap, members, invites, accounts);
   }
 
   // ─── Test 1: updateWorkspace with no fields → BadRequest ────────────

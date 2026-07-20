@@ -5,6 +5,7 @@ import Stripe from 'stripe';
 import { StripeWebhookService } from './stripe-webhook.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { SubscriptionEmailService } from '../email/subscription-email.service';
 
 jest.mock('stripe', () => ({
   __esModule: true,
@@ -52,6 +53,12 @@ describe('StripeWebhookService', () => {
         {
           provide: SubscriptionsService,
           useValue: { applyTrustedCheckoutUsingClient: applyTrusted },
+        },
+        {
+          provide: SubscriptionEmailService,
+          useValue: {
+            sendPaymentFailed: jest.fn().mockResolvedValue(undefined),
+          },
         },
       ],
     }).compile();
@@ -111,6 +118,12 @@ describe('StripeWebhookService', () => {
         {
           provide: SubscriptionsService,
           useValue: { applyTrustedCheckoutUsingClient: applyTrusted },
+        },
+        {
+          provide: SubscriptionEmailService,
+          useValue: {
+            sendPaymentFailed: jest.fn().mockResolvedValue(undefined),
+          },
         },
       ],
     }).compile();

@@ -1,4 +1,6 @@
+import { randomBytes } from 'crypto';
 import type { Response } from 'express';
+import type { JwtAudience } from '../../common/auth/current-user.decorator';
 
 type CookieConfig = {
   secure: boolean;
@@ -20,7 +22,10 @@ function parseDurationToMs(value: string): number {
 }
 
 export function getCookieConfig(): CookieConfig {
-  const secure = process.env.NODE_ENV === 'production';
+  const secure =
+    process.env.COOKIE_SECURE === 'false'
+      ? false
+      : process.env.NODE_ENV === 'production';
   return {
     secure,
     accessMaxAgeMs: parseDurationToMs(
@@ -32,10 +37,69 @@ export function getCookieConfig(): CookieConfig {
   };
 }
 
+const LEGACY_ACCESS = 'cs_access_token';
+const LEGACY_REFRESH = 'cs_refresh_token';
+const LEGACY_CSRF = 'csrf_token';
+
+const PLATFORM_ACCESS = '__Host-cs_platform_access';
+const PLATFORM_REFRESH = '__Host-cs_platform_refresh';
+const PLATFORM_CSRF = 'csrf_platform';
+
+const CUSTOMER_ACCESS = '__Host-cs_customer_access';
+const CUSTOMER_REFRESH = '__Host-cs_customer_refresh';
+const CUSTOMER_CSRF = 'csrf_customer';
+
+export function getCookieNames(audience: JwtAudience) {
+  if (audience === 'platform') {
+    return {
+      access: PLATFORM_ACCESS,
+      refresh: PLATFORM_REFRESH,
+      csrf: PLATFORM_CSRF,
+    };
+  }
+  return {
+    access: CUSTOMER_ACCESS,
+    refresh: CUSTOMER_REFRESH,
+    csrf: CUSTOMER_CSRF,
+  };
+}
+
 export function setAuthCookies(
   response: Response,
   accessToken: string,
   refreshToken: string,
+  audience: JwtAudience = 'customer',
+): void {
+  const config = getCookieConfig();
+  const names = getCookieNames(audience);
+  const common = {
+    httpOnly: true,
+    secure: config.secure,
+    sameSite: 'lax' as const,
+    path: '/',
+  };
+
+  response.cookie(names.access, accessToken, {
+    ...common,
+    maxAge: config.accessMaxAgeMs,
+  });
+  response.cookie(names.refresh, refreshToken, {
+    ...common,
+    maxAge: config.refreshMaxAgeMs,
+  });
+
+  const csrfToken = randomBytes(32).toString('hex');
+  response.cookie(names.csrf, csrfToken, {
+    httpOnly: false,
+    secure: config.secure,
+    sameSite: 'lax' as const,
+    path: '/',
+  });
+}
+
+export function clearAuthCookies(
+  response: Response,
+  audience?: JwtAudience,
 ): void {
   const config = getCookieConfig();
   const common = {
@@ -45,24 +109,51 @@ export function setAuthCookies(
     path: '/',
   };
 
-  response.cookie('cs_access_token', accessToken, {
-    ...common,
-    maxAge: config.accessMaxAgeMs,
-  });
-  response.cookie('cs_refresh_token', refreshToken, {
-    ...common,
-    maxAge: config.refreshMaxAgeMs,
-  });
+  if (audience) {
+    const names = getCookieNames(audience);
+    response.clearCookie(names.access, common);
+    response.clearCookie(names.refresh, common);
+    response.clearCookie(names.csrf, {
+      ...common,
+      httpOnly: false,
+    });
+  }
+
+  // Always clear legacy cookies for backward compat
+  response.clearCookie(LEGACY_ACCESS, common);
+  response.clearCookie(LEGACY_REFRESH, common);
+  response.clearCookie(LEGACY_CSRF, { ...common, httpOnly: false });
 }
 
-export function clearAuthCookies(response: Response): void {
-  const config = getCookieConfig();
-  const common = {
-    httpOnly: true,
-    secure: config.secure,
-    sameSite: 'lax' as const,
-    path: '/',
-  };
-  response.clearCookie('cs_access_token', common);
-  response.clearCookie('cs_refresh_token', common);
+export function extractAccessTokenFromCookies(
+  cookies: Record<string, string | undefined>,
+): string | null {
+  return (
+    cookies?.[PLATFORM_ACCESS] ??
+    cookies?.[CUSTOMER_ACCESS] ??
+    cookies?.[LEGACY_ACCESS] ??
+    null
+  );
+}
+
+export function extractRefreshTokenFromCookies(
+  cookies: Record<string, string | undefined>,
+): string | null {
+  return (
+    cookies?.[PLATFORM_REFRESH] ??
+    cookies?.[CUSTOMER_REFRESH] ??
+    cookies?.[LEGACY_REFRESH] ??
+    null
+  );
+}
+
+export function extractCsrfTokenFromCookies(
+  cookies: Record<string, string | undefined>,
+): string | null {
+  return (
+    cookies?.[PLATFORM_CSRF] ??
+    cookies?.[CUSTOMER_CSRF] ??
+    cookies?.[LEGACY_CSRF] ??
+    null
+  );
 }

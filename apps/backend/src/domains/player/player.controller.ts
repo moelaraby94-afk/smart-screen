@@ -16,6 +16,8 @@ import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { StartPairingSessionDto } from '../pairing/dto/start-pairing-session.dto';
 import { PairingService } from '../pairing/pairing.service';
 import { PlayerService } from './player.service';
+import { PlayerSecretGuard } from './player-secret.guard';
+import { PLAYER_ROUTES } from '../../common/constants/route-prefixes';
 
 /**
  * Unauthenticated player endpoints (kiosk). Authenticated by the `x-player-secret`
@@ -30,13 +32,14 @@ import { PlayerService } from './player.service';
  * idempotent — creating a pairing session — opts back in below.
  */
 @SkipThrottle()
-@Controller('player')
+@Controller({ path: [...PLAYER_ROUTES.PLAYER] })
 export class PlayerController {
   constructor(
     private readonly playerService: PlayerService,
     private readonly pairing: PairingService,
   ) {}
 
+  @UseGuards(PlayerSecretGuard)
   @Get('bootstrap')
   async bootstrap(
     @Query('serialNumber') serialNumber: string | undefined,
@@ -60,6 +63,7 @@ export class PlayerController {
     );
   }
 
+  @UseGuards(PlayerSecretGuard)
   @Get('canvas/:canvasId')
   async compiledCanvas(
     @Param('canvasId') canvasId: string,
@@ -70,6 +74,7 @@ export class PlayerController {
   }
 
   /** Kiosk player: prayer pause status (serial + secret auth). */
+  @UseGuards(PlayerSecretGuard)
   @Get('prayer-pause-status')
   async prayerPauseStatus(
     @Query('serialNumber') serialNumber: string | undefined,

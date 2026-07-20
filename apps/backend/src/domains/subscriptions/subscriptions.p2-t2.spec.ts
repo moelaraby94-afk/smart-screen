@@ -1,8 +1,9 @@
 import { ConfigService } from '@nestjs/config';
 import { SubscriptionPlan, SubscriptionStatus } from '@prisma/client';
 import { SubscriptionsService } from './subscriptions.service';
+import { SubscriptionStripeService } from './subscription-stripe.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 // Enable mock billing for setMockPlan tests (container runs NODE_ENV=production)
 process.env.ENABLE_MOCK_BILLING = 'true';
@@ -52,8 +53,8 @@ function createFakePrisma(opts: { subscriptions?: FakeSubscription[] }) {
 
 function createMockHeartbeat() {
   return {
-    emitWorkspaceSubscriptionUpdated: jest.fn(),
-  } as unknown as ScreenHeartbeatService;
+    emit: jest.fn(),
+  } as unknown as EventEmitter2;
 }
 
 function createMockConfigService() {
@@ -108,11 +109,17 @@ function makeStripeSub(
 
 describe('SubscriptionsService P2-T2 (state transitions)', () => {
   function makeService(fake: ReturnType<typeof createFakePrisma>) {
+    const stripeService = new SubscriptionStripeService(
+      fake as unknown as PrismaService,
+      createMockConfigService(),
+      null as never,
+    );
     return new SubscriptionsService(
       fake as unknown as PrismaService,
       createMockHeartbeat(),
       createMockConfigService(),
       null as never, // configHelper — not used in these paths
+      stripeService,
     );
   }
 

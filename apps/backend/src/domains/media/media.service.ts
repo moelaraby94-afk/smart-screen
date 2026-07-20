@@ -11,12 +11,14 @@ import { skipFor } from '../../common/pagination/pagination-query.dto';
 import { ListMediaDto } from './dto/list-media.dto';
 import { ErrorCode } from '../../common/errors/error-codes';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PlatformEvents } from '../../common/events/platform-events';
 import { STORAGE_SERVICE } from '../../common/storage/storage.interface';
 import type { IStorageService } from '../../common/storage/storage.interface';
 import { Inject } from '@nestjs/common';
 import { join } from 'path';
 import { createHash, randomUUID } from 'crypto';
+import { MediaFoldersService } from './media-folders.service';
 
 const ALLOWED_MIME = new Set([
   'image/jpeg',
@@ -35,8 +37,9 @@ export class MediaService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
-    private readonly heartbeat: ScreenHeartbeatService,
+    private readonly eventEmitter: EventEmitter2,
     @Inject(STORAGE_SERVICE) private readonly storage: IStorageService,
+    private readonly foldersService: MediaFoldersService,
   ) {}
 
   getPublicBaseUrl(): string {
@@ -88,13 +91,12 @@ export class MediaService {
     });
     const used = BigInt(agg._sum.sizeBytes ?? 0);
     if (used + BigInt(additionalBytes) > sub.storageLimitBytes) {
-      throw DomainException.forbidden(
-        ErrorCode.STORAGE_LIMIT_REACHED,
-        'Workspace storage limit reached',
+      throw DomainException.payloadTooLarge(
+        ErrorCode.STORAGE_QUOTA_EXCEEDED,
+        'Storage quota exceeded',
         {
-          limitBytes: Number(sub.storageLimitBytes),
-          usedBytes: Number(used),
-          requestedBytes: additionalBytes,
+          storageUsed: Number(used),
+          storageLimit: Number(sub.storageLimitBytes),
         },
       );
     }
@@ -133,9 +135,8 @@ export class MediaService {
      *
      * `file-type` is pure ESM, so it can only be reached from this CommonJS
      * build through a dynamic import (tsconfig `module: nodenext` preserves it
-     * rather than lowering it to `require`). Jest needs
-     * `--experimental-vm-modules` to execute that import — see the backend's
-     * `test` script.
+     * rather than lowering it to `require`). Jest resolves it via
+     * moduleNameMapper to a CJS mock.
      */
     const { fileTypeFromBuffer } = await import('file-type');
     const detected = await fileTypeFromBuffer(params.buffer);
@@ -241,8 +242,9 @@ export class MediaService {
     }
 
     if (params.workspaceId) {
-      this.heartbeat.emitUploadComplete(params.workspaceId, {
-        fileName: params.originalName,
+      this.eventEmitter.emit(PlatformEvents.UPLOAD_COMPLETE, {
+        workspaceId: params.workspaceId,
+        payload: { fileName: params.originalName },
       });
     }
 
@@ -271,11 +273,34 @@ export class MediaService {
       }),
       this.prisma.media.count({ where }),
     ]);
-    return buildPage(
-      items.map((m) => this.toResponse(m)),
-      total,
-      query,
-    );
+
+    let storageUsed: number | null = null;
+    let storageLimit: number | null = null;
+    if (query.workspaceId) {
+      const [agg, sub] = await Promise.all([
+        this.prisma.media.aggregate({
+          where: { workspaceId: query.workspaceId },
+          _sum: { sizeBytes: true },
+        }),
+        this.prisma.subscription.findUnique({
+          where: { workspaceId: query.workspaceId },
+          select: { storageLimitBytes: true },
+        }),
+      ]);
+      storageUsed = Number(agg._sum.sizeBytes ?? 0);
+      storageLimit =
+        sub?.storageLimitBytes != null ? Number(sub.storageLimitBytes) : null;
+    }
+
+    return {
+      ...buildPage(
+        items.map((m) => this.toResponse(m)),
+        total,
+        query,
+      ),
+      ...(storageUsed !== null ? { storageUsed } : {}),
+      ...(storageLimit !== null ? { storageLimit } : {}),
+    };
   }
 
   /**
@@ -431,18 +456,7 @@ export class MediaService {
   }
 
   async listFolders(ownerId: string, workspaceId?: string) {
-    const where: { ownerId: string; workspaceId?: string } = { ownerId };
-    if (workspaceId) where.workspaceId = workspaceId;
-    return this.prisma.mediaFolder.findMany({
-      where,
-      orderBy: { createdAt: 'asc' },
-      select: {
-        id: true,
-        name: true,
-        createdAt: true,
-        _count: { select: { medias: true } },
-      },
-    });
+    return this.foldersService.listFolders(ownerId, workspaceId);
   }
 
   async createFolder(
@@ -450,19 +464,7 @@ export class MediaService {
     workspaceId: string | null,
     name: string,
   ) {
-    const trimmed = name.trim();
-    if (trimmed.length < 2) {
-      throw new BadRequestException('Folder name is too short');
-    }
-    return this.prisma.mediaFolder.create({
-      data: { ownerId, workspaceId: workspaceId ?? undefined, name: trimmed },
-      select: {
-        id: true,
-        name: true,
-        createdAt: true,
-        _count: { select: { medias: true } },
-      },
-    });
+    return this.foldersService.createFolder(ownerId, workspaceId, name);
   }
 
   async renameFolder(
@@ -471,30 +473,12 @@ export class MediaService {
     folderId: string,
     name: string,
   ) {
-    const trimmed = name.trim();
-    if (trimmed.length < 2) {
-      throw new BadRequestException('Folder name is too short');
-    }
-    const where: { id: string; ownerId: string; workspaceId?: string } = {
-      id: folderId,
+    return this.foldersService.renameFolder(
       ownerId,
-    };
-    if (workspaceId) where.workspaceId = workspaceId;
-    const folder = await this.prisma.mediaFolder.findFirst({
-      where,
-      select: { id: true },
-    });
-    if (!folder) throw new NotFoundException('Folder not found');
-    return this.prisma.mediaFolder.update({
-      where: { id: folderId },
-      data: { name: trimmed },
-      select: {
-        id: true,
-        name: true,
-        createdAt: true,
-        _count: { select: { medias: true } },
-      },
-    });
+      workspaceId,
+      folderId,
+      name,
+    );
   }
 
   async deleteFolder(
@@ -502,27 +486,7 @@ export class MediaService {
     workspaceId: string | null,
     folderId: string,
   ) {
-    const where: { id: string; ownerId: string; workspaceId?: string } = {
-      id: folderId,
-      ownerId,
-    };
-    if (workspaceId) where.workspaceId = workspaceId;
-    const folder = await this.prisma.mediaFolder.findFirst({
-      where,
-      select: { id: true },
-    });
-    if (!folder) throw new NotFoundException('Folder not found');
-    const mediaWhere: {
-      folderId: string;
-      ownerId: string;
-      workspaceId?: string;
-    } = { folderId, ownerId };
-    if (workspaceId) mediaWhere.workspaceId = workspaceId;
-    await this.prisma.media.updateMany({
-      where: mediaWhere,
-      data: { folderId: null },
-    });
-    await this.prisma.mediaFolder.delete({ where: { id: folderId } });
+    return this.foldersService.deleteFolder(ownerId, workspaceId, folderId);
   }
 
   async moveMediaToFolder(
@@ -530,24 +494,11 @@ export class MediaService {
     mediaId: string,
     folderId: string | null,
   ) {
-    const media = await this.prisma.media.findFirst({
-      where: { id: mediaId, workspaceId },
-      select: { id: true },
-    });
-    if (!media) throw new NotFoundException('Media not found');
-    if (folderId) {
-      const folder = await this.prisma.mediaFolder.findFirst({
-        where: { id: folderId, workspaceId },
-        select: { id: true },
-      });
-      if (!folder) throw new NotFoundException('Folder not found');
-    }
-    const updated = await this.prisma.media.update({
-      where: { id: mediaId },
-      data: { folderId },
-      include: { folder: true },
-    });
-    return this.toResponse(updated);
+    return this.foldersService.moveMediaToFolder(
+      workspaceId,
+      mediaId,
+      folderId,
+    );
   }
 
   async setExpiry(

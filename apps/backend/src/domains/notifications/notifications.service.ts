@@ -1,13 +1,8 @@
-import {
-  Injectable,
-  NotFoundException,
-  Optional,
-  Inject,
-  forwardRef,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { skipFor } from '../../common/pagination/pagination-query.dto';
-import { RealtimeGateway } from '../realtime/realtime.gateway';
+import { PlatformEvents } from '../../common/events/platform-events';
 
 export type NotificationRow = {
   id: string;
@@ -23,9 +18,7 @@ export type NotificationRow = {
 export class NotificationsService {
   constructor(
     private readonly prisma: PrismaService,
-    @Optional()
-    @Inject(forwardRef(() => RealtimeGateway))
-    private readonly realtime?: RealtimeGateway,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async listForUser(
@@ -104,7 +97,10 @@ export class NotificationsService {
       link: row.link,
       createdAt: row.createdAt.toISOString(),
     };
-    this.realtime?.emitNotificationToUser(userId, result);
+    this.eventEmitter.emit(PlatformEvents.NOTIFICATION_CREATED, {
+      userId,
+      notification: result,
+    });
     return result;
   }
 

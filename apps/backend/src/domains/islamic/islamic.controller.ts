@@ -20,8 +20,9 @@ import { PrayerTimesService } from './prayer-times.service';
 import { RamadanService } from './ramadan.service';
 import { UpdatePrayerConfigDto } from './dto/update-prayer-config.dto';
 import { UpdateRamadanConfigDto } from './dto/update-ramadan-config.dto';
+import { CUSTOMER_ROUTES } from '../../common/constants/route-prefixes';
 
-@Controller('islamic')
+@Controller({ path: [...CUSTOMER_ROUTES.ISLAMIC] })
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class IslamicController {
   constructor(

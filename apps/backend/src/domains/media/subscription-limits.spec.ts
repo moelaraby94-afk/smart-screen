@@ -3,13 +3,15 @@ import { DomainException } from '../../common/errors/domain.exception';
 import { ErrorCode } from '../../common/errors/error-codes';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { ScreensService } from '../screens/screens.service';
+import { ScreenAssignmentsService } from '../screens/screen-assignments.service';
 import { PlaylistsService } from '../playlists/playlists.service';
-import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SchedulingService } from '../schedules/scheduling.service';
 import { MediaService } from './media.service';
+import { MediaFoldersService } from './media-folders.service';
 import type { Prisma } from '@prisma/client';
 
-const mockHeartbeat = {} as unknown as ScreenHeartbeatService;
+const mockHeartbeat = { emit: () => {} } as unknown as EventEmitter2;
 
 /**
  * In-memory stand-in for PrismaService covering only the delegates the
@@ -89,8 +91,9 @@ describe('Subscription limit enforcement (P1-T4)', () => {
       return new ScreensService(
         fake as unknown as PrismaService,
         null as unknown as PlaylistsService,
-        null as unknown as ScreenHeartbeatService,
+        null as unknown as EventEmitter2,
         null as unknown as SchedulingService,
+        null as unknown as ScreenAssignmentsService,
       );
     }
 
@@ -175,6 +178,7 @@ describe('Subscription limit enforcement (P1-T4)', () => {
           ensureDir: () => {},
           providerName: 'local',
         } as never,
+        {} as MediaFoldersService,
       );
     }
 
@@ -191,7 +195,7 @@ describe('Subscription limit enforcement (P1-T4)', () => {
       ).assertWithinStorageQuotaTx;
     }
 
-    it('throws STORAGE_LIMIT_REACHED when upload would exceed quota', async () => {
+    it('throws STORAGE_QUOTA_EXCEEDED when upload would exceed quota', async () => {
       const fake = createFakePrisma({
         storageLimitBytes: BigInt(1000),
         storageUsedBytes: BigInt(800),
@@ -209,12 +213,11 @@ describe('Subscription limit enforcement (P1-T4)', () => {
       } catch (e) {
         expect(e).toBeInstanceOf(DomainException);
         expect((e as DomainException).code).toBe(
-          ErrorCode.STORAGE_LIMIT_REACHED,
+          ErrorCode.STORAGE_QUOTA_EXCEEDED,
         );
         expect((e as DomainException).details).toEqual({
-          limitBytes: 1000,
-          usedBytes: 800,
-          requestedBytes: 300,
+          storageUsed: 800,
+          storageLimit: 1000,
         });
       }
     });

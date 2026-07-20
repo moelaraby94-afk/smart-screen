@@ -39,6 +39,9 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
+    "moduleNameMapper": {
+      "^file-type$": "<rootDir>/__mocks__/file-type.ts"
+    },
     "collectCoverageFrom": [
       "**/*.(t|j)s",
       "!**/*.module.ts",
@@ -52,10 +55,10 @@
     "coverageDirectory": "../coverage",
     "coverageThreshold": {
       "global": {
-        "branches": 37,
-        "functions": 38,
-        "lines": 45,
-        "statements": 45
+        "branches": 70,
+        "functions": 70,
+        "lines": 70,
+        "statements": 70
       }
     },
     "testEnvironment": "node"
@@ -67,12 +70,14 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.1",
+    "@nestjs/event-emitter": "^3.1.0",
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/mapped-types": "*",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/platform-socket.io": "^11.1.18",
     "@nestjs/schedule": "^6.1.1",
+    "@nestjs/swagger": "^11.4.6",
     "@nestjs/terminus": "^11.1.1",
     "@nestjs/throttler": "^6.5.0",
     "@nestjs/websockets": "^11.1.18",
@@ -81,11 +86,13 @@
     "@sentry/nestjs": "^10.48.0",
     "@sentry/node": "^10.48.0",
     "@socket.io/redis-adapter": "^8.3.0",
+    "@types/compression": "^1.8.1",
     "@types/qrcode": "^1.5.6",
     "bcryptjs": "^3.0.0",
     "bullmq": "^5.80.8",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "compression": "^1.8.1",
     "cookie": "^1.1.1",
     "cookie-parser": "^1.4.7",
     "date-fns": "^4.1.0",
@@ -93,6 +100,7 @@
     "file-type": "^21.3.4",
     "helmet": "^8.2.0",
     "ioredis": "^5.11.1",
+    "joi": "^18.2.3",
     "lucide-react": "^0.474.0",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^9.0.3",

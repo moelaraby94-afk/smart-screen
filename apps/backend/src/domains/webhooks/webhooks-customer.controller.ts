@@ -17,8 +17,9 @@ import { Roles } from '../../common/auth/roles.decorator';
 import { WebhooksService } from './webhooks.service';
 import { CreateWebhookDto } from './dto/create-webhook.dto';
 import { ToggleWebhookDto } from './dto/toggle-webhook.dto';
+import { CUSTOMER_ROUTES } from '../../common/constants/route-prefixes';
 
-@Controller('webhooks')
+@Controller({ path: [...CUSTOMER_ROUTES.WEBHOOKS] })
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class WebhooksController {
   constructor(private readonly webhooks: WebhooksService) {}

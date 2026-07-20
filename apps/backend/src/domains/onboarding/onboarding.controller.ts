@@ -19,8 +19,9 @@ import { UserRole } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { OnboardingService } from './onboarding.service';
 import { CompleteStepDto } from './dto/complete-step.dto';
+import { CUSTOMER_ROUTES } from '../../common/constants/route-prefixes';
 
-@Controller('onboarding')
+@Controller({ path: [...CUSTOMER_ROUTES.ONBOARDING] })
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class OnboardingController {
   constructor(

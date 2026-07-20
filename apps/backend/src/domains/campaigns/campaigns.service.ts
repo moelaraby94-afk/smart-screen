@@ -10,7 +10,8 @@ import {
   skipFor,
 } from '../../common/pagination/pagination-query.dto';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { RealtimeGateway } from '../realtime/realtime.gateway';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PlatformEvents } from '../../common/events/platform-events';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { UpdateCampaignDto } from './dto/update-campaign.dto';
 
@@ -37,7 +38,7 @@ function assertTransition(from: CampaignStatus, to: CampaignStatus): void {
 export class CampaignsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly realtime: RealtimeGateway,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async list(workspaceId: string, query: PaginationQueryDto) {
@@ -282,13 +283,10 @@ export class CampaignsService {
 
     // Push campaign update to all screens in workspace when published
     if (toStatus === 'PUBLISHED') {
-      this.realtime.server
-        .to(`workspace:${workspaceId}`)
-        .emit('campaign:push', {
-          campaignId: id,
-          workspaceId,
-          status: toStatus,
-        });
+      this.eventEmitter.emit(PlatformEvents.CAMPAIGN_PUBLISHED, {
+        workspaceId,
+        campaignId: id,
+      });
     }
 
     return updated[0];

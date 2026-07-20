@@ -1,8 +1,9 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ScreensService } from './screens.service';
+import { ScreenAssignmentsService } from './screen-assignments.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { PlaylistsService } from '../playlists/playlists.service';
-import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SchedulingService } from '../schedules/scheduling.service';
 
 type FakeScreen = {
@@ -170,12 +171,8 @@ function createMockPlaylistsService() {
 
 function createMockHeartbeat() {
   return {
-    emitPlayerTicker: jest.fn(),
-    emitRemoteCommand: jest.fn(),
-    emitContentSync: jest.fn(),
-    emitScheduleChanged: jest.fn(),
-    emitPairingStarted: jest.fn(),
-  } as unknown as ScreenHeartbeatService;
+    emit: jest.fn(),
+  } as unknown as EventEmitter2;
 }
 
 function createMockScheduling() {
@@ -215,11 +212,16 @@ function makeScreen(overrides: Partial<FakeScreen> = {}): FakeScreen {
 
 describe('ScreensService (P1-T6)', () => {
   function makeService(fake: ReturnType<typeof createFakePrisma>) {
+    const assignmentsService = new ScreenAssignmentsService(
+      fake as unknown as PrismaService,
+      createMockPlaylistsService(),
+    );
     return new ScreensService(
       fake as unknown as PrismaService,
       createMockPlaylistsService(),
       createMockHeartbeat(),
       createMockScheduling(),
+      assignmentsService,
     );
   }
 

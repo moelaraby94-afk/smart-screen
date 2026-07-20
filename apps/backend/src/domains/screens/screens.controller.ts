@@ -22,9 +22,10 @@ import { UpdateScreenDto } from './dto/update-screen.dto';
 import { AssignPlaylistDto } from './dto/assign-playlist.dto';
 import { ReorderAssignmentDto } from './dto/reorder-assignments.dto';
 import { ScreensService } from './screens.service';
+import { CUSTOMER_ROUTES } from '../../common/constants/route-prefixes';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('screens')
+@Controller({ path: [...CUSTOMER_ROUTES.SCREENS] })
 export class ScreensController {
   constructor(private readonly screensService: ScreensService) {}
 

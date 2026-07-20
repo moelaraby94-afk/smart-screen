@@ -9,7 +9,8 @@ import {
   skipFor,
 } from '../../common/pagination/pagination-query.dto';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PlatformEvents } from '../../common/events/platform-events';
 import { CreateCanvasDto } from './dto/create-canvas.dto';
 import { UpdateCanvasDto } from './dto/update-canvas.dto';
 
@@ -17,7 +18,7 @@ import { UpdateCanvasDto } from './dto/update-canvas.dto';
 export class CanvasesService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly heartbeat: ScreenHeartbeatService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(workspaceId: string, userId: string, dto: CreateCanvasDto) {
@@ -264,7 +265,7 @@ export class CanvasesService {
       at: new Date().toISOString(),
     };
     for (const screenId of screenIds) {
-      this.heartbeat.emitCanvasLive(screenId, payload);
+      this.eventEmitter.emit(PlatformEvents.CANVAS_LIVE, { screenId, payload });
     }
   }
 

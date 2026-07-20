@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotificationsService } from './notifications.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
@@ -42,6 +43,7 @@ describe('NotificationsService', () => {
       providers: [
         NotificationsService,
         { provide: PrismaService, useValue: prisma },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
     service = moduleRef.get(NotificationsService);

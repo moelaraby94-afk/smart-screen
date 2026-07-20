@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
-import { RealtimeModule } from '../realtime/realtime.module';
 import { PairingService } from './pairing.service';
+import { PairingLockoutService } from './pairing-lockout.service';
 
 @Module({
-  imports: [RealtimeModule],
-  providers: [PairingService],
-  exports: [PairingService],
+  providers: [PairingService, PairingLockoutService],
+  exports: [PairingService, PairingLockoutService],
 })
 export class PairingModule {}

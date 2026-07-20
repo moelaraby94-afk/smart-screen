@@ -1,18 +1,38 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { formatInTimeZone } from 'date-fns-tz';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { RedisService } from '../../common/redis/redis.service';
 import { PrayerTimesService } from './prayer-times.service';
 
 @Injectable()
 export class RamadanService {
   private readonly logger = new Logger(RamadanService.name);
+  private readonly CACHE_TTL = 120;
+  private readonly CACHE_PREFIX = 'ramadan-config';
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
     private readonly prayerTimes: PrayerTimesService,
   ) {}
 
   async getConfig(workspaceId: string) {
+    const cacheKey = `${this.CACHE_PREFIX}:${workspaceId}`;
+    const client = this.redis.getClient();
+
+    if (client) {
+      try {
+        const cached = await client.get(cacheKey);
+        if (cached) {
+          return JSON.parse(cached);
+        }
+      } catch (err) {
+        this.logger.warn(
+          `Redis GET failed for ${cacheKey}: ${(err as Error).message}`,
+        );
+      }
+    }
+
     let config = await this.prisma.ramadanConfig.findUnique({
       where: { workspaceId },
     });
@@ -21,6 +41,17 @@ export class RamadanService {
         data: { workspaceId },
       });
     }
+
+    if (client) {
+      try {
+        await client.setex(cacheKey, this.CACHE_TTL, JSON.stringify(config));
+      } catch (err) {
+        this.logger.warn(
+          `Redis SET failed for ${cacheKey}: ${(err as Error).message}`,
+        );
+      }
+    }
+
     return config;
   }
 
@@ -40,38 +71,47 @@ export class RamadanService {
   ) {
     await this.getConfig(workspaceId);
 
-    return this.prisma.ramadanConfig.update({
-      where: { workspaceId },
-      data: {
-        ...(updates.enabled !== undefined ? { enabled: updates.enabled } : {}),
-        ...(updates.iftarPlaylistId !== undefined
-          ? { iftarPlaylistId: updates.iftarPlaylistId }
-          : {}),
-        ...(updates.suhoorPlaylistId !== undefined
-          ? { suhoorPlaylistId: updates.suhoorPlaylistId }
-          : {}),
-        ...(updates.iftarBuffer !== undefined
-          ? { iftarBuffer: updates.iftarBuffer }
-          : {}),
-        ...(updates.suhoorBuffer !== undefined
-          ? { suhoorBuffer: updates.suhoorBuffer }
-          : {}),
-        ...(updates.showHijriDate !== undefined
-          ? { showHijriDate: updates.showHijriDate }
-          : {}),
-        ...(updates.showPrayerTimes !== undefined
-          ? { showPrayerTimes: updates.showPrayerTimes }
-          : {}),
-        ...(updates.startDate !== undefined
-          ? {
-              startDate: updates.startDate ? new Date(updates.startDate) : null,
-            }
-          : {}),
-        ...(updates.endDate !== undefined
-          ? { endDate: updates.endDate ? new Date(updates.endDate) : null }
-          : {}),
-      },
-    });
+    return this.prisma.ramadanConfig
+      .update({
+        where: { workspaceId },
+        data: {
+          ...(updates.enabled !== undefined
+            ? { enabled: updates.enabled }
+            : {}),
+          ...(updates.iftarPlaylistId !== undefined
+            ? { iftarPlaylistId: updates.iftarPlaylistId }
+            : {}),
+          ...(updates.suhoorPlaylistId !== undefined
+            ? { suhoorPlaylistId: updates.suhoorPlaylistId }
+            : {}),
+          ...(updates.iftarBuffer !== undefined
+            ? { iftarBuffer: updates.iftarBuffer }
+            : {}),
+          ...(updates.suhoorBuffer !== undefined
+            ? { suhoorBuffer: updates.suhoorBuffer }
+            : {}),
+          ...(updates.showHijriDate !== undefined
+            ? { showHijriDate: updates.showHijriDate }
+            : {}),
+          ...(updates.showPrayerTimes !== undefined
+            ? { showPrayerTimes: updates.showPrayerTimes }
+            : {}),
+          ...(updates.startDate !== undefined
+            ? {
+                startDate: updates.startDate
+                  ? new Date(updates.startDate)
+                  : null,
+              }
+            : {}),
+          ...(updates.endDate !== undefined
+            ? { endDate: updates.endDate ? new Date(updates.endDate) : null }
+            : {}),
+        },
+      })
+      .then((result) => {
+        void this.invalidateCache(workspaceId);
+        return result;
+      });
   }
 
   /**
@@ -153,8 +193,21 @@ export class RamadanService {
         where: { workspaceId },
         data: { enabled: false },
       });
+      await this.invalidateCache(workspaceId);
       this.logger.log(
         `Auto-deactivated Ramadan mode for workspace ${workspaceId}`,
+      );
+    }
+  }
+
+  private async invalidateCache(workspaceId: string): Promise<void> {
+    const client = this.redis.getClient();
+    if (!client) return;
+    try {
+      await client.del(`${this.CACHE_PREFIX}:${workspaceId}`);
+    } catch (err) {
+      this.logger.warn(
+        `Failed to invalidate Ramadan cache for ${workspaceId}: ${(err as Error).message}`,
       );
     }
   }

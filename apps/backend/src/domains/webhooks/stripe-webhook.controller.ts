@@ -9,6 +9,7 @@ import {
 import { SkipThrottle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { StripeWebhookService } from './stripe-webhook.service';
+import { INTERNAL_ROUTES } from '../../common/constants/route-prefixes';
 
 /**
  * Never rate limited. Stripe delivers bursts and retries with backoff; a 429
@@ -16,7 +17,7 @@ import { StripeWebhookService } from './stripe-webhook.service';
  * signature verification plus an idempotency key on (provider, externalId).
  */
 @SkipThrottle()
-@Controller('webhooks/stripe')
+@Controller({ path: [...INTERNAL_ROUTES.STRIPE_WEBHOOK] })
 export class StripeWebhookController {
   constructor(private readonly stripeWebhooks: StripeWebhookService) {}
 

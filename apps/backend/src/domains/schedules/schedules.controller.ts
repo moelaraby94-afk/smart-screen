@@ -18,9 +18,10 @@ import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { ListSchedulesDto } from './dto/list-schedules.dto';
 import { SchedulesService } from './schedules.service';
+import { CUSTOMER_ROUTES } from '../../common/constants/route-prefixes';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('schedules')
+@Controller({ path: [...CUSTOMER_ROUTES.SCHEDULES] })
 export class SchedulesController {
   constructor(private readonly schedulesService: SchedulesService) {}
 
@@ -34,6 +35,16 @@ export class SchedulesController {
   @Get('overlaps')
   overlaps(@Query('workspaceId') workspaceId: string) {
     return this.schedulesService.listOverlaps(workspaceId);
+  }
+
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
+  @Get('preview')
+  preview(
+    @Query('workspaceId') workspaceId: string,
+    @Query('screenId') screenId?: string,
+    @Query('date') date?: string,
+  ) {
+    return this.schedulesService.preview(workspaceId, screenId, date);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)

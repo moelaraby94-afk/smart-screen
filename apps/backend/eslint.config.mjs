@@ -1,6 +1,7 @@
 // @ts-check
 import eslint from '@eslint/js';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import importPlugin from 'eslint-plugin-import';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -22,6 +23,42 @@ export default tseslint.config(
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
+    },
+  },
+  {
+    plugins: { import: importPlugin },
+    rules: {
+      'import/no-restricted-paths': [
+        'error',
+        {
+          basePath: './src',
+          zones: [
+            {
+              target: './common/**',
+              from: ['./domains/**'],
+              message: 'Shared modules cannot import domain modules',
+            },
+            {
+              target: './domains/player/**',
+              from: ['./domains/admin/**'],
+              message:
+                'Player modules cannot import platform admin modules',
+            },
+            {
+              target: './domains/player/**',
+              from: ['./domains/workspaces/**'],
+              message:
+                'Player modules cannot import workspace modules — use shared interfaces',
+            },
+            {
+              target: './domains/admin/**',
+              from: ['./domains/player/**'],
+              message:
+                'Platform admin modules cannot import player modules',
+            },
+          ],
+        },
+      ],
     },
   },
   {

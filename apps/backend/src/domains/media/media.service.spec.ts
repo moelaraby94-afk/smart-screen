@@ -12,13 +12,14 @@ import { DomainException } from '../../common/errors/domain.exception';
 import { ErrorCode } from '../../common/errors/error-codes';
 import { ConfigService } from '@nestjs/config';
 import { MediaService } from './media.service';
+import { MediaFoldersService } from './media-folders.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { LocalStorageService } from '../../common/storage/local-storage.service';
 
 const mockHeartbeat = {
-  emitUploadComplete: () => {},
-} as unknown as ScreenHeartbeatService;
+  emit: () => {},
+} as unknown as EventEmitter2;
 
 function makeStorage(uploadRoot: string): LocalStorageService {
   return new LocalStorageService({
@@ -38,6 +39,7 @@ describe('MediaService.buildPublicUrl', () => {
       config,
       mockHeartbeat,
       storage,
+      {} as MediaFoldersService,
     );
 
     const url = service.buildPublicUrl('ws_1/file.png');
@@ -58,6 +60,7 @@ describe('MediaService.buildPublicUrl', () => {
       config,
       mockHeartbeat,
       storage,
+      {} as MediaFoldersService,
     );
 
     const url = service.buildPublicUrl('ws_1/file.png');
@@ -142,6 +145,7 @@ describe('MediaService storage quota + write ordering', () => {
       } as unknown as ConfigService,
       mockHeartbeat,
       storage,
+      {} as MediaFoldersService,
     );
 
     return { service, prisma, tx, mediaCreate, mediaDelete };
@@ -200,7 +204,7 @@ describe('MediaService storage quota + write ordering', () => {
     const error = await upload(service).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(DomainException);
     expect((error as DomainException).code).toBe(
-      ErrorCode.STORAGE_LIMIT_REACHED,
+      ErrorCode.STORAGE_QUOTA_EXCEEDED,
     );
 
     expect(mediaCreate).not.toHaveBeenCalled();
@@ -331,6 +335,7 @@ describe('MediaService storage quota + write ordering', () => {
         } as unknown as ConfigService,
         mockHeartbeat,
         storage,
+        {} as MediaFoldersService,
       );
 
       return { service, mediaCreate };
@@ -376,7 +381,7 @@ describe('MediaService storage quota + write ordering', () => {
         .catch((e: unknown) => e);
       expect(error).toBeInstanceOf(DomainException);
       expect((error as DomainException).code).toBe(
-        ErrorCode.STORAGE_LIMIT_REACHED,
+        ErrorCode.STORAGE_QUOTA_EXCEEDED,
       );
 
       expect(mediaCreate).not.toHaveBeenCalled();

@@ -27,26 +27,35 @@ import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { CreateAccountMemberDto } from './dto/create-account-member.dto';
 import { AddAccountMemberDto } from './dto/add-account-member.dto';
 import { UpdateAccountMemberRoleDto } from './dto/update-account-member-role.dto';
-import { WorkspacesService } from './workspaces.service';
+import { WorkspaceCrudService } from './workspace-crud.service';
+import { WorkspaceBootstrapService } from './workspace-bootstrap.service';
+import { WorkspaceMembersService } from './workspace-members.service';
+import { WorkspaceInvitesService } from './workspace-invites.service';
+import { WorkspaceAccountsService } from './workspace-accounts.service';
 import type { Request } from 'express';
+import { CUSTOMER_ROUTES } from '../../common/constants/route-prefixes';
 
-@Controller('workspaces')
+@Controller({ path: [...CUSTOMER_ROUTES.WORKSPACES] })
 export class WorkspacesController {
   constructor(
-    private readonly workspaces: WorkspacesService,
+    private readonly crud: WorkspaceCrudService,
+    private readonly bootstrap: WorkspaceBootstrapService,
+    private readonly members: WorkspaceMembersService,
+    private readonly invites: WorkspaceInvitesService,
+    private readonly accounts: WorkspaceAccountsService,
     private readonly pairing: PairingService,
   ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@CurrentUser() user: JwtUser, @Body() dto: CreateWorkspaceDto) {
-    return this.workspaces.createForUser(user.sub, dto.name);
+    return this.crud.createForUser(user.sub, dto.name);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('bootstrap-demo')
   bootstrapDemo(@CurrentUser() user: JwtUser) {
-    return this.workspaces.bootstrapDemo(user.sub);
+    return this.bootstrap.bootstrapDemo(user.sub);
   }
 
   // ─── Account-level member endpoints (must be before :workspaceId routes) ───
@@ -54,13 +63,13 @@ export class WorkspacesController {
   @UseGuards(JwtAuthGuard)
   @Get('account/members')
   listAccountMembers(@CurrentUser() user: JwtUser) {
-    return this.workspaces.listAccountMembers(user.sub);
+    return this.accounts.listAccountMembers(user.sub);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('account/workspaces')
   listAccountWorkspaces(@CurrentUser() user: JwtUser) {
-    return this.workspaces.listAccountWorkspaces(user.sub);
+    return this.accounts.listAccountWorkspaces(user.sub);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -69,7 +78,7 @@ export class WorkspacesController {
     @CurrentUser() user: JwtUser,
     @Body() dto: CreateAccountMemberDto,
   ) {
-    return this.workspaces.createAccountMember(user.sub, dto);
+    return this.accounts.createAccountMember(user.sub, dto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -78,7 +87,7 @@ export class WorkspacesController {
     @CurrentUser() user: JwtUser,
     @Body() dto: AddAccountMemberDto,
   ) {
-    return this.workspaces.addAccountMember(
+    return this.accounts.addAccountMember(
       user.sub,
       dto.userId,
       dto.role,
@@ -93,7 +102,7 @@ export class WorkspacesController {
     @CurrentUser() user: JwtUser,
     @Body() dto: UpdateAccountMemberRoleDto,
   ) {
-    return this.workspaces.updateAccountMemberRole(
+    return this.accounts.updateAccountMemberRole(
       user.sub,
       membershipId,
       dto.role,
@@ -106,7 +115,7 @@ export class WorkspacesController {
     @Param('membershipId') membershipId: string,
     @CurrentUser() user: JwtUser,
   ) {
-    return this.workspaces.removeAccountMember(user.sub, membershipId);
+    return this.accounts.removeAccountMember(user.sub, membershipId);
   }
 
   // ─── Workspace-level routes ──────────────────────────────────────
@@ -118,21 +127,21 @@ export class WorkspacesController {
     @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: JwtUser,
   ) {
-    return this.workspaces.seedDemoForMember(workspaceId, user.sub);
+    return this.bootstrap.seedDemoForMember(workspaceId, user.sub);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get(':workspaceId')
   getWorkspace(@Param('workspaceId') workspaceId: string) {
-    return this.workspaces.getWorkspace(workspaceId);
+    return this.crud.getWorkspace(workspaceId);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get(':workspaceId/members')
-  members(@Param('workspaceId') workspaceId: string) {
-    return this.workspaces.listMembers(workspaceId);
+  listMembers(@Param('workspaceId') workspaceId: string) {
+    return this.members.listMembers(workspaceId);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -143,7 +152,7 @@ export class WorkspacesController {
     @CurrentUser() user: JwtUser,
     @Body() dto: UpdateWorkspaceDto,
   ) {
-    return this.workspaces.updateWorkspace(user.sub, workspaceId, dto);
+    return this.crud.updateWorkspace(user.sub, workspaceId, dto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -153,7 +162,7 @@ export class WorkspacesController {
     @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: JwtUser,
   ) {
-    return this.workspaces.deleteWorkspace(user.sub, workspaceId);
+    return this.crud.deleteWorkspace(user.sub, workspaceId);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -165,7 +174,7 @@ export class WorkspacesController {
     @CurrentUser() user: JwtUser,
     @Body() dto: UpdateMemberRoleDto,
   ) {
-    return this.workspaces.updateMemberRole(
+    return this.members.updateMemberRole(
       workspaceId,
       user.sub,
       membershipId,
@@ -181,7 +190,7 @@ export class WorkspacesController {
     @Param('membershipId') membershipId: string,
     @CurrentUser() user: JwtUser,
   ) {
-    return this.workspaces.removeMember(workspaceId, user.sub, membershipId);
+    return this.members.removeMember(workspaceId, user.sub, membershipId);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -192,7 +201,7 @@ export class WorkspacesController {
     @CurrentUser() user: JwtUser,
     @Body() dto: InviteMemberDto,
   ) {
-    return this.workspaces.inviteMember(
+    return this.invites.inviteMember(
       workspaceId,
       user.sub,
       dto.email,
@@ -204,7 +213,7 @@ export class WorkspacesController {
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get(':workspaceId/invites')
   listInvites(@Param('workspaceId') workspaceId: string) {
-    return this.workspaces.listInvitations(workspaceId);
+    return this.invites.listInvitations(workspaceId);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -214,7 +223,7 @@ export class WorkspacesController {
     @Param('workspaceId') workspaceId: string,
     @Param('inviteId') inviteId: string,
   ) {
-    return this.workspaces.cancelInvitation(workspaceId, inviteId);
+    return this.invites.cancelInvitation(workspaceId, inviteId);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -224,13 +233,13 @@ export class WorkspacesController {
     @Param('workspaceId') workspaceId: string,
     @Param('inviteId') inviteId: string,
   ) {
-    return this.workspaces.resendInvitation(workspaceId, inviteId);
+    return this.invites.resendInvitation(workspaceId, inviteId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('invites/accept')
   acceptInvite(@CurrentUser() user: JwtUser, @Body() body: { token: string }) {
-    return this.workspaces.acceptInvitation(body.token, user.sub);
+    return this.invites.acceptInvitation(body.token, user.sub);
   }
 
   @UseGuards(JwtAuthGuard, UserThrottlerGuard, RolesGuard)
@@ -254,13 +263,13 @@ export class WorkspacesController {
     @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: JwtUser,
   ): Promise<void> {
-    await this.workspaces.notifyPairingStarted(user.sub, workspaceId);
+    await this.crud.notifyPairingStarted(user.sub, workspaceId);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get(':workspaceId/activity')
   recentActivity(@Param('workspaceId') workspaceId: string) {
-    return this.workspaces.recentActivity(workspaceId);
+    return this.crud.recentActivity(workspaceId);
   }
 }

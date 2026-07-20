@@ -381,13 +381,12 @@ describe('RealtimeGateway T2.4 (WebSocket auth hardening)', () => {
       sub: 'user_1',
       email: 'test@test.com',
       typ: 'access',
+      aud: 'platform',
+      isSuperAdmin: true,
     });
     (prisma.screen.findFirst as jest.Mock).mockResolvedValue({
       id: 'screen_1',
       workspaceId: 'ws_1',
-    });
-    (prisma.user.findUnique as jest.Mock).mockResolvedValue({
-      isSuperAdmin: true,
     });
 
     await gateway.handlePlayerBindScreen(sock as any, { screenId: 'screen_1' });

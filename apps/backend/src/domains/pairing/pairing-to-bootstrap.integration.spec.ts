@@ -20,9 +20,11 @@ import { PlayerController } from '../player/player.controller';
 import { PlayerService } from '../player/player.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OfflineEventQueueService } from '../realtime/offline-event-queue.service';
 import { WsThrottlerGuard } from '../../common/throttler/ws-throttler.guard';
 import { PairingService } from './pairing.service';
+import { PairingLockoutService } from './pairing-lockout.service';
 import { RedisService } from '../../common/redis/redis.service';
 
 /**
@@ -270,6 +272,7 @@ function createFakePrisma() {
       findUnique: ({ where }: { where: { workspaceId: string } }) =>
         subscriptions.get(where.workspaceId) ?? null,
     },
+    $executeRaw: jest.fn(() => Promise.resolve()),
   };
 
   return {
@@ -341,6 +344,7 @@ describe('pairing → player bootstrap (per-screen secret handoff)', () => {
       controllers: [PlayerController],
       providers: [
         PairingService,
+        PairingLockoutService,
         PlayerService,
         RealtimeGateway,
         WorkspaceAuthHelper,
@@ -352,6 +356,12 @@ describe('pairing → player bootstrap (per-screen secret handoff)', () => {
             setServer: jest.fn(),
             emitPairingStarted: jest.fn(),
             emitPairingSessionComplete: jest.fn(),
+          },
+        },
+        {
+          provide: EventEmitter2,
+          useValue: {
+            emit: jest.fn(),
           },
         },
         {

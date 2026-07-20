@@ -15,8 +15,9 @@ import { RolesGuard } from '../../common/auth/roles.guard';
 import { Roles } from '../../common/auth/roles.decorator';
 import { ApiKeysService } from './api-keys.service';
 import { CreateApiKeyDto } from './dto/create-api-key.dto';
+import { CUSTOMER_ROUTES } from '../../common/constants/route-prefixes';
 
-@Controller('api-keys')
+@Controller({ path: [...CUSTOMER_ROUTES.API_KEYS] })
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ApiKeysController {
   constructor(private readonly apiKeys: ApiKeysService) {}

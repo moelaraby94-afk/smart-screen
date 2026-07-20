@@ -27,11 +27,12 @@ import { ListMediaDto } from './dto/list-media.dto';
 import { MediaStatsQueryDto } from './dto/media-stats-query.dto';
 import { MoveMediaFolderDto } from './dto/move-media-folder.dto';
 import { MediaService } from './media.service';
+import { CUSTOMER_ROUTES } from '../../common/constants/route-prefixes';
 
 const MAX_BYTES = 150 * 1024 * 1024;
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('media')
+@Controller({ path: [...CUSTOMER_ROUTES.MEDIA] })
 export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
 

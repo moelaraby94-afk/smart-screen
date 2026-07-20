@@ -9,12 +9,13 @@ import type { JwtUser } from '../../common/auth/current-user.decorator';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
 import { CreatePortalDto } from './dto/create-portal.dto';
+import { CUSTOMER_ROUTES } from '../../common/constants/route-prefixes';
 
 /**
  * Authenticated Stripe Billing API (Checkout, etc.).
  * Webhooks stay under {@link WebhooksModule} at POST /webhooks/stripe.
  */
-@Controller('stripe')
+@Controller({ path: [...CUSTOMER_ROUTES.STRIPE] })
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class StripeController {
   constructor(private readonly subscriptions: SubscriptionsService) {}

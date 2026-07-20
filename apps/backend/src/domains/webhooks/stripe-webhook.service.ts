@@ -9,6 +9,9 @@ import { Prisma, SubscriptionPlan, UserRole } from '@prisma/client';
 import Stripe from 'stripe';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { SubscriptionEmailService } from '../email/subscription-email.service';
+
+const DUNNING_GRACE_PERIOD_DAYS = 7;
 
 @Injectable()
 export class StripeWebhookService {
@@ -18,6 +21,7 @@ export class StripeWebhookService {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     private readonly subscriptions: SubscriptionsService,
+    private readonly subscriptionEmail: SubscriptionEmailService,
   ) {}
 
   private parsePlan(raw: string | undefined): SubscriptionPlan | null {
@@ -225,14 +229,28 @@ export class StripeWebhookService {
 
               // Set grace period: 7 days from now
               const gracePeriodEndsAt = new Date(
-                Date.now() + 7 * 24 * 60 * 60 * 1000,
+                Date.now() + DUNNING_GRACE_PERIOD_DAYS * 24 * 60 * 60 * 1000,
               );
               await tx.subscription.update({
                 where: { workspaceId },
                 data: { gracePeriodEndsAt },
               });
 
-              // Enqueue dunning email (best-effort, non-blocking)
+              // Send dunning email (best-effort, non-blocking)
+              const ownerEmail = owner.user.email;
+              const ownerName = owner.user.fullName || ownerEmail;
+              this.subscriptionEmail
+                .sendPaymentFailed(
+                  ownerEmail,
+                  ownerName,
+                  DUNNING_GRACE_PERIOD_DAYS,
+                )
+                .catch((err) => {
+                  this.logger.error(
+                    `Failed to send dunning email to ${ownerEmail}: ${String(err)}`,
+                  );
+                });
+
               this.logger.warn(
                 `Payment failed for workspace ${workspaceId}, grace period set to ${gracePeriodEndsAt.toISOString()}`,
               );

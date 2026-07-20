@@ -21,9 +21,10 @@ import { UpdateCampaignDto } from './dto/update-campaign.dto';
 import { ListCampaignsDto } from './dto/list-campaigns.dto';
 import { TransitionCampaignDto } from './dto/transition-campaign.dto';
 import { CampaignsService } from './campaigns.service';
+import { CUSTOMER_ROUTES } from '../../common/constants/route-prefixes';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('campaigns')
+@Controller({ path: [...CUSTOMER_ROUTES.CAMPAIGNS] })
 export class CampaignsController {
   constructor(private readonly campaignsService: CampaignsService) {}
 

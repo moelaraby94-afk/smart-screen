@@ -1,13 +1,20 @@
 import { Test } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { AdminService } from './admin.service';
+import { PlatformTenantService } from './platform-tenant.service';
+import { PlatformTenantCommandsService } from './platform-tenant-commands.service';
+import { PlatformStaffService } from './platform-staff.service';
+import { PlatformSettingsService } from './platform-settings.service';
+import { PlatformAnalyticsService } from './platform-analytics.service';
+import { PlatformSecurityService } from './platform-security.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AuthService } from '../auth/auth.service';
-import { WorkspacesService } from '../workspaces/workspaces.service';
+import { WorkspaceProvisioningService } from '../../common/auth/workspace-provisioning.service';
 import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { SubscriptionEmailService } from '../email/subscription-email.service';
 import { AuditLogService } from '../../common/audit/audit-log.service';
+import { AccountContextHelper } from '../../common/auth/account-context.helper';
 
 function makePrisma() {
   return {
@@ -48,6 +55,13 @@ function makePrisma() {
     },
     subscription: {
       findMany: jest.fn().mockResolvedValue([]),
+      aggregate: jest.fn().mockResolvedValue({ _sum: {} }),
+    },
+    paymentRecord: {
+      aggregate: jest.fn().mockResolvedValue({ _sum: {} }),
+    },
+    screenPairingSession: {
+      count: jest.fn().mockResolvedValue(0),
     },
   } as unknown as PrismaService;
 }
@@ -61,21 +75,42 @@ describe('AdminService', () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
         AdminService,
+        PlatformTenantService,
+        PlatformTenantCommandsService,
+        PlatformStaffService,
+        PlatformSettingsService,
+        PlatformAnalyticsService,
+        PlatformSecurityService,
         { provide: PrismaService, useValue: prisma },
         { provide: AuthService, useValue: {} },
         {
-          provide: WorkspacesService,
+          provide: WorkspaceProvisioningService,
           useValue: {
             createForUser: jest.fn().mockResolvedValue({ id: 'ws1' }),
           },
         },
-        { provide: ScreenHeartbeatService, useValue: {} },
+        {
+          provide: ScreenHeartbeatService,
+          useValue: { getConnectedSocketCount: jest.fn().mockReturnValue(0) },
+        },
         {
           provide: SubscriptionsService,
           useValue: { setMockPlan: jest.fn().mockResolvedValue({}) },
         },
         { provide: SubscriptionEmailService, useValue: {} },
-        { provide: AuditLogService, useValue: {} },
+        {
+          provide: AuditLogService,
+          useValue: {
+            list: jest.fn().mockResolvedValue([]),
+            append: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
+          provide: AccountContextHelper,
+          useValue: {
+            invalidateUserContext: jest.fn().mockResolvedValue(undefined),
+          },
+        },
       ],
     }).compile();
     service = moduleRef.get(AdminService);
@@ -111,9 +146,11 @@ describe('AdminService', () => {
     );
   });
 
-  it('listCustomers returns empty array when no users', async () => {
+  it('listCustomers returns empty paginated result when no users', async () => {
     const result = await service.listCustomers();
-    expect(result).toEqual([]);
+    expect(result.items).toEqual([]);
+    expect(result.hasMore).toBe(false);
+    expect(result.nextCursor).toBeNull();
   });
 
   it('getCustomerProfile throws NotFound for missing user', async () => {
@@ -123,14 +160,18 @@ describe('AdminService', () => {
     );
   });
 
-  it('listWorkspaces returns empty array when no workspaces', async () => {
+  it('listWorkspaces returns empty paginated result when no workspaces', async () => {
     const result = await service.listWorkspaces();
-    expect(result).toEqual([]);
+    expect(result.items).toEqual([]);
+    expect(result.hasMore).toBe(false);
+    expect(result.nextCursor).toBeNull();
   });
 
-  it('listGlobalFleetScreens returns empty array when no screens', async () => {
+  it('listGlobalFleetScreens returns empty paginated result when no screens', async () => {
     const result = await service.listGlobalFleetScreens();
-    expect(result).toEqual([]);
+    expect(result.items).toEqual([]);
+    expect(result.hasMore).toBe(false);
+    expect(result.nextCursor).toBeNull();
   });
 
   it('sendSubscriptionReminder throws NotFound for missing user', async () => {

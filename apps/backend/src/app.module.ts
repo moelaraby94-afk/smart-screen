@@ -1,10 +1,15 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ClassSerializerInterceptor } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import * as Joi from 'joi';
 import { SentryModule } from '@sentry/nestjs/setup';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AdminIpGuard } from './common/auth/admin-ip.guard';
 import { AllExceptionsFilter } from './common/errors/all-exceptions.filter';
 import { CsrfModule } from './common/csrf/csrf.module';
 import { PrismaModule } from './common/prisma/prisma.module';
@@ -40,12 +45,19 @@ import { MetricsModule } from './common/metrics/metrics.module';
 import { MetricsMiddleware } from './common/metrics/metrics.middleware';
 import { RequestContextModule } from './common/request-context/request-context.module';
 import { WorkspaceAuthModule } from './common/auth/workspace-auth.module';
+import { JwtInfraModule } from './common/auth/jwt-infra.module';
 import { ConfigHelperModule } from './common/config/config-helper.module';
+import { SecurityEventModule } from './common/security/security-event.module';
+import { AiModule } from './domains/ai/ai.module';
+import { AnalyticsModule } from './domains/analytics/analytics.module';
+import { BulkOperationsModule } from './domains/bulk-operations/bulk-operations.module';
+import { ApiVersionMiddleware } from './common/middleware/api-version.middleware';
 
 @Module({
   imports: [
     ...(process.env.SENTRY_DSN?.trim() ? [SentryModule.forRoot()] : []),
     ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot(),
     /**
      * Baseline per-IP budget for the whole API. It exists to blunt
      * unauthenticated floods and scanners, not to police normal use — the
@@ -78,7 +90,43 @@ import { ConfigHelperModule } from './common/config/config-helper.module';
           : undefined,
       }),
     }),
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validationSchema: Joi.object({
+        NODE_ENV: Joi.string()
+          .valid('development', 'production', 'test')
+          .default('development'),
+        PORT: Joi.number().port().default(3000),
+        DATABASE_URL: Joi.string().uri().required(),
+        REDIS_URL: Joi.string().uri().optional().allow(''),
+        JWT_ACCESS_SECRET: Joi.string().optional(),
+        JWT_REFRESH_SECRET: Joi.string().optional(),
+        JWT_ACCESS_EXPIRES_IN: Joi.string().default('15m'),
+        JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
+        ENCRYPTION_KEY: Joi.string().optional(),
+        ALLOWED_ORIGINS: Joi.string().optional().allow(''),
+        MEDIA_STORAGE_PROVIDER: Joi.string()
+          .valid('local', 's3')
+          .default('local'),
+        RATE_LIMIT_PER_MINUTE: Joi.number().integer().min(1).default(300),
+        TRUST_PROXY_HOPS: Joi.number().integer().min(0).default(0),
+        AUDIT_LOG_RETENTION_DAYS: Joi.number().integer().min(1).default(90),
+        SENTRY_DSN: Joi.string().uri().optional().allow(''),
+        SMTP_HOST: Joi.string().optional().allow(''),
+        SMTP_PORT: Joi.number().port().optional(),
+        STRIPE_WEBHOOK_SECRET: Joi.string().optional().allow(''),
+        STRIPE_SECRET_KEY: Joi.string().optional().allow(''),
+        OPENAI_API_KEY: Joi.string().optional().allow(''),
+        OPENAI_MODEL: Joi.string().optional().allow(''),
+        CLAMAV_HOST: Joi.string().optional().allow(''),
+        CLAMAV_PORT: Joi.number().port().optional(),
+      }),
+      validationOptions: {
+        abortEarly: false,
+        allowUnknown: true,
+        stripUnknown: false,
+      },
+    }),
     BullModule.forRootAsync({
       imports: [ConfigModule, RedisModule],
       inject: [ConfigService, RedisService],
@@ -121,12 +169,24 @@ import { ConfigHelperModule } from './common/config/config-helper.module';
     MetricsModule,
     RequestContextModule,
     WorkspaceAuthModule,
+    JwtInfraModule,
     ConfigHelperModule,
+    SecurityEventModule,
+    AiModule,
+    AnalyticsModule,
+    BulkOperationsModule,
   ],
-  providers: [{ provide: APP_FILTER, useClass: AllExceptionsFilter }],
+  providers: [
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
+    AdminIpGuard,
+    Reflector,
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(MetricsMiddleware).forRoutes('*');
+    consumer.apply(ApiVersionMiddleware).forRoutes('*');
   }
 }

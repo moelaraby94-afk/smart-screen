@@ -11,7 +11,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { AuthService } from './auth.service';
+import { AuthCredentialsService } from './auth-credentials.service';
+import { AuthTokenService } from './auth-token.service';
+import { AuthProfileService } from './auth-profile.service';
 import { TwoFactorService } from './two-factor.service';
 import { LoginDto } from './dto/login.dto';
 import { LoginTwoFactorDto } from './dto/login-two-factor.dto';
@@ -24,13 +26,29 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import type { JwtUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
-import { clearAuthCookies, setAuthCookies } from './auth-cookie.util';
+import {
+  clearAuthCookies,
+  setAuthCookies,
+  extractRefreshTokenFromCookies,
+} from './auth-cookie.util';
+import { CUSTOMER_ROUTES } from '../../common/constants/route-prefixes';
 import type { Request, Response } from 'express';
 
-@Controller('auth')
+/**
+ * Customer-facing authentication: registration, login, 2FA, password reset,
+ * profile, refresh, and logout.
+ *
+ * Legacy paths under `auth/*` are preserved for backward compatibility.
+ * New paths under `customer/auth/*` are the canonical location.
+ * Platform-only auth operations (impersonation exit, token exchange) live
+ * in {@link PlatformAuthController}.
+ */
+@Controller({ path: [...CUSTOMER_ROUTES.AUTH] })
 export class AuthController {
   constructor(
-    private readonly authService: AuthService,
+    private readonly credentialsService: AuthCredentialsService,
+    private readonly tokenService: AuthTokenService,
+    private readonly profileService: AuthProfileService,
     private readonly twoFactorService: TwoFactorService,
   ) {}
 
@@ -38,14 +56,14 @@ export class AuthController {
   @Post('register/start')
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   async registerStart(@Body() dto: RegisterStartDto) {
-    return this.authService.registerStart(dto);
+    return this.credentialsService.registerStart(dto);
   }
 
   @HttpCode(200)
   @Post('register/resend')
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   async registerResend(@Body() dto: RegisterResendDto) {
-    return this.authService.registerResend(dto.email);
+    return this.credentialsService.registerResend(dto.email);
   }
 
   /** 6-digit OTP: without a tight budget it is brute-forceable inside its 15-minute TTL. */
@@ -56,8 +74,13 @@ export class AuthController {
     @Body() dto: RegisterVerifyDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const result = await this.authService.registerVerify(dto);
-    setAuthCookies(response, result.accessToken, result.refreshToken);
+    const result = await this.credentialsService.registerVerify(dto);
+    setAuthCookies(
+      response,
+      result.accessToken,
+      result.refreshToken,
+      result.user.audience,
+    );
     return {
       user: result.user,
       workspaces: result.workspaces,
@@ -69,14 +92,14 @@ export class AuthController {
   @Post('forgot-password')
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
-    return this.authService.forgotPassword(dto.email);
+    return this.credentialsService.forgotPassword(dto.email);
   }
 
   @HttpCode(200)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPasswordDto) {
-    return this.authService.resetPassword(dto);
+    return this.credentialsService.resetPassword(dto);
   }
 
   /**
@@ -92,11 +115,16 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Req() request: Request,
   ) {
-    const result = await this.authService.login(dto, request.ip);
+    const result = await this.credentialsService.login(dto, request.ip);
     if ('requiresTwoFactor' in result) {
       return result;
     }
-    setAuthCookies(response, result.accessToken, result.refreshToken);
+    setAuthCookies(
+      response,
+      result.accessToken,
+      result.refreshToken,
+      result.user.audience,
+    );
 
     return {
       user: result.user,
@@ -113,8 +141,16 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Req() request: Request,
   ) {
-    const result = await this.authService.loginWithTwoFactor(dto, request.ip);
-    setAuthCookies(response, result.accessToken, result.refreshToken);
+    const result = await this.credentialsService.loginWithTwoFactor(
+      dto,
+      request.ip,
+    );
+    setAuthCookies(
+      response,
+      result.accessToken,
+      result.refreshToken,
+      result.user.audience,
+    );
     return {
       user: result.user,
       workspaces: result.workspaces,
@@ -128,35 +164,23 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const refreshToken = request.cookies?.cs_refresh_token as
-      | string
-      | undefined;
-    const result = await this.authService.refreshTokens(refreshToken ?? '');
-    setAuthCookies(response, result.accessToken, result.refreshToken);
+    const refreshToken = extractRefreshTokenFromCookies(
+      request.cookies as Record<string, string | undefined>,
+    );
+    const result = await this.tokenService.refreshTokens(refreshToken ?? '');
+    setAuthCookies(
+      response,
+      result.accessToken,
+      result.refreshToken,
+      result.audience,
+    );
     return { success: true, accessToken: result.accessToken };
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
   me(@CurrentUser() user: JwtUser) {
-    return this.authService.me(user.sub, user.impersonatedBy);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(200)
-  @Post('exit-impersonation')
-  async exitImpersonation(
-    @CurrentUser() user: JwtUser,
-    @Res({ passthrough: true }) response: Response,
-    @Req() request: Request,
-  ) {
-    const result = await this.authService.exitImpersonation(user, request.ip);
-    setAuthCookies(response, result.accessToken, result.refreshToken);
-    return {
-      accessToken: result.accessToken,
-      user: result.user,
-      workspaces: result.workspaces,
-    };
+    return this.profileService.me(user.sub, user.impersonatedBy);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -166,8 +190,8 @@ export class AuthController {
     @CurrentUser() user: JwtUser,
     @Res({ passthrough: true }) response: Response,
   ): Promise<void> {
-    await this.authService.logout(user.sub);
-    clearAuthCookies(response);
+    await this.tokenService.logout(user.sub);
+    clearAuthCookies(response, user.aud);
   }
 
   // ─── 2FA Management ─────────────────────────────────────────────
@@ -183,7 +207,10 @@ export class AuthController {
   @HttpCode(200)
   @Post('2fa/setup')
   async setup2fa(@CurrentUser() user: JwtUser) {
-    const userData = await this.authService.me(user.sub, user.impersonatedBy);
+    const userData = await this.profileService.me(
+      user.sub,
+      user.impersonatedBy,
+    );
     if (!userData) throw new NotFoundException('User not found');
     return this.twoFactorService.generateSecret(userData.email);
   }
@@ -204,7 +231,7 @@ export class AuthController {
       dto.secret,
       dto.token,
     );
-    await this.authService.logTwoFactorAction(user.sub, '2FA_ENABLED');
+    await this.profileService.logTwoFactorAction(user.sub, '2FA_ENABLED');
     return result;
   }
 
@@ -224,7 +251,7 @@ export class AuthController {
       throw new BadRequestException('Verification code is required');
     }
     await this.twoFactorService.disableTwoFactor(user.sub, dto.token);
-    await this.authService.logTwoFactorAction(user.sub, '2FA_DISABLED');
+    await this.profileService.logTwoFactorAction(user.sub, '2FA_DISABLED');
     return { ok: true };
   }
 }

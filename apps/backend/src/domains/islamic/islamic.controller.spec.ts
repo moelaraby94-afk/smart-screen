@@ -39,7 +39,7 @@ describe('IslamicController', () => {
       controllers: [IslamicController],
       providers: [
         Reflector,
-        AccountContextHelper,
+        { provide: AccountContextHelper, useValue: {} },
         { provide: PrayerTimesService, useValue: prayerTimes },
         { provide: RamadanService, useValue: ramadan },
         { provide: PrismaService, useValue: prisma },

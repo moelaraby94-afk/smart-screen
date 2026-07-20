@@ -6,7 +6,7 @@ import {
 import { mkdir, writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import type { Express } from 'express';
-import { getAdminSettings, updateAdminSettings } from './admin-runtime.store';
+import { PlatformSettingsService } from './platform-settings.service';
 
 export const BRANDING_VARIANTS = [
   'en-light',
@@ -57,6 +57,8 @@ function variantToSettingsKey(
 
 @Injectable()
 export class BrandingAssetsService {
+  constructor(private readonly settings: PlatformSettingsService) {}
+
   async ensureDir(): Promise<void> {
     await mkdir(BRANDING_DIR, { recursive: true });
   }
@@ -80,7 +82,7 @@ export class BrandingAssetsService {
     }
     await this.ensureDir();
 
-    const settings = await getAdminSettings();
+    const settings = await this.settings.getSettings();
     const key = variantToSettingsKey(v);
     const prev = settings[key]?.trim();
     const ext = extFromMime(file.mimetype);
@@ -97,7 +99,7 @@ export class BrandingAssetsService {
     await writeFile(dest, file.buffer);
 
     const nextEpoch = (settings.brandingEpoch ?? 0) + 1;
-    await updateAdminSettings({
+    await this.settings.patchSettings({
       [key]: filename,
       brandingEpoch: nextEpoch,
     });
@@ -111,7 +113,7 @@ export class BrandingAssetsService {
       throw new NotFoundException();
     }
     const v = variant as BrandingVariant;
-    const settings = await getAdminSettings();
+    const settings = await this.settings.getSettings();
     const key = variantToSettingsKey(v);
     const name = settings[key]?.trim();
     if (!name) throw new NotFoundException();

@@ -77,4 +77,8 @@ export class UpdateScheduleDto {
   @IsOptional()
   @IsBoolean()
   enabled?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  excludeHolidays?: boolean;
 }

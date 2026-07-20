@@ -1,8 +1,9 @@
 import { Controller, Get, Param, Res } from '@nestjs/common';
 import { readFile } from 'fs/promises';
 import type { Response } from 'express';
-import { getAdminSettings } from './admin-runtime.store';
+import { PlatformSettingsService } from './platform-settings.service';
 import { BrandingAssetsService } from './branding-assets.service';
+import { PUBLIC_ROUTES } from '../../common/constants/route-prefixes';
 
 export type PublicBrandingDto = {
   platformName: string;
@@ -15,13 +16,16 @@ export type PublicBrandingDto = {
   hasAssetArDark: boolean;
 };
 
-@Controller('branding')
+@Controller({ path: [...PUBLIC_ROUTES.BRANDING] })
 export class BrandingController {
-  constructor(private readonly brandingAssets: BrandingAssetsService) {}
+  constructor(
+    private readonly brandingAssets: BrandingAssetsService,
+    private readonly settings: PlatformSettingsService,
+  ) {}
 
   @Get()
   async getBranding(): Promise<PublicBrandingDto> {
-    const s = await getAdminSettings();
+    const s = await this.settings.getSettings();
     return {
       platformName: s.platformName,
       brandingEpoch: s.brandingEpoch ?? 0,

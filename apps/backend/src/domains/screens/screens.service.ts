@@ -10,8 +10,10 @@ import { buildPage } from '../../common/pagination/page';
 import { skipFor } from '../../common/pagination/pagination-query.dto';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { PlaylistsService } from '../playlists/playlists.service';
-import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PlatformEvents } from '../../common/events/platform-events';
 import { SchedulingService } from '../schedules/scheduling.service';
+import { ScreenAssignmentsService } from './screen-assignments.service';
 import { CreateScreenDto } from './dto/create-screen.dto';
 import { ListScreensDto } from './dto/list-screens.dto';
 import { OverrideScreenDto } from './dto/override-screen.dto';
@@ -23,8 +25,9 @@ export class ScreensService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly playlistsService: PlaylistsService,
-    private readonly heartbeat: ScreenHeartbeatService,
+    private readonly eventEmitter: EventEmitter2,
     private readonly scheduling: SchedulingService,
+    private readonly assignmentsService: ScreenAssignmentsService,
   ) {}
 
   /** Blocks creation when the workspace already has `subscription.screenLimit` screens. */
@@ -235,7 +238,10 @@ export class ScreensService {
       await this.playlistsService.emitPlaylistForScreen(id);
     }
     if (dto.playerTicker !== undefined) {
-      this.heartbeat.emitPlayerTicker(id, dto.playerTicker ?? null);
+      this.eventEmitter.emit(PlatformEvents.PLAYER_TICKER, {
+        screenId: id,
+        text: dto.playerTicker ?? null,
+      });
     }
     return updated;
   }
@@ -258,20 +264,26 @@ export class ScreensService {
     };
 
     if (dto.command === 'identify') {
-      this.heartbeat.emitRemoteCommand(screen.id, {
-        ...base,
-        serialNumber: screen.serialNumber,
+      this.eventEmitter.emit(PlatformEvents.REMOTE_COMMAND, {
+        screenId: screen.id,
+        payload: { ...base, serialNumber: screen.serialNumber },
       });
       return { ok: true, command: dto.command };
     }
 
     if (dto.command === 'refresh_content') {
-      this.heartbeat.emitRemoteCommand(screen.id, base);
+      this.eventEmitter.emit(PlatformEvents.REMOTE_COMMAND, {
+        screenId: screen.id,
+        payload: base,
+      });
       return { ok: true, command: dto.command };
     }
 
     if (dto.command === 'restart') {
-      this.heartbeat.emitRemoteCommand(screen.id, base);
+      this.eventEmitter.emit(PlatformEvents.REMOTE_COMMAND, {
+        screenId: screen.id,
+        payload: base,
+      });
       return { ok: true, command: dto.command };
     }
 
@@ -391,14 +403,7 @@ export class ScreensService {
   // ─── Playlist Assignments (multi-playlist rotation) ───
 
   async listAssignments(workspaceId: string, screenId: string) {
-    await this.assertScreenInWorkspace(workspaceId, screenId);
-    return this.prisma.screenPlaylistAssignment.findMany({
-      where: { screenId },
-      orderBy: { orderIndex: 'asc' },
-      include: {
-        playlist: { select: { id: true, name: true, isPublished: true } },
-      },
-    });
+    return this.assignmentsService.listAssignments(workspaceId, screenId);
   }
 
   async addAssignment(
@@ -406,29 +411,7 @@ export class ScreensService {
     screenId: string,
     dto: { playlistId: string; orderIndex?: number },
   ) {
-    await this.assertScreenInWorkspace(workspaceId, screenId);
-    const existing = await this.prisma.screenPlaylistAssignment.findUnique({
-      where: { screenId_playlistId: { screenId, playlistId: dto.playlistId } },
-    });
-    if (existing) {
-      throw new BadRequestException('Playlist already assigned to this screen');
-    }
-    const count = await this.prisma.screenPlaylistAssignment.count({
-      where: { screenId },
-    });
-    const created = await this.prisma.screenPlaylistAssignment.create({
-      data: {
-        screenId,
-        playlistId: dto.playlistId,
-        orderIndex: dto.orderIndex ?? count,
-      },
-      include: {
-        playlist: { select: { id: true, name: true, isPublished: true } },
-      },
-    });
-
-    await this.playlistsService.emitPlaylistForScreen(screenId);
-    return created;
+    return this.assignmentsService.addAssignment(workspaceId, screenId, dto);
   }
 
   async removeAssignment(
@@ -436,11 +419,11 @@ export class ScreensService {
     screenId: string,
     assignmentId: string,
   ) {
-    await this.assertScreenInWorkspace(workspaceId, screenId);
-    await this.prisma.screenPlaylistAssignment.delete({
-      where: { id: assignmentId, screenId },
-    });
-    await this.playlistsService.emitPlaylistForScreen(screenId);
+    return this.assignmentsService.removeAssignment(
+      workspaceId,
+      screenId,
+      assignmentId,
+    );
   }
 
   async reorderAssignments(
@@ -448,25 +431,11 @@ export class ScreensService {
     screenId: string,
     items: { id: string; orderIndex: number }[],
   ) {
-    await this.assertScreenInWorkspace(workspaceId, screenId);
-    await this.prisma.$transaction(
-      items.map((item) =>
-        this.prisma.screenPlaylistAssignment.updateMany({
-          where: { id: item.id, screenId },
-          data: { orderIndex: item.orderIndex },
-        }),
-      ),
+    return this.assignmentsService.reorderAssignments(
+      workspaceId,
+      screenId,
+      items,
     );
-    const result = await this.prisma.screenPlaylistAssignment.findMany({
-      where: { screenId },
-      orderBy: { orderIndex: 'asc' },
-      include: {
-        playlist: { select: { id: true, name: true, isPublished: true } },
-      },
-    });
-
-    await this.playlistsService.emitPlaylistForScreen(screenId);
-    return result;
   }
 
   private async assertScreenInWorkspace(

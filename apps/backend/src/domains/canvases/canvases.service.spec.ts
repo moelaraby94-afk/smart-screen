@@ -1,7 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CanvasesService } from './canvases.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 type FakeCanvas = {
   id: string;
@@ -163,8 +163,8 @@ function createFakePrisma(opts: {
 
 function createMockHeartbeat() {
   return {
-    emitCanvasLive: jest.fn(),
-  } as unknown as ScreenHeartbeatService;
+    emit: jest.fn(),
+  } as unknown as EventEmitter2;
 }
 
 const WS_ID = 'ws-1';

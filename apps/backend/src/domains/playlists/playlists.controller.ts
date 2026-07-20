@@ -24,9 +24,10 @@ import { UpdatePlaylistDto } from './dto/update-playlist.dto';
 import { ReplacePlaylistItemsDto } from './dto/replace-playlist-items.dto';
 import { ListPlaylistsDto } from './dto/list-playlists.dto';
 import { PlaylistsService } from './playlists.service';
+import { CUSTOMER_ROUTES } from '../../common/constants/route-prefixes';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('playlists')
+@Controller({ path: [...CUSTOMER_ROUTES.PLAYLISTS] })
 export class PlaylistsController {
   constructor(private readonly playlistsService: PlaylistsService) {}
 

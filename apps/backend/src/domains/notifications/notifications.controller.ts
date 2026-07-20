@@ -19,8 +19,9 @@ import {
   NotificationsService,
   type NotificationRow,
 } from './notifications.service';
+import { CUSTOMER_ROUTES } from '../../common/constants/route-prefixes';
 
-@Controller('notifications')
+@Controller({ path: [...CUSTOMER_ROUTES.NOTIFICATIONS] })
 @UseGuards(JwtAuthGuard)
 export class NotificationsController {
   constructor(private readonly service: NotificationsService) {}

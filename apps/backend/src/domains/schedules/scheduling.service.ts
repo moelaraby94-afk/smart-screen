@@ -3,6 +3,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { enUS } from 'date-fns/locale';
 import { RecurrenceType, type Schedule } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { HolidayService } from './holiday.service';
 
 const WEEKDAY_NAME_TO_DOW: Record<string, number> = {
   Sunday: 0,
@@ -76,7 +77,10 @@ function isMinuteInWindow(
 
 @Injectable()
 export class SchedulingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly holidayService: HolidayService,
+  ) {}
 
   /**
    * Effective playlist id for playback:
@@ -133,12 +137,19 @@ export class SchedulingService {
 
     const { minutes, dow, dom } = nowInWorkspaceTz(at, tz);
 
-    const matching = schedules
+    let matching = schedules
       .filter((s) => this.scheduleMatches(s, at, tz, minutes, dow, dom))
       .sort(
         (a, b) =>
           b.priority - a.priority || (a.updatedAt > b.updatedAt ? -1 : 1),
       );
+
+    if (matching.length > 0) {
+      const isHoliday = await this.holidayService.isHoliday(screen.workspaceId, at);
+      if (isHoliday) {
+        matching = matching.filter((s) => !s.excludeHolidays);
+      }
+    }
 
     if (matching.length > 0) {
       const best = matching[0];

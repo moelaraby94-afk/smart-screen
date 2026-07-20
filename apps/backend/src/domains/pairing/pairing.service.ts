@@ -18,16 +18,11 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 import { WorkspaceAuthHelper } from '../../common/auth/workspace-auth.helper';
 import { DomainException } from '../../common/errors/domain.exception';
 import { ErrorCode } from '../../common/errors/error-codes';
-import { ScreenHeartbeatService } from '../realtime/screen-heartbeat.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PlatformEvents } from '../../common/events/platform-events';
+import { PairingLockoutService } from './pairing-lockout.service';
 import { ClaimPairingSessionDto } from './dto/claim-pairing-session.dto';
 import { StartPairingSessionDto } from './dto/start-pairing-session.dto';
-
-/** Wrong-code claim attempts are counted within this rolling window. */
-const LOCKOUT_FAILURE_WINDOW_MS = 10 * 60 * 1000;
-/** How long a user is locked out of claim once the failure threshold is hit. */
-const LOCKOUT_DURATION_MS = 30 * 60 * 1000;
-/** Wrong-code attempts allowed within the window before lockout kicks in. */
-const LOCKOUT_MAX_FAILED_ATTEMPTS = 5;
 
 @Injectable()
 export class PairingService {
@@ -37,7 +32,8 @@ export class PairingService {
     private readonly prisma: PrismaService,
     private readonly workspaceAuth: WorkspaceAuthHelper,
     private readonly config: ConfigService,
-    private readonly heartbeat: ScreenHeartbeatService,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly lockout: PairingLockoutService,
   ) {}
 
   private pairingTtlMs(): number {
@@ -58,90 +54,12 @@ export class PairingService {
     });
   }
 
-  /**
-   * Throws while the user is locked out from a prior burst of wrong-code claim
-   * guesses. Independent of the per-minute ThrottlerGuard on the route — this
-   * survives across throttle windows (30 min vs. 60 s).
-   */
-  private async assertClaimNotLockedOut(
-    userId: string,
-    workspaceId: string,
-    ip?: string,
-  ): Promise<void> {
-    const lockout = await this.prisma.pairingClaimLockout.findUnique({
-      where: { userId_ip: { userId, ip: ip ?? 'unknown' } },
-    });
-    const now = new Date();
-    if (lockout?.lockedUntil && lockout.lockedUntil > now) {
-      const retryAfterSeconds = Math.ceil(
-        (lockout.lockedUntil.getTime() - now.getTime()) / 1000,
-      );
-      this.logger.warn(
-        `Pairing claim failed userId=${userId} workspaceId=${workspaceId} reason=LOCKED_OUT retryAfterSeconds=${retryAfterSeconds}`,
-      );
-      throw DomainException.tooManyRequests(
-        ErrorCode.TOO_MANY_FAILED_PAIRING_ATTEMPTS,
-        'Too many failed pairing attempts',
-        { retryAfterSeconds },
-      );
-    }
-  }
-
-  /**
-   * Records a wrong/expired-code claim guess and, once
-   * {@link LOCKOUT_MAX_FAILED_ATTEMPTS} is hit inside the rolling
-   * {@link LOCKOUT_FAILURE_WINDOW_MS} window, locks the user out of claim for
-   * {@link LOCKOUT_DURATION_MS}. Only called after {@link assertClaimNotLockedOut}
-   * has already passed, so any `lockedUntil` seen here is stale (in the past).
-   */
-  private async recordFailedClaimAttempt(
-    userId: string,
-    workspaceId: string,
-    ip?: string,
-  ): Promise<void> {
-    const now = new Date();
-    const existing = await this.prisma.pairingClaimLockout.findUnique({
-      where: { userId_ip: { userId, ip: ip ?? 'unknown' } },
-    });
-
-    const windowExpired =
-      !existing ||
-      now.getTime() - existing.windowStartAt.getTime() >
-        LOCKOUT_FAILURE_WINDOW_MS;
-
-    const failedCount = windowExpired ? 1 : existing.failedCount + 1;
-    const windowStartAt = windowExpired ? now : existing.windowStartAt;
-    const lockedUntil =
-      failedCount >= LOCKOUT_MAX_FAILED_ATTEMPTS
-        ? new Date(now.getTime() + LOCKOUT_DURATION_MS)
-        : null;
-
-    await this.prisma.pairingClaimLockout.upsert({
-      where: { userId_ip: { userId, ip: ip ?? 'unknown' } },
-      create: {
-        userId,
-        ip: ip ?? 'unknown',
-        failedCount,
-        windowStartAt,
-        lockedUntil,
-      },
-      update: { failedCount, windowStartAt, lockedUntil },
-    });
-
-    this.logger.warn(
-      `Pairing claim failed userId=${userId} workspaceId=${workspaceId} reason=INVALID_OR_EXPIRED_PAIRING_CODE ` +
-        `failedCount=${failedCount}/${LOCKOUT_MAX_FAILED_ATTEMPTS}${lockedUntil ? ' -> LOCKED for 30m' : ''}`,
-    );
-  }
-
-  private async clearFailedClaimAttempts(userId: string): Promise<void> {
-    await this.prisma.pairingClaimLockout.deleteMany({ where: { userId } });
-  }
-
   private async assertWithinScreenLimitTx(
     tx: Prisma.TransactionClient,
     workspaceId: string,
   ): Promise<void> {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${workspaceId}))`;
+
     const sub = await tx.subscription.findUnique({
       where: { workspaceId },
       select: { screenLimit: true },
@@ -239,11 +157,14 @@ export class PairingService {
           },
         });
         if (notifyWorkspaceId) {
-          this.heartbeat.emitPairingStarted(notifyWorkspaceId, {
-            sessionId: row.id,
-            expiresAt: row.expiresAt.toISOString(),
-            source: 'player',
-            at: now.toISOString(),
+          this.eventEmitter.emit(PlatformEvents.PAIRING_STARTED, {
+            workspaceId: notifyWorkspaceId,
+            payload: {
+              sessionId: row.id,
+              expiresAt: row.expiresAt.toISOString(),
+              source: 'player',
+              at: now.toISOString(),
+            },
           });
         }
         return {
@@ -348,7 +269,7 @@ export class PairingService {
     dto: ClaimPairingSessionDto,
     ip?: string,
   ) {
-    await this.assertClaimNotLockedOut(userId, workspaceId, ip);
+    await this.lockout.assertNotLockedOut(userId, workspaceId, ip);
 
     try {
       await this.assertWorkspaceAdmin(workspaceId, userId);
@@ -436,18 +357,21 @@ export class PairingService {
         return { session, screen };
       });
 
-      await this.clearFailedClaimAttempts(userId);
+      await this.lockout.clearFailedAttempts(userId);
 
       const { session, screen } = result;
-      this.heartbeat.emitPairingSessionComplete(session.id, {
+      this.eventEmitter.emit(PlatformEvents.PAIRING_SESSION_COMPLETE, {
         sessionId: session.id,
-        screenId: screen.id,
-        serialNumber: screen.serialNumber,
-        workspaceId,
-        playerPlatform: screen.playerPlatform,
-        resolutionWidth: screen.resolutionWidth,
-        resolutionHeight: screen.resolutionHeight,
-        at: new Date().toISOString(),
+        payload: {
+          sessionId: session.id,
+          screenId: screen.id,
+          serialNumber: screen.serialNumber,
+          workspaceId,
+          playerPlatform: screen.playerPlatform,
+          resolutionWidth: screen.resolutionWidth,
+          resolutionHeight: screen.resolutionHeight,
+          at: new Date().toISOString(),
+        },
       });
 
       return {
@@ -470,7 +394,7 @@ export class PairingService {
           `reason=${err instanceof DomainException ? err.code : String(err)}`,
       );
       if (isWrongCode) {
-        await this.recordFailedClaimAttempt(userId, workspaceId, ip);
+        await this.lockout.recordFailedAttempt(userId, workspaceId, ip);
       }
       throw err;
     }
