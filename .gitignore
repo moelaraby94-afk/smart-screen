@@ -25,3 +25,4 @@ Thumbs.db
 # Local secrets / editor
 .env.*.local
 apps/marketing/.env.local
+.next/

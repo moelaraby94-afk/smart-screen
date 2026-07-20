@@ -45,14 +45,14 @@ src/
 
 | Pair | Location | Pattern | Status |
 |------|----------|---------|--------|
-| Auth ↔ Workspaces | `auth.module.ts:18`, `workspaces.module.ts:13` | `forwardRef()` | ⚠️ Known debt (TD-001) |
-| Auth ↔ Realtime | `realtime.module.ts:9` | `forwardRef(() => AuthModule)` | ⚠️ Known debt |
-| Schedules ↔ Playlists | `schedules.module.ts:12` | `forwardRef(() => PlaylistsModule)` | ⚠️ Known debt |
-| Admin ↔ Auth/Workspaces | `admin.module.ts:20-21` | `forwardRef()` x2 | ⚠️ Known debt |
+| Auth ↔ Workspaces | — | **RESOLVED** via `JwtInfraModule` extraction | ✅ Fixed |
+| Auth ↔ Realtime | — | **RESOLVED** via `JwtInfraModule` extraction | ✅ Fixed |
+| Schedules ↔ Playlists | `schedules.module.ts:12` | `forwardRef(() => PlaylistsModule)` | ⚠️ Known debt (TD-001) |
+| Notifications ↔ Realtime | `notifications.service.ts:27` | `@Inject(forwardRef(() => RealtimeGateway))` | ⚠️ Known debt |
 
 **NestJS Official Stance:** "Circular dependencies should be avoided when possible." — [NestJS Circular Dependencies](https://docs.nestjs.com/fundamentals/circular-dependency)
 
-**Verdict:** ⚠️ 4 circular dependency pairs. All use `forwardRef()` correctly. Not a blocker but architectural debt. All documented in TD-001.
+**Verdict:** ⚠️ 2 circular dependency pairs remain (down from 4). Both use `forwardRef()` correctly. Auth ↔ Workspaces and Auth ↔ Realtime were resolved by extracting `JwtInfraModule` as a shared `@Global()` module.
 
 ### 2.3 Provider Scopes
 
@@ -88,7 +88,7 @@ All providers use default (singleton) scope. No request-scoped providers found.
 | Indexes on query patterns | ✅ | `@@index([workspaceId, createdAt])`, `@@index([status, expiresAt])`, etc. |
 | Cascade deletes | ✅ | `onDelete: Cascade` on `WorkspaceMember`, `PlaylistItem`, etc. |
 | Unique constraints | ✅ | `@@unique` on `[userId, sessionId]`, `[workspaceId, code]`, etc. |
-| Deprecated models | ⚠️ | `WorkspacePairingCode` (KI-019), `PaymentRecord` unused (KI-020) |
+| Deprecated models | ✅ | `WorkspacePairingCode` removed. `PaymentRecord` actively used in Stripe webhooks and analytics. |
 | String instead of enum | ⚠️ | `recurrence` as String (TD-003), `startTime`/`endTime` as String (TD-004) |
 
 **Verdict:** ✅ Schema is well-indexed. Two deprecated/unused models and two type-safety debts — all documented.

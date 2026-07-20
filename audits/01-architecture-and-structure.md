@@ -54,23 +54,25 @@ The backend follows a **domain-driven modular architecture**:
 
 ```
 apps/backend/src/
-├── app.module.ts          # Root module — 22 domain modules registered
+├── app.module.ts          # Root module — 30+ modules registered (22 domain + 8 infrastructure)
 ├── main.ts                # Bootstrap, CORS, Helmet, validation pipe
 ├── instrument.ts          # Sentry instrumentation
-├── common/                # Cross-cutting concerns (12 sub-modules)
+├── common/                # Cross-cutting concerns (19 sub-modules)
 │   ├── audit/             # Audit log service
-│   ├── auth/              # JWT guard, roles guard, current-user decorator
-│   ├── config/            # Production secret assertions
+│   ├── auth/              # JWT guard, roles guard, current-user decorator, workspace auth
+│   ├── config/            # Production secret assertions, config helper, CORS config
+│   ├── crypto/            # AES-256-GCM encryption service
 │   ├── csrf/              # CSRF protection module
 │   ├── errors/            # AllExceptionsFilter, DomainException, error codes
 │   ├── health/            # Health check endpoints
+│   ├── metrics/           # Metrics middleware and controller
 │   ├── observability/     # Request logging
 │   ├── pagination/        # Pagination helpers
 │   ├── prisma/            # PrismaService
 │   ├── product/           # Mock billing, storage limit helpers
 │   ├── request-context/   # Request-scoped context + app logger
 │   ├── throttler/         # User-based throttler guard
-│   └── validation/        # (empty — 1 file)
+│   └── validation/        # Request body validation spec only
 └── domains/               # 22 domain modules
     ├── account/           # User profile, email change
     ├── admin/             # Super admin CRM, impersonation
@@ -98,7 +100,7 @@ apps/backend/src/
 
 ### 3.2 Cross-Module Dependencies
 
-- **`AuthModule`** uses `forwardRef(() => WorkspacesModule)` — circular dependency between auth and workspaces. This is a known pattern but indicates tight coupling.
+- **`AuthModule`** no longer imports `WorkspacesModule` directly. The circular dependency was resolved by extracting `JwtInfraModule` as a shared `@Global()` module that both `AuthModule` and `RealtimeModule` import independently.
 - **`SubscriptionsService`** is imported by both `StripeModule` and `WebhooksModule` — appropriate for the billing flow.
 - **`ScreenHeartbeatService`** from `RealtimeModule` is used by `SubscriptionsService` and `PairingService` — cross-domain realtime updates.
 

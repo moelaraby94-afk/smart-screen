@@ -93,6 +93,16 @@ Phase 10: Production Readiness
   ├── Admin session timeout ────────┤
   ├── IP allowlist for admin ───────┤
   └── Final penetration test ───────┘
+         │
+         ▼
+Phase 11: Platform Separation & Enterprise Architecture
+  ├── Route prefix centralization ──┐
+  ├── Auth route separation ────────┤
+  ├── Admin controller split ───────┤
+  ├── Player API formalization ─────┤
+  ├── Module boundary enforcement ──┤
+  ├── Large service decomposition ──┤
+  └── Circular dependency removal ──┘
 ```
 
 ---
@@ -1028,6 +1038,103 @@ P2-27, P2-44, P2-45, P2-46, P2-47, P3-57, P3-58, P3-59, P3-60
 - [ ] TypeScript compiles with 0 errors
 - [ ] All tests pass
 - [ ] Coverage ≥ 70%
+
+---
+
+## Phase 11: Platform Separation & Enterprise Architecture
+
+### Goal
+Separate Platform from Workspace APIs, formalize Player and Public API layers, centralize route management, improve module boundaries, and remove architectural coupling. After this phase, the backend supports clean separation for two dashboards (Platform Control + Customer) and future mobile/AI services.
+
+### Gaps Addressed
+P2-33 (WS event validation), P2-51 (circular dependency), P1-15 (AuthService decomposition), architectural debt from ad-hoc route prefixes.
+
+### Tasks
+
+#### 11.1 Route Prefix Centralization ✅
+- Created `src/common/constants/route-prefixes.ts` with centralized constants for all API layers
+- All 20 controllers migrated from ad-hoc string literals to centralized constants
+- Five API layers formalized: `platform/`, `customer/`, `player/`, `internal/`, `public/`
+- Backward compatibility maintained: all legacy paths still work alongside new prefixed paths
+
+#### 11.2 Auth Route Separation ✅
+- Split `AuthController` into customer-facing and platform-facing controllers
+- `AuthController` → `customer/auth` + legacy `auth` (register, login, 2FA, password reset, profile, refresh, logout)
+- `PlatformAuthController` → `platform/auth` + legacy `auth` (exit-impersonation, exchange)
+- Removed unused imports (AuthImpersonationService, ExchangeTokenService) from AuthController
+- Backward compatibility: all `auth/*` paths still work for both controllers via dual-path routing
+
+#### 11.3 Admin Controller Split ✅
+- Split 290-line `AdminController` into two focused controllers
+- `PlatformManagementController`: user CRUD, staff CRUD, customer/workspace management, impersonation, exchange-token
+- `PlatformOperationsController`: fleet/screens, stats, logs, settings, branding upload, subscription-mock
+- Both share `platform/` + `admin/` dual-path routing (backward compatible)
+- `admin.controller.ts` now re-exports both controllers for backward import compatibility
+- Test spec split to cover both controllers independently
+
+#### 11.4 Player API Formalization ✅
+- Created `PlayerSecretGuard` — dedicated guard for kiosk player authentication
+- Guard validates `x-player-secret` header against `Screen.pairingSecretHash` via Prisma
+- Applied guard to kiosk endpoints: `bootstrap`, `canvas/:canvasId`, `prayer-pause-status`
+- JWT endpoints (`workspace-bootstrap`, `prayer-pause-status/jwt`) remain under `JwtAuthGuard`
+- Service-layer validation kept as defense-in-depth fallback
+- Player auth is now a separate architectural concern, not embedded in service logic
+
+#### 11.5 Module Boundary Enforcement ✅
+- Updated ESLint `import/no-restricted-paths` rules to match actual directory structure
+- Removed dead zone rules referencing non-existent `./domains/customer/**` and `./domains/platform/**` paths
+- Enforced boundaries:
+  - `common/` cannot import from `domains/` (shared modules stay shared)
+  - `player/` cannot import from `admin/` (player layer independent of platform admin)
+  - `player/` cannot import from `workspaces/` (use shared interfaces)
+  - `admin/` cannot import from `player/` (platform admin independent of player)
+- All rules pass with 0 violations on current codebase
+
+#### 11.6 Large Service Decomposition ✅
+- Audited all service files: largest was `playlists.service.ts` at 1,245 lines
+- Extracted `PlaylistGroupsService` (140 lines): list/create/rename/delete/move group operations
+- Extracted `PlaylistResolutionService` (280 lines): nested playlist resolution, circular reference detection, payload building, serialization
+- `PlaylistsService` reduced from 1,245 → 790 lines (37% reduction), delegates to extracted services
+- All public API preserved — controller and external consumers unchanged
+- Test specs updated to construct new dependencies
+- TypeScript: 0 errors, Tests: 62 suites, 592 tests, all passing
+
+#### 11.7 Circular Dependency Removal ✅
+- Auth ↔ Workspaces circular dependency already resolved in prior phases
+- `WorkspaceResolverService` extracted to `common/auth/` — provides workspace list for auth without importing WorkspacesModule
+- `WorkspaceProvisioningService` extracted to `common/auth/` — provides workspace creation for registration without importing WorkspacesModule
+- Both registered in global `WorkspaceAuthModule` (`@Global()`)
+- `AuthModule` does not import `WorkspacesModule` — zero production cross-imports
+- `WorkspacesModule` does not import `AuthModule` — only test spec references `JwtStrategy`
+- Verified: no `from '../workspaces/'` in `domains/auth/`, no `from '../auth/'` in `domains/workspaces/` production code
+
+### Affected Files
+- `apps/backend/src/common/constants/route-prefixes.ts` — NEW
+- All 20 controller files — Modified imports + `@Controller` decorators
+- `apps/backend/src/main.ts` — No changes needed (raw body paths already correct)
+
+### Dependencies
+- All previous phases (building on existing architecture)
+
+### Verification
+- TypeScript: 0 errors
+- Tests: 62 suites, 592 tests, all passing
+- All legacy API paths still respond (backward compatibility)
+- New `customer/`, `platform/`, `player/`, `internal/`, `public/` prefixes all functional
+
+### Definition of Done
+- [x] Route prefix constants file created
+- [x] All controllers use centralized route constants
+- [x] Five API layers formalized (platform, customer, player, internal, public)
+- [x] Backward compatibility maintained
+- [x] TypeScript compiles with 0 errors
+- [x] All existing tests pass
+- [x] Auth route separation (Task 11.2)
+- [x] Admin controller split (Task 11.3)
+- [x] Player API formalization (Task 11.4)
+- [x] Module boundary enforcement (Task 11.5)
+- [x] Large service decomposition (Task 11.6)
+- [x] Circular dependency removal (Task 11.7)
 
 ---
 

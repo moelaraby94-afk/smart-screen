@@ -176,8 +176,8 @@
 
 ### 3.3 Rate Limiting
 
-- **Global `ThrottlerGuard`** (300 req/min per IP) ✅
-- **Per-route `@Throttle`** on sensitive endpoints ✅
+- **Global `ThrottlerGuard`** registered as `APP_GUARD` in `AppModule` (300 req/min per IP, configurable via `RATE_LIMIT_PER_MINUTE`) ✅
+- **Per-route `@Throttle`** on sensitive endpoints (login: 20/min, register: 5/min, password reset: 5/min, 2FA: 5/min) ✅
 - **`UserThrottlerGuard`** for per-user tracking on authenticated routes ✅
 - **`LoginLockout`** and `PairingClaimLockout`** for brute-force protection ✅
 
