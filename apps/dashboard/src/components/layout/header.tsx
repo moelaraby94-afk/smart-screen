@@ -119,7 +119,6 @@ export function ShellHeader({
 
   const desktopActions = (
     <div className="hidden shrink-0 flex-nowrap items-center justify-end gap-3 lg:flex">
-      <GlobalSearch />
       <DensityToggle />
       {showWorkspaceSwitcher ? (
         <div className="flex items-center gap-1.5">
@@ -134,6 +133,7 @@ export function ShellHeader({
 
   const mobileActions = (
     <div className="flex shrink-0 items-center gap-1.5 lg:hidden">
+      <GlobalSearch />
       {showWorkspaceSwitcher ? <OfflineIndicator /> : null}
       <NotificationBell />
       <MobileMoreMenu navLocale={navLocale} rtl={rtl} />

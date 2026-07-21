@@ -115,16 +115,16 @@ export function GlobalSearch() {
 
   const navCommands = useMemo<NavCommand[]>(() => {
     const cmds: NavCommand[] = [
-      { id: 'nav-overview', labelKey: 'nav.overview', href: `/${locale}/overview`, icon: LayoutDashboard },
-      { id: 'nav-screens', labelKey: 'nav.screens', href: `/${locale}/screens`, icon: Monitor },
-      { id: 'nav-emergency', labelKey: 'nav.emergency', href: `/${locale}/emergency`, icon: AlertTriangle },
-      { id: 'nav-media', labelKey: 'nav.media', href: `/${locale}/media`, icon: FolderOpen },
-      { id: 'nav-templates', labelKey: 'nav.templates', href: `/${locale}/templates`, icon: LayoutTemplate },
-      { id: 'nav-playlists', labelKey: 'nav.playlists', href: `/${locale}/content/playlists`, icon: Clapperboard },
-      { id: 'nav-schedules', labelKey: 'nav.schedules', href: `/${locale}/schedules`, icon: CalendarClock },
-      { id: 'nav-analytics', labelKey: 'nav.analytics', href: `/${locale}/analytics`, icon: Activity },
-      { id: 'nav-ai', labelKey: 'nav.ai', href: `/${locale}/ai`, icon: Sparkles },
-      { id: 'nav-team', labelKey: 'nav.team', href: `/${locale}/team`, icon: Users },
+      { id: 'nav-overview', labelKey: 'overview', href: `/${locale}/overview`, icon: LayoutDashboard },
+      { id: 'nav-screens', labelKey: 'screens', href: `/${locale}/screens`, icon: Monitor },
+      { id: 'nav-emergency', labelKey: 'emergency', href: `/${locale}/emergency`, icon: AlertTriangle },
+      { id: 'nav-media', labelKey: 'media', href: `/${locale}/media`, icon: FolderOpen },
+      { id: 'nav-templates', labelKey: 'templates', href: `/${locale}/templates`, icon: LayoutTemplate },
+      { id: 'nav-playlists', labelKey: 'playlists', href: `/${locale}/content/playlists`, icon: Clapperboard },
+      { id: 'nav-schedules', labelKey: 'schedules', href: `/${locale}/schedules`, icon: CalendarClock },
+      { id: 'nav-analytics', labelKey: 'analytics', href: `/${locale}/analytics`, icon: Activity },
+      { id: 'nav-ai', labelKey: 'ai', href: `/${locale}/ai`, icon: Sparkles },
+      { id: 'nav-team', labelKey: 'team', href: `/${locale}/team`, icon: Users },
     ];
     return cmds;
   }, [locale]);

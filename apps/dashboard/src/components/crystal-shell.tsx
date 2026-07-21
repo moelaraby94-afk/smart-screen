@@ -120,7 +120,7 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
       ) : null}
 
       {/* Main column: fixed viewport height; only <main> scrolls — sidebar stays fixed, no document scroll */}
-      <div className="relative z-content flex min-h-0 flex-1 flex-col overflow-hidden md:ms-[64px] lg:ms-[240px]">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden md:ms-[64px] lg:ms-[240px]">
         <ShellHeader
           navLocale={navLocale}
           rtl={rtl}
@@ -136,7 +136,7 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
         />
         <Breadcrumbs pathname={pathname} locale={navLocale} rtl={rtl} />
         <ShellHeaderInsetSetterContext.Provider value={setHeaderInsetStable}>
-          <main id="main-content" className="vc-scrollbar relative z-content mx-auto min-h-0 w-full max-w-[1400px] flex-1 overflow-y-auto overscroll-y-contain px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-6">
+          <main id="main-content" className="vc-scrollbar relative mx-auto min-h-0 w-full max-w-[1400px] flex-1 overflow-y-auto overscroll-y-contain px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-6">
             <ImpersonationReturnButton />
             <PageTransition>
               <WorkspaceGate>{children}</WorkspaceGate>

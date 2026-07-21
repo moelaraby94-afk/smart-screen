@@ -224,8 +224,8 @@ export function ShellSidebar({
     <aside
       key={`sidebar-${navLocale}`}
       className={cn(
-        'fixed inset-y-0 z-drawer flex w-[280px] flex-col [inset-inline-start:0]',
-        prefersReducedMotion ? 'transition-opacity duration-0' : 'transition-transform duration-normal',
+        'fixed inset-y-0 z-drawer flex w-[280px] flex-col [inset-inline-start:0] max-md:shadow-2xl',
+        prefersReducedMotion ? 'transition-[translate,transform] duration-0' : 'transition-[translate,transform] duration-normal',
         rtl
           ? mobileNavOpen ? 'max-md:translate-x-0' : 'max-md:translate-x-full'
           : mobileNavOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full',
