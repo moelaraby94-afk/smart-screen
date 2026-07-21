@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { cookies, headers } from 'next/headers';
+
+export const dynamic = 'force-dynamic';
 import { Cairo } from 'next/font/google';
 import { GeistMono } from 'geist/font/mono';
 import { GeistSans } from 'geist/font/sans';
