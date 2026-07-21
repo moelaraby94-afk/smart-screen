@@ -51,6 +51,11 @@ services:
       - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
       - "traefik.http.services.backend.loadbalancer.server.port=3000"
 
+networks:
+  default:
+    name: dokploy-network
+    external: true
+
 volumes:
   media_uploads:
   backend_data:

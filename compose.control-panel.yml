@@ -26,3 +26,8 @@ services:
       - "traefik.http.routers.control-panel.tls=true"
       - "traefik.http.routers.control-panel.tls.certresolver=letsencrypt"
       - "traefik.http.services.control-panel.loadbalancer.server.port=3002"
+
+networks:
+  default:
+    name: dokploy-network
+    external: true
