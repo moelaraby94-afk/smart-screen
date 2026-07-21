@@ -1,0 +1,121 @@
+# Smart Screen — Dokploy deployment overlay
+#
+# Usage in Dokploy:
+#   1. Create a "Docker Compose" project
+#   2. Point to this repo on GitHub
+#   3. Set the Compose file to: docker-compose.yml
+#   4. Add this as a second Compose file: docker-compose.dokploy.yml
+#   5. Or merge both into one file for Dokploy
+#
+# Dokploy uses Traefik as reverse proxy — SSL and routing are automatic.
+# This file:
+#   - Removes external port bindings (Traefik handles routing)
+#   - Adds Traefik labels for each public service
+#   - Adds production env overrides
+#   - Connects to Dokploy's Traefik network
+#
+# Required environment variables (set in Dokploy project settings):
+#   - DASHBOARD_DOMAIN=app.gpack.tech
+#   - ADMIN_DOMAIN=admin.gpack.tech
+#   - API_DOMAIN=api.gpack.tech
+#   - PLAYER_DOMAIN=player.gpack.tech
+#   - MARKETING_DOMAIN=gpack.tech
+#   - ALLOWED_ORIGINS=https://app.gpack.tech,https://admin.gpack.tech,https://player.gpack.tech
+#   - JWT_ACCESS_SECRET, JWT_REFRESH_SECRET, ENCRYPTION_KEY, PLAYER_HEARTBEAT_SECRET
+#   - POSTGRES_PASSWORD, MINIO_ROOT_USER, MINIO_ROOT_PASSWORD
+
+services:
+  # ── Internal services: no external ports ──────────────────────────────
+  db:
+    ports: !reset []
+
+  redis:
+    ports: !reset []
+
+  minio:
+    ports: !reset []
+
+  # ── Backend: API + WebSocket via Traefik ───────────────────────────────
+  backend:
+    ports: !reset []
+    environment:
+      TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-1}
+      MEDIA_PUBLIC_BASE_URL: ${MEDIA_PUBLIC_BASE_URL:-https://${API_DOMAIN}/media-files}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?Set ALLOWED_ORIGINS in Dokploy env}
+      COOKIE_SECURE: 'true'
+      ENABLE_SWAGGER: ${ENABLE_SWAGGER:-false}
+    labels:
+      - "traefik.enable=true"
+      # REST API + health + media
+      - "traefik.http.routers.backend.rule=Host(`${API_DOMAIN}`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls=true"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.backend.loadbalancer.server.port=3000"
+      # WebSocket support
+      - "traefik.http.routers.backend.middlewares=ws-headers@docker"
+      # Health check route (no TLS for internal checks)
+      - "traefik.http.routers.backend-health.rule=Host(`${API_DOMAIN}`) && PathPrefix(`/health`)"
+      - "traefik.http.routers.backend-health.entrypoints=web"
+      - "traefik.http.routers.backend-health.service=backend"
+
+  # ── Dashboard via Traefik ──────────────────────────────────────────────
+  dashboard:
+    ports: !reset []
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://${API_DOMAIN}/api/v1}
+      INTERNAL_API_BASE_URL: http://backend:3000/api/v1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`${DASHBOARD_DOMAIN}`)"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.services.dashboard.loadbalancer.server.port=3000"
+
+  # ── Player via Traefik ─────────────────────────────────────────────────
+  player:
+    ports: !reset []
+    environment:
+      NEXT_PUBLIC_REALTIME_URL: ${NEXT_PUBLIC_REALTIME_URL:-https://${API_DOMAIN}}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://${API_DOMAIN}/api/v1}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.player.rule=Host(`${PLAYER_DOMAIN}`)"
+      - "traefik.http.routers.player.entrypoints=websecure"
+      - "traefik.http.routers.player.tls=true"
+      - "traefik.http.routers.player.tls.certresolver=letsencrypt"
+      - "traefik.http.services.player.loadbalancer.server.port=3001"
+
+  # ── Control Panel via Traefik ──────────────────────────────────────────
+  control-panel:
+    ports: !reset []
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://${API_DOMAIN}/api/v1}
+      INTERNAL_API_BASE_URL: http://backend:3000/api/v1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.control-panel.rule=Host(`${ADMIN_DOMAIN}`)"
+      - "traefik.http.routers.control-panel.entrypoints=websecure"
+      - "traefik.http.routers.control-panel.tls=true"
+      - "traefik.http.routers.control-panel.tls.certresolver=letsencrypt"
+      - "traefik.http.services.control-panel.loadbalancer.server.port=3002"
+
+  # ── Marketing via Traefik ──────────────────────────────────────────────
+  marketing:
+    ports: !reset []
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.marketing.rule=Host(`${MARKETING_DOMAIN}`)"
+      - "traefik.http.routers.marketing.entrypoints=websecure"
+      - "traefik.http.routers.marketing.tls=true"
+      - "traefik.http.routers.marketing.tls.certresolver=letsencrypt"
+      - "traefik.http.services.marketing.loadbalancer.server.port=3010"
+      # Redirect www to non-www
+      - "traefik.http.routers.marketing-www.rule=Host(`www.${MARKETING_DOMAIN}`)"
+      - "traefik.http.routers.marketing-www.entrypoints=websecure"
+      - "traefik.http.routers.marketing-www.tls=true"
+      - "traefik.http.routers.marketing-www.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.marketing-www.middlewares=redirect-to-non-www@docker"
+      - "traefik.http.middlewares.redirect-to-non-www.redirectregex.regex=^https://www\\.(.*)"
+      - "traefik.http.middlewares.redirect-to-non-www.redirectregex.replacement=https://$$1"
