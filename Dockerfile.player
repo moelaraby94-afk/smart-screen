@@ -4,7 +4,7 @@
 # Build context MUST be the monorepo root.
 #   docker build -f Dockerfile.player .
 
-FROM node:20-bookworm-slim AS build
+FROM node:26-bookworm-slim AS build
 WORKDIR /repo
 
 RUN apt-get update \
@@ -32,7 +32,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build -w apps/player \
   && npm prune --omit=dev
 
-FROM node:20-bookworm-slim AS runner
+FROM node:26-bookworm-slim AS runner
 WORKDIR /repo
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
