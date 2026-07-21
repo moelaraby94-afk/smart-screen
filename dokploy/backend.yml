@@ -1,0 +1,56 @@
+# Smart Screen — Backend API only
+# Deploy as separate Dokploy application
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    volumes:
+      - media_uploads:/repo/apps/backend/uploads
+      - backend_data:/repo/apps/backend/.data
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      COOKIE_SECURE: 'true'
+      DATABASE_URL: "${DATABASE_URL:?Set DATABASE_URL}"
+      JWT_ACCESS_SECRET: "${JWT_ACCESS_SECRET:?Set JWT_ACCESS_SECRET}"
+      JWT_REFRESH_SECRET: "${JWT_REFRESH_SECRET:?Set JWT_REFRESH_SECRET}"
+      PLAYER_HEARTBEAT_SECRET: "${PLAYER_HEARTBEAT_SECRET:?Set PLAYER_HEARTBEAT_SECRET}"
+      ENCRYPTION_KEY: "${ENCRYPTION_KEY:?Set ENCRYPTION_KEY}"
+      ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:?Set ALLOWED_ORIGINS}"
+      MEDIA_PUBLIC_BASE_URL: https://${API_DOMAIN}/media-files
+      REDIS_URL: "${REDIS_URL:?Set REDIS_URL}"
+      MEDIA_STORAGE_PROVIDER: local
+      DATABASE_POOL_MAX: '20'
+      TRUST_PROXY_HOPS: '1'
+      RATE_LIMIT_PER_MINUTE: '300'
+      HEARTBEAT_STALE_MS: '45000'
+      HEARTBEAT_SWEEP_MS: '10000'
+      PAIRING_SESSION_TTL_MS: '900000'
+      JWT_ACCESS_EXPIRES_IN: '15m'
+      JWT_REFRESH_EXPIRES_IN: '7d'
+      EMAIL_FROM: noreply@gpack.tech
+      EMAIL_FROM_NAME: Smart Screen
+      NEXT_PUBLIC_ALLOW_MOCK_BILLING: 'false'
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'node -e "require(\"http\").get(\"http://127.0.0.1:3000/ready\",r=>process.exit(r.statusCode===200?0:1)).on(\"error\",()=>process.exit(1))"',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 90s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`${API_DOMAIN}`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls=true"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.backend.loadbalancer.server.port=3000"
+
+volumes:
+  media_uploads:
+  backend_data:

@@ -1,0 +1,28 @@
+# Smart Screen — Dashboard only
+# Deploy as separate Dokploy application
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+      args:
+        NEXT_PUBLIC_API_BASE_URL: https://${API_DOMAIN}/api/v1
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      NEXT_PUBLIC_API_BASE_URL: https://${API_DOMAIN}/api/v1
+      INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://backend:3000/api/v1}
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS "http://127.0.0.1:3000/api/health" >/dev/null || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 60s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`${DASHBOARD_DOMAIN}`)"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.services.dashboard.loadbalancer.server.port=3000"

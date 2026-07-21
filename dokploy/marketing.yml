@@ -1,0 +1,25 @@
+# Smart Screen — Marketing site only
+# Deploy as separate Dokploy application
+services:
+  marketing:
+    build:
+      context: .
+      dockerfile: Dockerfile.marketing
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: '3010'
+      NEXT_PUBLIC_DASHBOARD_URL: https://${DASHBOARD_DOMAIN}
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS "http://127.0.0.1:3010/" >/dev/null || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.marketing.rule=Host(`${MARKETING_DOMAIN}`)"
+      - "traefik.http.routers.marketing.entrypoints=websecure"
+      - "traefik.http.routers.marketing.tls=true"
+      - "traefik.http.routers.marketing.tls.certresolver=letsencrypt"
+      - "traefik.http.services.marketing.loadbalancer.server.port=3010"

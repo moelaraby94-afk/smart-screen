@@ -1,0 +1,28 @@
+# Smart Screen — Control Panel only
+# Deploy as separate Dokploy application
+services:
+  control-panel:
+    build:
+      context: .
+      dockerfile: Dockerfile.control-panel
+      args:
+        NEXT_PUBLIC_API_BASE_URL: https://${API_DOMAIN}/api/v1
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: '3002'
+      NEXT_PUBLIC_API_BASE_URL: https://${API_DOMAIN}/api/v1
+      INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://backend:3000/api/v1}
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS "http://127.0.0.1:3002/" >/dev/null || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.control-panel.rule=Host(`${ADMIN_DOMAIN}`)"
+      - "traefik.http.routers.control-panel.entrypoints=websecure"
+      - "traefik.http.routers.control-panel.tls=true"
+      - "traefik.http.routers.control-panel.tls.certresolver=letsencrypt"
+      - "traefik.http.services.control-panel.loadbalancer.server.port=3002"
