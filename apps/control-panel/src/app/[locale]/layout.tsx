@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { hasLocale } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
+import { NextIntlClientProvider } from 'next-intl';
 import { MotionConfig } from 'framer-motion';
 import { AppToaster } from '@/components/app-toaster';
 import { SwrProvider } from '@/components/swr-provider';
@@ -27,6 +28,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
   if (!hasLocale(routing.locales, locale)) notFound();
 
   setRequestLocale(locale);
+  const messages = (await import(`@/i18n/messages/${locale}.json`)).default;
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
   return (
@@ -35,12 +37,14 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
       dir={dir}
       className={`min-h-screen ${locale === 'ar' ? 'font-ar' : ''}`}
     >
-      <SwrProvider>
-        <MotionConfig reducedMotion="user">
-          {children}
-        </MotionConfig>
-        <AppToaster />
-      </SwrProvider>
+      <NextIntlClientProvider locale={locale} messages={messages as Record<string, unknown>}>
+        <SwrProvider>
+          <MotionConfig reducedMotion="user">
+            {children}
+          </MotionConfig>
+          <AppToaster />
+        </SwrProvider>
+      </NextIntlClientProvider>
     </div>
   );
 }
