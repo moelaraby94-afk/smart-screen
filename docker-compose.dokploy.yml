@@ -1,70 +1,157 @@
-# Smart Screen — Dokploy deployment overlay
+# Smart Screen — Dokploy deployment (self-contained)
 #
-# Usage in Dokploy:
-#   1. Create a "Docker Compose" project
-#   2. Point to this repo on GitHub
-#   3. Set the Compose file to: docker-compose.yml
-#   4. Add this as a second Compose file: docker-compose.dokploy.yml
-#   5. Or merge both into one file for Dokploy
+# This file is specifically for Dokploy. It uses Traefik labels for routing
+# and does not expose internal service ports.
 #
-# Dokploy uses Traefik as reverse proxy — SSL and routing are automatic.
-# This file:
-#   - Removes external port bindings (Traefik handles routing)
-#   - Adds Traefik labels for each public service
-#   - Adds production env overrides
-#   - Connects to Dokploy's Traefik network
+# In Dokploy:
+#   1. Create a Docker Compose project
+#   2. Connect GitHub repo: moelaraby94-afk/smart-screen
+#   3. Branch: main
+#   4. Compose file: docker-compose.dokploy.yml
+#   5. Set all environment variables (see below)
+#   6. Deploy
 #
 # Required environment variables (set in Dokploy project settings):
-#   - DASHBOARD_DOMAIN=app.gpack.tech
-#   - ADMIN_DOMAIN=admin.gpack.tech
-#   - API_DOMAIN=api.gpack.tech
-#   - PLAYER_DOMAIN=player.gpack.tech
-#   - MARKETING_DOMAIN=gpack.tech
-#   - ALLOWED_ORIGINS=https://app.gpack.tech,https://admin.gpack.tech,https://player.gpack.tech
-#   - JWT_ACCESS_SECRET, JWT_REFRESH_SECRET, ENCRYPTION_KEY, PLAYER_HEARTBEAT_SECRET
-#   - POSTGRES_PASSWORD, MINIO_ROOT_USER, MINIO_ROOT_PASSWORD
+#   API_DOMAIN=api.gpack.tech
+#   DASHBOARD_DOMAIN=app.gpack.tech
+#   ADMIN_DOMAIN=admin.gpack.tech
+#   PLAYER_DOMAIN=player.gpack.tech
+#   MARKETING_DOMAIN=gpack.tech
+#   ALLOWED_ORIGINS=https://app.gpack.tech,https://admin.gpack.tech,https://player.gpack.tech
+#   POSTGRES_PASSWORD=<strong-password>
+#   MINIO_ROOT_USER=<minio-user>
+#   MINIO_ROOT_PASSWORD=<minio-password>
+#   JWT_ACCESS_SECRET=<openssl rand -hex 32>
+#   JWT_REFRESH_SECRET=<openssl rand -hex 32>
+#   PLAYER_HEARTBEAT_SECRET=<openssl rand -hex 32>
+#   ENCRYPTION_KEY=<openssl rand -hex 32>
 
 services:
-  # ── Internal services: no external ports ──────────────────────────────
+  # ── Database ───────────────────────────────────────────────────────────
   db:
-    ports: !reset []
-
-  redis:
-    ports: !reset []
-
-  minio:
-    ports: !reset []
-
-  # ── Backend: API + WebSocket via Traefik ───────────────────────────────
-  backend:
-    ports: !reset []
+    image: postgres:16-alpine
+    restart: unless-stopped
     environment:
-      TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-1}
-      MEDIA_PUBLIC_BASE_URL: ${MEDIA_PUBLIC_BASE_URL:-https://${API_DOMAIN}/media-files}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?Set ALLOWED_ORIGINS in Dokploy env}
+      POSTGRES_USER: ${POSTGRES_USER:-smartscreen}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in Dokploy env}
+      POSTGRES_DB: ${POSTGRES_DB:-smartscreen}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Redis ──────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── MinIO (S3-compatible storage) ──────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER in Dokploy env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in Dokploy env}
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Backend API + WebSocket ────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - media_uploads:/repo/apps/backend/uploads
+      - backend_data:/repo/apps/backend/.data
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
       COOKIE_SECURE: 'true'
+      DATABASE_URL: postgresql://${POSTGRES_USER:-smartscreen}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-smartscreen}?schema=public
+      JWT_ACCESS_SECRET: "${JWT_ACCESS_SECRET:?Set JWT_ACCESS_SECRET}"
+      JWT_REFRESH_SECRET: "${JWT_REFRESH_SECRET:?Set JWT_REFRESH_SECRET}"
+      PLAYER_HEARTBEAT_SECRET: "${PLAYER_HEARTBEAT_SECRET:?Set PLAYER_HEARTBEAT_SECRET}"
+      ENCRYPTION_KEY: "${ENCRYPTION_KEY:?Set ENCRYPTION_KEY}"
+      ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:?Set ALLOWED_ORIGINS}"
+      MEDIA_PUBLIC_BASE_URL: https://${API_DOMAIN}/media-files
+      REDIS_URL: redis://redis:6379
+      MEDIA_STORAGE_PROVIDER: ${MEDIA_STORAGE_PROVIDER:-local}
+      DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-20}
+      DATABASE_POOL_TIMEOUT_MS: ${DATABASE_POOL_TIMEOUT_MS:-30000}
+      TRUST_PROXY_HOPS: '1'
       ENABLE_SWAGGER: ${ENABLE_SWAGGER:-false}
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-300}
+      HEARTBEAT_STALE_MS: ${HEARTBEAT_STALE_MS:-45000}
+      HEARTBEAT_SWEEP_MS: ${HEARTBEAT_SWEEP_MS:-10000}
+      PAIRING_SESSION_TTL_MS: ${PAIRING_SESSION_TTL_MS:-900000}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@gpack.tech}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-Smart Screen}
+      NEXT_PUBLIC_ALLOW_MOCK_BILLING: 'false'
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'node -e "require(\"http\").get(\"http://127.0.0.1:3000/ready\",r=>process.exit(r.statusCode===200?0:1)).on(\"error\",()=>process.exit(1))"',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 90s
     labels:
       - "traefik.enable=true"
-      # REST API + health + media
       - "traefik.http.routers.backend.rule=Host(`${API_DOMAIN}`)"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls=true"
       - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
       - "traefik.http.services.backend.loadbalancer.server.port=3000"
-      # WebSocket support
-      - "traefik.http.routers.backend.middlewares=ws-headers@docker"
-      # Health check route (no TLS for internal checks)
-      - "traefik.http.routers.backend-health.rule=Host(`${API_DOMAIN}`) && PathPrefix(`/health`)"
-      - "traefik.http.routers.backend-health.entrypoints=web"
-      - "traefik.http.routers.backend-health.service=backend"
 
-  # ── Dashboard via Traefik ──────────────────────────────────────────────
+  # ── Dashboard (customer panel) ─────────────────────────────────────────
   dashboard:
-    ports: !reset []
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+      args:
+        NEXT_PUBLIC_API_BASE_URL: https://${API_DOMAIN}/api/v1
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
     environment:
-      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://${API_DOMAIN}/api/v1}
+      NODE_ENV: production
+      PORT: '3000'
+      NEXT_PUBLIC_API_BASE_URL: https://${API_DOMAIN}/api/v1
       INTERNAL_API_BASE_URL: http://backend:3000/api/v1
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS "http://127.0.0.1:3000/api/health" >/dev/null || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 60s
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.rule=Host(`${DASHBOARD_DOMAIN}`)"
@@ -73,12 +160,27 @@ services:
       - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
       - "traefik.http.services.dashboard.loadbalancer.server.port=3000"
 
-  # ── Player via Traefik ─────────────────────────────────────────────────
+  # ── Player (kiosk screen runtime) ──────────────────────────────────────
   player:
-    ports: !reset []
+    build:
+      context: .
+      dockerfile: Dockerfile.player
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
     environment:
-      NEXT_PUBLIC_REALTIME_URL: ${NEXT_PUBLIC_REALTIME_URL:-https://${API_DOMAIN}}
-      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://${API_DOMAIN}/api/v1}
+      NODE_ENV: production
+      PORT: '3001'
+      NEXT_PUBLIC_REALTIME_URL: https://${API_DOMAIN}
+      NEXT_PUBLIC_API_BASE_URL: https://${API_DOMAIN}/api/v1
+      NEXT_PUBLIC_PLAYER_VERSION: ${NEXT_PUBLIC_PLAYER_VERSION:-0.1.0}
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS "http://127.0.0.1:3001/" >/dev/null || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.player.rule=Host(`${PLAYER_DOMAIN}`)"
@@ -87,12 +189,28 @@ services:
       - "traefik.http.routers.player.tls.certresolver=letsencrypt"
       - "traefik.http.services.player.loadbalancer.server.port=3001"
 
-  # ── Control Panel via Traefik ──────────────────────────────────────────
+  # ── Control Panel (platform admin) ─────────────────────────────────────
   control-panel:
-    ports: !reset []
+    build:
+      context: .
+      dockerfile: Dockerfile.control-panel
+      args:
+        NEXT_PUBLIC_API_BASE_URL: https://${API_DOMAIN}/api/v1
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
     environment:
-      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://${API_DOMAIN}/api/v1}
+      NODE_ENV: production
+      PORT: '3002'
+      NEXT_PUBLIC_API_BASE_URL: https://${API_DOMAIN}/api/v1
       INTERNAL_API_BASE_URL: http://backend:3000/api/v1
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS "http://127.0.0.1:3002/" >/dev/null || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.control-panel.rule=Host(`${ADMIN_DOMAIN}`)"
@@ -101,9 +219,22 @@ services:
       - "traefik.http.routers.control-panel.tls.certresolver=letsencrypt"
       - "traefik.http.services.control-panel.loadbalancer.server.port=3002"
 
-  # ── Marketing via Traefik ──────────────────────────────────────────────
+  # ── Marketing site ─────────────────────────────────────────────────────
   marketing:
-    ports: !reset []
+    build:
+      context: .
+      dockerfile: Dockerfile.marketing
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: '3010'
+      NEXT_PUBLIC_DASHBOARD_URL: https://${DASHBOARD_DOMAIN}
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS "http://127.0.0.1:3010/" >/dev/null || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.marketing.rule=Host(`${MARKETING_DOMAIN}`)"
@@ -111,11 +242,10 @@ services:
       - "traefik.http.routers.marketing.tls=true"
       - "traefik.http.routers.marketing.tls.certresolver=letsencrypt"
       - "traefik.http.services.marketing.loadbalancer.server.port=3010"
-      # Redirect www to non-www
-      - "traefik.http.routers.marketing-www.rule=Host(`www.${MARKETING_DOMAIN}`)"
-      - "traefik.http.routers.marketing-www.entrypoints=websecure"
-      - "traefik.http.routers.marketing-www.tls=true"
-      - "traefik.http.routers.marketing-www.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.marketing-www.middlewares=redirect-to-non-www@docker"
-      - "traefik.http.middlewares.redirect-to-non-www.redirectregex.regex=^https://www\\.(.*)"
-      - "traefik.http.middlewares.redirect-to-non-www.redirectregex.replacement=https://$$1"
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:
+  media_uploads:
+  backend_data:
