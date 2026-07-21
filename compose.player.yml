@@ -18,14 +18,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 60s
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.player.rule=Host(`${PLAYER_DOMAIN}`)"
-      - "traefik.http.routers.player.entrypoints=websecure"
-      - "traefik.http.routers.player.tls=true"
-      - "traefik.http.routers.player.tls.certresolver=letsencrypt"
-      - "traefik.http.services.player.loadbalancer.server.port=3001"
-
 networks:
   default:
     name: dokploy-network

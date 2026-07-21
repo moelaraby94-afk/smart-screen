@@ -16,14 +16,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 60s
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.marketing.rule=Host(`${MARKETING_DOMAIN}`)"
-      - "traefik.http.routers.marketing.entrypoints=websecure"
-      - "traefik.http.routers.marketing.tls=true"
-      - "traefik.http.routers.marketing.tls.certresolver=letsencrypt"
-      - "traefik.http.services.marketing.loadbalancer.server.port=3010"
-
 networks:
   default:
     name: dokploy-network
