@@ -243,7 +243,7 @@ export class WorkspacesController {
   }
 
   @UseGuards(JwtAuthGuard, UserThrottlerGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.EDITOR)
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post(':workspaceId/pairing-sessions/claim')
   claimPairingSession(
@@ -256,7 +256,7 @@ export class WorkspacesController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.OWNER, UserRole.EDITOR)
+  @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
   @HttpCode(204)
   @Post(':workspaceId/pairing-started')
   async notifyPairingStarted(

@@ -34,7 +34,6 @@ const SENSITIVE_FIELDS = new Set([
   'pendingEmailOtp',
   'refreshTokenHash',
   'keyHash',
-  'pollSecret',
   'sessionSecret',
 ]);
 
