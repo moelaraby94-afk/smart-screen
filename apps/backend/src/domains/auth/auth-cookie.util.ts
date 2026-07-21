@@ -75,10 +75,11 @@ export function setAuthCookies(
 ): void {
   const config = getCookieConfig();
   const names = getCookieNames(audience);
+  const sameSite = config.secure ? ('none' as const) : ('lax' as const);
   const common = {
     httpOnly: true,
     secure: config.secure,
-    sameSite: 'lax' as const,
+    sameSite,
     path: '/',
   };
 
@@ -95,7 +96,7 @@ export function setAuthCookies(
   response.cookie(names.csrf, csrfToken, {
     httpOnly: false,
     secure: config.secure,
-    sameSite: 'lax' as const,
+    sameSite,
     path: '/',
   });
 }
@@ -105,10 +106,11 @@ export function clearAuthCookies(
   audience?: JwtAudience,
 ): void {
   const config = getCookieConfig();
+  const sameSite = config.secure ? ('none' as const) : ('lax' as const);
   const common = {
     httpOnly: true,
     secure: config.secure,
-    sameSite: 'lax' as const,
+    sameSite,
     path: '/',
   };
 
