@@ -43,11 +43,6 @@ services:
       timeout: 5s
       retries: 6
       start_period: 90s
-networks:
-  default:
-    name: dokploy-network
-    external: true
-
 volumes:
   media_uploads:
   backend_data:
