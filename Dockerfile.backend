@@ -70,7 +70,7 @@ RUN addgroup --system --gid 1001 appgroup && \
 #   uploads/        — media.service.ts (uploaded media files)
 #   .data/          — admin-runtime.store.ts (audit log + platform settings
 #                     JSON) and branding-assets.service.ts (.data/branding/)
-RUN mkdir -p /repo/apps/backend/uploads /repo/apps/backend/.data/branding && \
+RUN mkdir -p /repo/apps/backend/uploads/media /repo/apps/backend/.data/branding && \
     chown -R appuser:appgroup /repo/apps/backend/uploads /repo/apps/backend/.data
 
 WORKDIR /repo/apps/backend
