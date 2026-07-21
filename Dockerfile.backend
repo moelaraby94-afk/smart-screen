@@ -90,4 +90,4 @@ HEALTHCHECK --interval=10s --timeout=5s --start-period=60s --retries=6 \
 
 USER appuser
 
-CMD ["sh", "-c", "npx prisma migrate deploy --schema=./prisma/schema.prisma && node dist/src/main.js"]
+CMD ["sh", "-c", "mkdir -p uploads/media .data/branding && npx prisma migrate deploy --schema=./prisma/schema.prisma && node dist/src/main.js"]
