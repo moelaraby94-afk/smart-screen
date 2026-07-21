@@ -1,88 +1,22 @@
-# Smart Screen — Dokploy deployment (self-contained)
+# Smart Screen — Dokploy deployment
 #
-# This file is specifically for Dokploy. It uses Traefik labels for routing
-# and does not expose internal service ports.
+# Database (PostgreSQL) and Redis are created as separate Dokploy resources.
+# This compose only contains the application services.
 #
 # In Dokploy:
-#   1. Create a Docker Compose project
-#   2. Connect GitHub repo: moelaraby94-afk/smart-screen
-#   3. Branch: main
-#   4. Compose file: docker-compose.dokploy.yml
-#   5. Set all environment variables (see below)
-#   6. Deploy
-#
-# Required environment variables (set in Dokploy project settings):
-#   API_DOMAIN=api.gpack.tech
-#   DASHBOARD_DOMAIN=app.gpack.tech
-#   ADMIN_DOMAIN=admin.gpack.tech
-#   PLAYER_DOMAIN=player.gpack.tech
-#   MARKETING_DOMAIN=gpack.tech
-#   ALLOWED_ORIGINS=https://app.gpack.tech,https://admin.gpack.tech,https://player.gpack.tech
-#   POSTGRES_PASSWORD=<strong-password>
-#   MINIO_ROOT_USER=<minio-user>
-#   MINIO_ROOT_PASSWORD=<minio-password>
-#   JWT_ACCESS_SECRET=<openssl rand -hex 32>
-#   JWT_REFRESH_SECRET=<openssl rand -hex 32>
-#   PLAYER_HEARTBEAT_SECRET=<openssl rand -hex 32>
-#   ENCRYPTION_KEY=<openssl rand -hex 32>
+#   1. Create PostgreSQL database → get connection string → set DATABASE_URL
+#   2. Create Redis database → get connection string → set REDIS_URL
+#   3. Create Docker Compose project → this file
+#   4. Set all environment variables
+#   5. Deploy
 
 services:
-  # ── Database ───────────────────────────────────────────────────────────
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-smartscreen}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in Dokploy env}
-      POSTGRES_DB: ${POSTGRES_DB:-smartscreen}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-  # ── Redis ──────────────────────────────────────────────────────────────
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
-    volumes:
-      - redisdata:/data
-    healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-  # ── MinIO (S3-compatible storage) ──────────────────────────────────────
-  minio:
-    image: minio/minio:latest
-    restart: unless-stopped
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER in Dokploy env}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in Dokploy env}
-    volumes:
-      - miniodata:/data
-    healthcheck:
-      test: ['CMD', 'mc', 'ready', 'local']
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
   # ── Backend API + WebSocket ────────────────────────────────────────────
   backend:
     build:
       context: .
       dockerfile: Dockerfile.backend
     restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     volumes:
       - media_uploads:/repo/apps/backend/uploads
       - backend_data:/repo/apps/backend/.data
@@ -90,15 +24,15 @@ services:
       NODE_ENV: production
       PORT: '3000'
       COOKIE_SECURE: 'true'
-      DATABASE_URL: postgresql://${POSTGRES_USER:-smartscreen}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-smartscreen}?schema=public
+      DATABASE_URL: "${DATABASE_URL:?Set DATABASE_URL from Dokploy PostgreSQL}"
       JWT_ACCESS_SECRET: "${JWT_ACCESS_SECRET:?Set JWT_ACCESS_SECRET}"
       JWT_REFRESH_SECRET: "${JWT_REFRESH_SECRET:?Set JWT_REFRESH_SECRET}"
       PLAYER_HEARTBEAT_SECRET: "${PLAYER_HEARTBEAT_SECRET:?Set PLAYER_HEARTBEAT_SECRET}"
       ENCRYPTION_KEY: "${ENCRYPTION_KEY:?Set ENCRYPTION_KEY}"
       ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:?Set ALLOWED_ORIGINS}"
       MEDIA_PUBLIC_BASE_URL: https://${API_DOMAIN}/media-files
-      REDIS_URL: redis://redis:6379
-      MEDIA_STORAGE_PROVIDER: ${MEDIA_STORAGE_PROVIDER:-local}
+      REDIS_URL: "${REDIS_URL:?Set REDIS_URL from Dokploy Redis}"
+      MEDIA_STORAGE_PROVIDER: local
       DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-20}
       DATABASE_POOL_TIMEOUT_MS: ${DATABASE_POOL_TIMEOUT_MS:-30000}
       TRUST_PROXY_HOPS: '1'
@@ -244,8 +178,5 @@ services:
       - "traefik.http.services.marketing.loadbalancer.server.port=3010"
 
 volumes:
-  pgdata:
-  redisdata:
-  miniodata:
   media_uploads:
   backend_data:
