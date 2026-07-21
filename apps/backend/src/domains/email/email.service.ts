@@ -32,7 +32,7 @@ export class EmailService {
 
   private fromHeader(): string {
     const name =
-      this.config.get<string>('EMAIL_FROM_NAME')?.trim() || 'Cloud Signage';
+      this.config.get<string>('EMAIL_FROM_NAME')?.trim() || 'Smart Screen';
     const addr =
       this.config.get<string>('EMAIL_FROM')?.trim() || 'noreply@localhost';
     return `${name} <${addr}>`;
@@ -121,7 +121,7 @@ export class EmailService {
 
   private extractName(from: string): string {
     const m = from.match(/^(.+)<[^>]+>$/);
-    return m ? m[1].trim().replace(/"/g, '') : 'Cloud Signage';
+    return m ? m[1].trim().replace(/"/g, '') : 'Smart Screen';
   }
 
   /** Enqueue an email for async sending via BullMQ. Falls back to sync send if queue is not available. */

@@ -3,8 +3,8 @@ import { GeistMono } from 'geist/font/mono';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Cloud Signage Player',
-  description: 'Playback runtime for Cloud Signage screens',
+  title: 'Smart Screen Player',
+  description: 'Playback runtime for Smart Screen screens',
 };
 
 export default function RootLayout({

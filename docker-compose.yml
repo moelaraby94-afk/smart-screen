@@ -240,6 +240,7 @@ services:
 
 volumes:
   pgdata:
+    name: smart_screen_pgdata
   redisdata:
     name: smart_screen_redisdata
   miniodata:

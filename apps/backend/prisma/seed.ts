@@ -134,7 +134,7 @@ async function main() {
     data: {
       email: SEED_ADMIN_EMAIL,
       fullName: 'Super Admin',
-      businessName: 'Cloud Signage Platform',
+      businessName: 'Smart Screen Platform',
       phone: '+1-555-0100',
       country: 'US',
       city: 'San Francisco',

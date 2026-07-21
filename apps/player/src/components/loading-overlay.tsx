@@ -39,7 +39,7 @@ export function LoadingOverlay({
             draggable={false}
           />
         ) : (
-          <p className="font-mono text-lg tracking-[0.25em] text-white/80">Cloud Signage</p>
+          <p className="font-mono text-lg tracking-[0.25em] text-white/80">Smart Screen</p>
         )}
         <div className="relative h-14 w-14">
           <div className="absolute inset-0 rounded-full border-2 border-cyan-500/20" />

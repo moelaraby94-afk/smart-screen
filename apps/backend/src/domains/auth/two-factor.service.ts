@@ -18,8 +18,8 @@ export class TwoFactorService {
     private readonly cryptoService: CryptoService,
   ) {
     this.issuer =
-      this.configService.get<string>('APP_NAME', 'Cloud Signage') ??
-      'Cloud Signage';
+      this.configService.get<string>('APP_NAME', 'Smart Screen') ??
+      'Smart Screen';
   }
 
   /** Generate a new TOTP secret and otpauth URL for the user. */

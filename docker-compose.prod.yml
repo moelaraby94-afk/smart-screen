@@ -1,0 +1,99 @@
+# Production override for Smart Screen
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
+#
+# This file overrides docker-compose.yml for production:
+#   - Removes external port bindings for DB, Redis, MinIO (internal only)
+#   - Adds TRUST_PROXY_HOPS for reverse proxy
+#   - Adds production env overrides
+#   - Adds nginx reverse proxy for SSL termination & domain routing
+#
+# Required environment variables (set in .env or .env.production):
+#   - DASHBOARD_DOMAIN    e.g. app.smartscreen.app
+#   - ADMIN_DOMAIN        e.g. admin.smartscreen.app
+#   - API_DOMAIN          e.g. api.smartscreen.app
+#   - PLAYER_DOMAIN       e.g. player.smartscreen.app
+#   - MARKETING_DOMAIN    e.g. smartscreen.app (or www.smartscreen.app)
+#   - ALLOWED_ORIGINS     e.g. https://app.smartscreen.app,https://admin.smartscreen.app
+#   - JWT_ACCESS_SECRET, JWT_REFRESH_SECRET, ENCRYPTION_KEY (already in .env)
+#   - SSL_CERT_PATH       e.g. /etc/letsencrypt/live/smartscreen.app/fullchain.pem
+#   - SSL_KEY_PATH        e.g. /etc/letsencrypt/live/smartscreen.app/privkey.pem
+
+services:
+  # ── Internal services: no external ports ──────────────────────────────
+  db:
+    ports: !reset []
+
+  redis:
+    ports: !reset []
+
+  minio:
+    ports: !reset []
+
+  # ── Backend: no external port (nginx proxies to it) ───────────────────
+  backend:
+    ports: !reset []
+    environment:
+      TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-1}
+      MEDIA_PUBLIC_BASE_URL: ${MEDIA_PUBLIC_BASE_URL:-https://${API_DOMAIN}/media-files}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?Set ALLOWED_ORIGINS in .env}
+      COOKIE_SECURE: 'true'
+      ENABLE_SWAGGER: ${ENABLE_SWAGGER:-false}
+
+  # ── Frontend apps: no external ports (nginx proxies to them) ──────────
+  dashboard:
+    ports: !reset []
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://${API_DOMAIN}/api/v1}
+      INTERNAL_API_BASE_URL: http://backend:3000/api/v1
+
+  player:
+    ports: !reset []
+    environment:
+      NEXT_PUBLIC_REALTIME_URL: ${NEXT_PUBLIC_REALTIME_URL:-https://${API_DOMAIN}}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://${API_DOMAIN}/api/v1}
+
+  control-panel:
+    ports: !reset []
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://${API_DOMAIN}/api/v1}
+      INTERNAL_API_BASE_URL: http://backend:3000/api/v1
+
+  marketing:
+    ports: !reset []
+
+  # ── Nginx reverse proxy: SSL termination, domain routing, WS upgrade ──
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+      dashboard:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DASHBOARD_DOMAIN: ${DASHBOARD_DOMAIN:?Set DASHBOARD_DOMAIN in .env.production}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN:?Set ADMIN_DOMAIN in .env.production}
+      API_DOMAIN: ${API_DOMAIN:?Set API_DOMAIN in .env.production}
+      PLAYER_DOMAIN: ${PLAYER_DOMAIN:?Set PLAYER_DOMAIN in .env.production}
+      MARKETING_DOMAIN: ${MARKETING_DOMAIN:?Set MARKETING_DOMAIN in .env.production}
+    volumes:
+      - ${SSL_CERT_PATH:-/etc/letsencrypt/live/smartscreen.app/fullchain.pem}:/etc/ssl/certs/fullchain.pem:ro
+      - ${SSL_KEY_PATH:-/etc/letsencrypt/live/smartscreen.app/privkey.pem}:/etc/ssl/private/privkey.pem:ro
+      - nginx_cache:/var/cache/nginx
+      - nginx_logs:/var/log/nginx
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://127.0.0.1/health']
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  nginx_cache:
+  nginx_logs:

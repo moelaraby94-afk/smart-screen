@@ -10,7 +10,7 @@ export function registerOtpEmail(params: {
   code: string;
   brandName?: string;
 }): { subject: string; html: string; text: string } {
-  const brand = params.brandName ?? 'Cloud Signage';
+  const brand = params.brandName ?? 'Smart Screen';
   const subject = `${brand}: your verification code`;
   const html = `<p>Your verification code is:</p><p style="font-size:24px;font-weight:bold;letter-spacing:0.2em">${esc(params.code)}</p><p>This code expires in 15 minutes.</p>`;
   const text = `Your verification code is: ${params.code}\nThis code expires in 15 minutes.`;
@@ -21,7 +21,7 @@ export function passwordResetEmail(params: {
   resetUrl: string;
   brandName?: string;
 }): { subject: string; html: string; text: string } {
-  const brand = params.brandName ?? 'Cloud Signage';
+  const brand = params.brandName ?? 'Smart Screen';
   const subject = `${brand}: reset your password`;
   const url = esc(params.resetUrl);
   const html = `<p>We received a request to reset your password.</p><p><a href="${url}">Set a new password</a></p><p>If you did not request this, you can ignore this email.</p><p style="word-break:break-all;color:#666">${url}</p>`;
@@ -33,7 +33,7 @@ export function emailChangeOtpEmail(params: {
   code: string;
   brandName?: string;
 }): { subject: string; html: string; text: string } {
-  const brand = params.brandName ?? 'Cloud Signage';
+  const brand = params.brandName ?? 'Smart Screen';
   const subject = `${brand}: confirm your new email`;
   const html = `<p>Your verification code for the new email address is:</p><p style="font-size:24px;font-weight:bold;letter-spacing:0.2em">${esc(params.code)}</p><p>This code expires in 15 minutes.</p>`;
   const text = `Your verification code for the new email is: ${params.code}\nThis code expires in 15 minutes.`;
@@ -47,7 +47,7 @@ export function teamInviteEmail(params: {
   role: string;
   brandName?: string;
 }): { subject: string; html: string; text: string } {
-  const brand = params.brandName ?? 'Cloud Signage';
+  const brand = params.brandName ?? 'Smart Screen';
   const subject = `${brand}: ${params.inviterName} invited you to "${params.workspaceName}"`;
   const url = esc(params.inviteUrl);
   const name = esc(params.inviterName);
@@ -62,7 +62,7 @@ export function subscriptionReminderEmail(params: {
   brandName?: string;
   dashboardUrl?: string;
 }): { subject: string; html: string; text: string } {
-  const brand = params.brandName ?? 'Cloud Signage';
+  const brand = params.brandName ?? 'Smart Screen';
   const subject = `${brand}: subscription reminder`;
   const name = esc(params.fullName);
   const dash = params.dashboardUrl
@@ -80,7 +80,7 @@ export function welcomeEmail(params: {
   brandName?: string;
   dashboardUrl?: string;
 }): { subject: string; html: string; text: string } {
-  const brand = params.brandName ?? 'Cloud Signage';
+  const brand = params.brandName ?? 'Smart Screen';
   const subject = `Welcome to ${brand}, ${params.fullName}!`;
   const name = esc(params.fullName);
   const dash = params.dashboardUrl
@@ -97,7 +97,7 @@ export function onboardingTipsEmail(params: {
   dashboardUrl?: string;
   day: number;
 }): { subject: string; html: string; text: string } {
-  const brand = params.brandName ?? 'Cloud Signage';
+  const brand = params.brandName ?? 'Smart Screen';
   const tips: Record<number, { title: string; body: string }> = {
     1: {
       title: 'Add your first screen',
@@ -130,7 +130,7 @@ export function screenOfflineEmail(params: {
   dashboardUrl?: string;
   brandName?: string;
 }): { subject: string; html: string; text: string } {
-  const brand = params.brandName ?? 'Cloud Signage';
+  const brand = params.brandName ?? 'Smart Screen';
   const subject = `${brand}: Screen "${params.screenName}" is offline`;
   const name = esc(params.screenName);
   const ws = esc(params.workspaceName);
@@ -150,7 +150,7 @@ export function campaignApprovalEmail(params: {
   dashboardUrl?: string;
   brandName?: string;
 }): { subject: string; html: string; text: string } {
-  const brand = params.brandName ?? 'Cloud Signage';
+  const brand = params.brandName ?? 'Smart Screen';
   const status = params.approved ? 'approved' : 'rejected';
   const subject = `${brand}: Campaign "${params.campaignName}" ${status}`;
   const name = esc(params.campaignName);
@@ -173,7 +173,7 @@ export function subscriptionExpiryEmail(params: {
   dashboardUrl?: string;
   brandName?: string;
 }): { subject: string; html: string; text: string } {
-  const brand = params.brandName ?? 'Cloud Signage';
+  const brand = params.brandName ?? 'Smart Screen';
   const subject = `${brand}: Your subscription expires in 7 days`;
   const name = esc(params.fullName);
   const dash = params.dashboardUrl
@@ -188,7 +188,7 @@ export function passwordChangedEmail(params: {
   fullName: string;
   brandName?: string;
 }): { subject: string; html: string; text: string } {
-  const brand = params.brandName ?? 'Cloud Signage';
+  const brand = params.brandName ?? 'Smart Screen';
   const subject = `${brand}: Your password was changed`;
   const name = esc(params.fullName);
   const html = `<p>Hi ${name},</p><p>Your password has been changed successfully. If you did not make this change, please contact support immediately.</p>`;
@@ -200,7 +200,7 @@ export function twoFactorDisabledEmail(params: {
   fullName: string;
   brandName?: string;
 }): { subject: string; html: string; text: string } {
-  const brand = params.brandName ?? 'Cloud Signage';
+  const brand = params.brandName ?? 'Smart Screen';
   const subject = `${brand}: Two-factor authentication disabled`;
   const name = esc(params.fullName);
   const html = `<p>Hi ${name},</p><p>Two-factor authentication has been disabled on your account. If you did not make this change, please contact support immediately.</p>`;
@@ -217,7 +217,7 @@ export function limitWarningEmail(params: {
   dashboardUrl?: string;
   brandName?: string;
 }): { subject: string; html: string; text: string } {
-  const brand = params.brandName ?? 'Cloud Signage';
+  const brand = params.brandName ?? 'Smart Screen';
   const resource = params.resourceType === 'storage' ? 'storage' : 'screen';
   const subject = `${brand}: ${resource} usage at ${params.percentage}%`;
   const name = esc(params.fullName);
@@ -235,7 +235,7 @@ export function paymentFailedEmail(params: {
   dashboardUrl?: string;
   gracePeriodDays?: number;
 }): { subject: string; html: string; text: string } {
-  const brand = params.brandName ?? 'Cloud Signage';
+  const brand = params.brandName ?? 'Smart Screen';
   const subject = `${brand}: payment failed — action required`;
   const name = esc(params.fullName);
   const grace = params.gracePeriodDays

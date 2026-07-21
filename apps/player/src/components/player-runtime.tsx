@@ -681,7 +681,7 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
     return (
       <div className="grid min-h-screen place-items-center bg-[#030712] p-6">
         <div className="w-full max-w-xl rounded-2xl border border-white/10 bg-white/[0.03] p-8 shadow-[0_0_60px_rgba(0,212,255,0.08)]">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/50">Cloud Signage Player</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-white/50">Smart Screen Player</p>
           <h1 className="mt-3 font-mono text-xl text-white/90">Configure environment</h1>
           <p className="mt-4 text-sm text-white/65">
             <strong className="text-white/85">JWT (Admin Control playlist):</strong> set{' '}

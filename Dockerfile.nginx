@@ -1,0 +1,43 @@
+# Smart Screen — Nginx reverse proxy with envsubst
+# Processes ${VAR} placeholders in conf.d templates on container start.
+
+FROM nginx:alpine
+
+# envsubst is already included in nginx:alpine (gettext)
+# We need a custom entrypoint that processes templates then starts nginx
+
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+COPY nginx/conf.d/ /etc/nginx/conf.d/templates/
+
+COPY <<'EOF' /docker-entrypoint.d/30-process-templates.sh
+#!/bin/sh
+set -e
+
+TEMPLATE_DIR="/etc/nginx/conf.d/templates"
+OUTPUT_DIR="/etc/nginx/conf.d"
+
+mkdir -p "$OUTPUT_DIR"
+
+# Remove the default.conf from the base image
+rm -f "$OUTPUT_DIR/default.conf"
+
+for template in "$TEMPLATE_DIR"/*.conf; do
+  [ -f "$template" ] || continue
+  filename=$(basename "$template")
+  envsubst '${DASHBOARD_DOMAIN} ${ADMIN_DOMAIN} ${API_DOMAIN} ${PLAYER_DOMAIN} ${MARKETING_DOMAIN}' \
+    < "$template" \
+    > "$OUTPUT_DIR/$filename"
+  echo "Processed nginx template: $filename"
+done
+
+# Copy default.conf as-is (no env vars needed)
+if [ -f "$TEMPLATE_DIR/default.conf" ]; then
+  cp "$TEMPLATE_DIR/default.conf" "$OUTPUT_DIR/default.conf"
+fi
+EOF
+
+RUN chmod +x /docker-entrypoint.d/30-process-templates.sh
+
+# Health check
+HEALTHCHECK --interval=10s --timeout=5s --retries=3 \
+  CMD wget --spider -q http://127.0.0.1/health || exit 1

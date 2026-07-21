@@ -23,7 +23,7 @@ const SETTINGS_KEY = 'admin.globalSettings';
 const SETTINGS_CATEGORY = 'admin';
 
 const DEFAULT_SETTINGS: AdminGlobalSettings = {
-  platformName: 'Cloud Signage',
+  platformName: 'Smart Screen',
   supportEmail: 'support@smartscreen.local',
   maintenanceMode: false,
   defaultLanguage: 'ar',
