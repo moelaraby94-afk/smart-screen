@@ -71,13 +71,13 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
 
   const handleFinish = useCallback(() => {
     onOpenChange(false);
-    router.push(`/${locale}/overview` as never as Route);
+    router.push(`/${locale}/overview` as Route);
     router.refresh();
   }, [onOpenChange, router, locale]);
 
   const handleClose = useCallback(() => {
     onOpenChange(false);
-    router.push(`/${locale}/overview` as never as Route);
+    router.push(`/${locale}/overview` as Route);
     router.refresh();
   }, [onOpenChange, router, locale]);
 
@@ -206,7 +206,7 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
                     type="button"
                     onClick={() => {
                       onOpenChange(false);
-                      router.push(link.href as never as Route);
+                      router.push(link.href as Route);
                       router.refresh();
                     }}
                     className="vc-card-surface flex w-full items-center gap-4 rounded-lg border border-border p-4 text-start transition hover:border-primary/40 hover:bg-primary/5"

@@ -1,30 +1,26 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import type { Route } from 'next';
 import { AlertCircle, Monitor, MonitorOff, Smartphone, Square } from 'lucide-react';
 import { useWorkspace } from '@/features/workspace/workspace-context';
-import { makeZonePresets, type ZonePreset } from '@/features/studio/canvas-layout';
+import { makeZonePresets, type ZonePreset } from '@/lib/zone-presets';
 import {
   DEFAULT_PLAYLIST_META,
   loadPlaylistMeta,
+  type PlaylistLocalMeta,
 } from '@/features/playlists/playlist-transitions';
-import { updatePlaylistMeta as apiUpdatePlaylistMeta } from '@/features/studio/studio-api';
+import { updatePlaylistMeta as apiUpdatePlaylistMeta } from '@/features/playlists/api/playlists-api';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 
-import { PlaylistHeader } from './studio/components/playlist-header';
-import { WorkspaceTabs } from './studio/components/workspace-tabs';
-import { GroupSidebar } from './studio/components/group-sidebar';
-import { PlaylistGridView } from './studio/components/playlist-grid-view';
 import { PlaylistEditorView } from './studio/components/playlist-editor-view';
 import { PlaylistPreviewOverlay } from './playlist-preview-overlay';
 
 import { usePlaylistData } from './studio/hooks/use-playlist-data';
 import { usePlaylistActions } from './studio/hooks/use-playlist-actions';
-import { useGroupActions } from './studio/hooks/use-group-actions';
 import { useTimelineEdit } from './studio/hooks/use-timeline-edit';
 import { usePlaylistMeta } from './studio/hooks/use-playlist-meta';
 
@@ -42,36 +38,42 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
 
   // ── State ──────────────────────────────────────────────
   const [playlistId, setPlaylistId] = useState<string>(initialPlaylistId ?? '');
-  const [newName, setNewName] = useState('');
   const [rows, setRows] = useState<Row[]>([]);
-  const [playlistSort, setPlaylistSort] = useState<string>('name');
-  const [viewMode, setViewMode] = useState<'grid' | 'editor'>(initialPlaylistId ? 'editor' : 'grid');
   const [selectedZonePreset, setSelectedZonePreset] = useState<ZonePreset | null>(null);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>('full');
   const [cloneTargetWs, setCloneTargetWs] = useState('');
-  const [search, setSearch] = useState('');
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [selectedRowClientId, setSelectedRowClientId] = useState<string | null>(null);
   const [viewportWidth, setViewportWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1280);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [showZoneSwitchDialog, setShowZoneSwitchDialog] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const pendingBackRef = useRef(false);
+  const pendingMetaPatchRef = useRef<Partial<PlaylistLocalMeta> | null>(null);
 
-  // Account-level state
-  const [filterWorkspaceId, setFilterWorkspaceId] = useState<string>('');
-  const [filterGroupId, setFilterGroupId] = useState<string>('');
-  const [newGroupName, setNewGroupName] = useState('');
-  const [renamingGroupId, setRenamingGroupId] = useState<string | null>(null);
-  const [renameGroupValue, setRenameGroupValue] = useState('');
+  // Account-level constants (grid view removed)
+  const filterWorkspaceId = '';
+  const filterGroupId = '';
 
   // ── Hooks ──────────────────────────────────────────────
-  const { playlistMeta, setPlaylistMeta, updatePlaylistMeta } = usePlaylistMeta(playlistId);
+  const { playlistMeta, setPlaylistMeta, updatePlaylistMeta: rawUpdatePlaylistMeta } = usePlaylistMeta(playlistId);
+
+  // Wrap updatePlaylistMeta to intercept multi_zone→single switches
+  const updatePlaylistMeta = useCallback((patch: Partial<PlaylistLocalMeta>) => {
+    if (patch.layoutType === 'single' && playlistMeta.layoutType === 'multi_zone') {
+      pendingMetaPatchRef.current = patch;
+      setShowZoneSwitchDialog(true);
+      return;
+    }
+    rawUpdatePlaylistMeta(patch);
+  }, [playlistMeta.layoutType, rawUpdatePlaylistMeta]);
 
   const skipHistoryRef = useRef(false);
+  const latestNameRef = useRef<string>('');
 
   const {
-    library, canvasLibrary, playlists, groups, loading,
-    setPlaylists, loadPlaylists, loadGroups, loadLibrary, loadPlaylistDetail,
+    library, canvasLibrary, playlists, loading, detailError,
+    setPlaylists, loadPlaylists, loadLibrary, loadPlaylistDetail,
   } = usePlaylistData(
     workspaceId, filterWorkspaceId, filterGroupId,
     setRows, null, null, skipHistoryRef,
@@ -79,21 +81,16 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
 
   const {
     togglingPublish, duplicating, cloning,
-    createPlaylist, savePlaylist, togglePublish,
-    duplicatePlaylist, duplicatePlaylistById, cloneToWorkspace, handleDeletePlaylist,
+    savePlaylist, togglePublish,
+    duplicatePlaylist, cloneToWorkspace,
   } = usePlaylistActions({
     workspaceId, filterWorkspaceId, filterGroupId,
     loadPlaylists, loadPlaylistDetail, bumpWorkspaceDataEpoch,
-    setPlaylists, setPlaylistId, setNewName,
-  });
-
-  const { handleCreateGroup, handleRenameGroup, handleDeleteGroup, handleMoveGroup } = useGroupActions({
-    loadGroups, loadPlaylists, filterGroupId, setFilterGroupId,
-    setNewGroupName, setRenamingGroupId, setRenameGroupValue,
+    setPlaylists,
   });
 
   const {
-    undoStack, redoStack, undo, redo, onDragEnd,
+    undoStack, redoStack, clearHistory, undo, redo, onDragEnd,
     updateDuration, removeRow, moveRow, duplicateRow, updateRowTransition, updateRowZone,
   } = useTimelineEdit({
     rows, setRows, playlistMeta, selectedZoneId, playlistId,
@@ -103,15 +100,15 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
   // ── Effects ────────────────────────────────────────────
   useEffect(() => {
     if (playlistId) {
+      clearHistory();
       void loadPlaylistDetail(playlistId);
       setPlaylistMeta(loadPlaylistMeta(playlistId));
-      setViewMode('editor');
+      latestNameRef.current = '';
     } else {
       setRows([]);
       setPlaylistMeta(DEFAULT_PLAYLIST_META);
-      setViewMode('grid');
     }
-  }, [playlistId, loadPlaylistDetail, setPlaylistMeta]);
+  }, [playlistId, loadPlaylistDetail, setPlaylistMeta, clearHistory]);
 
   // Viewport width tracking for responsive guards
   useEffect(() => {
@@ -127,31 +124,35 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
       skipHistoryRef.current = false;
       lastSavedRowsRef.current = rows;
       setSaveState('saved');
-    } else if (viewMode === 'editor' && rows !== lastSavedRowsRef.current) {
+    } else if (rows !== lastSavedRowsRef.current) {
       setSaveState('unsaved');
     }
-  }, [rows, viewMode]);
+  }, [rows]);
 
   // ── Derived values ─────────────────────────────────────
-  const sortedPlaylists = useMemo(() => {
-    const sorted = [...playlists];
-    const q = search.trim().toLowerCase();
-    const filtered = q ? sorted.filter((p) => p.name.toLowerCase().includes(q)) : sorted;
-    filtered.sort((a, b) => {
-      switch (playlistSort) {
-        case 'items': return b._count.items - a._count.items;
-        case 'screens': return (b._count.screensInGroup ?? 0) - (a._count.screensInGroup ?? 0);
-        case 'name': default: return a.name.localeCompare(b.name);
-      }
-    });
-    return filtered;
-  }, [playlists, playlistSort, search]);
-
   const selectedPlaylist = playlists.find((p) => p.id === playlistId);
   const orientationIcon = playlistMeta.orientation === 'portrait' ? Smartphone : playlistMeta.orientation === 'square' ? Square : Monitor;
   const presetW = playlistMeta.orientation === 'portrait' ? 1080 : playlistMeta.orientation === 'square' ? 1080 : 1920;
   const presetH = playlistMeta.orientation === 'portrait' ? 1920 : playlistMeta.orientation === 'square' ? 1080 : 1080;
   const zonePresets = makeZonePresets(presetW, presetH);
+
+  // Restore zone preset from saved meta
+  useEffect(() => {
+    if (playlistMeta.zonePresetId && playlistMeta.layoutType === 'multi_zone') {
+      const preset = zonePresets.find((z) => z.id === playlistMeta.zonePresetId) ?? null;
+      if (preset && (!selectedZonePreset || selectedZonePreset.id !== preset.id)) {
+        setSelectedZonePreset(preset);
+        setSelectedZoneId(preset.zones[0]?.name ?? '');
+      }
+    } else if (!playlistMeta.zonePresetId && selectedZonePreset) {
+      setSelectedZonePreset(null);
+    }
+  }, [playlistMeta.zonePresetId, playlistMeta.layoutType, zonePresets, selectedZonePreset]);
+
+  const handleSetSelectedZonePreset = useCallback((preset: ZonePreset | null) => {
+    setSelectedZonePreset(preset);
+    updatePlaylistMeta({ zonePresetId: preset?.id ?? null });
+  }, [updatePlaylistMeta]);
 
   const zones: Zone[] = playlistMeta.layoutType === 'multi_zone' && selectedZonePreset
     ? selectedZonePreset.zones.map((z) => ({
@@ -182,12 +183,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
     ? 'zone'
     : 'playlist';
 
-  // ── Stats ──────────────────────────────────────────────
-  const publishedCount = playlists.filter((p) => p.isPublished).length;
-  const draftCount = playlists.length - publishedCount;
-
   // ── Handlers ───────────────────────────────────────────
-  const openPlaylist = (id: string) => setPlaylistId(id);
   const backToGrid = () => {
     if (saveState === 'unsaved') {
       pendingBackRef.current = true;
@@ -195,13 +191,10 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
       return;
     }
     if (initialPlaylistId) {
-      // In preset mode, go back to playlist detail page
-      router.push(`/${locale}/content/playlists/${initialPlaylistId}` as never as Route);
-      return;
+      router.push(`/${locale}/content/playlists/${initialPlaylistId}` as Route);
+    } else {
+      router.push(`/${locale}/content/playlists` as Route);
     }
-    setPlaylistId('');
-    setViewMode('grid');
-    setSelectedRowClientId(null);
   };
 
   const handleSave = async () => {
@@ -211,13 +204,28 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
     setSaveState('saved');
   };
 
+  // Ctrl+S keyboard shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (saveState === 'unsaved' || saveState === 'idle') {
+          void handleSave();
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [saveState]);
+
   const handleNameBlur = () => {
-    if (workspaceId && selectedPlaylist) {
-      void apiUpdatePlaylistMeta(workspaceId, playlistId, { name: selectedPlaylist.name });
+    if (workspaceId && playlistId && latestNameRef.current) {
+      void apiUpdatePlaylistMeta(workspaceId, playlistId, { name: latestNameRef.current });
     }
   };
 
   const handleNameChange = (name: string) => {
+    latestNameRef.current = name;
     setPlaylists((prev) => prev.map((p) => p.id === playlistId ? { ...p, name } : p));
   };
 
@@ -227,57 +235,6 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
 
   if (!workspaceId) {
     return <p className="text-[15px] text-muted-foreground">{t('selectWorkspaceFirst')}</p>;
-  }
-
-  // ── Grid View ──────────────────────────────────────────
-  if (viewMode === 'grid' || !playlistId) {
-    return (
-      <div className="space-y-5">
-        <PlaylistHeader
-          total={playlists.length}
-          published={publishedCount}
-          draft={draftCount}
-        />
-        <WorkspaceTabs
-          workspaces={workspaces}
-          filterWorkspaceId={filterWorkspaceId}
-          setFilterWorkspaceId={setFilterWorkspaceId}
-        />
-        <div className="flex flex-col gap-4 xl:flex-row">
-          <GroupSidebar
-            groups={groups}
-            totalPlaylists={playlists.length}
-            filterGroupId={filterGroupId}
-            setFilterGroupId={setFilterGroupId}
-            newGroupName={newGroupName}
-            setNewGroupName={setNewGroupName}
-            onCreateGroup={handleCreateGroup}
-            renamingGroupId={renamingGroupId}
-            setRenamingGroupId={setRenamingGroupId}
-            renameGroupValue={renameGroupValue}
-            setRenameGroupValue={setRenameGroupValue}
-            onRenameGroup={handleRenameGroup}
-            onDeleteGroup={handleDeleteGroup}
-            onMoveGroup={handleMoveGroup}
-          />
-          <PlaylistGridView
-            loading={loading}
-            playlists={sortedPlaylists}
-            workspaces={workspaces}
-            search={search}
-            setSearch={setSearch}
-            playlistSort={playlistSort}
-            setPlaylistSort={setPlaylistSort}
-            newName={newName}
-            setNewName={setNewName}
-            onCreatePlaylist={createPlaylist}
-            onOpenPlaylist={openPlaylist}
-            onDuplicatePlaylist={duplicatePlaylistById}
-            onDeletePlaylist={handleDeletePlaylist}
-          />
-        </div>
-      </div>
-    );
   }
 
   // ── Editor View ────────────────────────────────────────
@@ -294,6 +251,22 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
         <Button variant="outline" onClick={backToGrid}>
           {t('backToList')}
         </Button>
+      </div>
+    );
+  }
+
+  // Detail load error — show retry UI
+  if (detailError) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-lg border border-border p-8 text-center">
+        <AlertCircle className="h-12 w-12 text-destructive" />
+        <div className="space-y-1">
+          <p className="text-base font-semibold">{t('loadFailed')}</p>
+        </div>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={backToGrid}>{t('backToList')}</Button>
+          <Button variant="cta" onClick={() => void loadPlaylistDetail(playlistId)}>{t('retry')}</Button>
+        </div>
       </div>
     );
   }
@@ -353,13 +326,14 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
       playlistMeta={playlistMeta}
       updatePlaylistMeta={updatePlaylistMeta}
       selectedZonePreset={selectedZonePreset}
-      setSelectedZonePreset={setSelectedZonePreset}
+      setSelectedZonePreset={handleSetSelectedZonePreset}
       zonePresets={zonePresets}
       setSelectedZoneId={setSelectedZoneId}
       selectionContext={selectionContext}
       selectedRow={selectedRow}
       onUpdateRowZone={updateRowZone}
       onDragEnd={onDragEnd}
+      onAssignScreens={() => router.push(`/${locale}/content/playlists/${playlistId}` as Route)}
       onPreview={() => setPreviewOpen(true)}
       onSelectRow={setSelectedRowClientId}
       selectedRowClientId={selectedRowClientId}
@@ -368,7 +342,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
       <PlaylistPreviewOverlay
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
-        rows={currentZoneRows}
+        rows={rows}
         defaultTransition={playlistMeta.defaultTransition}
         transitionDuration={playlistMeta.transitionDuration}
       />
@@ -385,11 +359,9 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
               if (pendingBackRef.current) {
                 pendingBackRef.current = false;
                 if (initialPlaylistId) {
-                  router.push(`/${locale}/content/playlists/${initialPlaylistId}` as never as Route);
+                  router.push(`/${locale}/content/playlists/${initialPlaylistId}` as Route);
                 } else {
-                  setPlaylistId('');
-                  setViewMode('grid');
-                  setSelectedRowClientId(null);
+                  router.push(`/${locale}/content/playlists` as Route);
                 }
               }
               setShowUnsavedDialog(false);
@@ -399,15 +371,36 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
               if (pendingBackRef.current) {
                 pendingBackRef.current = false;
                 if (initialPlaylistId) {
-                  router.push(`/${locale}/content/playlists/${initialPlaylistId}` as never as Route);
+                  router.push(`/${locale}/content/playlists/${initialPlaylistId}` as Route);
                 } else {
-                  setPlaylistId('');
-                  setViewMode('grid');
-                  setSelectedRowClientId(null);
+                  router.push(`/${locale}/content/playlists` as Route);
                 }
               }
               setShowUnsavedDialog(false);
             }}>{t('save')}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Zone switch confirmation dialog */}
+      <AlertDialog open={showZoneSwitchDialog} onOpenChange={setShowZoneSwitchDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('zoneSwitchTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('zoneSwitchDesc')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              pendingMetaPatchRef.current = null;
+              setShowZoneSwitchDialog(false);
+            }}>{t('zoneSwitchCancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (pendingMetaPatchRef.current) {
+                rawUpdatePlaylistMeta(pendingMetaPatchRef.current);
+                pendingMetaPatchRef.current = null;
+              }
+              setShowZoneSwitchDialog(false);
+            }}>{t('zoneSwitchConfirm')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

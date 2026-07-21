@@ -1,12 +1,14 @@
 import {
   createCanvas,
-  createPlaylist,
   updateCanvas,
+} from '@/features/studio/studio-api';
+import {
+  createPlaylist,
   updatePlaylistItems,
   updatePlaylistMeta,
   fetchPlaylists,
   fetchPlaylistDetail,
-} from '@/features/studio/studio-api';
+} from '@/features/playlists/api/playlists-api';
 import { readPageItems } from '@/features/api/page';
 
 /**

@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   fetchCanvases as apiFetchCanvases,
+} from '@/features/studio/studio-api';
+import {
   fetchPlaylists as apiFetchPlaylists,
   fetchPlaylistDetail as apiFetchPlaylistDetail,
   fetchPlaylistGroups as apiFetchPlaylistGroups,
-} from '@/features/studio/studio-api';
+} from '@/features/playlists/api/playlists-api';
 import { fetchMedia } from '@/features/media/api/media-api';
 import { readPageItems } from '@/features/api/page';
 import type { MediaItem } from '@/features/media/media-library-client';
@@ -20,6 +22,7 @@ type UsePlaylistDataReturn = {
   playlists: PlaylistSummary[];
   groups: PlaylistGroup[];
   loading: boolean;
+  detailError: boolean;
   setPlaylists: React.Dispatch<React.SetStateAction<PlaylistSummary[]>>;
   setGroups: React.Dispatch<React.SetStateAction<PlaylistGroup[]>>;
   setLibrary: React.Dispatch<React.SetStateAction<MediaItem[]>>;
@@ -45,6 +48,7 @@ export function usePlaylistData(
   const [playlists, setPlaylists] = useState<PlaylistSummary[]>([]);
   const [groups, setGroups] = useState<PlaylistGroup[]>([]);
   const [loading, setLoading] = useState(true);
+  const [detailError, setDetailError] = useState(false);
 
   const loadLibrary = useCallback(async () => {
     if (!workspaceId) return;
@@ -73,8 +77,12 @@ export function usePlaylistData(
   const loadPlaylistDetail = useCallback(
     async (id: string) => {
       if (!workspaceId) return;
+      setDetailError(false);
       const res = await apiFetchPlaylistDetail(workspaceId, id);
-      if (!res.ok) return;
+      if (!res.ok) {
+        setDetailError(true);
+        return;
+      }
       const data = (await res.json()) as {
         items: Array<{
           kind?: string;
@@ -137,6 +145,7 @@ export function usePlaylistData(
     playlists,
     groups,
     loading,
+    detailError,
     setPlaylists,
     setGroups,
     setLibrary,

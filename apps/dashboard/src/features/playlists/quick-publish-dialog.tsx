@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { createPlaylist, updatePlaylistItems } from '@/features/studio/studio-api';
+import { createPlaylist, updatePlaylistItems } from '@/features/playlists/api/playlists-api';
 import { fetchPlaylistOptions, updateScreen, type PlaylistOption } from '@/features/screens/api/screens-api';
 import { fetchScreens } from '@/features/screens/api/screens-api';
 import type { ScreenRow } from '@/features/screens/useApiScreens';

@@ -24,7 +24,7 @@ import { useTranslations } from 'next-intl';
 import { fetchScreens } from '@/features/screens/api/screens-api';
 import type { ScreenRow } from '@/features/screens/useApiScreens';
 import { fetchMedia, type MediaItem } from '@/features/media/api/media-api';
-import { fetchPlaylists } from '@/features/studio/studio-api';
+import { fetchPlaylists } from '@/features/playlists/api/playlists-api';
 import { readPageItems } from '@/features/api/page';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { useLocale } from 'next-intl';
@@ -171,7 +171,7 @@ export function GlobalSearch() {
           label: p.name,
           sublabel: p.isPublished ? t('published') : t('unpublished'),
           type: 'playlist',
-          href: `/${locale}/playlists` as string,
+          href: `/${locale}/content/playlists/${p.id}` as string,
         });
       }
     }

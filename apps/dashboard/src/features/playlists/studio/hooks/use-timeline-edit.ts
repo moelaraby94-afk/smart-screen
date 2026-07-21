@@ -24,6 +24,7 @@ type FullParams = UseTimelineEditParams & {
 type UseTimelineEditReturn = {
   undoStack: Row[][];
   redoStack: Row[][];
+  clearHistory: () => void;
   undo: () => void;
   redo: () => void;
   onDragEnd: (result: DropResult) => void;
@@ -293,9 +294,15 @@ export function useTimelineEdit({
     [setRows, pushHistory],
   );
 
+  const clearHistory = useCallback(() => {
+    setUndoStack([]);
+    setRedoStack([]);
+  }, []);
+
   return {
     undoStack,
     redoStack,
+    clearHistory,
     undo,
     redo,
     onDragEnd,

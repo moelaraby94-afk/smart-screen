@@ -48,7 +48,7 @@ import { formatBytesLocale } from '@/features/dashboard/home-dashboard-types';
 import { cn } from '@/lib/utils';
 import { EmptyMediaIllustration } from '@/features/media/media-preview-components';
 import { FolderSection, MediaGrid, type MediaFolder } from '@/features/media/media-grid-sections';
-import { fetchPlaylists as apiFetchPlaylists, fetchPlaylistDetail as apiFetchPlaylistDetail, updatePlaylistItems as apiUpdatePlaylistItems } from '@/features/studio/studio-api';
+import { fetchPlaylists as apiFetchPlaylists, fetchPlaylistDetail as apiFetchPlaylistDetail, updatePlaylistItems as apiUpdatePlaylistItems } from '@/features/playlists/api/playlists-api';
 import { readPageItems } from '@/features/api/page';
 
 export type MediaItem = {

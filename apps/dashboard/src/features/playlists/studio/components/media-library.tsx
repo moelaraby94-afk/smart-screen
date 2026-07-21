@@ -190,7 +190,7 @@ export function MediaLibrary({ library, canvasLibrary, onUploadComplete, workspa
 
         <TabsContent value="recent" className="mt-0 flex-1 overflow-hidden">
           <div className="max-h-[calc(100vh-280px)] overflow-y-auto p-1">
-            {filtered.slice(0, 10).map((m) => (
+            {[...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10).map((m) => (
               <div
                 key={m.id}
                 className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-background px-2.5 py-2 mb-1.5"

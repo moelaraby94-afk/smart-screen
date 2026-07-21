@@ -2926,7 +2926,12 @@
     "unsavedChangesTitle": "Unsaved changes",
     "unsavedChangesDesc": "You have unsaved changes. Save before leaving or discard them?",
     "discard": "Discard",
-    "studioEditor": "Playlist studio editor"
+    "studioEditor": "Playlist studio editor",
+    "zoneSwitchTitle": "Switch to single zone?",
+    "zoneSwitchDesc": "Switching to single zone will hide all zone assignments. Items will still keep their zone data but it won't be visible until you switch back to multi-zone.",
+    "zoneSwitchConfirm": "Switch",
+    "zoneSwitchCancel": "Cancel",
+    "loadFailed": "Could not load playlist. Please try again."
   },
   "playlistDetail": {
     "loading": "Loading playlist…",

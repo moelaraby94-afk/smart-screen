@@ -44,12 +44,14 @@ import {
   updateCanvas as apiUpdateCanvas,
   createCanvas as apiCreateCanvas,
   deleteCanvas as apiDeleteCanvas,
-  fetchPlaylists as apiFetchPlaylists,
   fetchCanvasVersions as apiFetchCanvasVersions,
   restoreCanvasVersion as apiRestoreCanvasVersion,
+} from '@/features/studio/studio-api';
+import {
+  fetchPlaylists as apiFetchPlaylists,
   createPlaylist as apiCreatePlaylist,
   updatePlaylistItems as apiUpdatePlaylistItems,
-} from '@/features/studio/studio-api';
+} from '@/features/playlists/api/playlists-api';
 import { fetchMedia, uploadMedia } from '@/features/media/api/media-api';
 import { readPageItems } from '@/features/api/page';
 import { useWorkspace } from '@/features/workspace/workspace-context';
@@ -474,7 +476,7 @@ export function StudioEditorClient() {
       });
       if (!itemsRes.ok) throw new Error('fail-items');
       toast.success(t('playlistCreated'));
-      router.push(`/${locale}/content/playlists/${created.id}/studio` as never as Route);
+      router.push(`/${locale}/content/playlists/${created.id}/studio` as Route);
     } catch {
       toast.error(t('playlistCreateFailed'));
     }

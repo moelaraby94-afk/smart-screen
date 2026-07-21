@@ -4,6 +4,7 @@ import { SchedulesClient } from '@/features/schedules/schedules-client';
 
 type Props = {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -14,8 +15,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function SchedulingPage({ params }: Props) {
+export default async function SchedulingPage({ params, searchParams }: Props) {
   const { locale } = await params;
+  const sp = await searchParams;
+  const initialPlaylistId = typeof sp.playlistId === 'string' ? sp.playlistId : '';
+  const initialScreenId = typeof sp.screen === 'string' ? sp.screen : '';
   const t = await getTranslations({ locale, namespace: 'schedules' });
   const tCommon = await getTranslations({ locale, namespace: 'common' });
 
@@ -28,7 +32,7 @@ export default async function SchedulingPage({ params }: Props) {
         <h1 className="text-xl font-semibold tracking-tight">{t('title')}</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">{t('description')}</p>
       </header>
-      <SchedulesClient locale={locale} />
+      <SchedulesClient locale={locale} initialPlaylistId={initialPlaylistId} initialScreenId={initialScreenId} />
     </main>
   );
 }

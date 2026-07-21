@@ -18,32 +18,13 @@ import { useTranslations, useLocale } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import type { MediaItem } from '@/features/media/media-library-client';
-import type { CanvasSummary } from './playlist-library-panels';
 import {
   type TransitionType,
   TRANSITIONS,
 } from '@/features/playlists/playlist-transitions';
+import type { Row } from './studio/types';
 
-export type Row =
-  | {
-      clientId: string;
-      kind: 'media';
-      mediaId: string;
-      durationSec: number;
-      media: MediaItem;
-      transition?: TransitionType;
-      zoneName?: string | null;
-    }
-  | {
-      clientId: string;
-      kind: 'canvas';
-      canvasId: string;
-      durationSec: number;
-      canvas: CanvasSummary;
-      transition?: TransitionType;
-      zoneName?: string | null;
-    };
+export type { Row };
 
 type PlaylistTimelineProps = {
   rows: Row[];

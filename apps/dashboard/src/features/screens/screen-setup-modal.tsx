@@ -48,7 +48,7 @@ import {
   type PlaylistOption,
   type PlaylistAssignment,
 } from '@/features/screens/api/screens-api';
-import { createPlaylist as apiCreatePlaylist } from '@/features/studio/studio-api';
+import { createPlaylist as apiCreatePlaylist } from '@/features/playlists/api/playlists-api';
 import { PlaylistCreateWizard } from '@/features/playlists/playlist-create-wizard';
 import {
   fetchSchedules,

@@ -201,6 +201,7 @@ export type PlaylistLocalMeta = {
   layoutType: PlaylistLayoutType;
   defaultTransition: TransitionType;
   transitionDuration: number;
+  zonePresetId?: string | null;
 };
 
 export const DEFAULT_PLAYLIST_META: PlaylistLocalMeta = {
@@ -208,6 +209,7 @@ export const DEFAULT_PLAYLIST_META: PlaylistLocalMeta = {
   layoutType: 'single',
   defaultTransition: 'fade',
   transitionDuration: 0.6,
+  zonePresetId: null,
 };
 
 const STORAGE_PREFIX = 'playlist-meta:';

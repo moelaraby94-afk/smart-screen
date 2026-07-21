@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import type { Route } from 'next';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -54,6 +54,7 @@ type FilterType = 'all' | 'unread' | 'read' | 'screen' | 'upload' | 'subscriptio
 export function NotificationsPageClient() {
   const t = useTranslations('notifications');
   const tPage = useTranslations('notifications.page');
+  const locale = useLocale();
   const router = useRouter();
   const { notifications, unreadCount, markAllRead, removeNotification, clearAll } = useNotifications();
   const [filter, setFilter] = useState<FilterType>('all');
@@ -79,7 +80,9 @@ export function NotificationsPageClient() {
   };
 
   const handleNotificationClick = (link?: string | null) => {
-    if (link) router.push(link as Route);
+    if (!link) return;
+    const href = link.startsWith('/') && !link.startsWith(`/${locale}`) ? `/${locale}${link}` : link;
+    router.push(href as Route);
   };
 
   const filterButtons: { label: string; value: FilterType }[] = [

@@ -169,7 +169,7 @@ export function PlaylistDetailClient({ playlistId }: { playlistId: string }) {
       }
       toast.success(tStudio('playlistDeleted'));
       bumpWorkspaceDataEpoch();
-      router.push(`/${locale}/content` as never as Route);
+      router.push(`/${locale}/content` as Route);
     } catch {
       toast.error(tStudio('couldNotDeletePlaylist'));
     }
@@ -405,7 +405,7 @@ export function PlaylistDetailClient({ playlistId }: { playlistId: string }) {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => router.push(`/${locale}/content/playlists/${playlistId}/studio` as never as Route)}
+                    onClick={() => router.push(`/${locale}/content/playlists/${playlistId}/studio` as Route)}
                   >
                     <Pencil className="me-2 h-4 w-4" strokeWidth={ICON_STROKE} />
                     {t('editInStudio')}
@@ -416,7 +416,7 @@ export function PlaylistDetailClient({ playlistId }: { playlistId: string }) {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => router.push(`/${locale}/scheduling?playlistId=${playlistId}` as never as Route)}
+                    onClick={() => router.push(`/${locale}/scheduling?playlistId=${playlistId}` as Route)}
                   >
                     <CalendarPlus className="me-2 h-4 w-4" strokeWidth={ICON_STROKE} />
                     {t('createSchedule')}
@@ -546,7 +546,7 @@ export function PlaylistDetailClient({ playlistId }: { playlistId: string }) {
                 {canEdit && (
                   <Button
                     variant="outline"
-                    onClick={() => router.push(`/${locale}/content/playlists/${playlistId}/studio` as never as Route)}
+                    onClick={() => router.push(`/${locale}/content/playlists/${playlistId}/studio` as Route)}
                   >
                     <Pencil className="me-2 h-4 w-4" strokeWidth={ICON_STROKE} />
                     {t('editInStudio')}

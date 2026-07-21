@@ -22,6 +22,8 @@ import {
   Sun,
   Users,
   ImageIcon,
+  LifeBuoy,
+  ScrollText,
 } from 'lucide-react';
 import { ShellLogo } from '@/components/layout/shell-logo';
 import { pathWithLocale } from '@/components/language-switcher';
@@ -402,6 +404,22 @@ export function ShellSidebar({
                 active={Boolean(pathname?.startsWith(`/${navLocale}/settings`))}
                 icon={Settings}
               />
+
+              {/* ── Secondary nav: Help + Audit Log ── */}
+              <div className="pt-2 mt-2 border-t border-border/60">
+                <NavItem
+                  href={hrefFor(navLocale, 'help') as Route}
+                  label={t('help')}
+                  active={Boolean(pathname?.startsWith(`/${navLocale}/help`))}
+                  icon={LifeBuoy}
+                />
+                <NavItem
+                  href={hrefFor(navLocale, 'auditLog') as Route}
+                  label={t('auditLog')}
+                  active={Boolean(pathname?.startsWith(`/${navLocale}/audit-log`))}
+                  icon={ScrollText}
+                />
+              </div>
             </>
           )}
         </nav>

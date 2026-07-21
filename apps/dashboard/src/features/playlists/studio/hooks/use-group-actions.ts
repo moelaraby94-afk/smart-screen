@@ -8,7 +8,7 @@ import {
   renamePlaylistGroup as apiRenamePlaylistGroup,
   deletePlaylistGroup as apiDeletePlaylistGroup,
   movePlaylistGroup as apiMovePlaylistGroup,
-} from '@/features/studio/studio-api';
+} from '@/features/playlists/api/playlists-api';
 
 type UseGroupActionsParams = {
   loadGroups: () => Promise<void>;

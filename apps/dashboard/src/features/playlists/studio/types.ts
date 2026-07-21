@@ -1,7 +1,7 @@
 import type { MediaItem } from '@/features/media/media-library-client';
 import type { CanvasSummary } from '@/features/playlists/playlist-library-panels';
 import type { TransitionType, PlaylistLocalMeta, PlaylistOrientation, PlaylistLayoutType } from '@/features/playlists/playlist-transitions';
-import type { ZonePreset } from '@/features/studio/canvas-layout';
+import type { ZonePreset } from '@/lib/zone-presets';
 
 export type { MediaItem, CanvasSummary, TransitionType, PlaylistLocalMeta, PlaylistOrientation, PlaylistLayoutType, ZonePreset };
 

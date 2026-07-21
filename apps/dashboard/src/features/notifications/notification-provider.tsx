@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import {
   Monitor,
   Upload,
@@ -80,6 +80,7 @@ function showBrowserNotification(title: string, body: string) {
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const t = useTranslations('notifications');
+  const locale = useLocale();
   const { workspaceId, isAuthenticated } = useWorkspace();
   const prevStatusRef = useRef<Map<string, string>>(new Map());
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -169,7 +170,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         {
           type: 'subscription_updated',
           message: t('subscriptionUpdated', { plan: payload.plan ?? '' }),
-          link: '/settings/billing',
+          link: `/${locale}/settings/billing`,
         },
         t('browserSubscription'),
       );
@@ -180,13 +181,13 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         icon: <CalendarClock className="h-4 w-4" />,
       });
       addNotification(
-        { type: 'schedule_changed', message: t('scheduleChanged'), link: '/schedules' },
+        { type: 'schedule_changed', message: t('scheduleChanged'), link: `/${locale}/scheduling` },
         t('browserSchedule'),
       );
     });
 
     socket.on('pairing:started', () => {
-      addNotification({ type: 'pairing_started', message: t('pairingStarted'), link: '/screens' });
+      addNotification({ type: 'pairing_started', message: t('pairingStarted'), link: `/${locale}/screens` });
     });
 
     return () => {
@@ -196,7 +197,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       socket.off('schedule:changed');
       socket.off('pairing:started');
     };
-  }, [socket, workspaceId, isAuthenticated, t, addNotification]);
+  }, [socket, workspaceId, isAuthenticated, t, addNotification, locale]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 

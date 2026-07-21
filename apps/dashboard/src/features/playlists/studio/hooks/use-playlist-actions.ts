@@ -7,7 +7,7 @@ import {
   createPlaylist as apiCreatePlaylist,
   updatePlaylistItems as apiUpdatePlaylistItems,
   updatePlaylistMeta as apiUpdatePlaylistMeta,
-} from '@/features/studio/studio-api';
+} from '@/features/playlists/api/playlists-api';
 import { apiFetch } from '@/features/auth/session';
 import type { PlaylistSummary, Row } from '../types';
 
@@ -19,8 +19,8 @@ type UsePlaylistActionsParams = {
   loadPlaylistDetail: (id: string) => Promise<void>;
   bumpWorkspaceDataEpoch: () => void;
   setPlaylists: React.Dispatch<React.SetStateAction<PlaylistSummary[]>>;
-  setPlaylistId: (id: string) => void;
-  setNewName: (name: string) => void;
+  setPlaylistId?: (id: string) => void;
+  setNewName?: (name: string) => void;
 };
 
 type UsePlaylistActionsReturn = {
@@ -32,7 +32,6 @@ type UsePlaylistActionsReturn = {
   savePlaylist: (playlistId: string, rows: Row[]) => Promise<void>;
   togglePublish: (playlistId: string, currentIsPublished: boolean) => Promise<void>;
   duplicatePlaylist: (playlistId: string) => Promise<void>;
-  duplicatePlaylistById: (id: string) => Promise<void>;
   cloneToWorkspace: (playlistId: string, targetWs: string) => Promise<void>;
   handleDeletePlaylist: (id: string) => Promise<void>;
 };
@@ -66,10 +65,10 @@ export function usePlaylistActions({
       }
       const created = (await res.json()) as { id: string };
       toast.success(t('playlistCreated'));
-      setNewName('');
+      setNewName?.('');
       await loadPlaylists();
       bumpWorkspaceDataEpoch();
-      setPlaylistId(created.id);
+      setPlaylistId?.(created.id);
     },
     [filterWorkspaceId, workspaceId, filterGroupId, loadPlaylists, bumpWorkspaceDataEpoch, setPlaylistId, setNewName, t],
   );
@@ -159,24 +158,6 @@ export function usePlaylistActions({
     [workspaceId, loadPlaylists, bumpWorkspaceDataEpoch, t],
   );
 
-  const duplicatePlaylistById = useCallback(
-    async (id: string) => {
-      if (!workspaceId) return;
-      const res = await apiFetch(
-        `/playlists/${encodeURIComponent(id)}/duplicate?workspaceId=${encodeURIComponent(workspaceId)}`,
-        { method: 'POST' },
-      );
-      if (!res.ok) {
-        toast.error(t('duplicateFailed'));
-        return;
-      }
-      toast.success(t('duplicated'));
-      await loadPlaylists();
-      bumpWorkspaceDataEpoch();
-    },
-    [workspaceId, loadPlaylists, bumpWorkspaceDataEpoch, t],
-  );
-
   const cloneToWorkspace = useCallback(
     async (playlistId: string, targetWs: string) => {
       if (!workspaceId || !playlistId || !targetWs) return;
@@ -224,7 +205,6 @@ export function usePlaylistActions({
     savePlaylist,
     togglePublish,
     duplicatePlaylist,
-    duplicatePlaylistById,
     cloneToWorkspace,
     handleDeletePlaylist,
   };

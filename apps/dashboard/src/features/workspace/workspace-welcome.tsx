@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import type { Route } from 'next';
 import { useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
 import { Building2, Loader2, Sparkles, Wand2 } from 'lucide-react';
@@ -42,7 +43,7 @@ export function WorkspaceWelcome() {
       setWorkspaceId(data.workspace.id);
       bumpWorkspaceDataEpoch();
       toast.success(t('demoLoaded'));
-      router.push(`/${locale}/overview`);
+      router.push(`/${locale}/overview` as Route);
       router.refresh();
     } catch {
       toast.error(t('demoFailed'));

@@ -9,10 +9,12 @@ import type { Route } from 'next';
 type TabDef = {
   key: string;
   segment: string;
+  href: string;
 };
 
 const ALL_TABS: TabDef[] = [
-  { key: 'tabPlaylists', segment: 'playlists' },
+  { key: 'tabPlaylists', segment: 'playlists', href: 'content/playlists' },
+  { key: 'tabTemplates', segment: 'templates', href: 'templates' },
 ];
 
 export function ContentTabs() {
@@ -26,7 +28,7 @@ export function ContentTabs() {
       className="inline-flex flex-wrap items-center gap-1 rounded-xl border border-border bg-muted/30 p-1"
     >
       {ALL_TABS.map((tab) => {
-        const href = `/${locale}/content/${tab.segment}`;
+        const href = `/${locale}/${tab.href}`;
         const active = pathname?.startsWith(href) ?? false;
         return (
           <Link

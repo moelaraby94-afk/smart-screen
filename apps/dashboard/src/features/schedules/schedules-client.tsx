@@ -66,7 +66,15 @@ type ScheduleApi = {
 type PlaylistOpt = { id: string; name: string; _count?: { items: number } };
 type ScreenOpt = { id: string; name: string };
 
-export function SchedulesClient({ locale }: { locale: string }) {
+export function SchedulesClient({
+  locale,
+  initialPlaylistId = '',
+  initialScreenId = '',
+}: {
+  locale: string;
+  initialPlaylistId?: string;
+  initialScreenId?: string;
+}) {
   const t = useTranslations('schedules');
   const { workspaceId, bumpWorkspaceDataEpoch, workspaces } = useWorkspace();
   const [schedules, setSchedules] = useState<ScheduleApi[]>([]);
@@ -82,8 +90,8 @@ export function SchedulesClient({ locale }: { locale: string }) {
   const [deleting, setDeleting] = useState(false);
   const [viewMode, setViewMode] = useState<'calendar' | 'timeline' | 'list'>('calendar');
   const [sortBy, setSortBy] = useState<string>('priority');
-  const [filterScreenId, setFilterScreenId] = useState('');
-  const [filterPlaylistId, setFilterPlaylistId] = useState('');
+  const [filterScreenId, setFilterScreenId] = useState(initialScreenId);
+  const [filterPlaylistId, setFilterPlaylistId] = useState(initialPlaylistId);
 
   const canEdit = useMemo(() => {
     const ws = workspaces.find((w) => w.id === workspaceId);

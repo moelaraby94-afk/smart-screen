@@ -453,7 +453,7 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
       if (!res.ok) throw new Error('fail');
       bumpWorkspaceDataEpoch();
       toast.success(tDetail('deleteSuccess', { name: screen.name }));
-      router.push(`/${locale}/screens`);
+      router.push(`/${locale}/screens` as Route);
     } catch {
       toast.error(tDetail('deleteFailed'));
       setDeleting(false);
