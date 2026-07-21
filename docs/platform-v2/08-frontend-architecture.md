@@ -42,7 +42,7 @@
 │  │  (apps/control-panel)│  │  (apps/workspace)   │     │
 │  │                      │  │                     │     │
 │  │  Domain:             │  │  Domain:            │     │
-│  │  admin.cloudsignage  │  │  app.cloudsignage   │     │
+│  │  admin.smartscreen  │  │  app.smartscreen   │     │
 │  │  .com                │  │  .com               │     │
 │  │                      │  │                     │     │
 │  │  API: /platform/*    │  │  API: /customer/*   │     │
@@ -70,7 +70,7 @@
 | Aspect | Control Panel | Customer Workspace |
 |---|---|---|
 | **Path** | `apps/control-panel/` | `apps/workspace/` |
-| **Domain** | `admin.cloudsignage.com` | `app.cloudsignage.com` |
+| **Domain** | `admin.smartscreen.com` | `app.smartscreen.com` |
 | **Users** | Platform staff | Customers |
 | **Auth audience** | `platform` | `customer` |
 | **API namespace** | `/platform/*` | `/customer/*` |
@@ -186,7 +186,7 @@ apps/control-panel/
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  [Cloud-Screen Control Panel]    🔔  👤 Admin User ▾ │
+│  [Smart Screen Control Panel]    🔔  👤 Admin User ▾ │
 ├──────────┬──────────────────────────────────────────┤
 │          │                                          │
 │  📊 Dash │  Breadcrumb: Dashboard                    │
@@ -382,7 +382,7 @@ When a platform staff member is impersonating a customer, the Customer Workspace
 
 - Banner is shown when JWT contains `impersonatedBy` claim
 - "Return to Control Panel" calls `POST /auth/exit-impersonation`
-- Backend issues platform exchange token → redirects to `admin.cloudsignage.com`
+- Backend issues platform exchange token → redirects to `admin.smartscreen.com`
 - Banner is always visible (cannot be dismissed)
 - Color: Warning amber, high contrast
 
@@ -429,7 +429,7 @@ packages/ui/
 └── tsconfig.json
 ```
 
-**Import:** `import { Button, Dialog } from '@cloud-screen/ui'`
+**Import:** `import { Button, Dialog } from '@smart-screen/ui'`
 
 ### 5.2 `packages/api-ts`
 
@@ -461,7 +461,7 @@ packages/api-ts/
 └── tsconfig.json
 ```
 
-**Import:** `import { Tenant, Subscription } from '@cloud-screen/api-ts'`
+**Import:** `import { Tenant, Subscription } from '@smart-screen/api-ts'`
 
 ### 5.3 `packages/config`
 
@@ -586,8 +586,8 @@ packages/config/
 
 | App | Domain | CDN | Deploy Trigger |
 |---|---|---|---|
-| Control Panel | `admin.cloudsignage.com` | Cloudflare | Merge to `main` (control-panel changes) |
-| Customer Workspace | `app.cloudsignage.com` | Cloudflare | Merge to `main` (workspace changes) |
+| Control Panel | `admin.smartscreen.com` | Cloudflare | Merge to `main` (control-panel changes) |
+| Customer Workspace | `app.smartscreen.com` | Cloudflare | Merge to `main` (workspace changes) |
 
 ### 8.3 Docker
 
@@ -620,7 +620,7 @@ RUN npm run build --workspace=apps/workspace
 3. Update API client to use `/platform/*` routes
 4. Update auth to use `audience: 'platform'` and `__cp_` cookies
 5. Create Control Panel shell, sidebar, header
-6. Deploy to `admin.cloudsignage.com`
+6. Deploy to `admin.smartscreen.com`
 
 ### 9.2 Phase 2: Clean Customer Workspace
 
@@ -631,7 +631,7 @@ RUN npm run build --workspace=apps/workspace
 5. Update auth to use `audience: 'customer'` and `__dash_` cookies
 6. Add impersonation banner
 7. Add `/auth/impersonate` route for exchange token
-8. Deploy to `app.cloudsignage.com`
+8. Deploy to `app.smartscreen.com`
 
 ### 9.3 Phase 3: Extract Shared Packages
 

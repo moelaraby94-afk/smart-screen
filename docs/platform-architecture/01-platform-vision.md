@@ -224,7 +224,7 @@ Do not separate the frontends. Only add stronger route guards and API partitioni
 
 - **No database schema changes are required** for Phase 1–2. The `User` model already supports both `isSuperAdmin`/`platformStaffRole` and customer fields.
 - **JWT changes are backward-compatible** if implemented as additive (new `audience` claim, old tokens treated as customer).
-- **The Control Panel can be deployed to a subdomain** (e.g., `admin.cloudsignage.com`) while the Customer Dashboard stays at `app.cloudsignage.com`.
+- **The Control Panel can be deployed to a subdomain** (e.g., `admin.smartscreen.com`) while the Customer Dashboard stays at `app.smartscreen.com`.
 - **Docker Compose** needs a new service entry for the Control Panel. The backend service does not change.
 - **CI/CD** needs a new build job for the Control Panel. The dashboard build job can skip admin routes after Phase 3.
 

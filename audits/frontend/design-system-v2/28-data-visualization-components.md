@@ -6,7 +6,7 @@
 
 ## 1. Data Viz Philosophy
 
-Data visualization in Cloud-Screen is **clear, minimal, and actionable**. Charts use the design system color palette, not custom colors. Every chart has accessible alternatives (data tables) and respects reduced motion.
+Data visualization in Smart Screen is **clear, minimal, and actionable**. Charts use the design system color palette, not custom colors. Every chart has accessible alternatives (data tables) and respects reduced motion.
 
 ---
 

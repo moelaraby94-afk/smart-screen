@@ -8,7 +8,7 @@
 
 ### 1.1 What Was Defined
 
-This product architecture defines the **frontend product structure** for Cloud-Screen, a multi-tenant digital signage SaaS targeting enterprise restaurants. The architecture covers 20 topics across 20 documents:
+This product architecture defines the **frontend product structure** for Smart Screen, a multi-tenant digital signage SaaS targeting enterprise restaurants. The architecture covers 20 topics across 20 documents:
 
 | # | Document | Topic | Key Output |
 |---|----------|-------|------------|

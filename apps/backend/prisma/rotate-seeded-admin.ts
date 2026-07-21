@@ -15,7 +15,7 @@ import { PrismaClient } from '@prisma/client';
  * Usage: npm run rotate-seeded-admin -w apps/backend
  */
 
-const TARGET_EMAILS = ['admin@cloudsignage.local', 'admin2@client.local'];
+const TARGET_EMAILS = ['admin@smartscreen.local', 'admin2@client.local'];
 
 const databaseUrl = process.env.DATABASE_URL?.trim();
 if (!databaseUrl) {

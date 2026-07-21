@@ -10,9 +10,9 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-cloudsignage}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cloudsignage_dev_password}
-      POSTGRES_DB: ${POSTGRES_DB:-cloudsignage}
+      POSTGRES_USER: ${POSTGRES_USER:-smartscreen}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smartscreen_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-smartscreen}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
@@ -86,7 +86,7 @@ services:
       # is the container itself — so migrate deploy fails with P1001 (can't reach
       # localhost:5433) and the backend crash-loops. Inside the network the db is
       # only reachable as `db:5432`, and that never varies for local dev.
-      DATABASE_URL: postgresql://cloudsignage:cloudsignage_dev_password@db:5432/cloudsignage?schema=public
+      DATABASE_URL: postgresql://smartscreen:smartscreen_dev_password@db:5432/smartscreen?schema=public
       # No defaults, deliberately. This service runs with NODE_ENV=production, and
       # main.ts refuses to start unless each of these is a strong, unique value
       # (>=32 chars, not a known placeholder, access != refresh). A default here
@@ -128,7 +128,7 @@ services:
       # "local" (default) uses the volume mount below; "s3" uses S3-compatible storage.
       MEDIA_STORAGE_PROVIDER: ${MEDIA_STORAGE_PROVIDER:-local}
       # When MEDIA_STORAGE_PROVIDER=s3, configure these:
-      # S3_BUCKET: ${S3_BUCKET:-cloudscreen}
+      # S3_BUCKET: ${S3_BUCKET:-smartscreen}
       # S3_REGION: ${S3_REGION:-auto}
       # S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
       # S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minioadmin}
@@ -241,10 +241,10 @@ services:
 volumes:
   pgdata:
   redisdata:
-    name: cloud_screen_redisdata
+    name: smart_screen_redisdata
   miniodata:
-    name: cloud_screen_miniodata
+    name: smart_screen_miniodata
   media_uploads:
-    name: cloud_screen_media_uploads
+    name: smart_screen_media_uploads
   backend_data:
-    name: cloud_screen_backend_data
+    name: smart_screen_backend_data

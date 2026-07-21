@@ -6,7 +6,7 @@
 
 ## 1. Success Philosophy
 
-Success feedback confirms that a user's action was completed. Cloud-Screen uses **toasts** for action-level success and **inline success states** for form-level success. Success is always **brief, non-blocking, and positive**.
+Success feedback confirms that a user's action was completed. Smart Screen uses **toasts** for action-level success and **inline success states** for form-level success. Success is always **brief, non-blocking, and positive**.
 
 ---
 

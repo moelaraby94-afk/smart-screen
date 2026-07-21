@@ -80,7 +80,7 @@
 |------|-------|----------|
 | `docs/EXECUTION_PLAN.md` | Execution Plan (11 phases) | Planning |
 | `docs/CHANGELOG_LAUNCH.md` | Launch Changelog | Reference |
-| `docs/ORCA-vs-CloudScreen-Comparison.md` | ORCA vs Cloud-Screen Comparison | Reference |
+| `docs/ORCA-vs-SmartScreen-Comparison.md` | ORCA vs Smart Screen Comparison | Reference |
 | `docs/api-page-coverage-matrix.md` | API Page Coverage Matrix | Reference |
 | `audits/00-audit-review-and-credibility.md` | Audit Review and Credibility | Methodology |
 | `audits/01-architecture-and-structure.md` | Architecture and Structure (general) | Technical |
@@ -325,7 +325,7 @@ The following terms are the canonical names used across all documentation. No sy
 | **Click Guard** | Navigation Guard, Route Guard | A mechanism preventing navigation when prerequisites aren't met |
 | **Data Epoch** | Refresh Token, Cache Buster | A counter that triggers SWR revalidation |
 | **Sovereign Mode** | Admin Mode, Super-Admin Mode | The state where super-admins are restricted from client routes |
-| **ORCA** | Design System, Theme | The design system name used in Cloud-Screen |
+| **ORCA** | Design System, Theme | The design system name used in Smart Screen |
 | **RTL** | Right-to-Left, Arabic Mode | Right-to-Left text and layout direction |
 | **LTR** | Left-to-Right, English Mode | Left-to-Right text and layout direction |
 | **WCAG** | Accessibility Standard, A11y | Web Content Accessibility Guidelines |

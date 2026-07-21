@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /home/gpack/Cloud-Screen
+cd /home/gpack/Smart Screen
 # Remove any existing ENCRYPTION_KEY line
 sed -i '/ENCRYPTION_KEY/d' .env
 # Generate and add

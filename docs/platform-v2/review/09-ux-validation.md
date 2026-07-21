@@ -8,7 +8,7 @@
 
 | Persona | App | Current State | Blueprint Target |
 |---|---|---|---|
-| Platform Owner | Control Panel | Embedded in dashboard `/admin/*` | Separate app `admin.cloudsignage.com` |
+| Platform Owner | Control Panel | Embedded in dashboard `/admin/*` | Separate app `admin.smartscreen.com` |
 | Support Specialist | Control Panel | Embedded in dashboard `/admin/*` | Separate app, read-only + impersonation |
 | Billing Manager | Control Panel | Embedded in dashboard `/admin/*` | Separate app, billing-focused |
 | Operations Engineer | Control Panel | **Does not exist** | Separate app, health + fleet |
@@ -44,7 +44,7 @@ Login → Dashboard → Sidebar shows admin nav (sovereign mode)
 ### 2.3 Target Flow
 
 ```
-Platform Login (admin.cloudsignage.com/login)
+Platform Login (admin.smartscreen.com/login)
 → Platform Dashboard
 → Sidebar: Customers, Staff, Users, Workspaces, Fleet, Analytics, Audit Log, Settings, Feature Flags, Health, Billing
 → Each page is self-contained in the Control Panel app

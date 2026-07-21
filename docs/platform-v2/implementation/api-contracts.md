@@ -1,7 +1,7 @@
 # API Contracts — Complete Specification
 
 > **Purpose:** Every API endpoint — new, modified, and existing — with request/response shapes
-> **Base URL:** `https://api.cloudsignage.com/api/v1`
+> **Base URL:** `https://api.smartscreen.com/api/v1`
 > **Auth:** JWT cookies (`__Host-cs_platform_access` or `__Host-cs_customer_access`) or `Authorization: Bearer <token>`
 > **CSRF:** `X-CSRF-Token` header required for all state-changing requests (except Bearer auth)
 
@@ -224,7 +224,7 @@
 {
   "user": {
     "id": "clxxx...",
-    "email": "admin@cloudsignage.com",
+    "email": "admin@smartscreen.com",
     "fullName": "Super Admin",
     "audience": "platform",
     "isSuperAdmin": true,
@@ -295,7 +295,7 @@
 ```json
 {
   "success": true,
-  "redirectUrl": "https://admin.cloudsignage.com/"
+  "redirectUrl": "https://admin.smartscreen.com/"
 }
 ```
 
@@ -334,7 +334,7 @@
 ```json
 {
   "secret": "JBSWY3DPEHPK3PXP",
-  "qrUrl": "otpauth://totp/CloudSignage:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=CloudSignage"
+  "qrUrl": "otpauth://totp/SmartScreen:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=SmartScreen"
 }
 ```
 
@@ -495,7 +495,7 @@
   "items": [
     {
       "id": "clxxx...",
-      "email": "admin@cloudsignage.com",
+      "email": "admin@smartscreen.com",
       "fullName": "Super Admin",
       "platformStaffRole": "SUPER_ADMIN",
       "isActive": true,
@@ -514,7 +514,7 @@
 **Body:**
 ```json
 {
-  "email": "newstaff@cloudsignage.com",
+  "email": "newstaff@smartscreen.com",
   "fullName": "Support Agent",
   "platformStaffRole": "SUPPORT_SPECIALIST",
   "password": "temporaryPassword123"
@@ -554,7 +554,7 @@
 ```json
 {
   "exchangeToken": "a1b2c3d4e5f6...",
-  "redirectUrl": "https://app.cloudsignage.com/auth/exchange?token=a1b2c3d4e5f6...",
+  "redirectUrl": "https://app.smartscreen.com/auth/exchange?token=a1b2c3d4e5f6...",
   "expiresAt": "2026-07-18T22:01:30Z"
 }
 ```
@@ -577,7 +577,7 @@
     "companyName": "Cloud Signage"
   },
   "email": {
-    "fromAddress": "noreply@cloudsignage.com",
+    "fromAddress": "noreply@smartscreen.com",
     "fromName": "Cloud Signage"
   },
   "billing": {
@@ -587,7 +587,7 @@
   },
   "general": {
     "platformName": "Cloud Signage",
-    "supportEmail": "support@cloudsignage.com",
+    "supportEmail": "support@smartscreen.com",
     "maintenanceMode": false,
     "signupEnabled": true
   }
@@ -622,7 +622,7 @@
     {
       "id": "clxxx...",
       "actorUserId": "clxxx...",
-      "actorEmail": "admin@cloudsignage.com",
+      "actorEmail": "admin@smartscreen.com",
       "action": "IMPERSONATION_START",
       "targetUserId": "clxxx...",
       "targetEmail": "customer@acme.com",
@@ -837,8 +837,8 @@
       "name": "welcome.jpg",
       "mimeType": "image/jpeg",
       "sizeBytes": 524288,
-      "url": "https://cdn.cloudsignage.com/media/clxxx...",
-      "thumbnailUrl": "https://cdn.cloudsignage.com/media/clxxx.../thumb",
+      "url": "https://cdn.smartscreen.com/media/clxxx...",
+      "thumbnailUrl": "https://cdn.smartscreen.com/media/clxxx.../thumb",
       "folderId": "clxxx...",
       "expiresAt": null,
       "createdAt": "2026-07-15T..."
@@ -863,7 +863,7 @@
   "name": "welcome.jpg",
   "mimeType": "image/jpeg",
   "sizeBytes": 524288,
-  "url": "https://cdn.cloudsignage.com/media/clxxx..."
+  "url": "https://cdn.smartscreen.com/media/clxxx..."
 }
 ```
 
@@ -1019,7 +1019,7 @@
         "id": "clxxx...",
         "type": "media",
         "mediaId": "clxxx...",
-        "url": "https://cdn.cloudsignage.com/media/clxxx...",
+        "url": "https://cdn.smartscreen.com/media/clxxx...",
         "durationSeconds": 15,
         "transition": "fade"
       }

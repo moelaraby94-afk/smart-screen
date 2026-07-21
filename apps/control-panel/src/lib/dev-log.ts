@@ -1,2 +1,2 @@
-export { devLog, devWarn, devError } from '@cloud-screen/shared';
+export { devLog, devWarn, devError } from '@smart-screen/shared';
 

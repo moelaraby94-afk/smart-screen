@@ -6,7 +6,7 @@
 
 ## 1. Purpose
 
-Defines the risk control process for the Cloud-Screen frontend implementation. Risks are identified, assessed, mitigated, and escalated according to this document.
+Defines the risk control process for the Smart Screen frontend implementation. Risks are identified, assessed, mitigated, and escalated according to this document.
 
 ---
 

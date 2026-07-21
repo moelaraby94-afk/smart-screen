@@ -1,4 +1,4 @@
-# تقرير مقارنة جوهري: ORCA-CLOUDSCREEN vs Cloud-Screen
+# تقرير مقارنة جوهري: ORCA-SMARTSCREEN vs Smart Screen
 
 > **تاريخ:** 12 يوليو 2026
 > **الهدف:** مقارنة جوهرية بين مشروعين لنفس المنتج (Digital Signage SaaS)
@@ -7,9 +7,9 @@
 
 ## 1. نظرة عامة على المشروعين
 
-| المعيار | ORCA-CLOUDSCREEN | Cloud-Screen |
+| المعيار | ORCA-SMARTSCREEN | Smart Screen |
 |---------|-----------------|--------------|
-| **الاسم** | DX-OS (Digital Experience OS) | Cloud-Screen / CloudSignage |
+| **الاسم** | DX-OS (Digital Experience OS) | Smart Screen / SmartScreen |
 | **الوصف** | منصة digital signage متعددة المستأجرين | منصة digital signage متعددة المستأجرين |
 | **Package Manager** | pnpm 9 + Turborepo | npm workspaces |
 | **Monorepo Tool** | Turborepo | npm workspaces (بدون turborepo) |
@@ -36,7 +36,7 @@
 
 ## 2. البنية المعمارية (Architecture)
 
-### ORCA-CLOUDSCREEN: Microservices
+### ORCA-SMARTSCREEN: Microservices
 
 ```
 8 خدمات منفصلة (NestJS):
@@ -63,7 +63,7 @@
 └── utils     — Shared utilities
 ```
 
-### Cloud-Screen: Monolith + Apps
+### Smart Screen: Monolith + Apps
 
 ```
 1 backend موحد (NestJS):
@@ -83,7 +83,7 @@
 
 ### الخلاصة المعمارية
 
-| المعيار | ORCA | Cloud-Screen |
+| المعيار | ORCA | Smart Screen |
 |---------|------|-------------|
 | **Backend** | 8 microservices منفصلة | 1 monolith موحد |
 | **Database** | مشتركة (Prisma + RLS) | مشتركة (Prisma) |
@@ -123,7 +123,7 @@
 - `EmergencyAlert` — تنبيهات الطوارئ
 - `DeviceCommand` — أوامر للشاشات
 
-### Cloud-Screen: Prisma 7
+### Smart Screen: Prisma 7
 
 **النماذج الرئيسية:**
 - `User` — مستخدم مع isSuperAdmin
@@ -144,7 +144,7 @@
 
 ### الفروقات الجوهرية في قاعدة البيانات
 
-| المعيار | ORCA | Cloud-Screen |
+| المعيار | ORCA | Smart Screen |
 |---------|------|-------------|
 | **Multi-tenancy** | `Tenant` + `tenantId` على كل model | `Workspace` + `workspaceId` |
 | **Roles** | `super_admin, tenant_admin, editor, operator, viewer` | `OWNER, ADMIN, EDITOR, VIEWER` + `isSuperAdmin` |
@@ -166,7 +166,7 @@
 
 ## 4. المميزات (Features)
 
-### 4.1 المميزات الموجودة في ORCA وغير موجودة في Cloud-Screen
+### 4.1 المميزات الموجودة في ORCA وغير موجودة في Smart Screen
 
 | # | الميزة | الوصف | الأهمية |
 |---|--------|------|---------|
@@ -191,7 +191,7 @@
 | 19 | **Proof-of-Play** | تسجيل ما تم عرضه ومتى | متوسطة |
 | 20 | **Content Templates** | 8 templates جاهزة (fullscreen, split, social wall, menu board) | متوسطة |
 
-### 4.2 المميزات الموجودة في Cloud-Screen وغير موجودة في ORCA
+### 4.2 المميزات الموجودة في Smart Screen وغير موجودة في ORCA
 
 | # | الميزة | الوصف | الأهمية |
 |---|--------|------|---------|
@@ -214,7 +214,7 @@
 
 ### 4.3 المميزات الموجودة في كلا المشروعين
 
-| الميزة | ORCA | Cloud-Screen |
+| الميزة | ORCA | Smart Screen |
 |--------|------|-------------|
 | **Multi-tenant** | Tenant + RBAC | Workspace + roles |
 | **JWT Auth** | + refresh tokens + Redis blacklist | + refresh tokens + multi-session |
@@ -231,7 +231,7 @@
 
 ## 5. جودة الكود والتشغيل
 
-| المعيار | ORCA | Cloud-Screen |
+| المعيار | ORCA | Smart Screen |
 |---------|------|-------------|
 | **Build Status** | ✅ يبني بنجاح | ✅ يبني بنجاح |
 | **TypeScript** | ✅ بدون أخطاء | ✅ بدون أخطاء |
@@ -260,7 +260,7 @@
 
 ---
 
-## 7. مشاكل Cloud-Screen المعروفة
+## 7. مشاكل Smart Screen المعروفة
 
 1. **No marketing/landing page** (apps/marketing فارغ)
 2. **No content approval workflow** (campaign lifecycle)
@@ -284,7 +284,7 @@
 
 ## 8. الخلاصة والتوصيات
 
-### 8.1 ما يميز ORCA عن Cloud-Screen
+### 8.1 ما يميز ORCA عن Smart Screen
 
 - **بنية microservices كاملة** — قابلة للتوسع بشكل أفضل
 - **AI service متكامل** — توليد محتوى + moderation + cost tracking
@@ -294,7 +294,7 @@
 - **200+ ملف توثيق** — شامل جداً
 - **Content versioning + Campaign lifecycle** — ميزات enterprise
 
-### 8.2 ما يميز Cloud-Screen عن ORCA
+### 8.2 ما يميز Smart Screen عن ORCA
 
 - **i18n كامل (EN/AR + RTL)** — جاهز للسوق العربي
 - **Canvas Studio مرئي** — محرر تصميم drag & drop
@@ -310,7 +310,7 @@
 
 **دمج المميزات من المشروعين:**
 
-1. **من ORCA → Cloud-Screen:**
+1. **من ORCA → Smart Screen:**
    - AI service (توليد محتوى)
    - Campaign lifecycle (approval workflow)
    - Public API + API keys + Webhooks
@@ -322,7 +322,7 @@
    - MinIO/S3 object storage
    - Redis cache
 
-2. **من Cloud-Screen → ORCA:**
+2. **من Smart Screen → ORCA:**
    - i18n + RTL support
    - Canvas Studio
    - 2FA / MFA
@@ -335,5 +335,5 @@
 
 3. **قرار معماري:**
    - ORCA: microservices أفضل للتوسع الكبير
-   - Cloud-Screen: monolith أبسط للصيانة والتشغيل السريع
-   - **التوصية:** البقاء على monolith (Cloud-Screen) مع إضافة مميزات ORCA تدريجياً
+   - Smart Screen: monolith أبسط للصيانة والتشغيل السريع
+   - **التوصية:** البقاء على monolith (Smart Screen) مع إضافة مميزات ORCA تدريجياً

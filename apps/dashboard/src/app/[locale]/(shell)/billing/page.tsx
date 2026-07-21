@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'billingClient' });
   return {
-    title: `${t('title')} — Cloud-Screen`,
+    title: `${t('title')} — Smart Screen`,
   };
 }
 

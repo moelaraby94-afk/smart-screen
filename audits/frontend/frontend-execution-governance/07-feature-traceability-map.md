@@ -6,7 +6,7 @@
 
 ## 1. Purpose
 
-Maps every feature in the Cloud-Screen platform through the complete traceability chain: from product architecture definition through user flow, screen specification, and design system components.
+Maps every feature in the Smart Screen platform through the complete traceability chain: from product architecture definition through user flow, screen specification, and design system components.
 
 ---
 

@@ -76,8 +76,8 @@
 ```sql
 CREATE TABLE "PlatformSettings" (
   "id"              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  "platformName"    TEXT NOT NULL DEFAULT 'Cloud-Screen',
-  "supportEmail"    TEXT NOT NULL DEFAULT 'support@cloudsignage.com',
+  "platformName"    TEXT NOT NULL DEFAULT 'Smart Screen',
+  "supportEmail"    TEXT NOT NULL DEFAULT 'support@smartscreen.com',
   "defaultLanguage" TEXT NOT NULL DEFAULT 'en',
   "defaultTrialDays" INT NOT NULL DEFAULT 14,
   "defaultGracePeriodDays" INT NOT NULL DEFAULT 7,

@@ -42,7 +42,7 @@ All roles (Owner, Editor, Viewer).
 - No breadcrumbs (top-level page)
 
 ### Page Title
-`Overview — Cloud-Screen`
+`Overview — Smart Screen`
 
 ### Page Description
 Dashboard with screen health summary, quick actions, recent activity, and (for empty workspaces) onboarding guide.
@@ -85,7 +85,7 @@ None.
 **Onboarding state (0 screens):**
 ```
 ┌─────────────────────────────────────────────────────┐
-│ Page Header: "Welcome to Cloud-Screen"               │
+│ Page Header: "Welcome to Smart Screen"               │
 ├─────────────────────────────────────────────────────┤
 │ ┌─────────────────────────────────────────────────┐ │
 │ │ Onboarding Card                                   │ │
@@ -164,7 +164,7 @@ Main content area (page-level scroll).
 
   {screens.length === 0 ? (
     <OnboardingCard>
-      <Heading level={3}>Welcome to Cloud-Screen!</Heading>
+      <Heading level={3}>Welcome to Smart Screen!</Heading>
       <OnboardingSteps>
         <OnboardingStep number={1} icon="Monitor" title="Pair your screen" description="Connect a TV or display" />
         <OnboardingStep number={2} icon="Image" title="Create a playlist" description="Add media and design content" />

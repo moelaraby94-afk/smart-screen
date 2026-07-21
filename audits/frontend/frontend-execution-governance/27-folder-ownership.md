@@ -6,7 +6,7 @@
 
 ## 1. Purpose
 
-Defines the folder structure for the Cloud-Screen frontend. Every file must be in its designated folder. No exceptions. Enforced by AI Constitution (Article VI, §6.2).
+Defines the folder structure for the Smart Screen frontend. Every file must be in its designated folder. No exceptions. Enforced by AI Constitution (Article VI, §6.2).
 
 ---
 

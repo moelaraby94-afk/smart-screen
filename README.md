@@ -18,7 +18,7 @@ Monorepo for the Cloud Signage platform: dashboard (Next.js), API (NestJS + Pris
 
 API base URL defaults to `http://localhost:4000/api/v1`; dashboard reads `NEXT_PUBLIC_API_BASE_URL`.
 
-> **If any environment (including staging) was ever seeded before this change**, its Super Admin (`admin@cloudsignage.local`) and demo client (`admin2@client.local`) accounts may still have the old hardcoded passwords (`admin` / `123`). Run `npm run rotate-seeded-admin -w apps/backend` against that database immediately to rotate both to strong random passwords — safe to run any time, it's a no-op if the accounts don't exist.
+> **If any environment (including staging) was ever seeded before this change**, its Super Admin (`admin@smartscreen.local`) and demo client (`admin2@client.local`) accounts may still have the old hardcoded passwords (`admin` / `123`). Run `npm run rotate-seeded-admin -w apps/backend` against that database immediately to rotate both to strong random passwords — safe to run any time, it's a no-op if the accounts don't exist.
 
 ## Workspace scripts
 

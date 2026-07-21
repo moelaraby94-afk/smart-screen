@@ -313,7 +313,7 @@
 
 ```
 ┌──────────────────────────────────────────────────┐
-│ Welcome to Cloud-Screen!                          │
+│ Welcome to Smart Screen!                          │
 │                                                   │
 │ Let's get your first screen connected.            │
 │ It takes less than 5 minutes.                     │

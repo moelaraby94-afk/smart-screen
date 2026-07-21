@@ -6,7 +6,7 @@
 
 ## 1. Responsive Philosophy
 
-Cloud-Screen is **desktop-first** (primary platform for digital signage management) but must be fully usable on tablets and mobile. The responsive strategy uses **mobile-first CSS** (base styles for mobile, overrides for larger screens) with **Tailwind breakpoints**.
+Smart Screen is **desktop-first** (primary platform for digital signage management) but must be fully usable on tablets and mobile. The responsive strategy uses **mobile-first CSS** (base styles for mobile, overrides for larger screens) with **Tailwind breakpoints**.
 
 ---
 

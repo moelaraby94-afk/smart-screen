@@ -45,13 +45,13 @@ INSERT INTO "PlatformSettings" ("id", "key", "value", "category") VALUES
   (gen_random_uuid(), 'branding.logoUrl', 'null', 'branding'),
   (gen_random_uuid(), 'branding.primaryColor', '"#6366f1"', 'branding'),
   (gen_random_uuid(), 'branding.companyName', '"Cloud Signage"', 'branding'),
-  (gen_random_uuid(), 'email.fromAddress', '"noreply@cloudsignage.com"', 'email'),
+  (gen_random_uuid(), 'email.fromAddress', '"noreply@smartscreen.com"', 'email'),
   (gen_random_uuid(), 'email.fromName', '"Cloud Signage"', 'email'),
   (gen_random_uuid(), 'billing.currency', '"USD"', 'billing'),
   (gen_random_uuid(), 'billing.trialDays', '14', 'billing'),
   (gen_random_uuid(), 'billing.gracePeriodDays', '7', 'billing'),
   (gen_random_uuid(), 'general.platformName', '"Cloud Signage"', 'general'),
-  (gen_random_uuid(), 'general.supportEmail', '"support@cloudsignage.com"', 'general'),
+  (gen_random_uuid(), 'general.supportEmail', '"support@smartscreen.com"', 'general'),
   (gen_random_uuid(), 'general.maintenanceMode', 'false', 'general'),
   (gen_random_uuid(), 'general.signupEnabled', 'true', 'general');
 ```

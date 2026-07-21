@@ -6,7 +6,7 @@
 
 ## 1. What Was Delivered
 
-This Screen Specifications document defines the **complete screen-level specification** for every page, dialog, drawer, and wizard in Cloud-Screen. It was built upon the UX Blueprint, User Flow Architecture, Information Architecture, Product Architecture, Transformation Documentation, and Frontend Audits.
+This Screen Specifications document defines the **complete screen-level specification** for every page, dialog, drawer, and wizard in Smart Screen. It was built upon the UX Blueprint, User Flow Architecture, Information Architecture, Product Architecture, Transformation Documentation, and Frontend Audits.
 
 ### Document Inventory
 

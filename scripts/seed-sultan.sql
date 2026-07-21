@@ -1,13 +1,13 @@
 -- Create customer user: Sultan
 INSERT INTO "User" (id, email, "fullName", "passwordHash", "emailVerified", "isSuperAdmin", "createdAt", "updatedAt", "businessName", "phone", "country", locale)
-VALUES ('clsultan00000000000000001', 'sultan@cloudscreen.io', 'Sultan', '$2b$12$Uklv1DQD29je4h/s7Dg7RuelfFEd7TVvzS1bH.43ytGFCY1Hognxm', true, false, NOW(), NOW(), 'Sultan Business', '+201234567890', 'EG', 'ar')
+VALUES ('clsultan00000000000000001', 'sultan@smartscreen.io', 'Sultan', '$2b$12$Uklv1DQD29je4h/s7Dg7RuelfFEd7TVvzS1bH.43ytGFCY1Hognxm', true, false, NOW(), NOW(), 'Sultan Business', '+201234567890', 'EG', 'ar')
 ON CONFLICT (email) DO NOTHING
 RETURNING id, email;
 
 -- Create workspace for Sultan
 INSERT INTO "Workspace" (id, name, slug, "createdAt", "updatedAt")
 SELECT 'clwssultan000000000000001', 'Sultan Workspace', 'sultan-workspace', NOW(), NOW()
-WHERE EXISTS (SELECT 1 FROM "User" WHERE email = 'sultan@cloudscreen.io')
+WHERE EXISTS (SELECT 1 FROM "User" WHERE email = 'sultan@smartscreen.io')
 AND NOT EXISTS (SELECT 1 FROM "Workspace" WHERE slug = 'sultan-workspace')
 RETURNING id, slug;
 

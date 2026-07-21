@@ -6,7 +6,7 @@
 
 ## 1. Complete Token Reference
 
-This document is the **single source of truth** for all design tokens. Every token used in the Cloud-Screen design system is listed here.
+This document is the **single source of truth** for all design tokens. Every token used in the Smart Screen design system is listed here.
 
 ---
 

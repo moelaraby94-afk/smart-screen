@@ -242,7 +242,7 @@ const s3 = new S3Client({
 #### Step 1.1.11: Environment Variables
 - **Modify:** `.env.example`
   - Add: `REDIS_URL=redis://localhost:6379`
-  - Add: `S3_BUCKET=cloud-screen-media`
+  - Add: `S3_BUCKET=smart-screen-media`
   - Add: `S3_REGION=auto`
   - Add: `S3_ACCESS_KEY=`
   - Add: `S3_SECRET_KEY=`

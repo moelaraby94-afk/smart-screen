@@ -6,5 +6,5 @@ export {
   markPendingWorkspaceCreate,
   consumePendingWorkspaceCreate,
   type ApiFetchInit,
-} from '@cloud-screen/shared';
+} from '@smart-screen/shared';
 

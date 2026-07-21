@@ -8,7 +8,7 @@
 
 ## 1. Project Overview
 
-**Cloud-Screen** is an enterprise cloud signage SaaS platform. It's a monorepo managed by npm workspaces, containing 4 apps:
+**Smart Screen** is an enterprise cloud signage SaaS platform. It's a monorepo managed by npm workspaces, containing 4 apps:
 
 | App | Tech | Port | Purpose |
 |-----|------|------|---------|
@@ -22,7 +22,7 @@
 ## 2. Monorepo Structure
 
 ```
-Cloud-Screen/
+Smart Screen/
 ├── apps/
 │   ├── backend/          # NestJS API
 │   ├── dashboard/        # Next.js dashboard
@@ -42,7 +42,7 @@ Cloud-Screen/
 
 - **No shared packages**: `packages/` directory exists but is empty. Shared types, constants, and validation logic are duplicated across apps.
 - **Root `prisma.service.ts`**: A stray `prisma.service.ts` file exists at the repo root (963 bytes). This appears to be a leftover/accidental file — the actual PrismaService lives at `apps/backend/src/common/prisma/prisma.service.ts`.
-- **Stray audit files**: Three audit markdown files exist at the repo root (`cloud-screen-audit-report.md`, `cloud-screen-audit-v2.md`, `cloud-screen-ux-audit.md`). These should be moved to `docs/` or `audits/`.
+- **Stray audit files**: Three audit markdown files exist at the repo root (`smart-screen-audit-report.md`, `smart-screen-audit-v2.md`, `smart-screen-ux-audit.md`). These should be moved to `docs/` or `audits/`.
 
 ---
 

@@ -6,7 +6,7 @@
 
 ## 1. Error Philosophy
 
-Errors are inevitable. Cloud-Screen handles errors gracefully with clear messaging, actionable guidance, and easy recovery. Every error state tells the user: **what happened, why, and what to do next.**
+Errors are inevitable. Smart Screen handles errors gracefully with clear messaging, actionable guidance, and easy recovery. Every error state tells the user: **what happened, why, and what to do next.**
 
 ---
 

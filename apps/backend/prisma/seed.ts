@@ -87,7 +87,7 @@ function wipeUploadsDir(): void {
   }
 }
 
-const SEED_ADMIN_EMAIL = 'admin@cloudsignage.local';
+const SEED_ADMIN_EMAIL = 'admin@smartscreen.local';
 const SEED_CLIENT_EMAIL = 'admin2@client.local';
 const SEED_WORKSPACE_NAMES = [CLIENT_WORKSPACE_NAME, 'Admin Control'];
 

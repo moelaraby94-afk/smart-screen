@@ -133,7 +133,7 @@
 | Issue | Severity | Detail |
 |---|---|---|
 | Single cookie for both identities | **CRITICAL** | Admin and customer sessions share `cs_access_token`. Can't have both sessions simultaneously. |
-| No domain separation | **HIGH** | Cookies are set on the current domain. Blueprint requires separate domains (`admin.cloudsignage.com` vs `app.cloudsignage.com`). |
+| No domain separation | **HIGH** | Cookies are set on the current domain. Blueprint requires separate domains (`admin.smartscreen.com` vs `app.smartscreen.com`). |
 | `sameSite: 'lax'` | **OK** | Correct for same-site API calls. Would need `sameSite: 'none'` + `secure` for cross-site. |
 | No `__Host-` prefix | **MEDIUM** | Using `__Host-cs_access_token` would prevent subdomain cookie injection. |
 
@@ -141,10 +141,10 @@
 
 | Cookie | Domain | Purpose | Attributes |
 |---|---|---|---|
-| `__Host-cs_platform_access` | `admin.cloudsignage.com` | Platform access token | `httpOnly`, `secure`, `sameSite: 'lax'`, `path: /` |
-| `__Host-cs_platform_refresh` | `admin.cloudsignage.com` | Platform refresh token | `httpOnly`, `secure`, `sameSite: 'lax'`, `path: /` |
-| `__Host-cs_customer_access` | `app.cloudsignage.com` | Customer access token | `httpOnly`, `secure`, `sameSite: 'lax'`, `path: /` |
-| `__Host-cs_customer_refresh` | `app.cloudsignage.com` | Customer refresh token | `httpOnly`, `secure`, `sameSite: 'lax'`, `path: /` |
+| `__Host-cs_platform_access` | `admin.smartscreen.com` | Platform access token | `httpOnly`, `secure`, `sameSite: 'lax'`, `path: /` |
+| `__Host-cs_platform_refresh` | `admin.smartscreen.com` | Platform refresh token | `httpOnly`, `secure`, `sameSite: 'lax'`, `path: /` |
+| `__Host-cs_customer_access` | `app.smartscreen.com` | Customer access token | `httpOnly`, `secure`, `sameSite: 'lax'`, `path: /` |
+| `__Host-cs_customer_refresh` | `app.smartscreen.com` | Customer refresh token | `httpOnly`, `secure`, `sameSite: 'lax'`, `path: /` |
 | `csrf_token` | Per-app | CSRF token | `httpOnly: false`, `secure`, `sameSite: 'lax'` |
 
 ---
@@ -196,7 +196,7 @@
 
 | Issue | Severity | Detail |
 |---|---|---|
-| Single allow-list for both apps | **MEDIUM** | Both `admin.cloudsignage.com` and `app.cloudsignage.com` share the same allow-list. Should be per-audience. |
+| Single allow-list for both apps | **MEDIUM** | Both `admin.smartscreen.com` and `app.smartscreen.com` share the same allow-list. Should be per-audience. |
 | No per-route CORS | **LOW** | All routes share the same CORS policy. Platform routes could have stricter policy. |
 
 ---

@@ -38,7 +38,7 @@ All users.
 - Breadcrumbs: None
 
 ### Page Title
-`Notifications — Cloud-Screen`
+`Notifications — Smart Screen`
 
 ### Primary CTA
 "Mark All as Read" button.
@@ -225,7 +225,7 @@ Super-Admin only.
 - Breadcrumbs: None (top-level admin page)
 
 ### Page Title
-`Customers — Cloud-Screen Admin`
+`Customers — Smart Screen Admin`
 
 ### Primary CTA
 "Impersonate" action (per row).
@@ -360,7 +360,7 @@ Super-Admin only.
 - Sidebar navigation
 
 ### Page Title
-`Staff — Cloud-Screen Admin`
+`Staff — Smart Screen Admin`
 
 ### Primary CTA
 "Add Staff" button (future).
@@ -457,7 +457,7 @@ Super-Admin only.
 - Sidebar navigation
 
 ### Page Title
-`Users — Cloud-Screen Admin`
+`Users — Smart Screen Admin`
 
 ### Primary CTA
 None (read-only view).

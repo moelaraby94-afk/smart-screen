@@ -140,11 +140,11 @@ The boundary between the Platform Control Panel and the Customer Dashboard is de
 | Property | Control Panel | Customer Dashboard |
 |---|---|---|
 | Application | `apps/control-panel` (new) | `apps/dashboard` (existing, admin routes removed) |
-| URL | `admin.cloudsignage.com` | `app.cloudsignage.com` |
+| URL | `admin.smartscreen.com` | `app.smartscreen.com` |
 | Port | 3003 | 3000 |
 | Build | Independent | Independent |
 | Deploy | Independent | Independent |
-| CORS Origin | `admin.cloudsignage.com` | `app.cloudsignage.com` |
+| CORS Origin | `admin.smartscreen.com` | `app.smartscreen.com` |
 | CDN | Independent | Independent |
 | i18n | Shared (ar/en) | Shared (ar/en) |
 | UI Components | Shared via `packages/ui` | Shared via `packages/ui` |
@@ -245,7 +245,7 @@ Control Panel                Backend                 Customer Dashboard
      │ { exchangeToken }        │                          │
      │                          │                          │
      │ Redirect to:             │                          │
-     │ app.cloudsignage.com/     │                          │
+     │ app.smartscreen.com/     │                          │
      │   auth/impersonate?       │                          │
      │   token=exchangeToken     │                          │
      ├─────────────────────────────────────────────────────►│
@@ -304,8 +304,8 @@ In the Control Panel, only import from `features/admin/` and shared packages. In
 ### 4.3 Separate CORS Origins
 
 The backend's `createCorsOriginChecker()` already supports multiple origins via `ALLOWED_ORIGINS`. In production:
-- `ALLOWED_ORIGINS=https://admin.cloudsignage.com,https://app.cloudsignage.com`
-- Both origins are allowed, but the Control Panel sends `Origin: https://admin.cloudsignage.com` and the Customer Dashboard sends `Origin: https://app.cloudsignage.com`.
+- `ALLOWED_ORIGINS=https://admin.smartscreen.com,https://app.smartscreen.com`
+- Both origins are allowed, but the Control Panel sends `Origin: https://admin.smartscreen.com` and the Customer Dashboard sends `Origin: https://app.smartscreen.com`.
 
 ### 4.4 Separate Rate Limiting (Future)
 

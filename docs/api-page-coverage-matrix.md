@@ -1,4 +1,4 @@
-# API ↔ UI coverage matrix (CloudSignage)
+# API ↔ UI coverage matrix (SmartScreen)
 
 **Purpose:** Track which backend routes are exercised by the dashboard or player, and UX maturity (loading / error / empty). Priorities: **P0** launch blocker, **P1** should fix before GA, **P2** polish.
 

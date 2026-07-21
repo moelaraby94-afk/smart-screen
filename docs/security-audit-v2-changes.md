@@ -30,7 +30,7 @@
 - **`Dockerfile.backend`**: شيل `npm prune --omit=dev`. الـ runner محتاج الـ validators وقت التشغيل (`class-validator`/`class-transformer`) و `ts-node` للـ seed — الـ prune كان بيشيلهم.
 - **`Dockerfile.dashboard`**: نسخ `apps/marketing/package.json` و `packages/` قبل `npm ci` عشان الـ workspace install يحلّ كل الأعضاء.
 
-> **ملاحظة بيئة:** فيه checkoutين للمشروع — Windows (`D:\projects\Cloud-Screen`) و WSL. تشغيل `npm install` من السياق الغلط بيفسد `package-lock.json` (paths وهمية لـ `wsl.localhost` + workspaces `extraneous`). لو حصل: `git checkout HEAD -- package.json package-lock.json`. شغّل `npm install` من checkout واحد بس.
+> **ملاحظة بيئة:** فيه checkoutين للمشروع — Windows (`D:\projects\Smart Screen`) و WSL. تشغيل `npm install` من السياق الغلط بيفسد `package-lock.json` (paths وهمية لـ `wsl.localhost` + workspaces `extraneous`). لو حصل: `git checkout HEAD -- package.json package-lock.json`. شغّل `npm install` من checkout واحد بس.
 
 ---
 
@@ -97,12 +97,12 @@
 البيئة local dev (Docker Desktop على WSL، داتا تجريبية). لإعادة التعيين:
 ```bash
 docker compose stop backend db && docker compose rm -f backend db
-docker volume rm cloud-screen_pgdata            # يمسح الـ DB بس
+docker volume rm smart-screen_pgdata            # يمسح الـ DB بس
 docker compose build backend                    # يخبز الـ migrations المصلّحة
 docker compose up -d db backend                 # migrate deploy بيتطبّق نضيف
 docker compose exec -e ENABLE_DB_SEED=true backend npx prisma db seed
 ```
-> الـ seed بيرفض يشتغل تحت `NODE_ENV=production` من غير `ENABLE_DB_SEED=true` (حماية مقصودة). بيعمل Super Admin (`admin@cloudsignage.local`) و demo client بباسوردات عشوائية تتعرض مرة واحدة.
+> الـ seed بيرفض يشتغل تحت `NODE_ENV=production` من غير `ENABLE_DB_SEED=true` (حماية مقصودة). بيعمل Super Admin (`admin@smartscreen.local`) و demo client بباسوردات عشوائية تتعرض مرة واحدة.
 
 ---
 
@@ -119,5 +119,5 @@ docker compose exec -e ENABLE_DB_SEED=true backend npx prisma db seed
 ## المستندات ذات الصلة
 - [`docs/hardening-report.md`](./hardening-report.md) — تقرير التقوية الشامل (الأجزاء 1-2).
 - [`docs/fix-plan.md`](./fix-plan.md) — خطة التنفيذ المرجعية.
-- [`cloud-screen-ux-audit.md`](../cloud-screen-ux-audit.md) — أوديت الـ UX/UI (المرجع لهجرة التصميم).
-- [`cloud-screen-audit-report.md`](../cloud-screen-audit-report.md), [`cloud-screen-audit-v2.md`](../cloud-screen-audit-v2.md) — تقارير الأوديت الأمني.
+- [`smart-screen-ux-audit.md`](../smart-screen-ux-audit.md) — أوديت الـ UX/UI (المرجع لهجرة التصميم).
+- [`smart-screen-audit-report.md`](../smart-screen-audit-report.md), [`smart-screen-audit-v2.md`](../smart-screen-audit-v2.md) — تقارير الأوديت الأمني.

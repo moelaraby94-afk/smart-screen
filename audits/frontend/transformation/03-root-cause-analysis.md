@@ -220,7 +220,7 @@ Mobile testing likely focused on individual page usability rather than cross-wor
 **Technical constraint:** SSO requires backend infrastructure that doesn't exist:
 - SAML/OIDC endpoint
 - Identity provider configuration UI
-- User mapping (SSO user → Cloud-Screen user)
+- User mapping (SSO user → Smart Screen user)
 - Session management for SSO-authenticated users
 
 **Root cause category:** Product decision (SMB focus) + technical constraint (no backend SSO)

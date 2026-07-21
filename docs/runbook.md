@@ -1,4 +1,4 @@
-# Operations runbook (CloudSignage)
+# Operations runbook (SmartScreen)
 
 ## Services
 
@@ -59,15 +59,15 @@ Set `NEXT_PUBLIC_API_BASE_URL` to the URL **browsers** use to reach the API. Kee
 `scripts/backup.sh` captures everything that cannot be rebuilt from the repo:
 
 1. **Postgres** (`pg_dump`) — users, workspaces, subscriptions, screens, playlists, audit log
-2. **`cloud_screen_media_uploads`** volume — customer-uploaded images/video
-3. **`cloud_screen_backend_data`** volume — `.data/` (platform settings, branding assets)
+2. **`smart_screen_media_uploads`** volume — customer-uploaded images/video
+3. **`smart_screen_backend_data`** volume — `.data/` (platform settings, branding assets)
 
 ```bash
 ./scripts/backup.sh                      # -> ./backups/{db,uploads,backend-data}-<stamp>.*
 RETENTION_DAYS=14 ./scripts/backup.sh    # also prune archives older than 14 days
 ```
 
-Schedule it daily, e.g. `0 3 * * * cd /srv/cloud-screen && RETENTION_DAYS=14 ./scripts/backup.sh >> /var/log/cs-backup.log 2>&1`.
+Schedule it daily, e.g. `0 3 * * * cd /srv/smart-screen && RETENTION_DAYS=14 ./scripts/backup.sh >> /var/log/cs-backup.log 2>&1`.
 
 Restore with `scripts/restore.sh` (destructive — the dump is taken with `--clean`):
 

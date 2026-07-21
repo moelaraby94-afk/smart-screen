@@ -1,5 +1,5 @@
 -- SecurityEventLog table
-CREATE TABLE "SecurityEventLog" (
+CREATE TABLE IF NOT EXISTS "SecurityEventLog" (
   "id"          TEXT NOT NULL,
   "eventType"   TEXT NOT NULL,
   "severity"    TEXT NOT NULL DEFAULT 'MEDIUM',
@@ -11,12 +11,12 @@ CREATE TABLE "SecurityEventLog" (
   "createdAt"   TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "SecurityEventLog_pkey" PRIMARY KEY ("id")
 );
-CREATE INDEX "SecurityEventLog_eventType_createdAt_idx" ON "SecurityEventLog"("eventType", "createdAt");
-CREATE INDEX "SecurityEventLog_userId_createdAt_idx" ON "SecurityEventLog"("userId", "createdAt");
-CREATE INDEX "SecurityEventLog_severity_createdAt_idx" ON "SecurityEventLog"("severity", "createdAt");
+CREATE INDEX IF NOT EXISTS "SecurityEventLog_eventType_createdAt_idx" ON "SecurityEventLog"("eventType", "createdAt");
+CREATE INDEX IF NOT EXISTS "SecurityEventLog_userId_createdAt_idx" ON "SecurityEventLog"("userId", "createdAt");
+CREATE INDEX IF NOT EXISTS "SecurityEventLog_severity_createdAt_idx" ON "SecurityEventLog"("severity", "createdAt");
 
 -- ProofOfPlay table
-CREATE TABLE "ProofOfPlay" (
+CREATE TABLE IF NOT EXISTS "ProofOfPlay" (
   "id"          TEXT NOT NULL,
   "workspaceId" TEXT NOT NULL,
   "screenId"    TEXT NOT NULL,
@@ -28,12 +28,12 @@ CREATE TABLE "ProofOfPlay" (
   "durationSec" INTEGER NOT NULL DEFAULT 0,
   CONSTRAINT "ProofOfPlay_pkey" PRIMARY KEY ("id")
 );
-CREATE INDEX "ProofOfPlay_workspaceId_playedAt_idx" ON "ProofOfPlay"("workspaceId", "playedAt");
-CREATE INDEX "ProofOfPlay_screenId_playedAt_idx" ON "ProofOfPlay"("screenId", "playedAt");
-CREATE INDEX "ProofOfPlay_contentId_idx" ON "ProofOfPlay"("contentId");
+CREATE INDEX IF NOT EXISTS "ProofOfPlay_workspaceId_playedAt_idx" ON "ProofOfPlay"("workspaceId", "playedAt");
+CREATE INDEX IF NOT EXISTS "ProofOfPlay_screenId_playedAt_idx" ON "ProofOfPlay"("screenId", "playedAt");
+CREATE INDEX IF NOT EXISTS "ProofOfPlay_contentId_idx" ON "ProofOfPlay"("contentId");
 
 -- Holiday table
-CREATE TABLE "Holiday" (
+CREATE TABLE IF NOT EXISTS "Holiday" (
   "id"          TEXT NOT NULL,
   "workspaceId" TEXT NOT NULL,
   "name"        TEXT NOT NULL,
@@ -44,10 +44,10 @@ CREATE TABLE "Holiday" (
   "updatedAt"   TIMESTAMP(3) NOT NULL,
   CONSTRAINT "Holiday_pkey" PRIMARY KEY ("id")
 );
-CREATE INDEX "Holiday_workspaceId_date_idx" ON "Holiday"("workspaceId", "date");
+CREATE INDEX IF NOT EXISTS "Holiday_workspaceId_date_idx" ON "Holiday"("workspaceId", "date");
 
 -- CommandAck table
-CREATE TABLE "CommandAck" (
+CREATE TABLE IF NOT EXISTS "CommandAck" (
   "id"           TEXT NOT NULL,
   "screenId"     TEXT NOT NULL,
   "command"      TEXT NOT NULL,
@@ -57,11 +57,11 @@ CREATE TABLE "CommandAck" (
   "createdAt"    TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "CommandAck_pkey" PRIMARY KEY ("id")
 );
-CREATE INDEX "CommandAck_screenId_createdAt_idx" ON "CommandAck"("screenId", "createdAt");
-CREATE INDEX "CommandAck_messageId_idx" ON "CommandAck"("messageId");
+CREATE INDEX IF NOT EXISTS "CommandAck_screenId_createdAt_idx" ON "CommandAck"("screenId", "createdAt");
+CREATE INDEX IF NOT EXISTS "CommandAck_messageId_idx" ON "CommandAck"("messageId");
 
 -- CrashReport table
-CREATE TABLE "CrashReport" (
+CREATE TABLE IF NOT EXISTS "CrashReport" (
   "id"            TEXT NOT NULL,
   "screenId"      TEXT,
   "workspaceId"   TEXT,
@@ -73,11 +73,11 @@ CREATE TABLE "CrashReport" (
   "createdAt"     TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "CrashReport_pkey" PRIMARY KEY ("id")
 );
-CREATE INDEX "CrashReport_screenId_createdAt_idx" ON "CrashReport"("screenId", "createdAt");
-CREATE INDEX "CrashReport_workspaceId_createdAt_idx" ON "CrashReport"("workspaceId", "createdAt");
+CREATE INDEX IF NOT EXISTS "CrashReport_screenId_createdAt_idx" ON "CrashReport"("screenId", "createdAt");
+CREATE INDEX IF NOT EXISTS "CrashReport_workspaceId_createdAt_idx" ON "CrashReport"("workspaceId", "createdAt");
 
 -- PlayerOtaUpdate table
-CREATE TABLE "PlayerOtaUpdate" (
+CREATE TABLE IF NOT EXISTS "PlayerOtaUpdate" (
   "id"            TEXT NOT NULL,
   "version"       TEXT NOT NULL,
   "platform"      TEXT NOT NULL DEFAULT 'ALL',
@@ -92,7 +92,7 @@ CREATE TABLE "PlayerOtaUpdate" (
   CONSTRAINT "PlayerOtaUpdate_pkey" PRIMARY KEY ("id"),
   CONSTRAINT "PlayerOtaUpdate_version_key" UNIQUE ("version")
 );
-CREATE INDEX "PlayerOtaUpdate_isPublished_createdAt_idx" ON "PlayerOtaUpdate"("isPublished", "createdAt");
+CREATE INDEX IF NOT EXISTS "PlayerOtaUpdate_isPublished_createdAt_idx" ON "PlayerOtaUpdate"("isPublished", "createdAt");
 
 -- Add excludeHolidays column to Schedule table
-ALTER TABLE "Schedule" ADD COLUMN "excludeHolidays" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Schedule" ADD COLUMN IF NOT EXISTS "excludeHolidays" BOOLEAN NOT NULL DEFAULT false;

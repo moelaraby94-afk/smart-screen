@@ -8,7 +8,7 @@
 
 ### 1.1 What Was Delivered
 
-This Information Architecture defines the **final frontend navigation structure** for Cloud-Screen. It was produced through a 4-phase process:
+This Information Architecture defines the **final frontend navigation structure** for Smart Screen. It was produced through a 4-phase process:
 
 | Phase | Document | Output |
 |-------|----------|--------|

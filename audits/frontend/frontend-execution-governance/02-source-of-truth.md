@@ -6,7 +6,7 @@
 
 ## 1. Purpose
 
-This document defines which documents are the **authoritative source of truth** for each domain of the Cloud-Screen frontend, and establishes precedence rules when documents conflict.
+This document defines which documents are the **authoritative source of truth** for each domain of the Smart Screen frontend, and establishes precedence rules when documents conflict.
 
 ---
 

@@ -1,7 +1,7 @@
 {
-  "name": "cloud-signage",
+  "name": "smart-screen",
   "version": "1.0.0",
-  "description": "Enterprise AI-powered cloud signage monorepo",
+  "description": "Enterprise AI-powered smart screen monorepo",
   "scripts": {
     "env:sync": "node scripts/sync-env.cjs",
     "clean": "node scripts/clean-build.cjs",

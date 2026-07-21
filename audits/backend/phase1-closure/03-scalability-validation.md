@@ -110,7 +110,7 @@
 # Required for multi-instance
 REDIS_URL=redis://:password@redis-host:6379
 MEDIA_STORAGE_PROVIDER=s3
-S3_BUCKET=cloud-screen-media
+S3_BUCKET=smart-screen-media
 S3_REGION=auto
 S3_ENDPOINT=https://s3.amazonaws.com  # or R2/MinIO endpoint
 S3_ACCESS_KEY=...

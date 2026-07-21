@@ -213,7 +213,7 @@ ENABLE_DUAL_ROUTING=true
 | Change | Backward Compatible? | Mechanism |
 |---|---|---|
 | Shared package extraction | ✅ Yes — same components, different import path | Build-time resolution |
-| App split | ✅ Yes — old app redirects to new app | HTTP 302 redirect from `/admin/*` to `admin.cloudsignage.com/*` |
+| App split | ✅ Yes — old app redirects to new app | HTTP 302 redirect from `/admin/*` to `admin.smartscreen.com/*` |
 | New cookie names | ❌ No — requires re-login | Must support old cookie name during transition |
 
 ### 6.3 Database Backward Compatibility

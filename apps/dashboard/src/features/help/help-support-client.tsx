@@ -165,11 +165,11 @@ export function HelpSupportClient() {
             <p className="mt-1 text-sm text-muted-foreground">{t('contactDescription')}</p>
             <div className="mt-4 flex flex-wrap gap-3">
               <a
-                href="mailto:support@cloudscreen.app"
+                href="mailto:support@smartscreen.app"
                 className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
               >
                 <Mail className="h-4 w-4" />
-                support@cloudscreen.app
+                support@smartscreen.app
               </a>
             </div>
           </div>

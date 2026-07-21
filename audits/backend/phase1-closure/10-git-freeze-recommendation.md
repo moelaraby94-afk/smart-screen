@@ -114,7 +114,7 @@ docker compose up --build backend -d
 ### If data corruption occurs:
 
 1. **Stop backend:** `docker compose stop backend`
-2. **Restore PostgreSQL:** `pg_restore -d cloudscreen < latest_backup.dump`
+2. **Restore PostgreSQL:** `pg_restore -d smartscreen < latest_backup.dump`
 3. **Checkout freeze tag:** `git checkout backend-phase1-freeze`
 4. **Restart:** `docker compose up --build backend -d`
 5. **Verify:** `curl http://localhost:4000/ready` — should return 200

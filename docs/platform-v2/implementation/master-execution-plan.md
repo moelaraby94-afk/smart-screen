@@ -1,4 +1,4 @@
-# Cloud-Screen Platform V2 — Master Execution Plan
+# Smart Screen Platform V2 — Master Execution Plan
 
 > **Status:** ACTIVE — Strict execution mode
 > **Governance:** Every task must achieve 100% documentation compliance before marking complete
@@ -331,9 +331,9 @@ STEP 7: UPDATE MEMORY
 - [ ] Copy each component from `components/ui/*` → `packages/ui/src/*.tsx`
 - [ ] Update internal imports in each component: `@/lib/utils` → `./lib/utils`
 - [ ] Create `packages/ui/src/index.ts` with all re-exports
-- [ ] Add `"@cloud-screen/ui": "*"` to `apps/dashboard/package.json` dependencies
+- [ ] Add `"@smart-screen/ui": "*"` to `apps/dashboard/package.json` dependencies
 - [ ] Run `npm install` to link workspace package
-- [ ] Update ALL imports in dashboard: `@/components/ui/button` → `@cloud-screen/ui`
+- [ ] Update ALL imports in dashboard: `@/components/ui/button` → `@smart-screen/ui`
 - [ ] Also extract: `language-switcher.tsx`, `page-transition.tsx`, `shell-logo.tsx`
 - [ ] Run typecheck after each batch of import updates
 
@@ -370,7 +370,7 @@ STEP 7: UPDATE MEMORY
 - [ ] Create `packages/config/tailwind.config.ts` (extract shared config)
 - [ ] Create `packages/config/eslint.config.mjs` (extract shared rules)
 - [ ] Create `packages/config/prettier.config.json` (copy from root)
-- [ ] Update all apps to extend from `@cloud-screen/config`
+- [ ] Update all apps to extend from `@smart-screen/config`
 - [ ] Run `npm install`
 
 **Verification:**
@@ -948,7 +948,7 @@ STEP 7: UPDATE MEMORY
 **Protocol:**
 1. Move all 15 admin routes from `apps/dashboard/src/app/[locale]/(shell)/admin/` to `apps/control-panel/src/app/[locale]/`
 2. Update route paths (remove `/admin/` prefix — Control Panel root is the admin)
-3. Add redirect from old `/admin/*` routes to `admin.cloudsignage.com/*`
+3. Add redirect from old `/admin/*` routes to `admin.smartscreen.com/*`
 4. Test: old routes redirect
 5. Test: new routes render
 6. Verify + document

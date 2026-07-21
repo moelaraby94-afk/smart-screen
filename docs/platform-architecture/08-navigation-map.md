@@ -339,7 +339,7 @@ When a super admin is impersonating a customer user, the Customer Dashboard show
 ```
 
 - Shown only when `impersonatedBy` claim is present in the JWT
-- "Return to Control Panel" link navigates to `admin.cloudsignage.com` and triggers exit-impersonation flow
+- "Return to Control Panel" link navigates to `admin.smartscreen.com` and triggers exit-impersonation flow
 - Banner is dismissible for the current session (stored in sessionStorage)
 
 ### 3.4 Auth Routes (Shared)

@@ -552,7 +552,7 @@ The Customer Domain encompasses every module that the customer interacts with. T
 |---|---|
 | **Owner** | Customer team |
 | **Purpose** | Customer-configured webhooks for workspace events |
-| **Why** | Customers integrate Cloud-Screen with their internal systems (Slack, custom dashboards) |
+| **Why** | Customers integrate Smart Screen with their internal systems (Slack, custom dashboards) |
 | **Business value** | Integration ecosystem, customer lock-in, automation |
 | **Technical value** | Event-driven webhooks with retry, signing, and delivery logs |
 
@@ -869,7 +869,7 @@ The following features currently exist in the dashboard but belong to the **Plat
 |---|---|---|
 | **JWT Audience** | `customer` | `platform` |
 | **Login endpoint** | `POST /auth/login` (audience: customer) | `POST /auth/login` (audience: platform) |
-| **Cookie domain** | `app.cloudsignage.com` | `admin.cloudsignage.com` |
+| **Cookie domain** | `app.smartscreen.com` | `admin.smartscreen.com` |
 | **Cookie names** | `__dash_access`, `__dash_refresh` | `__cp_access`, `__cp_refresh` |
 | **2FA** | Optional | Required |
 | **Session timeout** | 24 hours | 4 hours |

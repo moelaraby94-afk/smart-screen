@@ -6,7 +6,7 @@
 
 ## 1. Purpose
 
-Defines the recommended implementation order for the Cloud-Screen frontend V2. The order is determined by:
+Defines the recommended implementation order for the Smart Screen frontend V2. The order is determined by:
 - **Dependency chains** (tokens → primitives → composites → domain → pages)
 - **5-minute KPI priority** (pair screen, upload, create playlist, publish)
 - **Screen readiness scores** (from `screen-specifications/14-screen-specifications-summary.md`)

@@ -1,6 +1,6 @@
 # Frontend UI/UX Forensic Audit — Index (Version 2)
 
-> **Scope:** Complete forensic audit of the Cloud-Screen dashboard frontend (`apps/dashboard`), based solely on actual source code inspection.  
+> **Scope:** Complete forensic audit of the Smart Screen dashboard frontend (`apps/dashboard`), based solely on actual source code inspection.  
 > **Purpose:** Single source of truth detailed enough for another team to rebuild the entire frontend without opening the project.  
 > **Methodology:** Every observation in this audit is grounded in a specific file path and line range. No assumptions, no guesses.  
 > **Date:** 2025 (V1), 2025 V2 enrichment  

@@ -5,5 +5,5 @@ export {
   CardContent,
   cardVariants,
   type CardProps,
-} from '@cloud-screen/ui';
+} from '@smart-screen/ui';
 

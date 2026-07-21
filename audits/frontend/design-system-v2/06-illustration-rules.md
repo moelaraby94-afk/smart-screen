@@ -6,7 +6,7 @@
 
 ## 1. Illustration Philosophy
 
-Cloud-Screen uses **minimal, functional illustrations** — not decorative artwork. Illustrations appear only in empty states, error states, onboarding, and auth pages. The illustration style is **line-based, monochrome, and subtle** to match the Lucide icon language.
+Smart Screen uses **minimal, functional illustrations** — not decorative artwork. Illustrations appear only in empty states, error states, onboarding, and auth pages. The illustration style is **line-based, monochrome, and subtle** to match the Lucide icon language.
 
 ---
 
@@ -38,15 +38,15 @@ Cloud-Screen uses **minimal, functional illustrations** — not decorative artwo
 | Context | Illustration | Style |
 |---------|-------------|-------|
 | Empty workspace | 3-step guide with icons (Monitor → Image → Send) | Icon-based, horizontal |
-| Welcome card | Cloud-Screen logo + welcome text | Brand-based |
+| Welcome card | Smart Screen logo + welcome text | Brand-based |
 
 ### 2.4 Auth Page Illustrations
 
 | Context | Illustration | Style |
 |---------|-------------|-------|
-| Login | Cloud-Screen logo (32px) + "Cloud-Screen" text | Brand-based, centered |
-| Register | Cloud-Screen logo (32px) + "Cloud-Screen" text | Brand-based, centered |
-| Forgot Password | Cloud-Screen logo (32px) + "Cloud-Screen" text | Brand-based, centered |
+| Login | Smart Screen logo (32px) + "Smart Screen" text | Brand-based, centered |
+| Register | Smart Screen logo (32px) + "Smart Screen" text | Brand-based, centered |
+| Forgot Password | Smart Screen logo (32px) + "Smart Screen" text | Brand-based, centered |
 
 ---
 
@@ -57,7 +57,7 @@ Cloud-Screen uses **minimal, functional illustrations** — not decorative artwo
 - **Empty states:** `--muted-foreground` (subtle, not distracting)
 - **Error states:** `--warning` or `--destructive` (amber or red, context-dependent)
 - **Onboarding:** `--primary` for step icons (blue, encouraging)
-- **Brand:** Cloud-Screen logo in default brand colors
+- **Brand:** Smart Screen logo in default brand colors
 - **Never** use multi-color illustrations — monochrome only
 
 ### 3.2 Size

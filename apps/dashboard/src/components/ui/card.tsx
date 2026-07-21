@@ -8,5 +8,5 @@ export {
   cardVariants,
   cardPadding,
   type CardProps,
-} from '@cloud-screen/ui';
+} from '@smart-screen/ui';
 

@@ -6,7 +6,7 @@
 
 ## 1. RTL Philosophy
 
-Cloud-Screen supports **Arabic (RTL)** as a first-class language. RTL is not a mirror of LTR — it requires careful consideration of layout, spacing, icons, and text direction. The design system uses **logical properties** and Tailwind's RTL utilities to handle bidirectional layout.
+Smart Screen supports **Arabic (RTL)** as a first-class language. RTL is not a mirror of LTR — it requires careful consideration of layout, spacing, icons, and text direction. The design system uses **logical properties** and Tailwind's RTL utilities to handle bidirectional layout.
 
 ---
 

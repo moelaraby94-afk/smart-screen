@@ -163,8 +163,8 @@ async function bootstrap() {
 
   if (process.env.ENABLE_SWAGGER === 'true') {
     const config = new DocumentBuilder()
-      .setTitle('Cloud Screen API')
-      .setDescription('Cloud Screen backend API documentation')
+      .setTitle('Smart Screen API')
+      .setDescription('Smart Screen backend API documentation')
       .setVersion('1.0')
       .addBearerAuth()
       .build();

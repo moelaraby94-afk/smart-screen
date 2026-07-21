@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the strategy for rotating secrets used by the Cloud-Screen backend.
+This document outlines the strategy for rotating secrets used by the Smart Screen backend.
 
 ## Secrets Inventory
 

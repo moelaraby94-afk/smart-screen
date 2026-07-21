@@ -1,5 +1,5 @@
 {
-  "name": "@cloud-screen/shared",
+  "name": "@smart-screen/shared",
   "version": "0.1.0",
   "private": true,
   "main": "./src/index.ts",

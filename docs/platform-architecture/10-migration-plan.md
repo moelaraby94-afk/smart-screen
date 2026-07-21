@@ -8,7 +8,7 @@
 
 ## 1. Current State
 
-The Cloud-Screen platform is a monorepo with:
+The Smart Screen platform is a monorepo with:
 - `apps/backend` — NestJS API (shared by all frontends)
 - `apps/dashboard` — Next.js (serves both admin and customer routes)
 - `apps/player` — Next.js (screen playback)
@@ -62,7 +62,7 @@ Before creating the new application, extract shared code:
 1. **`packages/ui`** — Extract UI components:
    - Move `apps/dashboard/src/components/ui/*` to `packages/ui/src/*`
    - Re-export from `apps/dashboard/src/components/ui/index.ts` for backward compatibility
-   - Both apps import from `@cloud-screen/ui`
+   - Both apps import from `@smart-screen/ui`
 
 2. **`packages/config`** — Extract shared configuration:
    - `tailwind.config.ts` (shared base)
@@ -84,7 +84,7 @@ Before creating the new application, extract shared code:
 
 2. Configure `next-intl` (matching dashboard setup)
 3. Configure TailwindCSS (import from `packages/config`)
-4. Add `@cloud-screen/ui` and `@cloud-screen/api-client` dependencies
+4. Add `@smart-screen/ui` and `@smart-screen/api-client` dependencies
 5. Set up `next.config.ts` with API proxy to backend
 
 #### Step 1.3: Copy Admin Features
@@ -130,11 +130,11 @@ Create `apps/control-panel/src/components/layout/panel-shell.tsx`:
 
 1. Add `apps/control-panel` service to `docker-compose.yml`
 2. Add CI/CD build job for Control Panel
-3. Deploy to staging at `admin.staging.cloudsignage.com`
+3. Deploy to staging at `admin.staging.smartscreen.com`
 4. Test all admin features
-5. Deploy to production at `admin.cloudsignage.com`
+5. Deploy to production at `admin.smartscreen.com`
 
-**During Phase 1, both `app.cloudsignage.com/admin/*` and `admin.cloudsignage.com/admin/*` work.**
+**During Phase 1, both `app.smartscreen.com/admin/*` and `admin.smartscreen.com/admin/*` work.**
 
 #### Step 1.6: Acceptance Criteria
 
@@ -142,7 +142,7 @@ Create `apps/control-panel/src/components/layout/panel-shell.tsx`:
 - [ ] All admin pages render correctly in Control Panel
 - [ ] All admin API calls work from Control Panel
 - [ ] Customer Dashboard still serves admin routes (backward compatible)
-- [ ] Shared packages (`@cloud-screen/ui`, `@cloud-screen/api-client`) are imported correctly
+- [ ] Shared packages (`@smart-screen/ui`, `@smart-screen/api-client`) are imported correctly
 - [ ] i18n works in both Arabic and English
 - [ ] Branding (logo, platform name) loads correctly
 - [ ] Docker Compose runs both applications
@@ -237,7 +237,7 @@ Add `POST /auth/exchange-impersonation` to `AuthController`:
 Modify `AuthService.issueImpersonation()`:
 - Instead of returning tokens directly, generate a one-time exchange token
 - Store `{ actorId, targetId }` in Redis with 30s TTL
-- Return `{ exchangeToken, redirectUrl: 'https://app.cloudsignage.com/[locale]/auth/impersonate?token=EXCHANGE_TOKEN' }`
+- Return `{ exchangeToken, redirectUrl: 'https://app.smartscreen.com/[locale]/auth/impersonate?token=EXCHANGE_TOKEN' }`
 
 #### Step 3.2: Add Impersonation Exchange Page to Customer Dashboard
 
@@ -259,7 +259,7 @@ Modify Control Panel's impersonation action:
 Create `apps/dashboard/src/components/impersonation-banner.tsx`:
 - Read `impersonatedBy` from JWT (via `WorkspaceContext`)
 - Show banner: "You are impersonating [email]. [Return to Control Panel]"
-- "Return to Control Panel" link → `https://admin.cloudsignage.com` (with exit-impersonation token)
+- "Return to Control Panel" link → `https://admin.smartscreen.com` (with exit-impersonation token)
 
 #### Step 3.5: Remove Admin Routes from Customer Dashboard
 
@@ -269,7 +269,7 @@ Create `apps/dashboard/src/components/impersonation-banner.tsx`:
    ```typescript
    // Redirect /admin/* to Control Panel
    if (pathname.includes('/admin')) {
-     const url = new URL(`https://admin.cloudsignage.com${pathname}`);
+     const url = new URL(`https://admin.smartscreen.com${pathname}`);
      return NextResponse.redirect(url);
    }
    ```
@@ -309,7 +309,7 @@ Add to `schema.prisma`:
 model PlatformSettings {
   id                String   @id @default(cuid())
   platformName      String   @default("Cloud Signage")
-  supportEmail      String   @default("support@cloudsignage.local")
+  supportEmail      String   @default("support@smartscreen.local")
   maintenanceMode   Boolean  @default(false)
   defaultLanguage   String   @default("ar")
   logoUrlEn         String   @default("")

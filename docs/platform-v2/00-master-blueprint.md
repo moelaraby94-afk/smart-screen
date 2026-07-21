@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-Cloud-Screen is a digital signage SaaS platform. The current architecture is a monolithic application where platform administration and customer workspace functionality share a single frontend, a single backend process, and a single authentication context. This blueprint redesigns the platform into a **true enterprise-grade SaaS Operating System** with two completely independent products, a comprehensive platform domain, and a scalable architecture designed to support 100,000 screens across 10,000+ customers.
+Smart Screen is a digital signage SaaS platform. The current architecture is a monolithic application where platform administration and customer workspace functionality share a single frontend, a single backend process, and a single authentication context. This blueprint redesigns the platform into a **true enterprise-grade SaaS Operating System** with two completely independent products, a comprehensive platform domain, and a scalable architecture designed to support 100,000 screens across 10,000+ customers.
 
 This is not an admin panel separation. This is a platform redesign.
 
@@ -18,18 +18,18 @@ This is not an admin panel separation. This is a platform redesign.
 
 ## 2. The Two Products
 
-### Product A: Cloud-Screen Control Panel
+### Product A: Smart Screen Control Panel
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                  CLOUD-SCREEN CONTROL PANEL                      │
+│                  SMART-SCREEN CONTROL PANEL                      │
 │                                                                  │
 │  "The SaaS Operating System"                                    │
 │                                                                  │
 │  Owner: Platform Owner                                          │
 │  Users: Platform Staff (Super Admin, Support, Billing,          │
 │         Security, Operations, Developer)                        │
-│  Domain: admin.cloudsignage.com                                 │
+│  Domain: admin.smartscreen.com                                 │
 │  Purpose: Run the SaaS business                                 │
 │                                                                  │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐           │
@@ -53,17 +53,17 @@ This is not an admin panel separation. This is a platform redesign.
 
 **The Control Panel is the SaaS business operating system.** It manages tenants, subscriptions, billing, devices, features, support, branding, security, and platform configuration. It is NOT a customer-facing application. It is the internal tool that runs the business.
 
-### Product B: Cloud-Screen Customer Workspace
+### Product B: Smart Screen Customer Workspace
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                CLOUD-SCREEN CUSTOMER WORKSPACE                   │
+│                SMART-SCREEN CUSTOMER WORKSPACE                   │
 │                                                                  │
 │  "The Digital Signage Studio"                                   │
 │                                                                  │
 │  Owner: Customer                                                │
 │  Users: Customer Owner, Admin, Editor, Viewer                   │
-│  Domain: app.cloudsignage.com                                   │
+│  Domain: app.smartscreen.com                                   │
 │  Purpose: Manage digital signage content and screens            │
 │                                                                  │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐           │
@@ -96,7 +96,7 @@ This is not an admin panel separation. This is a platform redesign.
 | **Deployment** | Independent | Independent |
 | **Scaling** | Scaled to staff count (~100) | Scaled to customer count (~10,000+) |
 | **Release Cycle** | Independent | Independent |
-| **Cookies** | `admin.cloudsignage.com` | `app.cloudsignage.com` |
+| **Cookies** | `admin.smartscreen.com` | `app.smartscreen.com` |
 | **Security** | Stricter (2FA required, IP allowlist capable) | Standard (2FA optional) |
 
 ---
@@ -115,7 +115,7 @@ This is not an admin panel separation. This is a platform redesign.
               │                    │                    │
      ┌────────┴───────┐  ┌────────┴───────┐  ┌────────┴───────┐
      │  admin.        │  │  app.          │  │  player.       │
-     │  cloudsignage  │  │  cloudsignage  │  │  cloudsignage  │
+     │  smartscreen  │  │  smartscreen  │  │  smartscreen  │
      │  .com          │  │  .com          │  │  .com          │
      │                │  │                │  │                │
      │  Control       │  │  Customer      │  │  Player        │
@@ -364,7 +364,7 @@ This is not an admin panel separation. This is a platform redesign.
 
 ## 9. Final Deliverable Summary
 
-This blueprint consists of 16 documents (00–15) covering every aspect of the Cloud-Screen SaaS platform:
+This blueprint consists of 16 documents (00–15) covering every aspect of the Smart Screen SaaS platform:
 
 - **Domain design:** 30+ platform modules, 16+ customer modules
 - **Database design:** 20+ new tables proposed

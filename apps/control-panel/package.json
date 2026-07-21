@@ -12,8 +12,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@cloud-screen/shared": "*",
-    "@cloud-screen/ui": "*",
+    "@smart-screen/shared": "*",
+    "@smart-screen/ui": "*",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",

@@ -15,7 +15,7 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
-  title: 'Cloud Screen — Control Panel',
+  title: 'Smart Screen — Control Panel',
   description: 'Platform administration control panel',
 };
 

@@ -6,7 +6,7 @@
 
 ## 1. What Was Delivered
 
-This UX Blueprint defines the **complete user experience specification** for every frontend page in Cloud-Screen. It was built upon the Information Architecture, Product Architecture, Transformation Documentation, and Frontend Audits.
+This UX Blueprint defines the **complete user experience specification** for every frontend page in Smart Screen. It was built upon the Information Architecture, Product Architecture, Transformation Documentation, and Frontend Audits.
 
 ### Document Inventory
 

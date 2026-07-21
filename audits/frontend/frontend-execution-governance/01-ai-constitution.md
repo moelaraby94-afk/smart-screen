@@ -7,7 +7,7 @@
 
 ## Preamble
 
-This constitution defines the permanent rules that govern all AI-assisted frontend implementation for the Cloud-Screen platform. These rules are **absolute and non-negotiable**. Any violation must be documented as an ADR (see `24-adr-process.md`) and approved before proceeding.
+This constitution defines the permanent rules that govern all AI-assisted frontend implementation for the Smart Screen platform. These rules are **absolute and non-negotiable**. Any violation must be documented as an ADR (see `24-adr-process.md`) and approved before proceeding.
 
 ---
 

@@ -1,7 +1,7 @@
-# خطة تنفيذ إصلاحات Cloud-Screen
+# خطة تنفيذ إصلاحات Smart Screen
 
 > **تاريخ الإنشاء:** 11 يوليو 2026
-> **المرجع:** تقارير الـ Audit الثلاثة (`cloud-screen-audit-report.md`, `cloud-screen-audit-v2.md`, `cloud-screen-ux-audit.md`)
+> **المرجع:** تقارير الـ Audit الثلاثة (`smart-screen-audit-report.md`, `smart-screen-audit-v2.md`, `smart-screen-ux-audit.md`)
 > **الفرع الحالي:** `fix/security-audit-v2`
 > **قاعدة التنفيذ:** أي تعديل → sync فوري لـ WSL → rebuild للـ container المتأثر → `npm run verify` → اختبار يدوي
 
@@ -295,7 +295,7 @@
 ## قواعد التنفيذ العامة
 
 1. **قبل كل تاسك:** سيرش من الدوكيومنشن الرسمية (NestJS docs, Next.js docs, Prisma docs, React docs)
-2. **بعد كل تعديل:** sync فوري لـ WSL: `wsl -d Ubuntu -- bash -c "cp /mnt/d/projects/Cloud-Screen/<file> /home/gpack/Cloud-Screen/<file>"`
+2. **بعد كل تعديل:** sync فوري لـ WSL: `wsl -d Ubuntu -- bash -c "cp /mnt/d/projects/Smart Screen/<file> /home/gpack/Smart Screen/<file>"`
 3. **Rebuild:** `docker compose up --build <service>` للخدمة المتأثرة
 4. **بعد كل phase:** تشغيل `npm run verify` + اختبار يدوي على السيرفر
 5. **الترتيب:** Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4 (الترتيب مهم — مفيش تخطي)

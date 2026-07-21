@@ -45,8 +45,8 @@
 | Database migration | Additive schema changes, new tables | P0 |
 | Auth foundation | JWT audience, sessions, 2FA | P0 |
 | API namespacing | /platform/*, /customer/* routes | P0 |
-| Control Panel extraction | admin.cloudsignage.com | P0 |
-| Customer Workspace cleanup | app.cloudsignage.com | P0 |
+| Control Panel extraction | admin.smartscreen.com | P0 |
+| Customer Workspace cleanup | app.smartscreen.com | P0 |
 | Shared packages | packages/ui, packages/api-ts | P1 |
 
 ### 2.3 Q2: Platform Modules
@@ -79,7 +79,7 @@
 | Customer analytics | Adoption, engagement, cohorts | P0 |
 | Integrations | Google Drive, Dropbox, Slack | P1 |
 | API keys | Customer API access, rate limiting | P1 |
-| White-label (basic) | Custom branding, hide Cloud-Screen | P2 |
+| White-label (basic) | Custom branding, hide Smart Screen | P2 |
 | Mobile app (status) | Screen status on mobile (read-only) | P2 |
 
 ---

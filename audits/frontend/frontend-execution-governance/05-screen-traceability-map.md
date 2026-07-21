@@ -6,7 +6,7 @@
 
 ## 1. Purpose
 
-This document provides **complete traceability** from every screen in the Cloud-Screen application to its authoritative documentation. No screen may be implemented without this traceability being verified.
+This document provides **complete traceability** from every screen in the Smart Screen application to its authoritative documentation. No screen may be implemented without this traceability being verified.
 
 ---
 

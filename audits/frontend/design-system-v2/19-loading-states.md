@@ -6,7 +6,7 @@
 
 ## 1. Loading Philosophy
 
-Loading states manage user expectations during data fetching and processing. Cloud-Screen uses **skeletons** for initial loads and **spinners** for inline actions. The goal is to reduce perceived latency and prevent layout shift.
+Loading states manage user expectations during data fetching and processing. Smart Screen uses **skeletons** for initial loads and **spinners** for inline actions. The goal is to reduce perceived latency and prevent layout shift.
 
 ---
 
@@ -176,7 +176,7 @@ Full-page loading screen for heavy initial loads.
 
 #### Visual
 - Background: `--neutral-900` (dark)
-- Content: Cloud-Screen logo (48px) + "Loading Studio..." text
+- Content: Smart Screen logo (48px) + "Loading Studio..." text
 - Animation: Logo fade in (MI-08, 300ms), spinner below text
 
 #### Evidence

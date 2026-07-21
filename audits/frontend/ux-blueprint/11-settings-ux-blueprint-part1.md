@@ -411,7 +411,7 @@ Configure workspace identity and settings
 |----------|---------|---------|---------|
 | Delete workspace? | Danger zone | Delete (irreversible) or cancel | Cancel (safe default) |
 | EN or AR default? | Localization | English or Arabic | English (current default) |
-| Upload logo or use default? | Branding | Custom logo or default Cloud-Screen logo | Default (zero effort) |
+| Upload logo or use default? | Branding | Custom logo or default Smart Screen logo | Default (zero effort) |
 
 ### 15. User Mistakes
 

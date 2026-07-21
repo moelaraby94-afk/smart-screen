@@ -6,7 +6,7 @@
 
 ## 1. Form Philosophy
 
-Forms in Cloud-Screen are **simple, forgiving, and clear**. They guide the user with labels, validation, and helpful error messages. Every form follows the same structural pattern: `FormField` wraps each field with a label, input, and error message.
+Forms in Smart Screen are **simple, forgiving, and clear**. They guide the user with labels, validation, and helpful error messages. Every form follows the same structural pattern: `FormField` wraps each field with a label, input, and error message.
 
 ---
 

@@ -1,6 +1,6 @@
 # 26 — Backend Execution Roadmap
 
-> **Objective:** A complete, phased execution plan to bring the Cloud-Screen backend to production readiness. Each phase has a clear goal, affected files, required changes, dependencies, risks, verification method, and Definition of Done.
+> **Objective:** A complete, phased execution plan to bring the Smart Screen backend to production readiness. Each phase has a clear goal, affected files, required changes, dependencies, risks, verification method, and Definition of Done.
 
 > **Philosophy:** No rebuild. The existing NestJS modular monolith architecture is sound. Changes are additive and targeted. Every major change is justified with rationale, benefit, risk, and alternatives.
 

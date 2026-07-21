@@ -1,2 +1,2 @@
-export { cn } from '@cloud-screen/shared';
+export { cn } from '@smart-screen/shared';
 

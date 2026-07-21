@@ -1,2 +1,2 @@
-export { fetchAuthMeServer, type AuthMeServer } from '@cloud-screen/shared/server';
+export { fetchAuthMeServer, type AuthMeServer } from '@smart-screen/shared/server';
 

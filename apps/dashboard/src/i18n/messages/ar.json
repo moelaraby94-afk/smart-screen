@@ -1142,7 +1142,7 @@
     "title": "وثائق API",
     "description": "مرجع REST API للتكامل مع شاشة ذكية. جميع نقاط النهاية تتطلب مصادقة JWT ما لم يُذكر خلاف ذلك.",
     "baseUrlLabel": "عنوان الأساس",
-    "baseUrlValue": "https://api.cloudscreen.app/v1",
+    "baseUrlValue": "https://api.smartscreen.app/v1",
     "authExampleTitle": "مثال على المصادقة",
     "endpointsTitle": "نقاط النهاية",
     "copy": "نسخ",
@@ -1403,14 +1403,14 @@
   },
   "onboardingCard": {
     "ariaLabel": "البدء",
-    "welcome": "مرحباً بك في Cloud-Screen!",
+    "welcome": "مرحباً بك في الشاشة الذكية!",
     "description": "شغّل شاشتك الأولى في ثلاث خطوات بسيطة.",
     "cta": "أضف شاشتك الأولى",
     "ctaAria": "أضف شاشتك الأولى",
     "steps": {
       "pair": {
         "title": "اربط شاشتك",
-        "desc": "وصّل تلفاز أو شاشة بـ Cloud-Screen"
+        "desc": "وصّل تلفاز أو شاشة بـ الشاشة الذكية"
       },
       "create": {
         "title": "أنشئ قائمة تشغيل",

@@ -4,8 +4,8 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Cloud-Screen — Digital Signage Platform',
-    template: '%s — Cloud-Screen',
+    default: 'Smart Screen — Digital Signage Platform',
+    template: '%s — Smart Screen',
   },
   description:
     'Cloud-based digital signage platform. Manage screens, playlists, media, and campaigns from one dashboard. Supports Arabic & English, offline playback, and real-time control.',
@@ -18,9 +18,9 @@ export const metadata: Metadata = {
     'kiosk mode',
     'digital displays',
   ],
-  authors: [{ name: 'Cloud-Screen' }],
+  authors: [{ name: 'Smart Screen' }],
   openGraph: {
-    title: 'Cloud-Screen — Digital Signage Platform',
+    title: 'Smart Screen — Digital Signage Platform',
     description:
       'Cloud-based digital signage platform. Manage screens, playlists, media, and campaigns from one dashboard.',
     type: 'website',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Cloud-Screen — Digital Signage Platform',
+    title: 'Smart Screen — Digital Signage Platform',
     description:
       'Cloud-based digital signage platform. Manage screens, playlists, media, and campaigns.',
   },

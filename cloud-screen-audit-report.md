@@ -1,4 +1,4 @@
-# تقرير Audit احترافي — مشروع Cloud-Screen (صديقك)
+# تقرير Audit احترافي — مشروع Smart Screen (صديقك)
 
 > فُحص الكود فعليًا (git clone كامل) — مش وصف نظري. كل ملاحظة موثقة بمكانها في الكود.
 > Stack المشروع: NestJS + Prisma + PostgreSQL (backend) / Next.js (dashboard) / Next.js + Konva + Socket.io-client (player).
@@ -234,7 +234,7 @@
 
 ### 🚨🚨 الأخطر في التقرير كله: حساب Super Admin بباسورد `admin` بيتزرع فعليًا في قاعدة البيانات
 
-**الدليل:** `prisma/seed.ts` — سطر 68 و103: بيعمل مستخدم Super Admin حقيقي بإيميل `admin@cloudsignage.local` وباسورد **`admin`** (نص صريح قبل التشفير)، وعميل تاني بإيميل `admin2@client.local` وباسورد **`123`**. الملف ده بيتنفذ فعليًا لما حد يشغّل `npm run prisma:seed` (موثّق في الـ README كخطوة "Optional seed" في الإعداد الأولي).
+**الدليل:** `prisma/seed.ts` — سطر 68 و103: بيعمل مستخدم Super Admin حقيقي بإيميل `admin@smartscreen.local` وباسورد **`admin`** (نص صريح قبل التشفير)، وعميل تاني بإيميل `admin2@client.local` وباسورد **`123`**. الملف ده بيتنفذ فعليًا لما حد يشغّل `npm run prisma:seed` (موثّق في الـ README كخطوة "Optional seed" في الإعداد الأولي).
 
 **ليه ده أخطر حاجة في التقرير كله:**
 - ده مش "قيمة افتراضية لو نسيت تغيّرها" زي مشكلة الـ JWT — ده **حساب حقيقي بيتزرع في قاعدة البيانات فعليًا** بمجرد تشغيل أمر السييد

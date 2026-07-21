@@ -17,11 +17,11 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_FILE="${REPO_ROOT}/docker-compose.yml"
 
 DB_SERVICE="db"
-MEDIA_VOLUME="cloud_screen_media_uploads"
-DATA_VOLUME="cloud_screen_backend_data"
+MEDIA_VOLUME="smart_screen_media_uploads"
+DATA_VOLUME="smart_screen_backend_data"
 
-POSTGRES_USER="${POSTGRES_USER:-cloudsignage}"
-POSTGRES_DB="${POSTGRES_DB:-cloudsignage}"
+POSTGRES_USER="${POSTGRES_USER:-smartscreen}"
+POSTGRES_DB="${POSTGRES_DB:-smartscreen}"
 
 die() { echo "Error: $*" >&2; exit 1; }
 usage() { sed -n '2,14p' "$0"; exit 1; }

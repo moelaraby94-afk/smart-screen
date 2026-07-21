@@ -6,7 +6,7 @@
 
 ## 1. Product Identity
 
-Cloud-Screen is a **multi-tenant digital signage management platform** designed for the Saudi/Arabian market. It enables organizations to manage physical display screens across multiple locations (branches), schedule content playlists, and monitor screen health in real-time.
+Smart Screen is a **multi-tenant digital signage management platform** designed for the Saudi/Arabian market. It enables organizations to manage physical display screens across multiple locations (branches), schedule content playlists, and monitor screen health in real-time.
 
 ### Market Position
 - **Target market:** Saudi Arabia and GCC region (bilingual EN/AR, Islamic features)

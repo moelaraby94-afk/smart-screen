@@ -23,11 +23,11 @@ STAMP="$(date +%Y-%m-%d_%H%M%S)"
 RETENTION_DAYS="${RETENTION_DAYS:-0}"
 
 DB_SERVICE="db"
-MEDIA_VOLUME="cloud_screen_media_uploads"
-DATA_VOLUME="cloud_screen_backend_data"
+MEDIA_VOLUME="smart_screen_media_uploads"
+DATA_VOLUME="smart_screen_backend_data"
 
-POSTGRES_USER="${POSTGRES_USER:-cloudsignage}"
-POSTGRES_DB="${POSTGRES_DB:-cloudsignage}"
+POSTGRES_USER="${POSTGRES_USER:-smartscreen}"
+POSTGRES_DB="${POSTGRES_DB:-smartscreen}"
 
 die() { echo "Error: $*" >&2; exit 1; }
 

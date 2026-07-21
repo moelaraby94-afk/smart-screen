@@ -6,7 +6,7 @@
 
 ## 1. Motion Philosophy
 
-Motion in Cloud-Screen is **functional, not decorative**. Every animation serves a purpose: providing feedback, guiding attention, indicating state changes, or reducing perceived latency. Animations are **subtle, fast, and respect user preferences** (`prefers-reduced-motion`).
+Motion in Smart Screen is **functional, not decorative**. Every animation serves a purpose: providing feedback, guiding attention, indicating state changes, or reducing perceived latency. Animations are **subtle, fast, and respect user preferences** (`prefers-reduced-motion`).
 
 ---
 

@@ -1,4 +1,4 @@
-# Cloud Screen Backend — Full Audit & Gap Analysis Report
+# Smart Screen Backend — Full Audit & Gap Analysis Report
 
 > **Date:** 19 July 2026  
 > **Auditor:** Cascade AI (automated systematic audit)  

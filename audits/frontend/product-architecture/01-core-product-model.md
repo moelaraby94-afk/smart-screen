@@ -1,13 +1,13 @@
 # Core Product Model
 
 > **Evidence basis:** `01-current-product-model.md` (transformation), `28-feature-inventory.md` (audit), `27-user-flows.md` (audit), source code in `apps/dashboard/src/`
-> **Purpose:** Define what Cloud-Screen IS as a product — its identity, value proposition, market, and operating model
+> **Purpose:** Define what Smart Screen IS as a product — its identity, value proposition, market, and operating model
 
 ---
 
 ## 1. Product Identity
 
-Cloud-Screen is a **multi-tenant digital signage management platform** that enables organizations to connect, manage, and schedule content on physical display screens with minimal effort.
+Smart Screen is a **multi-tenant digital signage management platform** that enables organizations to connect, manage, and schedule content on physical display screens with minimal effort.
 
 ### 1.1 Product Definition
 

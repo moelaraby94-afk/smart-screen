@@ -47,7 +47,7 @@ await this.prisma.$transaction([
 
 ### `scryptSync` (one-time at startup)
 
-- `scryptSync(encryptionKey, 'cloud-screen-salt', 32)` — runs once in `CryptoService` constructor
+- `scryptSync(encryptionKey, 'smart-screen-salt', 32)` — runs once in `CryptoService` constructor
 - Cost parameters: default `N=16384, r=8, p=1` — ~100ms on modern hardware
 - **Assessment:** ✅ One-time cost at application bootstrap
 

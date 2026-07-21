@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-The Cloud-Screen backend has been comprehensively audited across 24 detailed audit files (00-23). A validation pass (25-audit-validation.md) corrected 8 factual errors, consolidated 10 duplicate groups, and reduced the gap count from 81 to 63. A best-practices reference (24-best-practices-reference.md) verified compliance against official documentation, confirming 26/49 practices fully compliant (53%).
+The Smart Screen backend has been comprehensively audited across 24 detailed audit files (00-23). A validation pass (25-audit-validation.md) corrected 8 factual errors, consolidated 10 duplicate groups, and reduced the gap count from 81 to 63. A best-practices reference (24-best-practices-reference.md) verified compliance against official documentation, confirming 26/49 practices fully compliant (53%).
 
 The execution roadmap (26-backend-execution-roadmap.md) defines 10 phases with clear dependencies, risks, and Definition of Done criteria. The plan preserves the existing NestJS modular monolith architecture — no rebuild required.
 

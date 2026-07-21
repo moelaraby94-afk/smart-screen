@@ -14,7 +14,7 @@ This blueprint transforms the findings of the V1 and V2 frontend audits into a s
 
 ## 2. Product Context
 
-Cloud-Screen is a multi-tenant digital signage SaaS platform serving the Saudi/Arabian market with bilingual (EN/AR) support. The dashboard application (Next.js 16, React 19) provides workspace management, screen fleet control, playlist/content management, scheduling, analytics, and administrative tools.
+Smart Screen is a multi-tenant digital signage SaaS platform serving the Saudi/Arabian market with bilingual (EN/AR) support. The dashboard application (Next.js 16, React 19) provides workspace management, screen fleet control, playlist/content management, scheduling, analytics, and administrative tools.
 
 The current frontend is **functionally complete** — all core features are implemented and operational. However, the V2 audit identified **80+ distinct issues** spanning UX, accessibility, enterprise readiness, information architecture, and technical debt that collectively limit the product's ability to scale beyond its current market position.
 

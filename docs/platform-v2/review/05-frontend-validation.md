@@ -322,7 +322,7 @@ app/[locale]/
 
 | Issue | Severity | Detail |
 |---|---|---|
-| `cn` utility import path | **HIGH** | All components import `@/lib/utils` for `cn`. Must change to `@cloud-screen/ui` after extraction. ~100+ import sites. |
+| `cn` utility import path | **HIGH** | All components import `@/lib/utils` for `cn`. Must change to `@smart-screen/ui` after extraction. ~100+ import sites. |
 | Tailwind config duplication | **MEDIUM** | Both apps need same Tailwind config. Must share via `packages/config`. |
 | Design tokens | **MEDIUM** | CSS variables for colors, spacing, etc. Must be shared. |
 | Radix peer dependencies | **LOW** | Both apps need same Radix versions. npm workspaces handles this. |
@@ -350,9 +350,9 @@ app/[locale]/
 ### 9.3 Package Naming Convention
 
 Recommend scoped names:
-- `@cloud-screen/ui`
-- `@cloud-screen/config`
-- `@cloud-screen/api-ts`
+- `@smart-screen/ui`
+- `@smart-screen/config`
+- `@smart-screen/api-ts`
 
 Must update `package.json` in each package and add to root `package.json` workspaces (already configured: `"workspaces": ["apps/*", "packages/*"]`).
 

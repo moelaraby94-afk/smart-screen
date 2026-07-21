@@ -43,7 +43,7 @@ validate(value: unknown): boolean {
 **Constructor (lines 26-38):**
 - ✅ Throws `InternalServerErrorException` if `ENCRYPTION_KEY` is missing
 - ✅ Uses `scryptSync` for key derivation (memory-hard, NIST-approved)
-- ⚠️ Fixed salt `'cloud-screen-salt'` — acceptable, security relies on key secrecy
+- ⚠️ Fixed salt `'smart-screen-salt'` — acceptable, security relies on key secrecy
 
 **encrypt (lines 44-53):**
 - ✅ Random 12-byte IV (96-bit, recommended for GCM)

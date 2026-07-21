@@ -6,7 +6,7 @@
 
 ## 1. What Was Delivered
 
-This User Flow Architecture defines the **complete interaction specification** for every user flow in Cloud-Screen. It was built upon the UX Blueprint, Information Architecture, Product Architecture, Transformation Documentation, and Frontend Audits.
+This User Flow Architecture defines the **complete interaction specification** for every user flow in Smart Screen. It was built upon the UX Blueprint, Information Architecture, Product Architecture, Transformation Documentation, and Frontend Audits.
 
 ### Document Inventory
 

@@ -137,7 +137,7 @@ All evidence references in this blueprint point to files in `audits/frontend/`. 
 | **Mental Model** | A user's internal representation of how a system works |
 | **MoSCoW** | Prioritization framework: Must Have, Should Have, Could Have, Won't Have |
 | **Next.js App Router** | Next.js 13+ routing system using file-based routing in the `app/` directory |
-| **ORCA** | The design system name used in Cloud-Screen |
+| **ORCA** | The design system name used in Smart Screen |
 | **Playlist** | A sequence of media items displayed on screens in order |
 | **Playlist Studio** | The canvas-based editor for creating and editing playlists |
 | **RBAC** | Role-Based Access Control — permission system based on roles |
@@ -147,9 +147,9 @@ All evidence references in this blueprint point to files in `audits/frontend/`. 
 | **SSO** | Single Sign-On — authentication via external identity provider (SAML/OIDC) |
 | **Studio** | See Playlist Studio |
 | **SWR** | Stale-While-Revalidate — React data fetching library used for server state |
-| **Tenant** | An isolated customer environment (workspace in Cloud-Screen) |
+| **Tenant** | An isolated customer environment (workspace in Smart Screen) |
 | **WCAG** | Web Content Accessibility Guidelines — international standard for web accessibility |
-| **Workspace** | The primary tenant boundary in Cloud-Screen, containing branches, screens, and content |
+| **Workspace** | The primary tenant boundary in Smart Screen, containing branches, screens, and content |
 
 ---
 

@@ -34,7 +34,7 @@ All users.
 - Sidebar navigation
 
 ### Page Title
-`Security — Cloud-Screen`
+`Security — Smart Screen`
 
 ### Primary CTA
 "Change Password" button.
@@ -225,7 +225,7 @@ Owner only (developer-oriented).
 - Sidebar navigation
 
 ### Page Title
-`API Keys — Cloud-Screen`
+`API Keys — Smart Screen`
 
 ### Primary CTA
 "Create API Key" button.
@@ -248,7 +248,7 @@ Owner only (developer-oriented).
 
 #### Section 1: API Key Creation
 - "Create API Key" button
-- (If no keys) Empty state: "No API keys created. Create one to access the Cloud-Screen API."
+- (If no keys) Empty state: "No API keys created. Create one to access the Smart Screen API."
 
 #### Section 2: API Key Table
 - **Columns:** Name, Key (masked — `cs_••••••••`), Created Date, Last Used, Status, Actions
@@ -266,7 +266,7 @@ Owner only (developer-oriented).
 - Skeleton table rows
 
 ### Empty — No API Keys
-- "No API keys created. Create one to access the Cloud-Screen API." + "Create API Key" CTA
+- "No API keys created. Create one to access the Smart Screen API." + "Create API Key" CTA
 
 ### Success — Key Created
 - Dialog shows full key (large, monospace)
@@ -368,7 +368,7 @@ All users.
 - Sidebar navigation
 
 ### Page Title
-`Notification Preferences — Cloud-Screen`
+`Notification Preferences — Smart Screen`
 
 ### Primary CTA
 "Save" button.

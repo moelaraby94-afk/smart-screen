@@ -41,7 +41,7 @@ Owner, Editor (full access); Viewer (read-only).
 - Breadcrumbs: None (top-level page)
 
 ### Page Title
-`Screens — Cloud-Screen`
+`Screens — Smart Screen`
 
 ### Primary CTA
 "Add Screen" button (top-right of page header).
@@ -362,7 +362,7 @@ All roles (Viewer: read-only).
 - Breadcrumbs: "Screens / [Screen Name]"
 
 ### Page Title
-`[Screen Name] — Cloud-Screen`
+`[Screen Name] — Smart Screen`
 
 ### Primary CTA
 "Assign Content" button (header, right side).
@@ -576,7 +576,7 @@ Owner/Editor only (Viewer: button hidden).
 - No sidebar for onboarding flow (first-time user may come from Overview)
 
 ### Page Title
-`Pair Screen — Cloud-Screen`
+`Pair Screen — Smart Screen`
 
 ### Primary CTA
 "Pair Screen" button (Step 3).

@@ -41,7 +41,7 @@ Owner (full access); Editor (view only); Viewer (view only).
 - Breadcrumbs: None (top-level page)
 
 ### Page Title
-`Team — Cloud-Screen`
+`Team — Smart Screen`
 
 ### Primary CTA
 "Invite Member" button (Owner only).

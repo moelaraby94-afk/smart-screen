@@ -6,7 +6,7 @@
 
 ## 1. Purpose
 
-This document catalogues every pattern that is **forbidden** in the Cloud-Screen frontend. Any code matching these patterns is a PR blocker. Enforced by AI Constitution (Articles III, V, VI).
+This document catalogues every pattern that is **forbidden** in the Smart Screen frontend. Any code matching these patterns is a PR blocker. Enforced by AI Constitution (Articles III, V, VI).
 
 ---
 

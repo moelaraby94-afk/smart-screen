@@ -6,7 +6,7 @@
 
 ## 1. Accessibility Philosophy
 
-Cloud-Screen targets **WCAG 2.1 Level AA** compliance. Accessibility is not an afterthought — it is baked into every component, every interaction, and every state. The design system enforces accessibility through tokens, component specifications, and acceptance criteria.
+Smart Screen targets **WCAG 2.1 Level AA** compliance. Accessibility is not an afterthought — it is baked into every component, every interaction, and every state. The design system enforces accessibility through tokens, component specifications, and acceptance criteria.
 
 ---
 

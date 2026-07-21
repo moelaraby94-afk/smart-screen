@@ -1,2 +1,2 @@
-export { ThemeProvider } from '@cloud-screen/shared';
+export { ThemeProvider } from '@smart-screen/shared';
 

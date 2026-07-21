@@ -8,7 +8,7 @@
 ## 1. Product Hierarchy Model
 
 ```
-Cloud-Screen Platform
+Smart Screen Platform
   │
   ├── Auth Layer (pre-product)
   │    ├── Login

@@ -1,2 +1,2 @@
-export { routing } from '@cloud-screen/shared';
+export { routing } from '@smart-screen/shared';
 

@@ -101,7 +101,7 @@ export class WebhooksService {
       event: 'webhook.test',
       timestamp: new Date().toISOString(),
       workspaceId,
-      data: { message: 'Test webhook from Cloud-Screen' },
+      data: { message: 'Test webhook from Smart Screen' },
     };
 
     await this.assertSafeUrl(endpoint.url);
@@ -120,8 +120,8 @@ export class WebhooksService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CloudScreen-Event': 'webhook.test',
-          'X-CloudScreen-Signature': `sha256=${signature}`,
+          'X-SmartScreen-Event': 'webhook.test',
+          'X-SmartScreen-Signature': `sha256=${signature}`,
         },
         body,
         redirect: 'manual',

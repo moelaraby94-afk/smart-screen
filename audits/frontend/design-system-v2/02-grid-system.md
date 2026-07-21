@@ -6,7 +6,7 @@
 
 ## 1. Grid Philosophy
 
-The Cloud-Screen grid system provides consistent horizontal alignment across all pages. It uses a **12-column grid** on desktop, simplifying to fewer columns on smaller breakpoints. The grid is **fluid** (percentage-based) with a **max-width container** to prevent excessive line lengths on large displays.
+The Smart Screen grid system provides consistent horizontal alignment across all pages. It uses a **12-column grid** on desktop, simplifying to fewer columns on smaller breakpoints. The grid is **fluid** (percentage-based) with a **max-width container** to prevent excessive line lengths on large displays.
 
 ---
 

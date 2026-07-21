@@ -1,8 +1,8 @@
 #!/bin/bash
-cd /home/gpack/Cloud-Screen
+cd /home/gpack/Smart Screen
 
 echo "=== Sync control-panel ==="
-rsync -av --exclude='node_modules' --exclude='.next' /mnt/d/projects/Cloud-Screen/apps/control-panel/ apps/control-panel/ 2>&1 | tail -5
+rsync -av --exclude='node_modules' --exclude='.next' /mnt/d/projects/Smart Screen/apps/control-panel/ apps/control-panel/ 2>&1 | tail -5
 
 echo "=== Check if control-panel is already running ==="
 lsof -i :3002 2>/dev/null || echo "Port 3002 is free"

@@ -34,7 +34,7 @@ export class CryptoService {
     // The salt is fixed per-deployment (derived from the key itself) so the
     // same env var always produces the same derived key — necessary for
     // decrypting previously encrypted values.
-    this.key = scryptSync(encryptionKey, 'cloud-screen-salt', 32);
+    this.key = scryptSync(encryptionKey, 'smart-screen-salt', 32);
   }
 
   /**

@@ -6,7 +6,7 @@
 
 ## 1. Chart Philosophy
 
-Charts in Cloud-Screen use **Recharts** (or similar React charting library). All charts share a consistent visual language: design system colors, minimal grid lines, clear tooltips, and accessible data alternatives.
+Charts in Smart Screen use **Recharts** (or similar React charting library). All charts share a consistent visual language: design system colors, minimal grid lines, clear tooltips, and accessible data alternatives.
 
 ---
 

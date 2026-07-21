@@ -17,7 +17,7 @@ export class LoginDto {
       .trim()
       .toLowerCase();
     if (v === 'admin' || v === 'superadmin' || v === 'super')
-      return 'admin@cloudsignage.local';
+      return 'admin@smartscreen.local';
     if (v === 'admin2' || v === 'client') return 'admin2@client.local';
     return String(value ?? '')
       .trim()

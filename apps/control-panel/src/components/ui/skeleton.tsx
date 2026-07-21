@@ -1,2 +1,2 @@
-export { Skeleton } from '@cloud-screen/ui';
+export { Skeleton } from '@smart-screen/ui';
 

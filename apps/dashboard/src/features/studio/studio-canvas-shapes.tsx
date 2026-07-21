@@ -113,7 +113,7 @@ export function QrCodeShape({
   const [img] = useImage(dataUrl, 'anonymous');
 
   useEffect(() => {
-    const data = obj.qrData || 'https://cloudscreen.app';
+    const data = obj.qrData || 'https://smartscreen.app';
     QRCode.toDataURL(data, { width: 256, margin: 1 })
       .then(setDataUrl)
       .catch(() => {});

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Cloud-Screen — Digital Signage Platform',
+  title: 'Smart Screen — Digital Signage Platform',
   description:
     'Cloud-based digital signage platform. Manage screens, playlists, media, and campaigns from one dashboard.',
 };
@@ -135,7 +135,7 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2">
             <Monitor className="h-6 w-6 text-blue-600" />
-            <span className="text-lg font-bold">Cloud-Screen</span>
+            <span className="text-lg font-bold">Smart Screen</span>
           </Link>
           <div className="hidden items-center gap-8 md:flex">
             <Link href="/features" className="text-sm text-gray-600 hover:text-gray-900">
@@ -180,7 +180,7 @@ export default function HomePage() {
               <span className="text-blue-600">from the cloud</span>
             </h1>
             <p className="mt-6 text-lg text-gray-600 sm:text-xl">
-              Cloud-Screen lets you manage digital displays, create visual content,
+              Smart Screen lets you manage digital displays, create visual content,
               schedule playlists, and track performance — all from one dashboard.
               Supports Arabic & English with full RTL.
             </p>
@@ -222,7 +222,7 @@ export default function HomePage() {
             </h2>
             <p className="mt-4 text-lg text-gray-600">
               From screen pairing to content design, scheduling, and analytics —
-              Cloud-Screen covers the entire workflow.
+              Smart Screen covers the entire workflow.
             </p>
           </div>
           <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -325,7 +325,7 @@ export default function HomePage() {
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-2">
               <Monitor className="h-5 w-5 text-blue-600" />
-              <span className="font-semibold">Cloud-Screen</span>
+              <span className="font-semibold">Smart Screen</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-gray-500">
               <Link href="/features" className="hover:text-gray-900">Features</Link>
@@ -337,7 +337,7 @@ export default function HomePage() {
                 Dashboard
               </a>
             </div>
-            <p className="text-sm text-gray-400">© 2026 Cloud-Screen. All rights reserved.</p>
+            <p className="text-sm text-gray-400">© 2026 Smart Screen. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -1,2 +1,2 @@
-export { AppToaster } from '@cloud-screen/shared';
+export { AppToaster } from '@smart-screen/shared';
 

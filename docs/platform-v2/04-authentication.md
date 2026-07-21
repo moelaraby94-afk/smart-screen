@@ -88,7 +88,7 @@
   "sessionId": "session-uuid",
   "iat": 1718000000,
   "exp": 1718014400,
-  "iss": "cloud-signage"
+  "iss": "smart-screen"
 }
 ```
 
@@ -119,14 +119,14 @@
 | `sessionId` | string | Session ID | Session ID | Session ID |
 | `iat` | number | Issued at | Issued at | Issued at |
 | `exp` | number | +4h | +24h | +15m |
-| `iss` | string | `cloud-signage` | `cloud-signage` | `cloud-signage` |
+| `iss` | string | `smart-screen` | `smart-screen` | `smart-screen` |
 
 ### 2.4 Login Flow
 
 #### Platform Login
 
 ```
-Control Panel (admin.cloudsignage.com)
+Control Panel (admin.smartscreen.com)
   │
   │  POST /auth/login
   │  { email, password, audience: 'platform' }
@@ -164,7 +164,7 @@ Control Panel
 #### Customer Login
 
 ```
-Customer Workspace (app.cloudsignage.com)
+Customer Workspace (app.smartscreen.com)
   │
   │  POST /auth/login
   │  { email, password, audience: 'customer' }
@@ -270,10 +270,10 @@ TTL: remaining token expiry
 
 | Cookie | Domain | Path | SameSite | Secure | HTTP-only | Purpose |
 |---|---|---|---|---|---|---|
-| `__cp_access` | `admin.cloudsignage.com` | `/` | Strict | ✅ | ✅ | Platform access token |
-| `__cp_refresh` | `admin.cloudsignage.com` | `/` | Strict | ✅ | ✅ | Platform refresh token |
-| `__dash_access` | `app.cloudsignage.com` | `/` | Lax | ✅ | ✅ | Customer access token |
-| `__dash_refresh` | `app.cloudsignage.com` | `/` | Lax | ✅ | ✅ | Customer refresh token |
+| `__cp_access` | `admin.smartscreen.com` | `/` | Strict | ✅ | ✅ | Platform access token |
+| `__cp_refresh` | `admin.smartscreen.com` | `/` | Strict | ✅ | ✅ | Platform refresh token |
+| `__dash_access` | `app.smartscreen.com` | `/` | Lax | ✅ | ✅ | Customer access token |
+| `__dash_refresh` | `app.smartscreen.com` | `/` | Lax | ✅ | ✅ | Customer refresh token |
 
 ### 4.2 Why Different Cookie Names?
 
@@ -283,11 +283,11 @@ TTL: remaining token expiry
 
 ### 4.3 Why SameSite=Strict for Platform?
 
-Platform cookies should never be sent on cross-origin requests. This prevents CSRF attacks on the Control Panel. The Control Panel only makes same-origin API calls (to `admin.cloudsignage.com/api/*`).
+Platform cookies should never be sent on cross-origin requests. This prevents CSRF attacks on the Control Panel. The Control Panel only makes same-origin API calls (to `admin.smartscreen.com/api/*`).
 
 ### 4.4 Why SameSite=Lax for Customer?
 
-Customer cookies need to be sent on top-level navigation (e.g., when a user clicks a link to `app.cloudsignage.com/overview`). Lax allows this while still preventing CSRF on POST/PUT/DELETE requests.
+Customer cookies need to be sent on top-level navigation (e.g., when a user clicks a link to `app.smartscreen.com/overview`). Lax allows this while still preventing CSRF on POST/PUT/DELETE requests.
 
 ---
 
@@ -299,11 +299,11 @@ This is the safest design. Detailed in the architecture review (Section 6). Summ
 
 1. **Control Panel** calls `POST /platform/impersonation/start` with target user ID
 2. **Backend** validates super admin, generates one-time exchange token (256-bit random), stores in Redis (30s TTL)
-3. **Control Panel** redirects browser to `app.cloudsignage.com/auth/impersonate?token={exchangeToken}`
+3. **Control Panel** redirects browser to `app.smartscreen.com/auth/impersonate?token={exchangeToken}`
 4. **Customer Workspace** calls `POST /auth/exchange-impersonation` with exchange token
 5. **Backend** validates exchange token (Redis lookup, one-time use, delete), issues customer-audience JWT with `impersonatedBy` claim
 6. **Customer Workspace** sets cookies, shows impersonation banner, redirects to `/overview`
-7. **Exit:** User clicks "Return to Control Panel" → `POST /auth/exit-impersonation` → backend issues platform exchange token → redirect to `admin.cloudsignage.com`
+7. **Exit:** User clicks "Return to Control Panel" → `POST /auth/exit-impersonation` → backend issues platform exchange token → redirect to `admin.smartscreen.com`
 
 ### 5.2 Security Guarantees
 
@@ -313,7 +313,7 @@ This is the safest design. Detailed in the architecture review (Section 6). Summ
 - Separate cookies per domain (no cookie collision)
 - `impersonatedBy` claim in JWT (audit trail)
 - Cannot access platform routes while impersonated (audience: customer)
-- Admin's original session preserved on `admin.cloudsignage.com`
+- Admin's original session preserved on `admin.smartscreen.com`
 
 ### 5.3 Audit Logging
 

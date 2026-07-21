@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-cd /home/gpack/Cloud-Screen
+cd /home/gpack/Smart Screen
 
 echo "=== Check node/npm ==="
 which node
@@ -10,7 +10,7 @@ node --version
 npm --version
 
 echo "=== Install deps for control-panel ==="
-cd /home/gpack/Cloud-Screen/apps/control-panel
+cd /home/gpack/Smart Screen/apps/control-panel
 npm install 2>&1 | tail -10
 
 echo "=== Build control-panel ==="

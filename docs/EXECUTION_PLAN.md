@@ -1,7 +1,7 @@
-# Cloud-Screen — خطة التنفيذ الكاملة لسد الفجوات
+# Smart Screen — خطة التنفيذ الكاملة لسد الفجوات
 
 > **تاريخ الإنشاء:** 13 يوليو 2026  
-> **المرجع:** ORCA-CLOUDSCREEN-main (دوسيه ORCA على Desktop)  
+> **المرجع:** ORCA-SMARTSCREEN-main (دوسيه ORCA على Desktop)  
 > **الهدف:** سد جميع الفجوات في رحلة العميل بشكل احترافي ومنظم  
 > **القاعدة:** من الأسهل للأصعب، كل مرحلة لها تاسكات واضحة، testing بعد كل تعديل  
 > **الاستثناء:** اللاندنج بيدج والابلكيشن خارج هذه الخطة تماماً (مرحلة منفصلة لاحقاً)
@@ -739,8 +739,8 @@
 
 1. **الترتيب:** التنفيذ من المرحلة 1 → 10 بالترتيب. المرحلة 11 منفصلة تماماً.
 2. **Testing:** بعد كل تاسك:
-   - sync to WSL: `wsl -d Ubuntu -- bash -c "cp /mnt/d/projects/Cloud-Screen/<file> /home/gpack/Cloud-Screen/<file>"`
-   - rebuild: `wsl -d Ubuntu -- bash -c "cd /home/gpack/Cloud-Screen && docker compose up --build <service> -d"`
+   - sync to WSL: `wsl -d Ubuntu -- bash -c "cp /mnt/d/projects/Smart Screen/<file> /home/gpack/Smart Screen/<file>"`
+   - rebuild: `wsl -d Ubuntu -- bash -c "cd /home/gpack/Smart Screen && docker compose up --build <service> -d"`
    - verify على `localhost:3000`
 3. **التوثيق:** بعد إكمال كل تاسك، حدّث قسم "سجل الإنجاز" بـ:
    - رقم التاسك

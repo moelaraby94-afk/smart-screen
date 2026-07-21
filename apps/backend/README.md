@@ -1,6 +1,6 @@
-# Cloud-Screen Backend
+# Smart Screen Backend
 
-NestJS backend for the Cloud-Screen digital signage platform.
+NestJS backend for the Smart Screen digital signage platform.
 
 ## Tech Stack
 

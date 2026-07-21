@@ -1,7 +1,7 @@
 # Phase 10 — Production Readiness & Launch Preparation Report
 
 **Date:** 18 July 2026
-**Scope:** Final production hardening of Cloud-Screen SaaS platform.
+**Scope:** Final production hardening of Smart Screen SaaS platform.
 
 ---
 
@@ -69,7 +69,7 @@
 | **Structured logging** | `AppLogger` — JSON in production with `level`, `message`, `requestId`, `context`, `timestamp` |
 | **Request context** | `RequestContextModule` with `AsyncLocalStorage` — `requestId` on every log line |
 | **Error tracking** | Sentry integration (backend `instrument.ts`, dashboard `sentry.*.config.ts`), PII scrubbing (`scrub-pii.ts`), error boundaries report to Sentry |
-| **API metrics** | Prometheus `prom-client` — `cloudscreen_http_request_duration_seconds`, `cloudscreen_http_requests_total`, `cloudscreen_http_errors_total`, `cloudscreen_active_sockets`. `/metrics` endpoint (excluded from API prefix) |
+| **API metrics** | Prometheus `prom-client` — `smartscreen_http_request_duration_seconds`, `smartscreen_http_requests_total`, `smartscreen_http_errors_total`, `smartscreen_active_sockets`. `/metrics` endpoint (excluded from API prefix) |
 | **Metrics middleware** | `MetricsMiddleware` on all routes — observes method, route, status, duration |
 | **Player heartbeat monitoring** | `ScreenHeartbeatService` — sweep timer (`HEARTBEAT_SWEEP_MS`), stale screen detection (`HEARTBEAT_STALE_MS`), status broadcast via `workspace:screen:status` |
 | **Failed payment monitoring** | `MaintenanceService.downgradeExpiredGracePeriods()` — daily cron at 8am UTC, downgrades subscriptions past grace period |

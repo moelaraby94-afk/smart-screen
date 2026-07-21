@@ -287,7 +287,7 @@
 | **Media مقابل Content** | `nav.media`="الوسائط"، `nav.content`="المحتوى" | مصطلح واحد: **Media / الوسائط** (تُحذف Content بالدمج D2) |
 | **Analytics مقابل Proof of Play** | `nav.analytics`="التحليلات"، `nav.proofOfPlay`="إثبات التشغيل" | **Analytics / التحليلات** فقط. "إثبات التشغيل" اسم كاذب (لا بيانات تشغيل) — يُحذف حتى وجود PoP حقيقي |
 | **"Display Groups / مجموعات الشاشات"** تدير playlists | `nav.displayGroups`="مجموعات الشاشات" | يُحذف بالدمج (D4)؛ لا مصطلح "مجموعات شاشات" يشير لـ playlists |
-| **اسم العلامة مضطرب** | `nav.brandName`="Cloud Signage / كلاود ساينج"، لكن المشروع "Cloud-Screen" والدعم `support@cloudscreen.app` | **وحّد اسم علامة واحد** عبر كل الواجهة والإيميلات والـ favicon (توقّف واسأل عن الاسم النهائي) |
+| **اسم العلامة مضطرب** | `nav.brandName`="Cloud Signage / كلاود ساينج"، لكن المشروع "Smart Screen" والدعم `support@smartscreen.app` | **وحّد اسم علامة واحد** عبر كل الواجهة والإيميلات والـ favicon (توقّف واسأل عن الاسم النهائي) |
 
 **قاموس المنتج (Product Glossary) — يُوثّق كملف مرجعي `docs/terminology.md` ويُفرض:**
 

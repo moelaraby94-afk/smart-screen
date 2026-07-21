@@ -1,4 +1,4 @@
-# تقرير Audit الاحترافي الكامل — Cloud-Screen
+# تقرير Audit الاحترافي الكامل — Smart Screen
 ## UX / UI / Business Logic / Customer Journey / Admin / Player
 
 > **تاريخ الـ Audit:** يوليو 2026
@@ -12,7 +12,7 @@
 ### 1.1 هيكل المشروع
 
 ```
-Cloud-Screen/
+Smart Screen/
 ├── apps/
 │   ├── dashboard/     ← Next.js 16 (Client + Admin)
 │   ├── backend/       ← NestJS 11 + Prisma 7 + PostgreSQL

@@ -8,7 +8,7 @@ import { SwrProvider } from '@/components/swr-provider';
 import { routing } from '@/i18n/routing';
 
 export const metadata: Metadata = {
-  title: 'Cloud Screen — Control Panel',
+  title: 'Smart Screen — Control Panel',
   description: 'Platform administration control panel',
 };
 export const dynamic = 'force-dynamic';

@@ -43,7 +43,7 @@ Owner, Editor (full access); Viewer (read-only).
 - Tabs: "Playlists" (active) | "Media"
 
 ### Page Title
-`Content — Cloud-Screen`
+`Content — Smart Screen`
 
 ### Primary CTA
 "Create Playlist" button (top-right).
@@ -274,7 +274,7 @@ Owner, Editor (full access); Viewer (read-only).
 - Sidebar navigation
 
 ### Page Title
-`Media — Cloud-Screen`
+`Media — Smart Screen`
 
 ### Primary CTA
 "Upload" button (top-right).
@@ -522,7 +522,7 @@ All roles (Viewer: read-only, no edit/publish).
 - Breadcrumbs: "Content / [Playlist Name]"
 
 ### Page Title
-`[Playlist Name] — Cloud-Screen`
+`[Playlist Name] — Smart Screen`
 
 ### Primary CTA
 "Publish to Screens" button.

@@ -6,7 +6,7 @@
 
 ## 1. Performance Philosophy
 
-Cloud-Screen targets **fast perceived performance** over raw metric optimization. The user should feel that the application is responsive, with no jarring delays, layout shifts, or frozen UI. Loading states manage expectations; optimistic updates provide instant feedback.
+Smart Screen targets **fast perceived performance** over raw metric optimization. The user should feel that the application is responsive, with no jarring delays, layout shifts, or frozen UI. Loading states manage expectations; optimistic updates provide instant feedback.
 
 ---
 

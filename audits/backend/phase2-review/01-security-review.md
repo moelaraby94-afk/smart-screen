@@ -10,7 +10,7 @@
 **Status: VERIFIED**
 
 - `CryptoService` uses AES-256-GCM (authenticated encryption) via Node.js `crypto` module
-- Key derivation: `scryptSync(encryptionKey, 'cloud-screen-salt', 32)` — memory-hard KDF
+- Key derivation: `scryptSync(encryptionKey, 'smart-screen-salt', 32)` — memory-hard KDF
 - 96-bit IV (12 bytes) — recommended for GCM mode
 - Auth tag verified on decrypt — tamper detection
 - 2FA secrets encrypted at rest: `two-factor.service.ts:120` calls `this.cryptoService.encrypt(secret)` before DB write

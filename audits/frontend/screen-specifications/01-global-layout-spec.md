@@ -46,7 +46,7 @@ All authenticated users (Owner, Editor, Viewer).
 
 ### Page Title
 - Set per-page via `document.title` or Next.js metadata
-- Format: `[Page Name] — Cloud-Screen`
+- Format: `[Page Name] — Smart Screen`
 
 ---
 
@@ -228,7 +228,7 @@ All authenticated users (Owner, Editor, Viewer).
 ## States
 
 ### Loading
-- **Initial app load:** Splash screen with Cloud-Screen logo + spinner (500ms max)
+- **Initial app load:** Splash screen with Smart Screen logo + spinner (500ms max)
 - **Sidebar:** Skeleton items (gray bars) during workspace data fetch
 - **Header:** Workspace name shows "Loading..." during switch
 

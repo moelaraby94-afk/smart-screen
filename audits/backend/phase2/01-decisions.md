@@ -47,7 +47,7 @@
 
 ## TD-2.4: Fixed salt for scryptSync
 
-**Decision:** Use a fixed salt `'cloud-screen-salt'` for `scryptSync`.
+**Decision:** Use a fixed salt `'smart-screen-salt'` for `scryptSync`.
 
 **Rationale:** The same `ENCRYPTION_KEY` env var must always produce the same derived key so previously encrypted values can be decrypted. A random salt would require storing the salt alongside each encrypted value, adding complexity for no security benefit since the key itself is already a secret.
 

@@ -1,6 +1,6 @@
 # Security & audit remediation log
 
-Tracks the fixes delivered against `cloud-screen-audit-report.md`, plus two
+Tracks the fixes delivered against `smart-screen-audit-report.md`, plus two
 related issues found during verification that the audit itself missed. Each
 entry lists what changed, why, and how it was verified (real execution, not
 just code review — see each section's "Verified" line).
@@ -95,7 +95,7 @@ in 404s for uploaded media.
 `MEDIA_UPLOAD_DIR` override; also exercised with a real upload + fetch of the
 returned `publicUrl`.
 
-## 5. Audit-driven fixes (`cloud-screen-audit-report.md`)
+## 5. Audit-driven fixes (`smart-screen-audit-report.md`)
 
 | # | Finding | Fix |
 |---|---|---|

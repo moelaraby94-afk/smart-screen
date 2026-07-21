@@ -101,7 +101,7 @@
 ### 2.1 Information Architecture
 
 ```
-Control Panel (admin.cloudsignage.com)
+Control Panel (admin.smartscreen.com)
 │
 ├── Dashboard
 │   ├── Revenue summary
@@ -210,7 +210,7 @@ Control Panel (admin.cloudsignage.com)
 ### 3.1 Information Architecture
 
 ```
-Customer Workspace (app.cloudsignage.com)
+Customer Workspace (app.smartscreen.com)
 │
 ├── Overview
 │   ├── Workspace summary
@@ -351,7 +351,7 @@ Support specialist logs into Control Panel
   ├── Clicks "Start Impersonation"
   │
   ▼
-Backend generates exchange token → redirects to app.cloudsignage.com/auth/impersonate?token=...
+Backend generates exchange token → redirects to app.smartscreen.com/auth/impersonate?token=...
   │
   ▼
 Customer Workspace receives token
@@ -379,7 +379,7 @@ Support specialist clicks "Return to Control Panel"
   │
   ├── POST /auth/exit-impersonation
   ├── Backend issues platform exchange token
-  ├── Redirects to admin.cloudsignage.com
+  ├── Redirects to admin.smartscreen.com
   ├── Control Panel restores admin session
   └── Support specialist returns to ticket
 ```
@@ -391,7 +391,7 @@ Customer navigates to Screens
   │
   ├── Clicks "Add Screen"
   ├── Modal: "Pair a new screen"
-  │   ├── Instructions: "On your screen device, open the Cloud-Screen Player app"
+  │   ├── Instructions: "On your screen device, open the Smart Screen Player app"
   │   ├── Instructions: "Enter this pairing code: ABC123"
   │   ├── Pairing code displayed (large, readable)
   │   ├── Countdown timer (10:00)

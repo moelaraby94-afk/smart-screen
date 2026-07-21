@@ -6,7 +6,7 @@
 
 ## 1. Purpose
 
-Defines the architectural rules that govern the Cloud-Screen frontend. These rules ensure the application is scalable, maintainable, and consistent. Enforced by AI Constitution (Article VI).
+Defines the architectural rules that govern the Smart Screen frontend. These rules ensure the application is scalable, maintainable, and consistent. Enforced by AI Constitution (Article VI).
 
 ---
 

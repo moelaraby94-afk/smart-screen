@@ -281,7 +281,7 @@ This context does NOT load workspace lists, workspace stats, or workspace data. 
 
 ### 3.4 Authentication Flow
 
-1. Platform staff navigates to `admin.cloudsignage.com/[locale]/login`
+1. Platform staff navigates to `admin.smartscreen.com/[locale]/login`
 2. Login form posts to `POST /api/v1/auth/login` with `audience: 'platform'` in the request body
 3. Backend validates credentials, checks `isSuperAdmin` or `platformStaffRole` is set
 4. Backend issues JWT with `audience: 'platform'` claim
@@ -438,7 +438,7 @@ Use a commercial admin dashboard template (e.g., Tremor, Refine) for the Control
 
 - **Phase 1:** Copy admin files to `apps/control-panel`. Both dashboard and Control Panel serve admin routes. Use DNS or environment variable to control which one is used.
 - **Phase 2:** Add JWT audience claims. Control Panel login requests `audience: 'platform'`.
-- **Phase 3:** Remove admin routes from `apps/dashboard`. Dashboard redirects `/admin/*` to `admin.cloudsignage.com`.
+- **Phase 3:** Remove admin routes from `apps/dashboard`. Dashboard redirects `/admin/*` to `admin.smartscreen.com`.
 - **Phase 4:** Migrate platform settings from file to database.
 
 **Key files to copy:**
@@ -468,6 +468,6 @@ Use a commercial admin dashboard template (e.g., Tremor, Refine) for the Control
 
 Create `apps/control-panel` as a dedicated Next.js application with its own shell, auth context, and login page. Copy the existing admin features and routes with minimal modifications. The primary change is replacing `WorkspaceContext` with `PlatformContext` and removing the `sovereign` toggle logic.
 
-The Control Panel should be deployed to `admin.cloudsignage.com` with independent CI/CD, scaling, and monitoring. It should have its own login page that requests `audience: 'platform'` tokens from the backend.
+The Control Panel should be deployed to `admin.smartscreen.com` with independent CI/CD, scaling, and monitoring. It should have its own login page that requests `audience: 'platform'` tokens from the backend.
 
 The existing admin UI components are well-built and should be reused as-is. The main work is extraction and context replacement, not redesign.

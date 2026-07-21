@@ -790,7 +790,7 @@ export function StudioEditorClient() {
             y: 250,
             width: 200,
             height: 200,
-            qrData: 'https://cloudscreen.app',
+            qrData: 'https://smartscreen.app',
             opacity: 1,
           },
         ],
@@ -965,7 +965,7 @@ export function StudioEditorClient() {
         className="flex min-h-[400px] flex-col items-center justify-center gap-6 rounded-lg bg-neutral-900 p-8"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={logoSrc} alt="Cloud-Screen" className="max-h-12 w-auto object-contain" />
+        <img src={logoSrc} alt="Smart Screen" className="max-h-12 w-auto object-contain" />
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <p className="text-sm text-muted-foreground">{t('loadingStudio')}</p>
       </motion.div>

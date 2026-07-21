@@ -39,7 +39,7 @@ All users (each user edits their own profile).
 - Tabs: "Profile" (active) | "Workspace" (Owner) | "Billing" (Owner) | "Security" | "API" (Owner) | "Notifications"
 
 ### Page Title
-`Settings — Cloud-Screen`
+`Settings — Smart Screen`
 
 ### Primary CTA
 "Save" button (form submit).
@@ -248,7 +248,7 @@ Owner only.
 - Sidebar navigation
 
 ### Page Title
-`Workspace Settings — Cloud-Screen`
+`Workspace Settings — Smart Screen`
 
 ### Primary CTA
 "Save" button.
@@ -354,7 +354,7 @@ Owner only.
 - Sidebar navigation
 
 ### Page Title
-`Billing — Cloud-Screen`
+`Billing — Smart Screen`
 
 ### Primary CTA
 "Select Plan" button (on plan cards).

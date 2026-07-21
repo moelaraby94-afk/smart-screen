@@ -6,16 +6,16 @@
 
 ## 1. Taxonomy Structure
 
-The Cloud-Screen component taxonomy organizes all UI components into **4 layers** based on reusability and domain specificity.
+The Smart Screen component taxonomy organizes all UI components into **4 layers** based on reusability and domain specificity.
 
 ### Layer 1: Primitive Components
-Generic, domain-agnostic components that form the building blocks. No Cloud-Screen-specific logic.
+Generic, domain-agnostic components that form the building blocks. No Smart Screen-specific logic.
 
 ### Layer 2: Composite Components
 Components composed from primitives, with some domain awareness but still broadly reusable.
 
 ### Layer 3: Domain Components
-Cloud-Screen-specific components that encode business logic, entity types, or workflow patterns.
+Smart Screen-specific components that encode business logic, entity types, or workflow patterns.
 
 ### Layer 4: Page Components
 Full page-level compositions that combine domain, composite, and primitive components.

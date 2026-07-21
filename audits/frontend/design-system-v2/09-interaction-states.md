@@ -6,7 +6,7 @@
 
 ## 1. State Philosophy
 
-Every interactive element in Cloud-Screen must have clearly defined visual states. States communicate to the user what the element is, what it can do, and what is happening. Consistent state treatment across all components is critical for a coherent design system.
+Every interactive element in Smart Screen must have clearly defined visual states. States communicate to the user what the element is, what it can do, and what is happening. Consistent state treatment across all components is critical for a coherent design system.
 
 ---
 

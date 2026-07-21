@@ -1,2 +1,2 @@
-export { SwrProvider } from '@cloud-screen/shared';
+export { SwrProvider } from '@smart-screen/shared';
 

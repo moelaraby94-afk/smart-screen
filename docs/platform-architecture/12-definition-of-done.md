@@ -146,7 +146,7 @@ There is no documented criteria for when to roll back a phase. Without this, the
 - [ ] Customer Dashboard `/auth/impersonate` page exchanges token and sets cookies
 - [ ] Impersonation banner is shown when `impersonatedBy` claim is present
 - [ ] "Return to Control Panel" link exits impersonation and redirects to Control Panel
-- [ ] `/admin/*` on Customer Dashboard redirects to `admin.cloudsignage.com/admin/*`
+- [ ] `/admin/*` on Customer Dashboard redirects to `admin.smartscreen.com/admin/*`
 - [ ] `apps/dashboard/src/app/[locale]/(shell)/admin/` directory is deleted
 - [ ] `apps/dashboard/src/features/admin/` directory is deleted
 - [ ] `CrystalShell` has no `sovereign` logic
@@ -167,7 +167,7 @@ There is no documented criteria for when to roll back a phase. Without this, the
 #### Verification Methods
 
 - [ ] Manual: Super admin impersonates customer from Control Panel → redirected to Customer Dashboard → banner shown → can use customer features → return to Control Panel
-- [ ] Manual: Navigate to `app.cloudsignage.com/admin/customers` → redirected to `admin.cloudsignage.com/admin/customers`
+- [ ] Manual: Navigate to `app.smartscreen.com/admin/customers` → redirected to `admin.smartscreen.com/admin/customers`
 - [ ] Manual: All customer features work (click through every sidebar item)
 - [ ] Automated: `grep -r "isSuperAdmin" apps/dashboard/src/` returns only `impersonation-banner.tsx`
 - [ ] Automated: `grep -r "sovereign" apps/dashboard/src/` returns zero results

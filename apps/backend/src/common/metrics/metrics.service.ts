@@ -22,11 +22,11 @@ export class MetricsService implements OnModuleInit {
 
     collectDefaultMetrics({
       register: this.registry,
-      prefix: 'cloudscreen_',
+      prefix: 'smartscreen_',
     });
 
     this.httpRequestDuration = new Histogram({
-      name: 'cloudscreen_http_request_duration_seconds',
+      name: 'smartscreen_http_request_duration_seconds',
       help: 'HTTP request duration in seconds',
       labelNames: ['method', 'route', 'status'] as const,
       buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
@@ -34,21 +34,21 @@ export class MetricsService implements OnModuleInit {
     });
 
     this.httpRequestTotal = new Counter({
-      name: 'cloudscreen_http_requests_total',
+      name: 'smartscreen_http_requests_total',
       help: 'Total HTTP requests',
       labelNames: ['method', 'route', 'status'] as const,
       registers: [this.registry],
     });
 
     this.httpErrorsTotal = new Counter({
-      name: 'cloudscreen_http_errors_total',
+      name: 'smartscreen_http_errors_total',
       help: 'Total HTTP errors (status >= 400)',
       labelNames: ['method', 'route', 'status'] as const,
       registers: [this.registry],
     });
 
     this.activeSockets = new Gauge({
-      name: 'cloudscreen_active_sockets',
+      name: 'smartscreen_active_sockets',
       help: 'Active Socket.IO connections on the /realtime namespace',
       registers: [this.registry],
     });

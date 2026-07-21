@@ -427,12 +427,12 @@ Both admin and customer use the same cookie names on the same domain.
 
 | Cookie | Domain | Purpose |
 |---|---|---|
-| `__Host-cs_platform_access` | `admin.cloudsignage.com` | Platform access token |
-| `__Host-cs_platform_refresh` | `admin.cloudsignage.com` | Platform refresh token |
-| `__Host-cs_customer_access` | `app.cloudsignage.com` | Customer access token |
-| `__Host-cs_customer_refresh` | `app.cloudsignage.com` | Customer refresh token |
-| `csrf_platform` | `admin.cloudsignage.com` | Platform CSRF token |
-| `csrf_customer` | `app.cloudsignage.com` | Customer CSRF token |
+| `__Host-cs_platform_access` | `admin.smartscreen.com` | Platform access token |
+| `__Host-cs_platform_refresh` | `admin.smartscreen.com` | Platform refresh token |
+| `__Host-cs_customer_access` | `app.smartscreen.com` | Customer access token |
+| `__Host-cs_customer_refresh` | `app.smartscreen.com` | Customer refresh token |
+| `csrf_platform` | `admin.smartscreen.com` | Platform CSRF token |
+| `csrf_customer` | `app.smartscreen.com` | Customer CSRF token |
 
 #### 3.2.2 Cookie Attributes
 
@@ -714,13 +714,13 @@ model PlatformSettings {
 | `branding.logoUrl` | branding | string (URL) | `null` |
 | `branding.primaryColor` | branding | string (hex) | `#6366f1` |
 | `branding.companyName` | branding | string | `Cloud Signage` |
-| `email.fromAddress` | email | string | `noreply@cloudsignage.com` |
+| `email.fromAddress` | email | string | `noreply@smartscreen.com` |
 | `email.fromName` | email | string | `Cloud Signage` |
 | `billing.currency` | billing | string | `USD` |
 | `billing.trialDays` | billing | number | `14` |
 | `billing.gracePeriodDays` | billing | number | `7` |
 | `general.platformName` | general | string | `Cloud Signage` |
-| `general.supportEmail` | general | string | `support@cloudsignage.com` |
+| `general.supportEmail` | general | string | `support@smartscreen.com` |
 | `general.maintenanceMode` | general | boolean | `false` |
 | `general.signupEnabled` | general | boolean | `true` |
 
@@ -860,7 +860,7 @@ model ExchangeToken {
    - tokenHash = sha256(token)
    - expiresAt = now + 60 seconds
    - Save to ExchangeToken table
-4. Backend returns: { exchangeToken: string, targetApp: 'customer', redirectUrl: 'https://app.cloudsignage.com/auth/exchange?token=...' }
+4. Backend returns: { exchangeToken: string, targetApp: 'customer', redirectUrl: 'https://app.smartscreen.com/auth/exchange?token=...' }
 5. Platform frontend redirects browser to redirectUrl
 6. Customer app calls POST /api/v1/auth/exchange
    Body: { token: string }
@@ -898,7 +898,7 @@ model ExchangeToken {
    - Validates token has impersonatedBy
    - Revokes customer session (delete refresh token)
    - Clears customer cookies
-   - Returns: { redirectUrl: 'https://admin.cloudsignage.com/' }
+   - Returns: { redirectUrl: 'https://admin.smartscreen.com/' }
 5. Browser redirects to platform app
 6. Platform app has its own session (separate cookies) — admin is still logged in
 ```
@@ -964,7 +964,7 @@ packages/ui/
 
 ```json
 {
-  "name": "@cloud-screen/ui",
+  "name": "@smart-screen/ui",
   "version": "0.1.0",
   "private": true,
   "main": "./src/index.ts",
@@ -1002,8 +1002,8 @@ packages/ui/
 3. Copy each component from `apps/dashboard/src/components/ui/*` → `packages/ui/src/*.tsx`
 4. Update internal imports in each component: `@/lib/utils` → `./lib/utils`
 5. Create `packages/ui/src/index.ts` with all re-exports
-6. In `apps/dashboard/package.json`, add `"@cloud-screen/ui": "*"` to dependencies
-7. In all dashboard files, replace `@/components/ui/button` → `@cloud-screen/ui` (or specific import)
+6. In `apps/dashboard/package.json`, add `"@smart-screen/ui": "*"` to dependencies
+7. In all dashboard files, replace `@/components/ui/button` → `@smart-screen/ui` (or specific import)
 8. Run `npm install` to link the workspace package
 9. Run `npm run typecheck && npm run build` to verify
 
@@ -1011,13 +1011,13 @@ packages/ui/
 
 **Option A (barrel import):**
 ```typescript
-import { Button, Input, Dialog } from '@cloud-screen/ui';
+import { Button, Input, Dialog } from '@smart-screen/ui';
 ```
 
 **Option B (named import — better tree-shaking):**
 ```typescript
-import { Button } from '@cloud-screen/ui/button';
-import { Input } from '@cloud-screen/ui/input';
+import { Button } from '@smart-screen/ui/button';
+import { Input } from '@smart-screen/ui/input';
 ```
 
 **Recommendation:** Option A for simplicity. Next.js handles tree-shaking automatically.
@@ -1039,7 +1039,7 @@ packages/config/
 
 ```json
 {
-  "name": "@cloud-screen/config",
+  "name": "@smart-screen/config",
   "version": "0.1.0",
   "private": true,
   "main": "./index.ts",
@@ -1052,12 +1052,12 @@ packages/config/
 ```json
 // apps/dashboard/tsconfig.json
 {
-  "extends": "@cloud-screen/config/tsconfig.json",
+  "extends": "@smart-screen/config/tsconfig.json",
   "compilerOptions": { ... }
 }
 
 // apps/dashboard/tailwind.config.ts
-import config from '@cloud-screen/config/tailwind.config';
+import config from '@smart-screen/config/tailwind.config';
 export default { ...config, content: [...] };
 ```
 
@@ -1217,22 +1217,22 @@ set -euo pipefail
 BACKUP_DIR="/backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 DB_URL="${DATABASE_URL:?DATABASE_URL not set}"
-S3_BUCKET="${BACKUP_S3_BUCKET:-cloudscreen-backups}"
+S3_BUCKET="${BACKUP_S3_BUCKET:-smartscreen-backups}"
 S3_PREFIX="db-backups"
 
 # Create backup
-pg_dump "$DB_URL" --format=custom --file="$BACKUP_DIR/cloudsignage_$TIMESTAMP.dump"
+pg_dump "$DB_URL" --format=custom --file="$BACKUP_DIR/smartscreen_$TIMESTAMP.dump"
 
 # Upload to S3
 if command -v aws &> /dev/null; then
-  aws s3 cp "$BACKUP_DIR/cloudsignage_$TIMESTAMP.dump" \
-    "s3://$S3_BUCKET/$S3_PREFIX/cloudsignage_$TIMESTAMP.dump"
+  aws s3 cp "$BACKUP_DIR/smartscreen_$TIMESTAMP.dump" \
+    "s3://$S3_BUCKET/$S3_PREFIX/smartscreen_$TIMESTAMP.dump"
 fi
 
 # Clean up local files older than 7 days
-find "$BACKUP_DIR" -name "cloudsignage_*.dump" -mtime +7 -delete
+find "$BACKUP_DIR" -name "smartscreen_*.dump" -mtime +7 -delete
 
-echo "Backup complete: cloudsignage_$TIMESTAMP.dump"
+echo "Backup complete: smartscreen_$TIMESTAMP.dump"
 ```
 
 ### 11.3 Cron Setup
@@ -1246,10 +1246,10 @@ Add to Docker Compose or host crontab:
 
 ```bash
 # Download from S3
-aws s3 cp s3://cloudscreen-backups/db-backups/cloudsignage_20260718_030000.dump .
+aws s3 cp s3://smartscreen-backups/db-backups/smartscreen_20260718_030000.dump .
 
 # Restore
-pg_restore --dbname="$DATABASE_URL" --clean --if-exists cloudsignage_20260718_030000.dump
+pg_restore --dbname="$DATABASE_URL" --clean --if-exists smartscreen_20260718_030000.dump
 ```
 
 ---
@@ -1379,7 +1379,7 @@ Before Phase 0 is considered complete, verify ALL of the following:
 ### Packages
 - [ ] `packages/ui` created with all UI components
 - [ ] `packages/config` created with shared configs
-- [ ] All dashboard imports updated to use `@cloud-screen/ui`
+- [ ] All dashboard imports updated to use `@smart-screen/ui`
 - [ ] `npm run typecheck` passes
 - [ ] `npm run build` passes
 

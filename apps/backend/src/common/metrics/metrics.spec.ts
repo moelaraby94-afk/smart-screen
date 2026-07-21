@@ -21,15 +21,15 @@ describe('MetricsService', () => {
 
   it('should expose a registry with default metrics', async () => {
     const output = await service.metrics();
-    expect(output).toContain('cloudscreen_');
+    expect(output).toContain('smartscreen_');
     expect(output).toContain('process_');
   });
 
   it('should record HTTP request metrics', async () => {
     service.observeHttpRequest('GET', '/api/v1/screens', 200, 0.05);
     const output = await service.metrics();
-    expect(output).toContain('cloudscreen_http_requests_total');
-    expect(output).toContain('cloudscreen_http_request_duration_seconds');
+    expect(output).toContain('smartscreen_http_requests_total');
+    expect(output).toContain('smartscreen_http_request_duration_seconds');
     expect(output).toContain('method="GET"');
     expect(output).toContain('route="/api/v1/screens"');
     expect(output).toContain('status="200"');
@@ -38,7 +38,7 @@ describe('MetricsService', () => {
   it('should increment error counter for status >= 400', async () => {
     service.observeHttpRequest('POST', '/api/v1/auth/login', 500, 0.1);
     const output = await service.metrics();
-    expect(output).toContain('cloudscreen_http_errors_total');
+    expect(output).toContain('smartscreen_http_errors_total');
     expect(output).toContain('status="500"');
   });
 
@@ -49,7 +49,7 @@ describe('MetricsService', () => {
       .split('\n')
       .filter(
         (l) =>
-          l.startsWith('cloudscreen_http_errors_total') && !l.startsWith('#'),
+          l.startsWith('smartscreen_http_errors_total') && !l.startsWith('#'),
       );
     // Only the HELP/TYPE lines should exist, no data lines for 200
     expect(errorLines.length).toBe(0);
@@ -58,7 +58,7 @@ describe('MetricsService', () => {
   it('should set active socket gauge', async () => {
     service.setActiveSockets(42);
     const output = await service.metrics();
-    expect(output).toContain('cloudscreen_active_sockets');
+    expect(output).toContain('smartscreen_active_sockets');
     expect(output).toContain('42');
   });
 
@@ -95,12 +95,12 @@ describe('MetricsController', () => {
 
   it('should return metrics output', async () => {
     const result = await controller.metrics();
-    expect(result).toContain('cloudscreen_');
+    expect(result).toContain('smartscreen_');
   });
 
   it('should return metrics from the service', async () => {
     service.setActiveSockets(7);
     const result = await controller.metrics();
-    expect(result).toContain('cloudscreen_active_sockets');
+    expect(result).toContain('smartscreen_active_sockets');
   });
 });

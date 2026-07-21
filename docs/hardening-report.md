@@ -1,4 +1,4 @@
-# تقرير التحسين الشامل — Cloud-Screen
+# تقرير التحسين الشامل — Smart Screen
 
 > **الفرع:** `fix/security-audit-v2`
 > **المنهجية:** كل بند اتحقق منه بالأدوات **وعلى السيرفر الشغّال فعليًا** (Postgres + backend + dashboard + player)، مش بمراجعة الكود بس.

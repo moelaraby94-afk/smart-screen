@@ -1142,7 +1142,7 @@
     "title": "API documentation",
     "description": "REST API reference for integrating with Smart Screen. All endpoints require JWT authentication unless noted.",
     "baseUrlLabel": "Base URL",
-    "baseUrlValue": "https://api.cloudscreen.app/v1",
+    "baseUrlValue": "https://api.smartscreen.app/v1",
     "authExampleTitle": "Authentication example",
     "endpointsTitle": "Endpoints",
     "copy": "Copy",
@@ -1403,14 +1403,14 @@
   },
   "onboardingCard": {
     "ariaLabel": "Getting started",
-    "welcome": "Welcome to Cloud-Screen!",
+    "welcome": "Welcome to Smart Screen!",
     "description": "Get your first screen running in three simple steps.",
     "cta": "Add Your First Screen",
     "ctaAria": "Add your first screen",
     "steps": {
       "pair": {
         "title": "Pair your screen",
-        "desc": "Connect a TV or display to Cloud-Screen"
+        "desc": "Connect a TV or display to Smart Screen"
       },
       "create": {
         "title": "Create a playlist",

@@ -6,7 +6,7 @@
 
 ## 1. Layout Philosophy
 
-The Cloud-Screen layout system defines **page-level structural patterns** — how the sidebar, header, and content area combine, and how content is arranged within pages. Every page follows one of the defined layout patterns, ensuring structural consistency across the product.
+The Smart Screen layout system defines **page-level structural patterns** — how the sidebar, header, and content area combine, and how content is arranged within pages. Every page follows one of the defined layout patterns, ensuring structural consistency across the product.
 
 ---
 

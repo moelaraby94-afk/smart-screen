@@ -237,7 +237,7 @@
 | Point | Risk | Prevention |
 |-------|------|------------|
 | First step | High — user doesn't know what to do | Clear 3-step guide + prominent CTA |
-| "What is a screen?" | Medium — terminology confusion | Step description: "Connect a TV or display to Cloud-Screen" |
+| "What is a screen?" | Medium — terminology confusion | Step description: "Connect a TV or display to Smart Screen" |
 | After pairing | Medium — what next? | Post-pairing CTA: "Assign content" (FL-SC-01 success state) |
 
 ### UX Notes

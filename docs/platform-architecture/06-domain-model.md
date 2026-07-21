@@ -235,7 +235,7 @@ The `AuditLog` model stores JSON data and is used for both platform-level events
 model PlatformSettings {
   id              String   @id @default(cuid())
   platformName    String   @default("Cloud Signage")
-  supportEmail    String   @default("support@cloudsignage.local")
+  supportEmail    String   @default("support@smartscreen.local")
   maintenanceMode Boolean  @default(false)
   defaultLanguage String   @default("ar")
   logoUrlEn       String   @default("")

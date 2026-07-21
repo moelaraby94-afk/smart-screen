@@ -153,7 +153,7 @@ function CanvasQrCodeNode({ obj }: { obj: CanvasObjectJson }) {
   const [dataUrl, setDataUrl] = useState('');
   const [img] = useImage(dataUrl, 'anonymous');
   useEffect(() => {
-    QRCode.toDataURL(obj.qrData || 'https://cloudscreen.app', { width: 256, margin: 1 })
+    QRCode.toDataURL(obj.qrData || 'https://smartscreen.app', { width: 256, margin: 1 })
       .then(setDataUrl)
       .catch(() => {});
   }, [obj.qrData]);

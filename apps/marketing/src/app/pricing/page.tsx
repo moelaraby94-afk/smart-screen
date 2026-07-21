@@ -5,7 +5,7 @@ import { Monitor, Zap, Check } from 'lucide-react';
 export const metadata: Metadata = {
   title: 'Pricing',
   description:
-    'Simple, transparent pricing for Cloud-Screen digital signage platform. Start free, upgrade when you grow.',
+    'Simple, transparent pricing for Smart Screen digital signage platform. Start free, upgrade when you grow.',
 };
 
 const plans = [
@@ -78,7 +78,7 @@ const faqs = [
   },
   {
     q: 'Do you support Arabic?',
-    a: 'Yes. Cloud-Screen has full Arabic (RTL) and English (LTR) support across the dashboard, emails, and player.',
+    a: 'Yes. Smart Screen has full Arabic (RTL) and English (LTR) support across the dashboard, emails, and player.',
   },
   {
     q: 'What happens if my screen goes offline?',
@@ -97,7 +97,7 @@ export default function PricingPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2">
             <Monitor className="h-6 w-6 text-blue-600" />
-            <span className="text-lg font-bold">Cloud-Screen</span>
+            <span className="text-lg font-bold">Smart Screen</span>
           </Link>
           <div className="hidden items-center gap-8 md:flex">
             <Link href="/features" className="text-sm text-gray-600 hover:text-gray-900">Features</Link>
@@ -195,14 +195,14 @@ export default function PricingPage() {
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-2">
               <Monitor className="h-5 w-5 text-blue-600" />
-              <span className="font-semibold">Cloud-Screen</span>
+              <span className="font-semibold">Smart Screen</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-gray-500">
               <Link href="/features" className="hover:text-gray-900">Features</Link>
               <Link href="/pricing" className="hover:text-gray-900">Pricing</Link>
               <a href={process.env.NEXT_PUBLIC_DASHBOARD_URL ?? 'http://localhost:3000'} className="hover:text-gray-900">Dashboard</a>
             </div>
-            <p className="text-sm text-gray-400">© 2026 Cloud-Screen. All rights reserved.</p>
+            <p className="text-sm text-gray-400">© 2026 Smart Screen. All rights reserved.</p>
           </div>
         </div>
       </footer>

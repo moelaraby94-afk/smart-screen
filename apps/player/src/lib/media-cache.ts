@@ -1,6 +1,6 @@
 import { devWarn } from '@/lib/dev-log';
 
-const CACHE_NAME = 'cloudsignage-player-v1';
+const CACHE_NAME = 'smartscreen-player-v1';
 
 /** Maps canonical media URL → object URL (deduped until cleared). */
 const urlToBlob = new Map<string, string>();

@@ -6,7 +6,7 @@
 
 ## Design System V2 — Master Index
 
-This is the single source of truth for the Cloud-Screen Design System V2. All 50 documents are listed below with their purpose and key content.
+This is the single source of truth for the Smart Screen Design System V2. All 50 documents are listed below with their purpose and key content.
 
 ---
 

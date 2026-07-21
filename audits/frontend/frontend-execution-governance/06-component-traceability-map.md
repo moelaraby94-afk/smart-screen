@@ -6,7 +6,7 @@
 
 ## 1. Purpose
 
-Maps every component in the Cloud-Screen design system to its specification, taxonomy layer, dependencies, and screen usage. No component may be implemented without this traceability.
+Maps every component in the Smart Screen design system to its specification, taxonomy layer, dependencies, and screen usage. No component may be implemented without this traceability.
 
 ---
 

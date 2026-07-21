@@ -8,7 +8,7 @@
 ## 1. Complete Sitemap
 
 ```
-Cloud-Screen Platform
+Smart Screen Platform
 │
 ├── Auth Layer (pre-product, no shell)
 │    ├── /login

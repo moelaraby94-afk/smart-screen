@@ -125,7 +125,7 @@ There is no database entity for impersonation sessions. The `impersonatedBy` cla
 model PlatformSettings {
   id                String   @id @default(cuid())
   platformName      String   @default("Cloud Signage")
-  supportEmail      String   @default("support@cloudsignage.local")
+  supportEmail      String   @default("support@smartscreen.local")
   maintenanceMode   Boolean  @default(false)
   defaultLanguage   String   @default("ar")
   logoUrlEn         String   @default("")

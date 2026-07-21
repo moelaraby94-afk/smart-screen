@@ -207,7 +207,7 @@ After separation, `CrystalShell` is simplified:
 - `ImpersonationReturnButton` import (replaced by a simpler `ImpersonationBanner`)
 
 **Added:**
-- `ImpersonationBanner` — a thin banner shown when `impersonatedBy` is present in the JWT, with a "Return to Control Panel" link that redirects to `admin.cloudsignage.com`
+- `ImpersonationBanner` — a thin banner shown when `impersonatedBy` is present in the JWT, with a "Return to Control Panel" link that redirects to `admin.smartscreen.com`
 
 **Kept:**
 - `ShellSidebar` — always renders customer navigation (no sovereign branch)
@@ -235,16 +235,16 @@ When a super admin impersonates a customer from the Control Panel:
 
 1. Control Panel calls `POST /api/v1/admin/users/:id/impersonate`
 2. Backend issues a one-time exchange token (stored in Redis with 30s TTL)
-3. Control Panel redirects browser to `app.cloudsignage.com/[locale]/auth/impersonate?token=EXCHANGE_TOKEN`
+3. Control Panel redirects browser to `app.smartscreen.com/[locale]/auth/impersonate?token=EXCHANGE_TOKEN`
 4. Customer Dashboard's `/auth/impersonate` page calls `POST /api/v1/auth/exchange-impersonation` with the exchange token
 5. Backend validates the exchange token, issues customer-audience access + refresh tokens with `impersonatedBy` claim
 6. Customer Dashboard sets cookies and redirects to `/overview`
 7. `ImpersonationBanner` is shown (reads `impersonatedBy` from JWT)
-8. "Return to Control Panel" link redirects to `admin.cloudsignage.com` and calls `POST /auth/exit-impersonation` (which reissues platform-audience tokens — but this happens via the Control Panel's own exit flow)
+8. "Return to Control Panel" link redirects to `admin.smartscreen.com` and calls `POST /auth/exit-impersonation` (which reissues platform-audience tokens — but this happens via the Control Panel's own exit flow)
 
 ### 3.5 Authentication Flow
 
-1. Customer navigates to `app.cloudsignage.com/[locale]/login`
+1. Customer navigates to `app.smartscreen.com/[locale]/login`
 2. Login form posts to `POST /api/v1/auth/login` with `audience: 'customer'` (or no audience — backward compatible)
 3. Backend validates credentials
 4. Backend issues JWT with `audience: 'customer'` claim
@@ -338,7 +338,7 @@ The Customer Dashboard provides:
 After the Control Panel is fully operational:
 1. Delete `apps/dashboard/src/app/[locale]/(shell)/admin/` directory
 2. Delete `apps/dashboard/src/features/admin/` directory
-3. Add a redirect in `next.config.ts` or middleware: `/[locale]/admin/*` → `https://admin.cloudsignage.com/[locale]/admin/*`
+3. Add a redirect in `next.config.ts` or middleware: `/[locale]/admin/*` → `https://admin.smartscreen.com/[locale]/admin/*`
 4. Remove `sovereign` logic from `CrystalShell` and `ShellSidebar`
 5. Remove `isSuperAdmin` from `WorkspaceContext`
 6. Remove `cs_super_admin` sessionStorage usage

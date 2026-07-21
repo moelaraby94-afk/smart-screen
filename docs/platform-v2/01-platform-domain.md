@@ -952,7 +952,7 @@ The Platform Domain encompasses every module that operates the SaaS business. Th
 |---|---|
 | **Owner** | Platform team |
 | **Purpose** | Manage marketplace apps and extensions |
-| **Why** | Third-party developers can build and sell apps that extend Cloud-Screen |
+| **Why** | Third-party developers can build and sell apps that extend Smart Screen |
 | **Business value** | Platform revenue (app store commission), ecosystem growth, customer retention |
 | **Technical value** | App registry, versioning, sandbox, review process |
 
@@ -1114,7 +1114,7 @@ The Platform Domain encompasses every module that operates the SaaS business. Th
 - Per-customer email templates (via EmailCenter overrides)
 - Per-customer login page (branded login)
 - Per-customer default language
-- Hide "Powered by Cloud-Screen" badge
+- Hide "Powered by Smart Screen" badge
 - Reseller hierarchy (reseller manages multiple customers)
 
 **Public APIs:**
@@ -1177,7 +1177,7 @@ The Platform Domain encompasses every module that operates the SaaS business. Th
 - `GET /health/storage` — Storage service connectivity
 - `GET /health/realtime` — WebSocket service status
 - `GET /health/queues` — Queue depth and worker status
-- Public status page (optional, at `status.cloudsignage.com`)
+- Public status page (optional, at `status.smartscreen.com`)
 
 **Public APIs:**
 - `GET /health` — Health overview

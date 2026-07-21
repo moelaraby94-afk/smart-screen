@@ -42,7 +42,7 @@ Owner, Editor (full access); Viewer (read-only).
 - Breadcrumbs: None (top-level page)
 
 ### Page Title
-`Scheduling — Cloud-Screen`
+`Scheduling — Smart Screen`
 
 ### Primary CTA
 "Create Schedule" button (top-right).
@@ -303,7 +303,7 @@ Owner, Editor, Viewer (all roles can view).
 - Breadcrumbs: None (top-level page)
 
 ### Page Title
-`Analytics — Cloud-Screen`
+`Analytics — Smart Screen`
 
 ### Primary CTA
 Period selector (7d, 30d, 90d, Custom).

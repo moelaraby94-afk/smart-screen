@@ -1,4 +1,4 @@
-# Executable Remediation Plan — Cloud-Screen
+# Executable Remediation Plan — Smart Screen
 
 **Version:** 1.0 · **Date:** 2026-07-13 · **Author:** Claude (Opus 4.8)
 **Audience:** an implementing coding agent (assume limited autonomy — follow this document

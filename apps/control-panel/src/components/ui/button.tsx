@@ -1,2 +1,2 @@
-export { Button, buttonVariants, type ButtonProps } from '@cloud-screen/ui';
+export { Button, buttonVariants, type ButtonProps } from '@smart-screen/ui';
 

@@ -29,7 +29,7 @@
 - Screen: `/overview`
 - System Response: Overview detects 0 screens (SWR returns empty array)
 - UI: First-time user state replaces normal widgets:
-  - Welcome card: "Welcome to Cloud-Screen!"
+  - Welcome card: "Welcome to Smart Screen!"
   - 3-step guide: "1. Pair your screen → 2. Create a playlist → 3. Publish to your screen"
   - Primary CTA: "Add Your First Screen" (large, prominent button)
 - State Transition: Overview → ONBOARDING state
@@ -40,7 +40,7 @@
 - User Action: Reads 3-step guide
 - UI: Steps are visual (icons + short text), not text-heavy
 - Hesitation Point: User may not understand "pair" terminology
-- Prevention: Step 1 description: "Connect a TV or display to Cloud-Screen"
+- Prevention: Step 1 description: "Connect a TV or display to Smart Screen"
 
 **Step 3: Click CTA**
 - User Action: Clicks "Add Your First Screen"
@@ -84,7 +84,7 @@
 
 | Point | Risk | Prevention | Recovery |
 |-------|------|------------|----------|
-| "What is Cloud-Screen?" | High — new users may not understand product | 3-step guide explains the workflow visually | User reads guide |
+| "What is Smart Screen?" | High — new users may not understand product | 3-step guide explains the workflow visually | User reads guide |
 | "What is pairing?" | Medium — technical term | Step 1 description: "Connect a TV or display" | User reads description |
 | "Do I need hardware?" | Medium — user may not have a screen yet | CTA is clear: "Add Your First Screen" | User can explore other pages first |
 | First step hesitation | High — where to start? | Only ONE primary CTA (not multiple choices) | Single clear action |
@@ -134,7 +134,7 @@
 - Context: User has never paired a screen before
 - UI: Wizard is the same, but help tooltips are more prominent
 - Hesitation: User may not know where to find pairing code
-- Prevention: Help tooltip: "The pairing code is displayed on your screen's player app. Install the Cloud-Screen Player app on your TV or display to get started."
+- Prevention: Help tooltip: "The pairing code is displayed on your screen's player app. Install the Smart Screen Player app on your TV or display to get started."
 
 **Onboarding-specific Step 5: Post-pairing CTA**
 - After successful pairing, success state shows:

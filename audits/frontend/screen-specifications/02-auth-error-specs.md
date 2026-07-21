@@ -40,7 +40,7 @@ Public page — no authentication required.
 No sidebar, no header — standalone page.
 
 ### Page Title
-`Sign In — Cloud-Screen`
+`Sign In — Smart Screen`
 
 ### Page Description
 Centered card with email/password form, brand logo, and links to register and forgot password.
@@ -81,7 +81,7 @@ None.
 7. "Register" link
 
 ### Page Sections
-1. **Brand header:** Logo + "Cloud-Screen" text
+1. **Brand header:** Logo + "Smart Screen" text
 2. **Form card:** Email, password, submit
 3. **Secondary links:** Forgot password, register
 
@@ -99,7 +99,7 @@ None (fits in viewport on desktop; scrolls on mobile if keyboard opens).
 <AuthLayout>
   <BrandHeader>
     <Logo />
-    <BrandName text="Cloud-Screen" />
+    <BrandName text="Smart Screen" />
   </BrandHeader>
   <AuthCard>
     <Heading level={2}>Sign In</Heading>
@@ -360,7 +360,7 @@ Public page.
 No sidebar, no header — standalone page.
 
 ### Page Title
-`Create Account — Cloud-Screen`
+`Create Account — Smart Screen`
 
 ### Primary CTA
 "Create Account" button.
@@ -522,7 +522,7 @@ Public page.
 - "Back to Login" link → `/login`
 
 ### Page Title
-`Reset Password — Cloud-Screen`
+`Reset Password — Smart Screen`
 
 ### Primary CTA
 "Send Reset Link" button.
@@ -609,7 +609,7 @@ None.
 - "Go to Login" button → `/login` (unauthenticated)
 
 ### Page Title
-`Page Not Found — Cloud-Screen`
+`Page Not Found — Smart Screen`
 
 ### Primary CTA
 "Go to Overview" (authenticated) / "Go to Login" (unauthenticated).
@@ -677,7 +677,7 @@ Users with insufficient permissions (Editor, Viewer).
 - Auto-redirect after toast
 
 ### Page Title
-`Access Denied — Cloud-Screen`
+`Access Denied — Smart Screen`
 
 ### Primary CTA
 "Go to Overview".
@@ -742,7 +742,7 @@ All users.
 - "Reload" button → page reload
 
 ### Page Title
-`Something Went Wrong — Cloud-Screen`
+`Something Went Wrong — Smart Screen`
 
 ### Primary CTA
 "Reload" button.

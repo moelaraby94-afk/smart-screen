@@ -32,7 +32,7 @@ Super-Admin only.
 - "Impersonate" → Client Overview
 
 ### Page Title
-`Workspaces — Cloud-Screen Admin`
+`Workspaces — Smart Screen Admin`
 
 ### Primary CTA
 None (management actions per row).
@@ -161,7 +161,7 @@ Super-Admin only.
 - Sidebar navigation
 
 ### Page Title
-`Fleet — Cloud-Screen Admin`
+`Fleet — Smart Screen Admin`
 
 ### Primary CTA
 None (monitoring view).
@@ -293,7 +293,7 @@ Super-Admin only.
 - Sidebar navigation
 
 ### Page Title
-`System Health — Cloud-Screen Admin`
+`System Health — Smart Screen Admin`
 
 ### Primary CTA
 None (monitoring view).
@@ -398,7 +398,7 @@ Super-Admin only.
 - Sidebar navigation
 
 ### Page Title
-`Logs — Cloud-Screen Admin`
+`Logs — Smart Screen Admin`
 
 ### Primary CTA
 None (read-only view).
@@ -513,7 +513,7 @@ Super-Admin only.
 - Sidebar navigation
 
 ### Page Title
-`Feature Flags — Cloud-Screen Admin`
+`Feature Flags — Smart Screen Admin`
 
 ### Primary CTA
 "Create Flag" button (future).

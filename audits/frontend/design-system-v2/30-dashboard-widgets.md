@@ -126,7 +126,7 @@ Guide new users through the 5-minute KPI setup (pair screen, upload, create play
 Overview page (empty workspace state).
 
 #### Contents
-- Title: "Welcome to Cloud-Screen"
+- Title: "Welcome to Smart Screen"
 - 3-step guide with icons:
   1. Pair your first screen (Monitor icon)
   2. Upload media (Upload icon)

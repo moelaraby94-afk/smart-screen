@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /home/gpack/Cloud-Screen
+cd /home/gpack/Smart Screen
 
 # Sync all changed backend files
 for f in \
@@ -18,7 +18,7 @@ for f in \
   apps/backend/src/domains/workspaces/dto/update-account-member-role.dto.ts \
   apps/backend/prisma/seed.ts
 do
-  cp /mnt/d/projects/Cloud-Screen/$f $f
+  cp /mnt/d/projects/Smart Screen/$f $f
 done
 
 # Rebuild backend

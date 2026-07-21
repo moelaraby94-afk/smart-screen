@@ -104,7 +104,7 @@ When a data container (table, list, grid, page section) has zero items.
 | Scheduling (no schedules) | `CalendarClock` | "No schedules yet" | "Create a schedule to automate content playback." | "Create Schedule" | `07-scheduling-analytics-specs.md` |
 | Analytics (no data) | `BarChart3` | "No analytics data" | "Add screens and publish content to see performance." | None | `07-scheduling-analytics-specs.md` |
 | Team (no pending) | — | Section hidden | Pending section not shown when empty | — | `08-team-spec.md` |
-| API Keys (no keys) | `Key` | "No API keys created" | "Create one to access the Cloud-Screen API." | "Create API Key" | `10-settings-specs-part2.md` |
+| API Keys (no keys) | `Key` | "No API keys created" | "Create one to access the Smart Screen API." | "Create API Key" | `10-settings-specs-part2.md` |
 | Admin (no results) | `Search` | "No [items] found" | "Try adjusting your search or filters." | "Clear Filters" | `11/12-admin-specs.md` |
 
 ### Responsive Behavior

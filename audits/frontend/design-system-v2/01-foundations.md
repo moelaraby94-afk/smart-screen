@@ -9,7 +9,7 @@
 
 ### 1.1 Color Philosophy
 
-The Cloud-Screen color system preserves the current visual identity while introducing a mature, scalable token architecture. Colors are organized as **semantic tokens** (role-based) built on **primitive tokens** (raw values). This separation allows theme switching (light/dark) and brand customization without touching component-level code.
+The Smart Screen color system preserves the current visual identity while introducing a mature, scalable token architecture. Colors are organized as **semantic tokens** (role-based) built on **primitive tokens** (raw values). This separation allows theme switching (light/dark) and brand customization without touching component-level code.
 
 ### 1.2 Primitive Color Tokens
 

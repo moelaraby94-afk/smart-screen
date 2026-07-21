@@ -10,7 +10,7 @@
 
 ## 1. Executive Overview
 
-This document is the master report for a comprehensive architecture study of the Cloud-Screen digital signage SaaS platform. The study analyzes the current monolithic structure where the Platform Control Panel (admin) and Customer Dashboard share a single frontend application and a single backend process, and proposes a target architecture that separates them into two independent frontend applications with a partitioned but shared backend API.
+This document is the master report for a comprehensive architecture study of the Smart Screen digital signage SaaS platform. The study analyzes the current monolithic structure where the Platform Control Panel (admin) and Customer Dashboard share a single frontend application and a single backend process, and proposes a target architecture that separates them into two independent frontend applications with a partitioned but shared backend API.
 
 The study is organized into 12 specification documents covering vision, boundaries, panel specifications, permissions, domain model, API boundaries, navigation, database impact, migration plan, risk analysis, and definition of done.
 
@@ -18,7 +18,7 @@ The study is organized into 12 specification documents covering vision, boundari
 
 ## 2. Current State
 
-Cloud-Screen is a monorepo with four applications:
+Smart Screen is a monorepo with four applications:
 
 | App | Tech | Purpose |
 |---|---|---|
@@ -285,7 +285,7 @@ The separation reduces total risk. All new risks are medium or low severity with
 
 ## 14. Conclusion
 
-The Cloud-Screen platform is well-positioned for a frontend separation. The admin module is already isolated in both the backend (`domains/admin/`) and frontend (`app/[locale]/(shell)/admin/`, `features/admin/`). The main work is extraction, not refactoring.
+The Smart Screen platform is well-positioned for a frontend separation. The admin module is already isolated in both the backend (`domains/admin/`) and frontend (`app/[locale]/(shell)/admin/`, `features/admin/`). The main work is extraction, not refactoring.
 
 The recommended architecture — **two frontends, one backend with route-level partitioning** — achieves the separation goals with minimal complexity. The four-phase migration plan ensures backward compatibility through Phase 2 and provides clear rollback points at each phase.
 

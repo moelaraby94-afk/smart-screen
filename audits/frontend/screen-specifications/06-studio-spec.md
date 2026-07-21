@@ -42,7 +42,7 @@ Owner, Editor.
 - No standard page header — Studio has its own toolbar
 
 ### Page Title
-`Studio — [Playlist Name] — Cloud-Screen`
+`Studio — [Playlist Name] — Smart Screen`
 
 ### Primary CTA
 "Save" button (top-right of toolbar).
@@ -261,7 +261,7 @@ Owner, Editor.
 ## States
 
 ### Loading
-- **Initial load:** Splash screen with Cloud-Screen logo + spinner (Konva is heavy, 1-3s)
+- **Initial load:** Splash screen with Smart Screen logo + spinner (Konva is heavy, 1-3s)
 - **Splash:** Centered, `bg-neutral-900`, logo + "Loading Studio..."
 - **After load:** Splash fades to Studio (MI-08, 300ms)
 

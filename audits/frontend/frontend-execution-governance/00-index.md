@@ -7,7 +7,7 @@
 
 ## Purpose
 
-This is the **Frontend Execution Governance** — the constitution that controls every implementation decision for the Cloud-Screen frontend. It ensures that every line of code strictly follows all previously created documentation.
+This is the **Frontend Execution Governance** — the constitution that controls every implementation decision for the Smart Screen frontend. It ensures that every line of code strictly follows all previously created documentation.
 
 **This is NOT product documentation.** This is implementation governance.
 

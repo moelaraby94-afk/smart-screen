@@ -10,7 +10,7 @@
 
 ### 1.1 SaaS Subscription Model
 
-Cloud-Screen operates on a **tiered SaaS subscription model** with screen-based pricing. The primary billing metric is the number of active screens per workspace.
+Smart Screen operates on a **tiered SaaS subscription model** with screen-based pricing. The primary billing metric is the number of active screens per workspace.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -209,7 +209,7 @@ Post-grace
 ### 5.2 Reseller Hierarchy
 
 ```
-Platform Owner (Cloud-Screen)
+Platform Owner (Smart Screen)
   │
   ├── Reseller A (Agency)
   │   ├── Customer 1 (branded as Reseller A)
@@ -220,19 +220,19 @@ Platform Owner (Cloud-Screen)
   │   ├── Customer 4 (branded as Reseller B)
   │   └── Customer 5 (branded as Reseller B)
   │
-  └── Direct Customer 6 (branded as Cloud-Screen)
+  └── Direct Customer 6 (branded as Smart Screen)
 ```
 
 ### 5.3 White-Label Features
 
 | Feature | Description |
 |---|---|
-| Custom logo | Replace Cloud-Screen logo with reseller's logo |
+| Custom logo | Replace Smart Screen logo with reseller's logo |
 | Custom colors | Brand colors applied to UI |
-| Custom domain | `signage.reseller-brand.com` instead of `app.cloudsignage.com` |
+| Custom domain | `signage.reseller-brand.com` instead of `app.smartscreen.com` |
 | Custom email | Emails sent from `noreply@reseller-brand.com` |
 | Custom login | Branded login page |
-| Hide branding | Remove "Powered by Cloud-Screen" |
+| Hide branding | Remove "Powered by Smart Screen" |
 | Reseller dashboard | Manage customers under reseller account |
 | Bulk provisioning | Create multiple workspaces at once |
 
@@ -299,7 +299,7 @@ Revenue split
 
 | Type | Description | Use Case |
 |---|---|---|
-| **SaaS** | Subscription-based, hosted by Cloud-Screen | Default |
+| **SaaS** | Subscription-based, hosted by Smart Screen | Default |
 | **On-Premise** | Self-hosted, license key required | Government, air-gapped networks |
 | **Marketplace** | App-specific license | Third-party apps |
 

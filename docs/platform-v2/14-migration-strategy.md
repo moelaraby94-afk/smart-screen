@@ -244,7 +244,7 @@ Modify RolesGuard:
 ### 5.1 Goals
 - Create `apps/control-panel/` as a new Next.js app
 - Move all admin features to Control Panel
-- Deploy to `admin.cloudsignage.com`
+- Deploy to `admin.smartscreen.com`
 - Control Panel uses `/platform/*` API routes
 
 ### 5.2 Steps
@@ -293,19 +293,19 @@ Create:
 #### Step 3.4: Deploy Control Panel
 
 ```
-Deploy to admin.cloudsignage.com:
+Deploy to admin.smartscreen.com:
   - Dockerfile.control-panel
-  - Cloudflare DNS: admin.cloudsignage.com → Control Panel
-  - Cookie domain: admin.cloudsignage.com
+  - Cloudflare DNS: admin.smartscreen.com → Control Panel
+  - Cookie domain: admin.smartscreen.com
   - Cookie names: __cp_access, __cp_refresh
 ```
 
 **Acceptance criteria:**
-- Control Panel accessible at `admin.cloudsignage.com`
+- Control Panel accessible at `admin.smartscreen.com`
 - Platform staff can login (with 2FA)
 - All admin features available in Control Panel
 - Control Panel calls `/platform/*` API routes
-- Platform cookies set on `admin.cloudsignage.com` domain
+- Platform cookies set on `admin.smartscreen.com` domain
 - Old dashboard admin routes still work (backward compat)
 
 ---
@@ -317,7 +317,7 @@ Deploy to admin.cloudsignage.com:
 - Remove all admin code from Customer Workspace
 - Update API client to use `/customer/*` routes
 - Add impersonation banner and exchange token landing
-- Deploy to `app.cloudsignage.com`
+- Deploy to `app.smartscreen.com`
 
 ### 6.2 Steps
 
@@ -373,21 +373,21 @@ Add:
 Update:
   - Login: send audience: 'customer'
   - Cookie names: __dash_access, __dash_refresh
-  - Cookie domain: app.cloudsignage.com
+  - Cookie domain: app.smartscreen.com
   - Remove platform-specific auth logic
 ```
 
 #### Step 4.5: Deploy Customer Workspace
 
 ```
-Deploy to app.cloudsignage.com:
+Deploy to app.smartscreen.com:
   - Dockerfile.workspace
-  - Cloudflare DNS: app.cloudsignage.com → Customer Workspace
-  - Cookie domain: app.cloudsignage.com
+  - Cloudflare DNS: app.smartscreen.com → Customer Workspace
+  - Cookie domain: app.smartscreen.com
 ```
 
 **Acceptance criteria:**
-- Customer Workspace accessible at `app.cloudsignage.com`
+- Customer Workspace accessible at `app.smartscreen.com`
 - No admin code in bundle (verify with bundle analyzer)
 - All customer features work
 - Impersonation flow works (Control Panel → Customer Workspace → return)
@@ -411,11 +411,11 @@ Deploy to app.cloudsignage.com:
 ```
 1. Move UI components:
    - Button, Input, Label, Dialog, etc. → packages/ui/src/
-   - Update imports in both apps: import { Button } from '@cloud-screen/ui'
+   - Update imports in both apps: import { Button } from '@smart-screen/ui'
 
 2. Move TypeScript types:
    - API response types, DTOs → packages/api-ts/src/
-   - Update imports: import { Tenant, Subscription } from '@cloud-screen/api-ts'
+   - Update imports: import { Tenant, Subscription } from '@smart-screen/api-ts'
 
 3. Move config:
    - Tailwind preset → packages/config/tailwind-preset.ts
@@ -424,7 +424,7 @@ Deploy to app.cloudsignage.com:
 ```
 
 **Acceptance criteria:**
-- Both apps import from `@cloud-screen/ui`, `@cloud-screen/api-ts`, `@cloud-screen/config`
+- Both apps import from `@smart-screen/ui`, `@smart-screen/api-ts`, `@smart-screen/config`
 - No duplicated UI components
 - No duplicated type definitions
 - Both apps build successfully
@@ -568,8 +568,8 @@ Player:
 |---|---|---|---|
 | Phase 1 complete | Team | Slack | "Auth foundation deployed. No user-facing changes." |
 | Phase 2 complete | Team | Slack | "API namespacing deployed. Old routes still work." |
-| Phase 3 complete | Team + Staff | Slack + Email | "Control Panel live at admin.cloudsignage.com. Please use new URL." |
-| Phase 4 complete | Team + Customers | Email | "Customer Workspace now at app.cloudsignage.com. Update your bookmarks." |
+| Phase 3 complete | Team + Staff | Slack + Email | "Control Panel live at admin.smartscreen.com. Please use new URL." |
+| Phase 4 complete | Team + Customers | Email | "Customer Workspace now at app.smartscreen.com. Update your bookmarks." |
 | Phase 5 complete | Team | Slack | "Shared packages extracted. No user-facing changes." |
 | Phase 6 complete | Team | Slack | "Migration complete. Old routes and deprecated fields removed." |
 

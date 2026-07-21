@@ -24,7 +24,7 @@ const SETTINGS_CATEGORY = 'admin';
 
 const DEFAULT_SETTINGS: AdminGlobalSettings = {
   platformName: 'Cloud Signage',
-  supportEmail: 'support@cloudsignage.local',
+  supportEmail: 'support@smartscreen.local',
   maintenanceMode: false,
   defaultLanguage: 'ar',
   logoUrlEn: '',

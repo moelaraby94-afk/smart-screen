@@ -6,7 +6,7 @@
 
 ## 1. Purpose
 
-Every component in the Cloud-Screen design system must pass these acceptance criteria before it is considered production-ready. These criteria are **universal** — they apply to every component — in addition to the component-specific criteria in each specification file.
+Every component in the Smart Screen design system must pass these acceptance criteria before it is considered production-ready. These criteria are **universal** — they apply to every component — in addition to the component-specific criteria in each specification file.
 
 ---
 

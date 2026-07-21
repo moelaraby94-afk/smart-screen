@@ -46,7 +46,7 @@ All Phase 2 changes verified against actual source code, official documentation,
 8. **`pairing.service.ts` still uses `PLAYER_HEARTBEAT_SECRET`** — `apps/backend/src/domains/pairing/pairing.service.ts:197-198` uses shared secret for optional workspace notification during pairing. Not an auth path, but uses a shared secret pattern.
 9. **Stale comments** — `player.controller.ts:23-24` comment says shared secret is accepted for screens without per-screen hash (no longer true). `seed.ts:23` references `ENABLE_DEV_LOGIN`.
 10. **CryptoService backward compat is fail-open** — `crypto.service.ts:84-86` catches decryption errors and returns the raw value. If the key is wrong, 2FA silently fails rather than throwing. Impact is DoS (user can't log in with 2FA), not bypass. Acceptable but should log a warning.
-11. **Fixed salt in scryptSync** — `crypto.service.ts:37` uses `'cloud-screen-salt'`. Security relies on `ENCRYPTION_KEY` being secret, not the salt. Acceptable for current architecture.
+11. **Fixed salt in scryptSync** — `crypto.service.ts:37` uses `'smart-screen-salt'`. Security relies on `ENCRYPTION_KEY` being secret, not the salt. Acceptable for current architecture.
 12. **`auth-refresh-session.spec.ts` uses `null as never` for CryptoService** — `auth-refresh-session.spec.ts:197` passes null instead of a proper mock. Works because 2FA paths aren't exercised, but fragile.
 
 ## Verification Counts

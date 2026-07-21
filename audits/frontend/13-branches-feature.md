@@ -216,7 +216,7 @@ Utility functions for computing branch statistics from raw data.
 ### Branch List — IA Evaluation
 
 **[V2] Branches as Workspace Equivalent:**
-In the Cloud-Screen architecture, "branches" are equivalent to workspaces — each branch is a separate workspace with its own screens, playlists, media, and team. The branch list is the workspace list, and the branch detail is the workspace dashboard.
+In the Smart Screen architecture, "branches" are equivalent to workspaces — each branch is a separate workspace with its own screens, playlists, media, and team. The branch list is the workspace list, and the branch detail is the workspace dashboard.
 
 **[V2] Branch Stats Display:**
 The `BranchStats` type provides `screenCount`, `onlineCount`, `offlineCount`, `playlistCount`, `mediaCount`. These stats give users a quick overview of each branch's health and content volume. The online/offline count is particularly valuable for fleet health monitoring.

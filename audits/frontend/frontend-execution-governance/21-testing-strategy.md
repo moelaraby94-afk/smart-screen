@@ -6,7 +6,7 @@
 
 ## 1. Purpose
 
-Defines the testing strategy for the Cloud-Screen frontend. Every component and screen must be tested according to this strategy before merge.
+Defines the testing strategy for the Smart Screen frontend. Every component and screen must be tested according to this strategy before merge.
 
 ---
 

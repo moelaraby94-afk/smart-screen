@@ -1,7 +1,7 @@
 # Deployment & Operations Guide
 
 This document covers zero-downtime deployment strategy, pre-deploy migrations,
-CDN configuration, TLS automation, and disaster recovery for Cloud Screen.
+CDN configuration, TLS automation, and disaster recovery for Smart Screen.
 
 ---
 
@@ -39,7 +39,7 @@ container/step:
 ```yaml
 # docker-compose.yml or K8s init container
 migration:
-  image: cloud-screen-backend:latest
+  image: smart-screen-backend:latest
   command: npx prisma migrate deploy
   env:
     DATABASE_URL: ${DATABASE_URL}

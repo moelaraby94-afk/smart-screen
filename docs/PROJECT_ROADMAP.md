@@ -1,4 +1,4 @@
-# Cloud-Screen — خارطة الطريق الاحترافية الشاملة
+# Smart Screen — خارطة الطريق الاحترافية الشاملة
 
 > **تاريخ الإصدار:** 20 يوليو 2026
 > **الإصدار:** 1.0
@@ -27,9 +27,9 @@
 
 ## 1. نظرة عامة على المشروع
 
-### 1.1 ما هو Cloud-Screen؟
+### 1.1 ما هو Smart Screen؟
 
-Cloud-Screen هو منصة **Digital Signage SaaS** (لافتات رقمية سحابية) تتيح للشركات إدارة شاشات العرض الرقمية من مكان واحد — رفع المحتوى، تصميم الكانفس، إنشاء القوائم التشغيلية، جدولة العرض، وإدارة أسطول الشاشات عن بُعد.
+Smart Screen هو منصة **Digital Signage SaaS** (لافتات رقمية سحابية) تتيح للشركات إدارة شاشات العرض الرقمية من مكان واحد — رفع المحتوى، تصميم الكانفس، إنشاء القوائم التشغيلية، جدولة العرض، وإدارة أسطول الشاشات عن بُعد.
 
 ### 1.2 القيمة المقترحة
 
@@ -705,14 +705,14 @@ LEAD → TRIAL → ACTIVE (Paid) → AT_RISK → CHURNED → REACTIVATED
 | **Case Studies** | "How [Restaurant Chain] improved sales 30%" | EN + AR | LinkedIn |
 | **Video Demos** | 2-min product walkthrough | EN + AR | YouTube + Landing |
 | **Templates Gallery** | Free templates as lead magnet | EN + AR | Landing + Email |
-| **Comparison Pages** | "Cloud-Screen vs ScreenCloud" | EN | SEO |
+| **Comparison Pages** | "Smart Screen vs ScreenCloud" | EN | SEO |
 | **Ramadan Guide** | "Digital signage best practices for Ramadan" | AR | SEO + Email |
 
 ---
 
 ## 9. مقارنة تنافسية
 
-| الميزة | Cloud-Screen | ScreenCloud | Yodeck | OptiSigns |
+| الميزة | Smart Screen | ScreenCloud | Yodeck | OptiSigns |
 |--------|:---:|:---:|:---:|:---:|
 | **Templates** | 10 ✅ | 150+ | 400+ | 4000+ |
 | **Built-in Designer** | ✅ Konva Studio | ✅ Studio+Canvas | ✅ Layout Editor | ✅ Designer 2.0 |
@@ -735,7 +735,7 @@ LEAD → TRIAL → ACTIVE (Paid) → AT_RISK → CHURNED → REACTIVATED
 | **White-Label** | ✅ | ❌ | ❌ | ❌ |
 | **Pricing (Pro)** | $99 | $90 | $99 | $99 |
 
-**الخلاصة:** Cloud-Screen يتفوق في **الدعم العربي، الميزات الإسلامية، AI، On-premise، White-label**. يحتاج تحسين في **Templates، App integrations، Multi-zone، Mobile app**.
+**الخلاصة:** Smart Screen يتفوق في **الدعم العربي، الميزات الإسلامية، AI، On-premise، White-label**. يحتاج تحسين في **Templates، App integrations، Multi-zone، Mobile app**.
 
 ---
 
@@ -919,7 +919,7 @@ LEAD → TRIAL → ACTIVE (Paid) → AT_RISK → CHURNED → REACTIVATED
 
 ## الخلاصة
 
-Cloud-Screen هو منصة **Digital Signage SaaS** قوية تقنياً مع **backend production-ready (81%)** و **frontend شامل (28+ صفحة)**. المنصة تتميز بـ:
+Smart Screen هو منصة **Digital Signage SaaS** قوية تقنياً مع **backend production-ready (81%)** و **frontend شامل (28+ صفحة)**. المنصة تتميز بـ:
 
 1. **قاعدة تقنية صلبة:** 26 domain module، 623 test، Docker، CI/CD
 2. **ميزات تنافسية فريدة:** دعم عربي كامل، ميزات إسلامية، AI، on-premise، white-label
