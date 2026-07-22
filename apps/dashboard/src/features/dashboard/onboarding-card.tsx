@@ -2,11 +2,13 @@
 
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Monitor, Image, Send } from 'lucide-react';
+import { Monitor, Image, Send, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ICON_STROKE } from '@/lib/icon-stroke';
+import { WorkspaceCreateDialog } from '@/features/workspace/workspace-create-dialog';
 
 const steps = [
   { icon: Monitor, key: 'pair' },
@@ -18,6 +20,7 @@ export function OnboardingCard() {
   const t = useTranslations('onboardingCard');
   const locale = useLocale();
   const router = useRouter();
+  const [createBranchOpen, setCreateBranchOpen] = useState(false);
 
   return (
     <motion.section
@@ -53,15 +56,28 @@ export function OnboardingCard() {
         ))}
       </ol>
 
-      <Button
-        variant="default"
-        size="lg"
-        className="mt-8"
-        aria-label={t('ctaAria')}
-        onClick={() => router.push(`/${locale}/screens/pair` as Route)}
-      >
-        {t('cta')}
-      </Button>
+      <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <Button
+          variant="default"
+          size="lg"
+          aria-label={t('ctaAria')}
+          onClick={() => router.push(`/${locale}/screens/pair` as Route)}
+        >
+          <Monitor className="me-2 h-4 w-4" strokeWidth={ICON_STROKE} />
+          {t('cta')}
+        </Button>
+        <Button
+          variant="outline"
+          size="lg"
+          aria-label={t('addBranchAria')}
+          onClick={() => setCreateBranchOpen(true)}
+        >
+          <Building2 className="me-2 h-4 w-4" strokeWidth={ICON_STROKE} />
+          {t('addBranch')}
+        </Button>
+      </div>
+
+      <WorkspaceCreateDialog open={createBranchOpen} onOpenChange={setCreateBranchOpen} />
     </motion.section>
   );
 }

@@ -1407,6 +1407,8 @@
     "description": "Get your first screen running in three simple steps.",
     "cta": "Add Your First Screen",
     "ctaAria": "Add your first screen",
+    "addBranch": "Add New Branch",
+    "addBranchAria": "Create a new branch",
     "steps": {
       "pair": {
         "title": "Pair your screen",

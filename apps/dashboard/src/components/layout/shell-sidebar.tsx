@@ -31,7 +31,6 @@ import { setStoredAccessToken } from '@/features/auth/session';
 import { logout as apiLogout } from '@/features/auth/auth-api';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
-import { WorkspaceSwitcher } from '@/features/workspace/workspace-switcher';
 import { useReducedMotion } from 'framer-motion';
 
 /* ═══════════════════════════════════════════════════════════════
@@ -237,13 +236,6 @@ export function ShellSidebar({
         <div className="flex shrink-0 items-center px-5 pt-5 pb-3 max-md:block md:hidden lg:block">
           <ShellLogo locale={navLocale} />
         </div>
-
-        {/* ── Workspace switcher (mobile drawer only) ── */}
-        {showWorkspaceSwitcher ? (
-          <div className="shrink-0 px-3 pb-2 max-md:block md:hidden lg:block">
-            <WorkspaceSwitcher />
-          </div>
-        ) : null}
 
         {/* ── Nav ── */}
         <nav

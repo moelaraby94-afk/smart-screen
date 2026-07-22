@@ -6,18 +6,13 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2,
-  Check,
-  ChevronDown,
-  FolderTree,
   Monitor,
   Clapperboard,
   Image as ImageIcon,
-  MoreVertical,
   Pause,
   Pencil,
   Play,
   Plus,
-  Search,
   Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,15 +26,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { useWorkspace } from '@/features/workspace/workspace-context';
@@ -143,7 +131,6 @@ export function BranchesPageClient({ locale }: Props) {
   const { workspaces, workspaceId, setWorkspaceId, bumpWorkspaceDataEpoch, refreshWorkspaces } = useWorkspace();
   const { toastResponseError } = useApiErrorToast();
   const [createOpen, setCreateOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
@@ -164,13 +151,7 @@ export function BranchesPageClient({ locale }: Props) {
     }
   }, [effectiveId, workspaceId, setWorkspaceId, bumpWorkspaceDataEpoch]);
 
-  const filteredWorkspaces = useMemo(() => {
-    if (!searchQuery.trim()) return workspaces;
-    const q = searchQuery.toLowerCase();
-    return workspaces.filter((w) => w.name.toLowerCase().includes(q));
-  }, [workspaces, searchQuery]);
-
-  const canDeleteBranch = workspaces.length > 1;
+  const canDeleteBranch = true;
   const canRenameBranch = Boolean(selectedBranch && (selectedBranch.role === 'OWNER' || selectedBranch.role === 'ADMIN'));
   const canTogglePause = canRenameBranch;
 
@@ -249,166 +230,22 @@ export function BranchesPageClient({ locale }: Props) {
 
   return (
     <main className="space-y-6 pb-12">
-      {/* ── Page header with workspace selector ── */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
-            <Building2 className="h-6 w-6 text-primary" strokeWidth={ICON_STROKE} />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-foreground lg:text-2xl">
-              {t('title')}
-            </h1>
-            <p className="mt-0.5 text-sm text-muted-foreground">{t('subtitle')}</p>
-          </div>
+      {/* ── Page header ── */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-foreground lg:text-2xl">
+            {t('title')}
+          </h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t('subtitle')}</p>
         </div>
-
-        <div className="flex items-center gap-2">
-          {/* Workspace selector dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="min-w-[200px] justify-between rounded-lg gap-2"
-              >
-                <span className="flex items-center gap-2 truncate">
-                  <FolderTree className="h-4 w-4 shrink-0 text-primary" strokeWidth={ICON_STROKE} />
-                  <span className="truncate">
-                    {selectedBranch ? selectedBranch.name : t('selectPlaceholder')}
-                  </span>
-                </span>
-                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={ICON_STROKE} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[280px] p-2">
-              {/* Search inside dropdown */}
-              <div className="relative mb-2">
-                <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" strokeWidth={ICON_STROKE} />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={t('searchPlaceholder')}
-                  className="h-9 rounded-lg ps-8 text-sm"
-                />
-              </div>
-              <div className="max-h-[300px] overflow-y-auto">
-                {filteredWorkspaces.length === 0 ? (
-                  <p className="px-3 py-4 text-center text-sm text-muted-foreground">
-                    {t('noResults')}
-                  </p>
-                ) : (
-                  filteredWorkspaces.map((ws) => (
-                    <DropdownMenuItem
-                      key={ws.id}
-                      className={cn(
-                        'flex cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm',
-                        ws.id === effectiveId
-                          ? 'bg-primary/10 font-semibold text-foreground'
-                          : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
-                      )}
-                      onSelect={(e) => {
-                        e.preventDefault();
-                        setWorkspaceId(ws.id);
-                        bumpWorkspaceDataEpoch();
-                      }}
-                    >
-                      <span className="flex items-center gap-2 truncate">
-                        <Building2 className="h-4 w-4 shrink-0 text-primary" strokeWidth={ICON_STROKE} />
-                        <span className="truncate">{ws.name}</span>
-                        {ws.isPaused && (
-                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-warning" />
-                        )}
-                      </span>
-                      {ws.id === effectiveId && (
-                        <Check className="h-4 w-4 shrink-0 text-primary" strokeWidth={ICON_STROKE} />
-                      )}
-                    </DropdownMenuItem>
-                  ))
-                )}
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-primary"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  setCreateOpen(true);
-                }}
-              >
-                <Plus className="h-4 w-4" strokeWidth={ICON_STROKE} />
-                {t('createNew')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <Button
-            variant="cta"
-            className="rounded-lg gap-2"
-            onClick={() => setCreateOpen(true)}
-          >
-            <Plus className="h-4 w-4" strokeWidth={ICON_STROKE} />
-            {t('createNew')}
-          </Button>
-
-          {selectedBranch && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="rounded-lg gap-2"
-                  aria-label={t('branchActions')}
-                >
-                  <MoreVertical className="h-4 w-4" strokeWidth={ICON_STROKE} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-[12rem]">
-                {canTogglePause && (
-                  <DropdownMenuItem
-                    className="gap-2 font-semibold"
-                    disabled={togglingPause}
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      void handleTogglePause();
-                    }}
-                  >
-                    {selectedBranch.isPaused ? (
-                      <Play className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
-                    ) : (
-                      <Pause className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
-                    )}
-                    {selectedBranch.isPaused ? t('resumeBranch') : t('pauseBranch')}
-                  </DropdownMenuItem>
-                )}
-                {canRenameBranch && (
-                  <DropdownMenuItem
-                    className="gap-2 font-semibold"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      setRenameValue(selectedBranch.name);
-                      setRenameOpen(true);
-                    }}
-                  >
-                    <Pencil className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
-                    {t('renameBranch')}
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem
-                  className="gap-2 font-semibold text-destructive focus:text-destructive"
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    if (!canDeleteBranch) {
-                      toast.error(t('deleteLastBranch'));
-                      return;
-                    }
-                    setDeleteOpen(true);
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" strokeWidth={ICON_STROKE} />
-                  {t('deleteBranch')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
+        <Button
+          variant="cta"
+          className="rounded-lg gap-2 shrink-0"
+          onClick={() => setCreateOpen(true)}
+        >
+          <Plus className="h-4 w-4" strokeWidth={ICON_STROKE} />
+          {t('createNew')}
+        </Button>
       </div>
 
       {/* ── Branch cards grid ── */}
@@ -447,16 +284,90 @@ export function BranchesPageClient({ locale }: Props) {
         </div>
       )}
 
-      {/* ── Detail content for selected workspace ── */}
+      {/* ── Selected branch detail ── */}
       <AnimatePresence mode="wait">
-        {effectiveId && (
+        {effectiveId && selectedBranch && (
           <motion.div
             key={effectiveId}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.25 }}
+            className="space-y-4"
           >
+            {/* Branch detail header with actions */}
+            <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors',
+                  selectedBranch.id === effectiveId
+                    ? 'bg-primary/15 text-primary'
+                    : 'bg-muted text-muted-foreground',
+                )}>
+                  <Building2 className="h-5 w-5" strokeWidth={ICON_STROKE} />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="truncate text-base font-bold text-foreground">{selectedBranch.name}</h2>
+                  <div className="mt-0.5 flex items-center gap-1.5">
+                    <span className={cn(
+                      'h-1.5 w-1.5 rounded-full',
+                      selectedBranch.isPaused ? 'bg-warning' : 'bg-success',
+                    )} />
+                    <span className="text-[10px] text-muted-foreground">
+                      {selectedBranch.isPaused ? tWs('statusPaused') : tWs('statusActive')}
+                    </span>
+                    {selectedBranch.role && (
+                      <span className="text-[10px] text-muted-foreground/70">· {selectedBranch.role}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {canTogglePause && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-lg gap-2"
+                    disabled={togglingPause}
+                    onClick={() => void handleTogglePause()}
+                  >
+                    {selectedBranch.isPaused ? (
+                      <Play className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
+                    ) : (
+                      <Pause className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
+                    )}
+                    <span className="hidden sm:inline">
+                      {selectedBranch.isPaused ? t('resumeBranch') : t('pauseBranch')}
+                    </span>
+                  </Button>
+                )}
+                {canRenameBranch && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-lg gap-2"
+                    onClick={() => {
+                      setRenameValue(selectedBranch.name);
+                      setRenameOpen(true);
+                    }}
+                  >
+                    <Pencil className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
+                    <span className="hidden sm:inline">{t('renameBranch')}</span>
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-lg gap-2 text-destructive hover:text-destructive"
+                  onClick={() => setDeleteOpen(true)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
+                  <span className="hidden sm:inline">{t('deleteBranch')}</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Branch detail content (tabs: playlists, screens, media) */}
             <BranchDetailClient locale={locale} workspaceIdOverride={effectiveId} />
           </motion.div>
         )}
