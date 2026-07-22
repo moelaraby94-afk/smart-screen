@@ -109,6 +109,10 @@ export class PlaylistsController {
       dto.workspaceId ?? null,
       dto.name,
       dto.groupId ?? null,
+      dto.orientation,
+      dto.renderMode,
+      dto.targetWidth,
+      dto.targetHeight,
     );
   }
 

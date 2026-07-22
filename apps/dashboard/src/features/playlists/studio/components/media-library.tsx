@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { Draggable, Droppable } from '@hello-pangea/dnd';
 import {
-  Film, GripVertical, ImageIcon, Library, PenLine, Upload, Search, Clock,
+  Film, GripVertical, ImageIcon, Library, PenLine, Upload, Search, Clock, AlertTriangle,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
@@ -13,15 +13,29 @@ import { toast } from 'sonner';
 import type { MediaItem } from '@/features/media/media-library-client';
 import { uploadMedia as apiUploadMedia } from '@/features/media/api/media-api';
 import type { CanvasSummary } from '@/features/playlists/playlist-library-panels';
+import type { PlaylistLocalMeta } from '@/features/playlists/playlist-transitions';
 
 type MediaLibraryProps = {
   library: MediaItem[];
   canvasLibrary: CanvasSummary[];
   onUploadComplete: () => void;
   workspaceId: string | null;
+  playlistMeta?: PlaylistLocalMeta;
 };
 
-export function MediaLibrary({ library, canvasLibrary, onUploadComplete, workspaceId }: MediaLibraryProps) {
+function isMediaOrientationMismatch(
+  media: MediaItem,
+  orientation: PlaylistLocalMeta['orientation'],
+): boolean {
+  if (!media.width || !media.height) return false;
+  const isLandscape = media.width > media.height;
+  const isPortrait = media.height > media.width;
+  if (orientation === 'landscape' && isPortrait) return true;
+  if (orientation === 'portrait' && isLandscape) return true;
+  return false;
+}
+
+export function MediaLibrary({ library, canvasLibrary, onUploadComplete, workspaceId, playlistMeta }: MediaLibraryProps) {
   const t = useTranslations('playlistStudioClient');
   const [search, setSearch] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -139,6 +153,19 @@ export function MediaLibrary({ library, canvasLibrary, onUploadComplete, workspa
                           <span className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">
                             {m.originalName}
                           </span>
+                          {playlistMeta && isMediaOrientationMismatch(m, playlistMeta.orientation) && (
+                            <span
+                              title={t('orientationMismatchWarning')}
+                              className="shrink-0 text-amber-500"
+                            >
+                              <AlertTriangle className="h-3.5 w-3.5" />
+                            </span>
+                          )}
+                          {m.width && m.height && (
+                            <span className="shrink-0 text-[10px] text-muted-foreground">
+                              {m.width}×{m.height}
+                            </span>
+                          )}
                         </div>
                       )}
                     </Draggable>

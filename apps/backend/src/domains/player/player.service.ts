@@ -72,6 +72,8 @@ export class PlayerService {
         workspaceId: true,
         playerTicker: true,
         orientation: true,
+        resolutionWidth: true,
+        resolutionHeight: true,
         pairingSecretHash: true,
         workspace: { select: { isPaused: true, name: true } },
       },
@@ -98,6 +100,8 @@ export class PlayerService {
       workspaceName: screen.workspace.name,
       ticker: screen.playerTicker ?? null,
       orientation: screen.orientation,
+      resolutionWidth: screen.resolutionWidth,
+      resolutionHeight: screen.resolutionHeight,
       playlist: playlist ?? {
         workspaceId: screen.workspaceId,
         screenId: screen.id,

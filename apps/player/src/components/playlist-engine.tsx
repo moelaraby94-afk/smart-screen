@@ -5,18 +5,29 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CanvasKonvaView } from '@/components/canvas-konva-view';
 import { resolvePlaybackUrl } from '@/lib/media-cache';
 import { devWarn } from '@/lib/dev-log';
-import type { PlaylistItemUnion } from '@/types/player-playlist';
+import type { PlaylistItemUnion, RenderMode } from '@/types/player-playlist';
 
 const PLAYBACK_ERROR_SKIP_MS = 3000;
 /** After this many consecutive slide failures, hard-reload to clear bad cache / memory state. */
 const SKIP_STREAK_RELOAD_THRESHOLD = 5;
 
-export type MediaObjectFitMode = 'cover' | 'contain';
+export type MediaObjectFitMode = 'cover' | 'contain' | 'center' | 'fit_width' | 'fit_height';
 
 const defaultMediaObjectFit: MediaObjectFitMode =
   process.env.NEXT_PUBLIC_PLAYER_MEDIA_OBJECT_FIT === 'cover'
     ? 'cover'
     : 'contain';
+
+export function renderModeToFitMode(mode?: RenderMode): MediaObjectFitMode {
+  switch (mode) {
+    case 'COVER': return 'cover';
+    case 'CENTER': return 'center';
+    case 'FIT_WIDTH': return 'fit_width';
+    case 'FIT_HEIGHT': return 'fit_height';
+    case 'CONTAIN':
+    default: return 'contain';
+  }
+}
 
 export type PlaylistPlaybackErrorPayload = {
   code: string;
@@ -73,11 +84,23 @@ function MediaSlide({
 }) {
   const video = isVideoMime(slide.mimeType);
   const firedRef = useRef(false);
-  const fitClass = objectFit === 'cover' ? 'object-cover' : 'object-contain';
+
+  const fitClass =
+    objectFit === 'cover' ? 'object-cover'
+    : objectFit === 'fit_width' ? 'object-contain w-full h-auto'
+    : objectFit === 'fit_height' ? 'object-contain h-full w-auto'
+    : 'object-contain';
+
   const mediaBoxClass =
     objectFit === 'cover'
       ? 'h-full w-full min-h-full min-w-full'
-      : 'max-h-full max-w-full';
+    : objectFit === 'fit_width'
+      ? 'w-full h-auto'
+    : objectFit === 'fit_height'
+      ? 'h-full w-auto'
+    : objectFit === 'center'
+      ? 'max-h-full max-w-full'
+    : 'max-h-full max-w-full';
 
   const fire = useCallback(
     (medium: 'video' | 'image', detail?: string) => {
@@ -91,7 +114,7 @@ function MediaSlide({
   return (
     <div
       className={`absolute inset-0 overflow-hidden bg-black${
-        objectFit === 'contain' ? ' flex items-center justify-center' : ''
+        objectFit === 'contain' || objectFit === 'center' ? ' flex items-center justify-center' : objectFit === 'fit_width' ? ' flex items-center justify-center' : objectFit === 'fit_height' ? ' flex items-center justify-center' : ''
       }`}
     >
       {video ? (

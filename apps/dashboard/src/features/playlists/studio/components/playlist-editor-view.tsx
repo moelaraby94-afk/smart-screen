@@ -132,6 +132,7 @@ export function PlaylistEditorView(props: PlaylistEditorViewProps) {
               canvasLibrary={props.canvasLibrary}
               onUploadComplete={props.onUploadComplete}
               workspaceId={props.workspaceId}
+              playlistMeta={props.playlistMeta}
             />
           </div>
 

@@ -77,6 +77,20 @@ enum ScreenOrientation {
 
 }
 
+enum RenderMode {
+
+  CONTAIN
+
+  COVER
+
+  CENTER
+
+  FIT_WIDTH
+
+  FIT_HEIGHT
+
+}
+
 
 
 enum CanvasType {
@@ -787,6 +801,12 @@ model Media {
   relativePath  String
   folderId      String?
 
+  /// Detected media width in pixels (images/video frames)
+  width         Int?
+
+  /// Detected media height in pixels (images/video frames)
+  height        Int?
+
   /// SHA-256 hash of file content for integrity checking
   fileHash      String?
 
@@ -853,6 +873,18 @@ model Playlist {
   name            String
 
   isPublished     Boolean        @default(false)
+
+  /// Display orientation this playlist is designed for
+  orientation     ScreenOrientation @default(AUTO)
+
+  /// How media should be rendered on screen (contain = no crop, cover = fill, etc.)
+  renderMode      RenderMode     @default(CONTAIN)
+
+  /// Target rendering width in pixels (e.g. 1920 for landscape, 1080 for portrait)
+  targetWidth     Int?
+
+  /// Target rendering height in pixels (e.g. 1080 for landscape, 1920 for portrait)
+  targetHeight    Int?
 
   createdAt       DateTime       @default(now())
 

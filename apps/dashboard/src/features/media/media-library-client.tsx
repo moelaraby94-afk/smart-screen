@@ -56,6 +56,8 @@ export type MediaItem = {
   originalName: string;
   mimeType: string;
   sizeBytes: number;
+  width?: number | null;
+  height?: number | null;
   publicUrl: string;
   createdAt: string;
   workspaceId?: string;

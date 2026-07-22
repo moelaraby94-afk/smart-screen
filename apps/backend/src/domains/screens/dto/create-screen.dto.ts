@@ -1,4 +1,4 @@
-import { PlayerPlatform } from '@prisma/client';
+import { PlayerPlatform, ScreenOrientation } from '@prisma/client';
 import {
   IsEnum,
   IsInt,
@@ -45,4 +45,8 @@ export class CreateScreenDto {
   @Max(4320)
   @IsOptional()
   resolutionHeight?: number;
+
+  @IsEnum(ScreenOrientation)
+  @IsOptional()
+  orientation?: ScreenOrientation;
 }

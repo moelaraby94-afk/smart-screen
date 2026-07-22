@@ -196,12 +196,15 @@ export type PlaylistOrientation = 'landscape' | 'portrait' | 'square';
 
 export type PlaylistLayoutType = 'single' | 'multi_zone';
 
+export type RenderMode = 'CONTAIN' | 'COVER' | 'CENTER' | 'FIT_WIDTH' | 'FIT_HEIGHT';
+
 export type PlaylistLocalMeta = {
   orientation: PlaylistOrientation;
   layoutType: PlaylistLayoutType;
   defaultTransition: TransitionType;
   transitionDuration: number;
   zonePresetId?: string | null;
+  renderMode?: RenderMode;
 };
 
 export const DEFAULT_PLAYLIST_META: PlaylistLocalMeta = {
@@ -210,6 +213,7 @@ export const DEFAULT_PLAYLIST_META: PlaylistLocalMeta = {
   defaultTransition: 'fade',
   transitionDuration: 0.6,
   zonePresetId: null,
+  renderMode: 'CONTAIN',
 };
 
 const STORAGE_PREFIX = 'playlist-meta:';

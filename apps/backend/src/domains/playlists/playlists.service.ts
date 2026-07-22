@@ -54,6 +54,10 @@ export class PlaylistsService {
     workspaceId: string | null,
     name: string,
     groupId?: string | null,
+    orientation?: string,
+    renderMode?: string,
+    targetWidth?: number,
+    targetHeight?: number,
   ) {
     return this.prisma.playlist.create({
       data: {
@@ -61,6 +65,10 @@ export class PlaylistsService {
         workspaceId: workspaceId ?? undefined,
         name,
         groupId: groupId ?? undefined,
+        ...(orientation ? { orientation: orientation as any } : {}),
+        ...(renderMode ? { renderMode: renderMode as any } : {}),
+        ...(targetWidth !== undefined ? { targetWidth } : {}),
+        ...(targetHeight !== undefined ? { targetHeight } : {}),
       },
     });
   }
@@ -136,12 +144,30 @@ export class PlaylistsService {
 
   async update(workspaceId: string, id: string, dto: UpdatePlaylistDto) {
     await this.ensurePlaylist(workspaceId, id);
-    if (dto.name === undefined && dto.isPublished === undefined) {
+    if (
+      dto.name === undefined &&
+      dto.isPublished === undefined &&
+      dto.orientation === undefined &&
+      dto.renderMode === undefined &&
+      dto.targetWidth === undefined &&
+      dto.targetHeight === undefined
+    ) {
       throw new BadRequestException('No fields to update.');
     }
-    const data: { name?: string; isPublished?: boolean } = {};
+    const data: {
+      name?: string;
+      isPublished?: boolean;
+      orientation?: any;
+      renderMode?: any;
+      targetWidth?: number;
+      targetHeight?: number;
+    } = {};
     if (dto.name !== undefined) data.name = dto.name.trim();
     if (dto.isPublished !== undefined) data.isPublished = dto.isPublished;
+    if (dto.orientation !== undefined) data.orientation = dto.orientation;
+    if (dto.renderMode !== undefined) data.renderMode = dto.renderMode;
+    if (dto.targetWidth !== undefined) data.targetWidth = dto.targetWidth;
+    if (dto.targetHeight !== undefined) data.targetHeight = dto.targetHeight;
     const updated = await this.prisma.playlist.update({
       where: { id },
       data,

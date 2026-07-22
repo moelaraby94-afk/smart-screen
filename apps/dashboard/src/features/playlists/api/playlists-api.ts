@@ -48,7 +48,14 @@ export async function updatePlaylistItems(
 export async function updatePlaylistMeta(
   workspaceId: string,
   playlistId: string,
-  data: { name?: string; isPublished?: boolean },
+  data: {
+    name?: string;
+    isPublished?: boolean;
+    orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
+    renderMode?: 'CONTAIN' | 'COVER' | 'CENTER' | 'FIT_WIDTH' | 'FIT_HEIGHT';
+    targetWidth?: number;
+    targetHeight?: number;
+  },
 ): Promise<Response> {
   return apiFetch(
     `/playlists/${playlistId}?workspaceId=${encodeURIComponent(workspaceId)}`,

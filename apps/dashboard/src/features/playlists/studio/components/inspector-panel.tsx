@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import {
   type TransitionType,
   type PlaylistLocalMeta,
+  type RenderMode,
   TRANSITIONS,
 } from '@/features/playlists/playlist-transitions';
 import type { ZonePreset, SelectionContext, Row } from '../types';
@@ -87,6 +88,31 @@ export function InspectorPanel({
                 );
               })}
             </div>
+            <p className="text-[10px] leading-tight text-muted-foreground">
+              {t('recommendedSize')}: {presetW}×{presetH}px
+            </p>
+          </div>
+
+          <div className="space-y-2 border-b border-border/40 pb-4">
+            <Label className="text-[11px] font-medium text-muted-foreground">{t('renderMode')}</Label>
+            <select
+              className="h-8 w-full rounded-lg border border-border bg-background px-2.5 text-xs font-medium outline-none focus:border-primary/40"
+              value={playlistMeta.renderMode ?? 'CONTAIN'}
+              onChange={(e) => updatePlaylistMeta({ renderMode: e.target.value as RenderMode })}
+            >
+              <option value="CONTAIN">{t('renderContain')}</option>
+              <option value="COVER">{t('renderCover')}</option>
+              <option value="CENTER">{t('renderCenter')}</option>
+              <option value="FIT_WIDTH">{t('renderFitWidth')}</option>
+              <option value="FIT_HEIGHT">{t('renderFitHeight')}</option>
+            </select>
+            <p className="text-[10px] leading-tight text-muted-foreground">
+              {(playlistMeta.renderMode ?? 'CONTAIN') === 'CONTAIN' && t('renderContainDesc')}
+              {(playlistMeta.renderMode ?? 'CONTAIN') === 'COVER' && t('renderCoverDesc')}
+              {(playlistMeta.renderMode ?? 'CONTAIN') === 'CENTER' && t('renderCenterDesc')}
+              {(playlistMeta.renderMode ?? 'CONTAIN') === 'FIT_WIDTH' && t('renderFitWidthDesc')}
+              {(playlistMeta.renderMode ?? 'CONTAIN') === 'FIT_HEIGHT' && t('renderFitHeightDesc')}
+            </p>
           </div>
 
           <div className="space-y-2 border-b border-border/40 pb-4">

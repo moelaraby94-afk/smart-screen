@@ -183,6 +183,10 @@ export class PlaylistResolutionService {
       workspaceId: playlist.workspaceId ?? null,
       name: playlist.name,
       isPublished: playlist.isPublished,
+      orientation: (playlist as any).orientation ?? 'AUTO',
+      renderMode: (playlist as any).renderMode ?? 'CONTAIN',
+      targetWidth: (playlist as any).targetWidth ?? null,
+      targetHeight: (playlist as any).targetHeight ?? null,
       createdAt: playlist.createdAt.toISOString(),
       updatedAt: playlist.updatedAt.toISOString(),
       items: playlist.items.map((item) => this.serializeItem(item)),
@@ -355,6 +359,10 @@ export class PlaylistResolutionService {
       name: playlist.name,
       isPublished: playlist.isPublished,
       activeSource,
+      renderMode: (playlist as any).renderMode ?? 'CONTAIN',
+      orientation: (playlist as any).orientation ?? 'AUTO',
+      targetWidth: (playlist as any).targetWidth ?? null,
+      targetHeight: (playlist as any).targetHeight ?? null,
       items: resolvedItems.map((item) => {
         if (item.kind === 'media') {
           return {

@@ -26,3 +26,5 @@ Thumbs.db
 .env.*.local
 apps/marketing/.env.local
 .next/
+
+.server-access.local.md

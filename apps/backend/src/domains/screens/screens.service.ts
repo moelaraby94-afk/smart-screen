@@ -81,6 +81,9 @@ export class ScreensService {
         ...(dto.resolutionHeight !== undefined
           ? { resolutionHeight: dto.resolutionHeight }
           : {}),
+        ...(dto.orientation !== undefined
+          ? { orientation: dto.orientation }
+          : {}),
         ...(playlistGroupId !== undefined ? { playlistGroupId } : {}),
       },
       select: this.screenSelect,

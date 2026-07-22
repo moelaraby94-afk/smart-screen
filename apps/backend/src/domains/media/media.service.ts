@@ -156,9 +156,14 @@ export class MediaService {
     // EXIF stripping for images: preserve orientation only
     let uploadBuffer = params.buffer;
     const IMAGE_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+    let detectedWidth: number | null = null;
+    let detectedHeight: number | null = null;
     if (IMAGE_MIMES.has(detected.mime)) {
       try {
         const sharp = (await import('sharp')).default;
+        const metadata = await sharp(params.buffer).metadata();
+        detectedWidth = metadata.width ?? null;
+        detectedHeight = metadata.height ?? null;
         uploadBuffer = await sharp(params.buffer).rotate().toBuffer();
       } catch {
         // sharp failed — use original buffer
@@ -219,6 +224,8 @@ export class MediaService {
             relativePath,
             folderId: params.folderId ?? null,
             fileHash,
+            width: detectedWidth,
+            height: detectedHeight,
           },
         });
       });
@@ -530,6 +537,8 @@ export class MediaService {
     relativePath: string;
     folderId?: string | null;
     folder?: { id: string; name: string } | null;
+    width?: number | null;
+    height?: number | null;
     createdAt: Date;
     updatedAt: Date;
     expiresAt?: Date | null;
@@ -541,6 +550,8 @@ export class MediaService {
       originalName: media.originalName,
       mimeType: media.mimeType,
       sizeBytes: media.sizeBytes,
+      width: media.width ?? null,
+      height: media.height ?? null,
       relativePath: media.relativePath,
       folderId: media.folderId ?? null,
       folderName: media.folder?.name ?? null,

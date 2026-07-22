@@ -72,6 +72,8 @@ export function parsePlaylistPayload(raw: unknown): PlaylistPayload | null {
   if (!Array.isArray(o.items)) return null;
   const items = o.items.map(normalizeItem).filter((x): x is PlaylistItemUnion => x !== null);
   const src = o.activeSource;
+  const rm = o.renderMode;
+  const ort = o.orientation;
   return {
     workspaceId: String(o.workspaceId ?? ''),
     screenId: String(o.screenId ?? ''),
@@ -80,6 +82,14 @@ export function parsePlaylistPayload(raw: unknown): PlaylistPayload | null {
     ...(src === 'override' || src === 'schedule' || src === 'rotation' || src === 'default'
       ? { activeSource: src }
       : {}),
+    ...(rm === 'CONTAIN' || rm === 'COVER' || rm === 'CENTER' || rm === 'FIT_WIDTH' || rm === 'FIT_HEIGHT'
+      ? { renderMode: rm }
+      : {}),
+    ...(ort === 'AUTO' || ort === 'LANDSCAPE' || ort === 'PORTRAIT'
+      ? { orientation: ort }
+      : {}),
+    ...(o.targetWidth != null ? { targetWidth: Number(o.targetWidth) } : {}),
+    ...(o.targetHeight != null ? { targetHeight: Number(o.targetHeight) } : {}),
     items,
   };
 }

@@ -29,6 +29,8 @@ export type PlaylistCanvasItem = {
 
 export type PlaylistItemUnion = PlaylistMediaItem | PlaylistCanvasItem;
 
+export type RenderMode = 'CONTAIN' | 'COVER' | 'CENTER' | 'FIT_WIDTH' | 'FIT_HEIGHT';
+
 export type PlaylistPayload = {
   workspaceId: string;
   screenId: string;
@@ -36,6 +38,10 @@ export type PlaylistPayload = {
   name: string | null;
   /** override | schedule | rotation | default — from scheduling engine */
   activeSource?: 'override' | 'schedule' | 'rotation' | 'default';
+  renderMode?: RenderMode;
+  orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
+  targetWidth?: number | null;
+  targetHeight?: number | null;
   items: PlaylistItemUnion[];
 };
 
@@ -47,5 +53,7 @@ export type BootstrapResponse = {
   workspaceName?: string | null;
   ticker: string | null;
   orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
+  resolutionWidth?: number;
+  resolutionHeight?: number;
   playlist: PlaylistPayload;
 };

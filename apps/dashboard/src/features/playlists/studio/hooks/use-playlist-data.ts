@@ -31,7 +31,12 @@ type UsePlaylistDataReturn = {
   loadPlaylists: () => Promise<void>;
   loadGroups: () => Promise<void>;
   loadCanvasLibrary: () => Promise<void>;
-  loadPlaylistDetail: (id: string) => Promise<void>;
+  loadPlaylistDetail: (id: string) => Promise<{
+    orientation?: string;
+    renderMode?: string;
+    targetWidth?: number | null;
+    targetHeight?: number | null;
+  } | null>;
 };
 
 export function usePlaylistData(
@@ -76,14 +81,18 @@ export function usePlaylistData(
 
   const loadPlaylistDetail = useCallback(
     async (id: string) => {
-      if (!workspaceId) return;
+      if (!workspaceId) return null;
       setDetailError(false);
       const res = await apiFetchPlaylistDetail(workspaceId, id);
       if (!res.ok) {
         setDetailError(true);
-        return;
+        return null;
       }
       const data = (await res.json()) as {
+        orientation?: string;
+        renderMode?: string;
+        targetWidth?: number | null;
+        targetHeight?: number | null;
         items: Array<{
           kind?: string;
           durationSec: number;
@@ -123,6 +132,12 @@ export function usePlaylistData(
       setUndoStack?.([]);
       setRedoStack?.([]);
       setRows(mapped.filter((r): r is Row => r !== null));
+      return {
+        orientation: data.orientation,
+        renderMode: data.renderMode,
+        targetWidth: data.targetWidth ?? null,
+        targetHeight: data.targetHeight ?? null,
+      };
     },
     [workspaceId, setRows, setUndoStack, setRedoStack, skipHistoryRef],
   );

@@ -58,7 +58,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
   // ── Hooks ──────────────────────────────────────────────
   const { playlistMeta, setPlaylistMeta, updatePlaylistMeta: rawUpdatePlaylistMeta } = usePlaylistMeta(playlistId);
 
-  // Wrap updatePlaylistMeta to intercept multi_zone→single switches
+  // Wrap updatePlaylistMeta to intercept multi_zone→single switches and sync to server
   const updatePlaylistMeta = useCallback((patch: Partial<PlaylistLocalMeta>) => {
     if (patch.layoutType === 'single' && playlistMeta.layoutType === 'multi_zone') {
       pendingMetaPatchRef.current = patch;
@@ -66,7 +66,19 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
       return;
     }
     rawUpdatePlaylistMeta(patch);
-  }, [playlistMeta.layoutType, rawUpdatePlaylistMeta]);
+    // Persist orientation and renderMode to server
+    if (workspaceId && playlistId && (patch.orientation || patch.renderMode)) {
+      const apiData: Record<string, unknown> = {};
+      if (patch.orientation) {
+        const ortMap: Record<string, string> = { landscape: 'LANDSCAPE', portrait: 'PORTRAIT', square: 'AUTO' };
+        apiData.orientation = ortMap[patch.orientation] ?? 'AUTO';
+      }
+      if (patch.renderMode) {
+        apiData.renderMode = patch.renderMode;
+      }
+      void apiUpdatePlaylistMeta(workspaceId, playlistId, apiData);
+    }
+  }, [playlistMeta.layoutType, rawUpdatePlaylistMeta, workspaceId, playlistId]);
 
   const skipHistoryRef = useRef(false);
   const latestNameRef = useRef<string>('');
@@ -101,9 +113,21 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
   useEffect(() => {
     if (playlistId) {
       clearHistory();
-      void loadPlaylistDetail(playlistId);
       setPlaylistMeta(loadPlaylistMeta(playlistId));
       latestNameRef.current = '';
+      void loadPlaylistDetail(playlistId).then((serverMeta) => {
+        if (!serverMeta) return;
+        const ortMap: Record<string, string> = { LANDSCAPE: 'landscape', PORTRAIT: 'portrait', AUTO: 'landscape' };
+        const serverOrientation = serverMeta.orientation ? (ortMap[serverMeta.orientation] ?? 'landscape') : undefined;
+        const serverRenderMode = serverMeta.renderMode as PlaylistLocalMeta['renderMode'] | undefined;
+        if (serverOrientation || serverRenderMode) {
+          setPlaylistMeta((prev) => ({
+            ...prev,
+            ...(serverOrientation ? { orientation: serverOrientation as PlaylistLocalMeta['orientation'] } : {}),
+            ...(serverRenderMode ? { renderMode: serverRenderMode } : {}),
+          }));
+        }
+      });
     } else {
       setRows([]);
       setPlaylistMeta(DEFAULT_PLAYLIST_META);

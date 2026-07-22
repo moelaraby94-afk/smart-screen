@@ -32,6 +32,7 @@ import { PlayerPairingWait } from '@/components/player-pairing-wait';
 import { PrayerPauseOverlay } from '@/components/prayer-pause-overlay';
 import {
   PlaylistEngine,
+  renderModeToFitMode,
   type PlaylistPlaybackErrorPayload,
 } from '@/components/playlist-engine';
 
@@ -775,6 +776,7 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
               <PlaylistEngine
                 items={playlist.items}
                 liveCanvasLayouts={liveCanvasLayouts}
+                mediaObjectFit={renderModeToFitMode(playlist.renderMode)}
                 onPlaybackMediaError={
                   bootMode === 'kiosk' ? reportPlaybackMediaError : undefined
                 }

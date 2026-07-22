@@ -16,7 +16,7 @@ type UsePlaylistActionsParams = {
   filterWorkspaceId: string;
   filterGroupId: string;
   loadPlaylists: () => Promise<void>;
-  loadPlaylistDetail: (id: string) => Promise<void>;
+  loadPlaylistDetail: (id: string) => Promise<unknown>;
   bumpWorkspaceDataEpoch: () => void;
   setPlaylists: React.Dispatch<React.SetStateAction<PlaylistSummary[]>>;
   setPlaylistId?: (id: string) => void;
