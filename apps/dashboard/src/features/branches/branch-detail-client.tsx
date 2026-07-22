@@ -219,7 +219,7 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
   const loading = screensLoading || branchPlaylists.isLoading;
 
   return (
-    <main className="space-y-8 pb-12">
+    <div className="space-y-8 pb-12">
       {/* Inline toolbar for branches page (header inset is skipped when workspaceIdOverride is set) */}
       {workspaceIdOverride && (
         <BranchWorkspaceToolbar
@@ -244,7 +244,7 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
         }}
       />
 
-      <BranchStatsSection stats={stats} loading={loading} />
+      <BranchStatsSection stats={stats} loading={loading} showHero={!workspaceIdOverride} />
 
       {activeTab === 'playlists' && canDeletePlaylist ? (
         <BranchReviewSection
@@ -394,6 +394,6 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </main>
+    </div>
   );
 }

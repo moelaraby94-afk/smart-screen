@@ -90,7 +90,7 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
   const rtl = navLocale === 'ar';
 
   return (
-    <div className="relative flex h-dvh min-h-0 flex-col overflow-x-hidden overflow-y-hidden bg-background text-foreground dark:bg-transparent">
+    <div className="relative flex h-screen h-dvh min-h-0 flex-col overflow-x-hidden overflow-y-hidden bg-background text-foreground dark:bg-transparent">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-tooltip focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg"
@@ -107,7 +107,6 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
         isLoading={isLoading}
         isAuthenticated={isAuthenticated}
         mobileNavOpen={mobileNavOpen}
-        showWorkspaceSwitcher={true}
       />
 
       {mobileNavOpen ? (
@@ -120,7 +119,7 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
       ) : null}
 
       {/* Main column: fixed viewport height; only <main> scrolls — sidebar stays fixed, no document scroll */}
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden md:ms-[64px] lg:ms-[240px]">
+      <div className="relative z-0 flex min-h-0 flex-1 flex-col overflow-hidden md:ms-[64px] lg:ms-[240px]">
         <ShellHeader
           navLocale={navLocale}
           rtl={rtl}

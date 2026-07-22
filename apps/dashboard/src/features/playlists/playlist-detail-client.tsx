@@ -311,7 +311,7 @@ export function PlaylistDetailClient({ playlistId }: { playlistId: string }) {
 
   if (notFound) {
     return (
-      <main className="mx-auto max-w-[1200px] px-6 py-6">
+      <div className="mx-auto max-w-[1200px] px-6 py-6">
         <div className="flex flex-col items-center gap-4 py-20 text-center">
           <p className="text-lg font-bold text-foreground">{t('notFound')}</p>
           <p className="text-sm text-muted-foreground">{t('notFoundDesc')}</p>
@@ -322,13 +322,13 @@ export function PlaylistDetailClient({ playlistId }: { playlistId: string }) {
             </Button>
           </Link>
         </div>
-      </main>
+      </div>
     );
   }
 
   if (loadError && !playlist) {
     return (
-      <main className="mx-auto max-w-[1200px] px-6 py-6">
+      <div className="mx-auto max-w-[1200px] px-6 py-6">
         <div className="flex flex-col items-center gap-4 py-20 text-center">
           <AlertCircle className="h-10 w-10 text-destructive/50" strokeWidth={1.5} />
           <p className="text-sm font-medium text-foreground">{t('loadErrorTitle')}</p>
@@ -337,7 +337,7 @@ export function PlaylistDetailClient({ playlistId }: { playlistId: string }) {
             {t('retry')}
           </Button>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -353,7 +353,7 @@ export function PlaylistDetailClient({ playlistId }: { playlistId: string }) {
   const isImage = currentItem?.media?.mimeType.startsWith('image/');
 
   return (
-    <main className="mx-auto max-w-[1200px] space-y-6 px-6 py-6" aria-label={playlist?.name ?? t('loading')}>
+    <div className="mx-auto max-w-[1200px] space-y-6 px-6 py-6" aria-label={playlist?.name ?? t('loading')}>
       {/* Breadcrumbs */}
       <nav aria-label={t('breadcrumbAria')} className="flex items-center gap-2 text-sm">
         <Link href={`/${locale}/content` as Route} className="text-muted-foreground hover:text-foreground hover:underline">
@@ -755,6 +755,6 @@ export function PlaylistDetailClient({ playlistId }: { playlistId: string }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </main>
+    </div>
   );
 }

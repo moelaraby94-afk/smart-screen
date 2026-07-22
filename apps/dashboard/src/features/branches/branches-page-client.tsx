@@ -151,16 +151,11 @@ export function BranchesPageClient({ locale }: Props) {
     }
   }, [effectiveId, workspaceId, setWorkspaceId, bumpWorkspaceDataEpoch]);
 
-  const canDeleteBranch = true;
   const canRenameBranch = Boolean(selectedBranch && (selectedBranch.role === 'OWNER' || selectedBranch.role === 'ADMIN'));
   const canTogglePause = canRenameBranch;
 
   const handleDeleteBranch = useCallback(async () => {
     if (!selectedBranch || deleting) return;
-    if (!canDeleteBranch) {
-      toast.error(t('deleteLastBranch'));
-      return;
-    }
     setDeleting(true);
     try {
       const res = await deleteWorkspace(selectedBranch.id);
@@ -182,7 +177,7 @@ export function BranchesPageClient({ locale }: Props) {
     } finally {
       setDeleting(false);
     }
-  }, [selectedBranch, deleting, canDeleteBranch, workspaces, setWorkspaceId, refreshWorkspaces, bumpWorkspaceDataEpoch, t, toastResponseError]);
+  }, [selectedBranch, deleting, workspaces, setWorkspaceId, refreshWorkspaces, bumpWorkspaceDataEpoch, t, toastResponseError]);
 
   const handleTogglePause = useCallback(async () => {
     if (!selectedBranch || togglingPause) return;
@@ -229,7 +224,7 @@ export function BranchesPageClient({ locale }: Props) {
   }, [selectedBranch, renaming, renameValue, refreshWorkspaces, bumpWorkspaceDataEpoch, t, toastResponseError]);
 
   return (
-    <main className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12">
       {/* ── Page header ── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -376,13 +371,6 @@ export function BranchesPageClient({ locale }: Props) {
       <WorkspaceCreateDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
-        onCreated={() => {
-          if (workspaces.length > 0) {
-            const latest = workspaces[workspaces.length - 1];
-            setWorkspaceId(latest.id);
-            bumpWorkspaceDataEpoch();
-          }
-        }}
       />
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
@@ -455,6 +443,6 @@ export function BranchesPageClient({ locale }: Props) {
           </div>
         </DialogContent>
       </Dialog>
-    </main>
+    </div>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import type { MouseEvent as ReactMouseEvent } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
 import { useTranslations, useLocale } from 'next-intl';
@@ -47,9 +48,10 @@ import { useBranchActivity } from '@/features/branches/use-branch-activity';
 type StatsSectionProps = {
   stats: BranchScreenStats;
   loading: boolean;
+  showHero?: boolean;
 };
 
-export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
+export function BranchStatsSection({ stats, loading, showHero = true }: StatsSectionProps) {
   const t = useTranslations('branchDetail');
   const tWs = useTranslations('workspaceSettings');
   const locale = useLocale();
@@ -119,7 +121,7 @@ export function BranchStatsSection({ stats, loading }: StatsSectionProps) {
   return (
     <section className="space-y-6">
       {/* ── Hero workspace card ── */}
-      {branch && (
+      {showHero && branch && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -512,7 +514,7 @@ export function BranchPlaylistsSection(props: PlaylistsSectionProps) {
                       size="icon"
                       className="absolute end-2 top-2 z-card h-9 w-9 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
                       aria-label={t('playlistActionsAria')}
-                      onClick={(e) => e.preventDefault()}
+                      onClick={(e: ReactMouseEvent) => e.preventDefault()}
                     >
                       {dupBusy ? (
                         <Loader2 className="h-4 w-4 animate-spin" strokeWidth={ICON_STROKE} />

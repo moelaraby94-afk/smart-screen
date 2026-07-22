@@ -21,7 +21,7 @@ import { useWorkspace } from '@/features/workspace/workspace-context';
 import type { Route } from 'next';
 import { WorkspaceCreateDialog } from '@/features/workspace/workspace-create-dialog';
 
-export function WorkspaceSwitcher() {
+export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const locale = useLocale();
@@ -62,41 +62,45 @@ export function WorkspaceSwitcher() {
 
   return (
     <>
-      <div className="flex max-w-[min(100%,min(420px,calc(100vw-8rem)))] items-center gap-1.5">
+      <div className={cn('flex items-center gap-1.5', compact && 'max-w-[160px]')}>
         <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
           <DropdownMenuTrigger asChild disabled={workspaces.length === 0}>
             <button
               type="button"
-              className={cn(appDropdownTriggerClass, 'flex-1 justify-between gap-2')}
+              className={cn(appDropdownTriggerClass, compact ? 'h-9 w-9 justify-center !px-0' : 'flex-1 justify-between gap-2')}
               aria-label={tWs('activeWorkspaceSr')}
               aria-expanded={menuOpen}
               aria-haspopup="menu"
             >
-              <span className="flex min-w-0 flex-1 items-center gap-2.5">
+              <span className={cn('flex min-w-0 flex-1 items-center gap-2.5', compact && 'flex-none')}>
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
                   <BriefcaseBusiness className="h-4 w-4 text-white" strokeWidth={ICON_STROKE} aria-hidden />
                 </span>
-                <span className="min-w-0 flex-1 text-start leading-snug">
-                  <span
-                    className={cn(
-                      'line-clamp-3 break-words text-[13px] font-semibold sm:text-[14px]',
-                      isOverviewHome && workspaces.length > 0
-                        ? 'text-muted-foreground'
-                        : 'text-foreground',
-                    )}
-                  >
-                    {currentLabel}
+                {!compact && (
+                  <span className="min-w-0 flex-1 text-start leading-snug">
+                    <span
+                      className={cn(
+                        'line-clamp-3 break-words text-[13px] font-semibold sm:text-[14px]',
+                        isOverviewHome && workspaces.length > 0
+                          ? 'text-muted-foreground'
+                          : 'text-foreground',
+                      )}
+                    >
+                      {currentLabel}
+                    </span>
                   </span>
-                </span>
-              </span>
-              <ChevronDown
-                className={cn(
-                  'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200',
-                  menuOpen && 'rotate-180',
                 )}
-                strokeWidth={ICON_STROKE}
-                aria-hidden
-              />
+              </span>
+              {!compact && (
+                <ChevronDown
+                  className={cn(
+                    'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200',
+                    menuOpen && 'rotate-180',
+                  )}
+                  strokeWidth={ICON_STROKE}
+                  aria-hidden
+                />
+              )}
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -167,17 +171,19 @@ export function WorkspaceSwitcher() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          title={tWs('newWorkspaceTitle')}
-          className="h-9 w-9 shrink-0 rounded-lg border border-border bg-card text-foreground hover:bg-muted"
-          onClick={() => setCreateOpen(true)}
-          aria-label={tWs('createWorkspaceAria')}
-        >
-          <Plus className="h-4 w-4" strokeWidth={ICON_STROKE} />
-        </Button>
+        {!compact && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            title={tWs('newWorkspaceTitle')}
+            className="h-9 w-9 shrink-0 rounded-lg border border-border bg-card text-foreground hover:bg-muted"
+            onClick={() => setCreateOpen(true)}
+            aria-label={tWs('createWorkspaceAria')}
+          >
+            <Plus className="h-4 w-4" strokeWidth={ICON_STROKE} />
+          </Button>
+        )}
       </div>
 
       <WorkspaceCreateDialog open={createOpen} onOpenChange={setCreateOpen} />

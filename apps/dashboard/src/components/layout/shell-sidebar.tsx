@@ -196,7 +196,6 @@ export type ShellSidebarProps = {
   isLoading: boolean;
   isAuthenticated: boolean;
   mobileNavOpen: boolean;
-  showWorkspaceSwitcher: boolean;
 };
 
 export function ShellSidebar({
@@ -209,7 +208,6 @@ export function ShellSidebar({
   isLoading,
   isAuthenticated,
   mobileNavOpen,
-  showWorkspaceSwitcher,
 }: ShellSidebarProps) {
   const t = useTranslations('nav');
   const tUser = useTranslations('userMenu');

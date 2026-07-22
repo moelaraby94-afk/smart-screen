@@ -50,6 +50,7 @@ export function ClientHomeDashboard() {
     setWorkspaceId,
     isSuperAdmin,
     bumpWorkspaceDataEpoch,
+    refreshWorkspaces,
   } = useWorkspace();
 
   const [insights, setInsights] = useState<InsightsPayload | null>(null);
@@ -143,6 +144,7 @@ export function ClientHomeDashboard() {
       toast.success(t('toastRenamed'));
       setRenameOpen(false);
       setRenameTarget(null);
+      await refreshWorkspaces(renameTarget.workspaceId);
       bumpWorkspaceDataEpoch();
       await load();
     } catch {
@@ -150,7 +152,7 @@ export function ClientHomeDashboard() {
     } finally {
       setRenameBusy(false);
     }
-  }, [renameTarget, renameValue, t, toastResponseError, bumpWorkspaceDataEpoch, load]);
+  }, [renameTarget, renameValue, t, toastResponseError, bumpWorkspaceDataEpoch, load, refreshWorkspaces]);
 
   const onTogglePause = useCallback(
     async (row: InsightsBranch) => {
@@ -164,6 +166,7 @@ export function ClientHomeDashboard() {
           return;
         }
         toast.success(row.isPaused === true ? t('toastResumed') : t('toastPaused'));
+        await refreshWorkspaces(row.workspaceId);
         bumpWorkspaceDataEpoch();
         await load();
       } catch {
@@ -172,7 +175,7 @@ export function ClientHomeDashboard() {
         setPauseBusyId(null);
       }
     },
-    [t, toastResponseError, bumpWorkspaceDataEpoch, load],
+    [t, toastResponseError, bumpWorkspaceDataEpoch, load, refreshWorkspaces],
   );
 
   const onSeedDemo = useCallback(
@@ -212,6 +215,12 @@ export function ClientHomeDashboard() {
       }
       toast.success(t('toastDeleted'));
       setDeleteTarget(null);
+      const remaining = workspaces.filter((w) => w.id !== deleteTarget.workspaceId);
+      const nextId = remaining[0]?.id ?? null;
+      if (nextId) {
+        setWorkspaceId(nextId);
+      }
+      await refreshWorkspaces(nextId);
       bumpWorkspaceDataEpoch();
       await load();
     } catch {
@@ -219,7 +228,7 @@ export function ClientHomeDashboard() {
     } finally {
       setDeleteBusy(false);
     }
-  }, [deleteTarget, t, toastResponseError, bumpWorkspaceDataEpoch, load]);
+  }, [deleteTarget, t, toastResponseError, bumpWorkspaceDataEpoch, load, workspaces, setWorkspaceId, refreshWorkspaces]);
 
   if (loading && !insights) {
     return (

@@ -114,7 +114,7 @@ export function PlaylistScreensClient({ locale }: Props) {
   }
 
   return (
-    <main className="space-y-8 pb-12">
+    <div className="space-y-8 pb-12">
       <header className="space-y-1">
         <p className="vc-page-kicker">{t('kicker')}</p>
         <h1 className="vc-page-title text-balance dark:text-white">
@@ -202,6 +202,6 @@ export function PlaylistScreensClient({ locale }: Props) {
           void reload();
         }}
       />
-    </main>
+    </div>
   );
 }
