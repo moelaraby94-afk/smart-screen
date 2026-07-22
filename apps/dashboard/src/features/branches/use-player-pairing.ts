@@ -90,18 +90,18 @@ export function usePlayerPairing(
 
   useEffect(() => clearSuccessTimer, [clearSuccessTimer]);
 
-  const claim = useCallback(async (playlistGroupId?: string) => {
+  const claim = useCallback(async (targetWorkspaceId?: string) => {
     if (!workspaceId || !canClaim) return;
     const cleanCode = code.replace(/\D/g, '').slice(0, 6);
     if (cleanCode.length !== 6) return;
     setError(null);
     setBusy(true);
     try {
-      const body: { code: string; name?: string; playlistGroupId?: string } = { code: cleanCode };
+      const body: { code: string; name?: string } = { code: cleanCode };
       const trimmedName = name.trim();
       if (trimmedName) body.name = trimmedName;
-      if (playlistGroupId) body.playlistGroupId = playlistGroupId;
-      const res = await apiFetch(`/workspaces/${encodeURIComponent(workspaceId)}/pairing-sessions/claim`, {
+      const wsId = targetWorkspaceId || workspaceId;
+      const res = await apiFetch(`/workspaces/${encodeURIComponent(wsId)}/pairing-sessions/claim`, {
         method: 'POST',
         body: JSON.stringify(body),
       });
