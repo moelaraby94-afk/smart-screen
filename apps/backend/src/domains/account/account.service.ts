@@ -166,13 +166,25 @@ export class AccountService {
     return {
       currentPlan: {
         userSubscriptionStatus: user.subscriptionStatus,
-        subscriptionEndDate: user.subscriptionEndDate,
+        subscriptionEndDate: user.subscriptionEndDate?.toISOString() ?? null,
         workspacePlan: wsSub?.plan ?? null,
         workspaceStatus: wsSub?.status ?? null,
         seats: wsSub?.seats ?? null,
         screenLimit: wsSub?.screenLimit ?? null,
       },
-      payments: user.payments,
+      payments: user.payments.map((p) => ({
+        id: p.id,
+        amountCents: p.amountCents,
+        currency: p.currency,
+        status: p.status,
+        description: p.description,
+        invoiceRef: p.invoiceRef,
+        paidAt: p.paidAt?.toISOString() ?? null,
+        provider: p.provider,
+        externalId: p.externalId,
+        metadata: p.metadata,
+        createdAt: p.createdAt.toISOString(),
+      })),
     };
   }
 

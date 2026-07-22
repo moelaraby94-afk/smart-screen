@@ -94,4 +94,23 @@ describe('SensitiveFieldInterceptor', () => {
       done();
     });
   });
+
+  it('preserves Date objects without converting them to empty objects', (done) => {
+    const date = new Date('2025-01-15T10:30:00Z');
+    const input = {
+      id: '1',
+      subscriptionEndDate: date,
+      payments: [
+        { id: 'p1', paidAt: date, createdAt: date },
+      ],
+    };
+    interceptor.intercept(mockContext, callWith(input)).subscribe((result) => {
+      const r = result as { id: string; subscriptionEndDate: unknown; payments: Array<{ paidAt: unknown; createdAt: unknown }> };
+      expect(r.subscriptionEndDate).toBeInstanceOf(Date);
+      expect((r.subscriptionEndDate as Date).getTime()).toBe(date.getTime());
+      expect(r.payments[0].paidAt).toBeInstanceOf(Date);
+      expect(r.payments[0].createdAt).toBeInstanceOf(Date);
+      done();
+    });
+  });
 });

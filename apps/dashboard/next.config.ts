@@ -9,6 +9,7 @@ config({ path: path.resolve(process.cwd(), '../../.env') });
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
+  transpilePackages: ['@smart-screen/shared', '@smart-screen/ui'],
   serverExternalPackages: ['konva', 'react-konva'],
   allowedDevOrigins: ['127.0.0.1', 'localhost'],
   async rewrites() {

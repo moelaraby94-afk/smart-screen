@@ -50,13 +50,19 @@ export function SubscriptionSummarySection() {
     void load();
   }, [load]);
 
-  const daysLeft = data?.currentPlan.subscriptionEndDate
-    ? Math.max(0, Math.ceil((new Date(data.currentPlan.subscriptionEndDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : null;
+  const daysLeft = (() => {
+    const end = data?.currentPlan.subscriptionEndDate;
+    if (!end) return null;
+    const ms = new Date(end).getTime();
+    if (Number.isNaN(ms)) return null;
+    return Math.max(0, Math.ceil((ms - Date.now()) / (1000 * 60 * 60 * 24)));
+  })();
 
   const fmtDate = (ts: string | null) => {
     if (!ts) return '—';
-    return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(ts));
+    const d = new Date(ts);
+    if (Number.isNaN(d.getTime())) return '—';
+    return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(d);
   };
 
   const planName = data?.currentPlan.workspacePlan ?? data?.currentPlan.userSubscriptionStatus ?? '—';

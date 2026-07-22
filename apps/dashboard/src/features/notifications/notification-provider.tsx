@@ -246,6 +246,7 @@ export function NotificationBell() {
   const [bellOpen, setBellOpen] = useState(false);
 
   const formatTime = (ts: number) => {
+    if (!Number.isFinite(ts)) return '';
     const diff = Date.now() - ts;
     if (diff < 60_000) return t('justNow');
     if (diff < 3_600_000) return t('minutesAgo', { n: Math.floor(diff / 60_000) });

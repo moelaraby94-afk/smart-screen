@@ -37,6 +37,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { CardGridSkeleton } from '@/components/ui/skeleton-patterns';
 import { UsageIndicator } from '@/components/usage-indicator';
+import { WidgetErrorBoundary } from '@/components/widget-error-boundary';
 import { fetchMediaStats } from '@/features/dashboard/dashboard-api';
 
 export function ClientHomeDashboard() {
@@ -93,8 +94,8 @@ export function ClientHomeDashboard() {
     try {
       const res = await fetchMediaStats(workspaceId);
       if (res.ok) {
-        const data = (await res.json()) as { totalSizeBytes?: number };
-        setStorageUsed(data.totalSizeBytes ?? 0);
+        const data = (await res.json()) as { storageBytes?: number };
+        setStorageUsed(data.storageBytes ?? 0);
       }
     } catch {
       // silent — storage indicator is optional
@@ -109,7 +110,9 @@ export function ClientHomeDashboard() {
     if (!insights) return null;
     const end = insights.account.subscriptionEndDate;
     if (!end) return null;
-    const diff = new Date(end).getTime() - Date.now();
+    const ms = new Date(end).getTime();
+    if (Number.isNaN(ms)) return null;
+    const diff = ms - Date.now();
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   }, [insights]);
 
@@ -273,46 +276,68 @@ export function ClientHomeDashboard() {
         <OnboardingCard />
       ) : (
         <>
-          <OnboardingProgressWidget />
+          <WidgetErrorBoundary>
+            <OnboardingProgressWidget />
+          </WidgetErrorBoundary>
 
-          <QuickActionsSection />
+          <WidgetErrorBoundary>
+            <QuickActionsSection />
+          </WidgetErrorBoundary>
 
-          <UsageIndicator screenCount={totalScreens} storageUsedBytes={storageUsed} />
+          <WidgetErrorBoundary>
+            <UsageIndicator screenCount={totalScreens} storageUsedBytes={storageUsed} />
+          </WidgetErrorBoundary>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <ScreenHealthSection />
-            <RecentActivityFeed />
+            <WidgetErrorBoundary>
+              <ScreenHealthSection />
+            </WidgetErrorBoundary>
+            <WidgetErrorBoundary>
+              <RecentActivityFeed />
+            </WidgetErrorBoundary>
             <div className="lg:col-span-1">
-              <SubscriptionSummarySection />
+              <WidgetErrorBoundary>
+                <SubscriptionSummarySection />
+              </WidgetErrorBoundary>
             </div>
           </div>
 
-          <ActiveContentWidget />
+          <WidgetErrorBoundary>
+            <ActiveContentWidget />
+          </WidgetErrorBoundary>
 
-          <TotalsSection
-            totals={insights.totals}
-            loading={loading}
-            daysRemaining={daysRemaining}
-          />
+          <WidgetErrorBoundary>
+            <TotalsSection
+              totals={insights.totals}
+              loading={loading}
+              daysRemaining={daysRemaining}
+            />
+          </WidgetErrorBoundary>
 
-          <WorkspaceCardsSection
-            branches={insights.branches}
-            workspaces={workspaces}
-            loading={loading}
-            locale={locale}
-            isSuperAdmin={isSuperAdmin}
-            pauseBusyId={pauseBusyId}
-            onOpenBranch={onOpenBranch}
-            onRename={onRename}
-            onTogglePause={onTogglePause}
-            onSeedDemo={onSeedDemo}
-            seedDemoBusyId={seedDemoBusyId}
-            onDelete={onDelete}
-          />
+          <WidgetErrorBoundary>
+            <WorkspaceCardsSection
+              branches={insights.branches}
+              workspaces={workspaces}
+              loading={loading}
+              locale={locale}
+              isSuperAdmin={isSuperAdmin}
+              pauseBusyId={pauseBusyId}
+              onOpenBranch={onOpenBranch}
+              onRename={onRename}
+              onTogglePause={onTogglePause}
+              onSeedDemo={onSeedDemo}
+              seedDemoBusyId={seedDemoBusyId}
+              onDelete={onDelete}
+            />
+          </WidgetErrorBoundary>
 
           <div className="grid gap-4 md:grid-cols-[1fr_auto]">
-            <PrayerTimesWidget />
-            <HijriDateWidget />
+            <WidgetErrorBoundary>
+              <PrayerTimesWidget />
+            </WidgetErrorBoundary>
+            <WidgetErrorBoundary>
+              <HijriDateWidget />
+            </WidgetErrorBoundary>
           </div>
         </>
       )}

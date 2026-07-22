@@ -41,6 +41,8 @@ function scrubValue(value: unknown): unknown {
   if (value === null || value === undefined) return value;
   if (typeof value !== 'object') return value;
 
+  if (value instanceof Date) return value;
+
   if (Array.isArray(value)) {
     return value.map(scrubValue);
   }
