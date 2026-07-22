@@ -436,8 +436,10 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
       }
     });
 
-    socket.on('disconnect', () => {
-      /* keep UI; kiosk path sets hints */
+    socket.on('disconnect', (reason: string) => {
+      if (reason === 'io server disconnect') {
+        setTimeout(() => socket.connect(), 2000);
+      }
     });
 
     return () => {
@@ -631,6 +633,9 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
 
     socket.on('disconnect', (reason: string) => {
       setConnectionHint(`Disconnected (${reason})`);
+      if (reason === 'io server disconnect') {
+        setTimeout(() => socket.connect(), 2000);
+      }
     });
 
     socket.on('reconnect', () => {

@@ -14,9 +14,9 @@ const SKIP_STREAK_RELOAD_THRESHOLD = 5;
 export type MediaObjectFitMode = 'cover' | 'contain';
 
 const defaultMediaObjectFit: MediaObjectFitMode =
-  process.env.NEXT_PUBLIC_PLAYER_MEDIA_OBJECT_FIT === 'contain'
-    ? 'contain'
-    : 'cover';
+  process.env.NEXT_PUBLIC_PLAYER_MEDIA_OBJECT_FIT === 'cover'
+    ? 'cover'
+    : 'contain';
 
 export type PlaylistPlaybackErrorPayload = {
   code: string;
