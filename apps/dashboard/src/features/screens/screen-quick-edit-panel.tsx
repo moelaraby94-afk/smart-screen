@@ -49,7 +49,7 @@ export function ScreenQuickEditPanel({
   const [playlistId, setPlaylistId] = useState<string>('');
   const [scheduleId, setScheduleId] = useState<string>('');
   const [tickerText, setTickerText] = useState<string>('');
-  const [orientation, setOrientation] = useState<'AUTO' | 'LANDSCAPE' | 'PORTRAIT'>('AUTO');
+  const [orientation, setOrientation] = useState<'AUTO' | 'LANDSCAPE' | 'PORTRAIT' | 'SQUARE'>('AUTO');
   const [overridePlId, setOverridePlId] = useState<string>('');
   const [overrideDuration, setOverrideDuration] = useState<number>(480);
   const [location, setLocation] = useState<string>('');
@@ -201,7 +201,7 @@ export function ScreenQuickEditPanel({
     }
   };
 
-  const applyOrientation = async (next: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT') => {
+  const applyOrientation = async (next: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT' | 'SQUARE') => {
     if (!screen) return;
     setBusy(true);
     try {
@@ -529,7 +529,7 @@ export function ScreenQuickEditPanel({
                   value={orientation}
                   disabled={busy}
                   onChange={(e) => {
-                    const v = e.target.value as 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
+                    const v = e.target.value as 'AUTO' | 'LANDSCAPE' | 'PORTRAIT' | 'SQUARE';
                     void applyOrientation(v);
                   }}
                 >

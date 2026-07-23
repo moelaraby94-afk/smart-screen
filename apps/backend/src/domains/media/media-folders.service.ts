@@ -2,11 +2,12 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Inject,
 } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { STORAGE_SERVICE } from '../../common/storage/storage.interface';
 import type { IStorageService } from '../../common/storage/storage.interface';
-import { Inject } from '@nestjs/common';
+import { toMediaResponse, type MediaResponse } from './media.mapper';
 
 /**
  * Media folder organization: list, create, rename, delete, move media.
@@ -146,27 +147,20 @@ export class MediaFoldersService {
     originalName: string;
     mimeType: string;
     sizeBytes: number;
+    width?: number | null;
+    height?: number | null;
+    durationSec?: number | null;
+    rotation?: number | null;
+    codec?: string | null;
+    bitrate?: number | null;
+    frameRate?: number | null;
     relativePath: string;
     folderId?: string | null;
     folder?: { id: string; name: string } | null;
     createdAt: Date;
     updatedAt: Date;
     expiresAt?: Date | null;
-  }) {
-    return {
-      id: media.id,
-      workspaceId: media.workspaceId,
-      fileName: media.fileName,
-      originalName: media.originalName,
-      mimeType: media.mimeType,
-      sizeBytes: media.sizeBytes,
-      relativePath: media.relativePath,
-      folderId: media.folderId ?? null,
-      folderName: media.folder?.name ?? null,
-      publicUrl: this.storage.getPublicUrl(media.relativePath),
-      createdAt: media.createdAt.toISOString(),
-      updatedAt: media.updatedAt.toISOString(),
-      expiresAt: media.expiresAt ? media.expiresAt.toISOString() : null,
-    };
+  }): MediaResponse {
+    return toMediaResponse(media, this.storage);
   }
 }

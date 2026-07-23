@@ -1,10 +1,14 @@
 'use client';
 
-import { Component, type ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
+import * as Sentry from '@sentry/nextjs';
+import { devError } from '@/lib/dev-log';
 
 type Props = {
   children: ReactNode;
   fallback?: ReactNode;
+  /** Optional name for the widget section — included in logs for identification. */
+  name?: string;
 };
 
 type State = {
@@ -21,7 +25,18 @@ export class WidgetErrorBoundary extends Component<Props, State> {
     return { hasError: true };
   }
 
-  override componentDidCatch() {}
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    const componentName = this.props.name ?? 'WidgetErrorBoundary';
+    devError(`[${componentName}] render error:`, error, errorInfo);
+    Sentry.captureException(error, {
+      tags: { component: componentName },
+      extra: {
+        componentStack: errorInfo.componentStack,
+        errorMessage: error.message,
+        errorStack: error.stack,
+      },
+    });
+  }
 
   override render() {
     if (this.state.hasError) {

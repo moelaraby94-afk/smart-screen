@@ -24,7 +24,7 @@ export type ScreenRow = {
   overridePlaylistId?: string | null;
   overrideExpiresAt?: string | null;
   playerTicker?: string | null;
-  orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
+  orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT' | 'SQUARE';
   playerPlatform?: string | null;
   updatedAt: string;
 };

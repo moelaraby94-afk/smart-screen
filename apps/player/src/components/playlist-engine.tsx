@@ -5,27 +5,58 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CanvasKonvaView } from '@/components/canvas-konva-view';
 import { resolvePlaybackUrl } from '@/lib/media-cache';
 import { devWarn } from '@/lib/dev-log';
-import type { PlaylistItemUnion, RenderMode } from '@/types/player-playlist';
+import type { PlaylistItemUnion } from '@/types/player-playlist';
+import type { ObjectFitMode } from '@/rendering/types';
 
 const PLAYBACK_ERROR_SKIP_MS = 3000;
 /** After this many consecutive slide failures, hard-reload to clear bad cache / memory state. */
 const SKIP_STREAK_RELOAD_THRESHOLD = 5;
 
-export type MediaObjectFitMode = 'cover' | 'contain' | 'center' | 'fit_width' | 'fit_height';
+export type MediaObjectFitMode = ObjectFitMode;
 
 const defaultMediaObjectFit: MediaObjectFitMode =
   process.env.NEXT_PUBLIC_PLAYER_MEDIA_OBJECT_FIT === 'cover'
     ? 'cover'
     : 'contain';
 
-export function renderModeToFitMode(mode?: RenderMode): MediaObjectFitMode {
-  switch (mode) {
-    case 'COVER': return 'cover';
-    case 'CENTER': return 'center';
-    case 'FIT_WIDTH': return 'fit_width';
-    case 'FIT_HEIGHT': return 'fit_height';
-    case 'CONTAIN':
-    default: return 'contain';
+/**
+ * Translates a RenderDecision's objectFit into CSS classes.
+ * This is the ONLY place where objectFit → CSS mapping happens.
+ */
+function objectFitToCss(fit: ObjectFitMode): { fitClass: string; mediaBoxClass: string; containerClass: string } {
+  switch (fit) {
+    case 'cover':
+      return {
+        fitClass: 'object-cover',
+        mediaBoxClass: 'h-full w-full min-h-full min-w-full',
+        containerClass: 'absolute inset-0 overflow-hidden bg-black',
+      };
+    case 'fit_width':
+      return {
+        fitClass: 'object-contain w-full h-auto',
+        mediaBoxClass: 'w-full h-auto',
+        containerClass: 'absolute inset-0 overflow-hidden bg-black flex items-center justify-center',
+      };
+    case 'fit_height':
+      return {
+        fitClass: 'object-contain h-full w-auto',
+        mediaBoxClass: 'h-full w-auto',
+        containerClass: 'absolute inset-0 overflow-hidden bg-black flex items-center justify-center',
+      };
+    case 'center':
+      // CENTER: media at natural size, centered — NOT same as contain
+      return {
+        fitClass: 'object-none',
+        mediaBoxClass: 'max-h-full max-w-full',
+        containerClass: 'absolute inset-0 overflow-hidden bg-black flex items-center justify-center',
+      };
+    case 'contain':
+    default:
+      return {
+        fitClass: 'object-contain',
+        mediaBoxClass: 'max-h-full max-w-full',
+        containerClass: 'absolute inset-0 overflow-hidden bg-black flex items-center justify-center',
+      };
   }
 }
 
@@ -43,9 +74,13 @@ type Props = {
   onPlaybackMediaError?: (payload: PlaylistPlaybackErrorPayload) => void;
   /**
    * Image / video fit. Defaults to `cover` (or `NEXT_PUBLIC_PLAYER_MEDIA_OBJECT_FIT=contain`).
-   * Canvas stage always uses cover-style scaling.
+   * Derived from RenderDecision.objectFit by the parent component.
    */
   mediaObjectFit?: MediaObjectFitMode;
+  /** Render mode from playlist — passed to CanvasKonvaView for canvas scaling */
+  renderMode?: 'CONTAIN' | 'COVER' | 'CENTER' | 'FIT_WIDTH' | 'FIT_HEIGHT';
+  /** Orientation from playlist/screen — passed to CanvasKonvaView */
+  orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT' | 'SQUARE';
 };
 
 function isVideoMime(mime: string) {
@@ -85,22 +120,7 @@ function MediaSlide({
   const video = isVideoMime(slide.mimeType);
   const firedRef = useRef(false);
 
-  const fitClass =
-    objectFit === 'cover' ? 'object-cover'
-    : objectFit === 'fit_width' ? 'object-contain w-full h-auto'
-    : objectFit === 'fit_height' ? 'object-contain h-full w-auto'
-    : 'object-contain';
-
-  const mediaBoxClass =
-    objectFit === 'cover'
-      ? 'h-full w-full min-h-full min-w-full'
-    : objectFit === 'fit_width'
-      ? 'w-full h-auto'
-    : objectFit === 'fit_height'
-      ? 'h-full w-auto'
-    : objectFit === 'center'
-      ? 'max-h-full max-w-full'
-    : 'max-h-full max-w-full';
+  const { fitClass, mediaBoxClass, containerClass } = objectFitToCss(objectFit);
 
   const fire = useCallback(
     (medium: 'video' | 'image', detail?: string) => {
@@ -112,11 +132,7 @@ function MediaSlide({
   );
 
   return (
-    <div
-      className={`absolute inset-0 overflow-hidden bg-black${
-        objectFit === 'contain' || objectFit === 'center' ? ' flex items-center justify-center' : objectFit === 'fit_width' ? ' flex items-center justify-center' : objectFit === 'fit_height' ? ' flex items-center justify-center' : ''
-      }`}
-    >
+    <div className={containerClass}>
       {video ? (
         <video
           className={`${mediaBoxClass} ${fitClass}`}
@@ -162,6 +178,8 @@ export function PlaylistEngine({
   liveCanvasLayouts,
   onPlaybackMediaError,
   mediaObjectFit = defaultMediaObjectFit,
+  renderMode = 'CONTAIN',
+  orientation = 'AUTO',
 }: Props) {
   const sorted = useMemo(
     () => [...items].sort((a, b) => a.orderIndex - b.orderIndex),
@@ -401,6 +419,8 @@ export function PlaylistEngine({
               liveOverride={
                 liveCanvasLayouts?.[resolved.canvas.id] ?? null
               }
+              renderMode={renderMode}
+              orientation={orientation}
             />
           )}
         </motion.div>

@@ -10,6 +10,7 @@ import { buildPage } from '../../common/pagination/page';
 import {
   PaginationQueryDto,
   skipFor,
+  MAX_PAGE_SIZE,
 } from '../../common/pagination/pagination-query.dto';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { PlaylistsService } from '../playlists/playlists.service';
@@ -47,6 +48,7 @@ export class SchedulesService {
   async listOverlaps(workspaceId: string) {
     const rows = await this.prisma.schedule.findMany({
       where: { workspaceId, enabled: true },
+      take: MAX_PAGE_SIZE,
       select: {
         id: true,
         screenId: true,

@@ -11,6 +11,7 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 import { ConfigHelper } from '../../common/config/config.helper';
 import { EmailService } from '../email/email.service';
 import { teamInviteEmail } from '../email/email-templates';
+import { MAX_PAGE_SIZE } from '../../common/pagination/pagination-query.dto';
 
 @Injectable()
 export class WorkspaceInvitesService {
@@ -282,6 +283,7 @@ export class WorkspaceInvitesService {
     const invitations = await this.prisma.workspaceInvitation.findMany({
       where: { workspaceId, status: InvitationStatus.PENDING },
       orderBy: { createdAt: 'desc' },
+      take: MAX_PAGE_SIZE,
       select: {
         id: true,
         email: true,

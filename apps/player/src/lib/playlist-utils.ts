@@ -28,6 +28,10 @@ function normalizeItem(raw: unknown): PlaylistItemUnion | null {
         id: String(m.id ?? ''),
         mimeType: String(m.mimeType ?? ''),
         publicUrl: String(m.publicUrl ?? ''),
+        ...(m.width != null ? { width: Number(m.width) } : {}),
+        ...(m.height != null ? { height: Number(m.height) } : {}),
+        ...(m.durationSec != null ? { durationSec: Number(m.durationSec) } : {}),
+        ...(m.rotation != null ? { rotation: Number(m.rotation) } : {}),
       },
     };
   }
@@ -59,6 +63,10 @@ function normalizeItem(raw: unknown): PlaylistItemUnion | null {
         id: String(m.id ?? ''),
         mimeType: String(m.mimeType ?? ''),
         publicUrl: String(m.publicUrl ?? ''),
+        ...(m.width != null ? { width: Number(m.width) } : {}),
+        ...(m.height != null ? { height: Number(m.height) } : {}),
+        ...(m.durationSec != null ? { durationSec: Number(m.durationSec) } : {}),
+        ...(m.rotation != null ? { rotation: Number(m.rotation) } : {}),
       },
     };
   }
@@ -85,7 +93,7 @@ export function parsePlaylistPayload(raw: unknown): PlaylistPayload | null {
     ...(rm === 'CONTAIN' || rm === 'COVER' || rm === 'CENTER' || rm === 'FIT_WIDTH' || rm === 'FIT_HEIGHT'
       ? { renderMode: rm }
       : {}),
-    ...(ort === 'AUTO' || ort === 'LANDSCAPE' || ort === 'PORTRAIT'
+    ...(ort === 'AUTO' || ort === 'LANDSCAPE' || ort === 'PORTRAIT' || ort === 'SQUARE'
       ? { orientation: ort }
       : {}),
     ...(o.targetWidth != null ? { targetWidth: Number(o.targetWidth) } : {}),

@@ -8,6 +8,7 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 import { WorkspaceAuthHelper } from '../../common/auth/workspace-auth.helper';
 import { SessionRevocationService } from '../../common/auth/session-revocation.service';
 import { AccountContextHelper } from '../../common/auth/account-context.helper';
+import { MAX_PAGE_SIZE } from '../../common/pagination/pagination-query.dto';
 
 @Injectable()
 export class WorkspaceMembersService {
@@ -22,6 +23,7 @@ export class WorkspaceMembersService {
     const rows = await this.prisma.workspaceMember.findMany({
       where: { workspaceId },
       orderBy: { createdAt: 'asc' },
+      take: MAX_PAGE_SIZE,
       select: {
         id: true,
         role: true,

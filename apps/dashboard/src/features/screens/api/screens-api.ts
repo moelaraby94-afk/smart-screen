@@ -18,7 +18,7 @@ export type ScreenUpdateInput = {
   playerPlatform?: string;
   resolutionWidth?: number;
   resolutionHeight?: number;
-  orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
+  orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT' | 'SQUARE';
 };
 
 export type RemoteCommand = 'identify' | 'refresh_content' | 'restart';

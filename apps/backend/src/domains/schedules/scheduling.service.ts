@@ -198,6 +198,10 @@ export class SchedulingService {
 
   /**
    * Returns pairs of schedule ids that overlap on the same screen scope (same day, time intersection).
+   *
+   * Optimized: groups schedules by (screenId, recurrence, day) so only
+   * schedules that can possibly overlap are compared, and uses O(1)
+   * interval arithmetic instead of a 15-minute granularity sweep.
    */
   findOverlappingPairs(
     schedules: Array<{
@@ -212,51 +216,60 @@ export class SchedulingService {
     }>,
   ): Array<[string, string]> {
     const overlaps: Array<[string, string]> = [];
-    const list = [...schedules];
 
-    const window = (start: string, end: string) => {
-      const a = parseHHmm(start);
-      const b = parseHHmm(end);
-      return { a, b, crosses: a >= b };
-    };
+    // Group by (screenId, recurrence, day) — only schedules in the same group can overlap
+    const groups = new Map<string, Array<{
+      id: string;
+      start: number;
+      end: number;
+      crosses: boolean;
+    }>>();
 
-    for (let i = 0; i < list.length; i++) {
-      for (let j = i + 1; j < list.length; j++) {
-        const x = list[i];
-        const y = list[j];
-        if (x.screenId !== y.screenId) continue;
-        // Only schedules of the same recurrence type can overlap deterministically.
-        const xRec = x.recurrence ?? RecurrenceType.WEEKLY;
-        const yRec = y.recurrence ?? RecurrenceType.WEEKLY;
-        if (xRec !== yRec) continue;
-        const days =
-          xRec === RecurrenceType.MONTHLY
-            ? (x.daysOfMonth ?? []).filter((d) =>
-                (y.daysOfMonth ?? []).includes(d),
-              )
-            : x.daysOfWeek.filter((d) => y.daysOfWeek.includes(d));
-        if (days.length === 0) continue;
+    for (const s of schedules) {
+      const rec = s.recurrence ?? RecurrenceType.WEEKLY;
+      const days = rec === RecurrenceType.MONTHLY
+        ? (s.daysOfMonth ?? [])
+        : s.daysOfWeek;
+      const start = parseHHmm(s.startTime);
+      const end = parseHHmm(s.endTime);
+      const crosses = start >= end;
 
-        const wx = window(x.startTime, x.endTime);
-        const wy = window(y.startTime, y.endTime);
-
-        const intersects = this.windowsOverlap(wx, wy);
-        if (intersects) overlaps.push([x.id, y.id]);
+      for (const day of days) {
+        const key = `${s.screenId ?? '*'}|${rec}|${day}`;
+        let group = groups.get(key);
+        if (!group) {
+          group = [];
+          groups.set(key, group);
+        }
+        group.push({ id: s.id, start, end, crosses });
       }
     }
+
+    // Within each group, compare all pairs with O(1) interval check
+    for (const group of groups.values()) {
+      for (let i = 0; i < group.length; i++) {
+        for (let j = i + 1; j < group.length; j++) {
+          if (this.intervalsOverlap(group[i], group[j])) {
+            overlaps.push([group[i].id, group[j].id]);
+          }
+        }
+      }
+    }
+
     return overlaps;
   }
 
-  private windowsOverlap(
-    x: { a: number; b: number; crosses: boolean },
-    y: { a: number; b: number; crosses: boolean },
+  /**
+   * O(1) interval overlap check supporting midnight-crossing windows.
+   * A window that crosses midnight spans [start, 1440) ∪ [0, end).
+   */
+  private intervalsOverlap(
+    x: { start: number; end: number; crosses: boolean },
+    y: { start: number; end: number; crosses: boolean },
   ): boolean {
-    const inWin = (m: number, w: { a: number; b: number; crosses: boolean }) =>
-      w.crosses ? m >= w.a || m < w.b : m >= w.a && m < w.b;
-
-    for (let m = 0; m < 24 * 60; m += 15) {
-      if (inWin(m, x) && inWin(m, y)) return true;
-    }
-    return false;
+    if (x.crosses && y.crosses) return true; // both include midnight
+    if (x.crosses) return y.start < x.end || y.end > x.start;
+    if (y.crosses) return x.start < y.end || x.end > y.start;
+    return x.start < y.end && y.start < x.end;
   }
 }

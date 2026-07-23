@@ -7,7 +7,7 @@ import { Prisma, ScreenStatus } from '@prisma/client';
 import { DomainException } from '../../common/errors/domain.exception';
 import { ErrorCode } from '../../common/errors/error-codes';
 import { buildPage } from '../../common/pagination/page';
-import { skipFor } from '../../common/pagination/pagination-query.dto';
+import { skipFor, MAX_PAGE_SIZE } from '../../common/pagination/pagination-query.dto';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { PlaylistsService } from '../playlists/playlists.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -301,6 +301,7 @@ export class ScreensService {
   async getAnalytics(workspaceId: string) {
     const screens = await this.prisma.screen.findMany({
       where: { workspaceId },
+      take: MAX_PAGE_SIZE,
       select: {
         id: true,
         name: true,

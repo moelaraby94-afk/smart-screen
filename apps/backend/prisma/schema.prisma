@@ -75,6 +75,8 @@ enum ScreenOrientation {
 
   PORTRAIT
 
+  SQUARE
+
 }
 
 enum RenderMode {
@@ -806,6 +808,21 @@ model Media {
 
   /// Detected media height in pixels (images/video frames)
   height        Int?
+
+  /// Video duration in seconds (null for images)
+  durationSec   Float?
+
+  /// Video rotation in degrees (0, 90, 180, 270) from metadata
+  rotation      Int?
+
+  /// Video codec name (e.g. h264, vp9)
+  codec         String?
+
+  /// Video bitrate in bits per second
+  bitrate       Int?
+
+  /// Video frame rate (e.g. 24, 30, 60)
+  frameRate     Float?
 
   /// SHA-256 hash of file content for integrity checking
   fileHash      String?

@@ -2,6 +2,8 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Inject,
+  Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
@@ -15,10 +17,11 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PlatformEvents } from '../../common/events/platform-events';
 import { STORAGE_SERVICE } from '../../common/storage/storage.interface';
 import type { IStorageService } from '../../common/storage/storage.interface';
-import { Inject } from '@nestjs/common';
 import { join } from 'path';
 import { createHash, randomUUID } from 'crypto';
 import { MediaFoldersService } from './media-folders.service';
+import { toMediaResponse, type MediaResponse } from './media.mapper';
+import { extractVideoMetadata, isVideoMime, type VideoMetadata } from './video-metadata';
 
 const ALLOWED_MIME = new Set([
   'image/jpeg',
@@ -34,6 +37,7 @@ const MAX_BYTES = 150 * 1024 * 1024;
 
 @Injectable()
 export class MediaService {
+  private readonly logger = new Logger(MediaService.name);
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
@@ -170,6 +174,24 @@ export class MediaService {
       }
     }
 
+    // Video metadata extraction via ffprobe (fault-tolerant)
+    let videoMeta: VideoMetadata = {
+      width: null,
+      height: null,
+      durationSec: null,
+      rotation: null,
+      codec: null,
+      bitrate: null,
+      frameRate: null,
+    };
+    if (isVideoMime(detected.mime)) {
+      videoMeta = await extractVideoMetadata(params.buffer, {
+        warn: (msg: string) => this.logger?.warn?.(msg),
+      });
+      if (videoMeta.width) detectedWidth = videoMeta.width;
+      if (videoMeta.height) detectedHeight = videoMeta.height;
+    }
+
     // SHA-256 file hash for integrity checking
     const fileHash = createHash('sha256').update(uploadBuffer).digest('hex');
 
@@ -226,6 +248,11 @@ export class MediaService {
             fileHash,
             width: detectedWidth,
             height: detectedHeight,
+            durationSec: videoMeta.durationSec,
+            rotation: videoMeta.rotation,
+            codec: videoMeta.codec,
+            bitrate: videoMeta.bitrate,
+            frameRate: videoMeta.frameRate,
           },
         });
       });
@@ -539,27 +566,16 @@ export class MediaService {
     folder?: { id: string; name: string } | null;
     width?: number | null;
     height?: number | null;
+    durationSec?: number | null;
+    rotation?: number | null;
+    codec?: string | null;
+    bitrate?: number | null;
+    frameRate?: number | null;
     createdAt: Date;
     updatedAt: Date;
     expiresAt?: Date | null;
-  }) {
-    return {
-      id: media.id,
-      workspaceId: media.workspaceId,
-      fileName: media.fileName,
-      originalName: media.originalName,
-      mimeType: media.mimeType,
-      sizeBytes: media.sizeBytes,
-      width: media.width ?? null,
-      height: media.height ?? null,
-      relativePath: media.relativePath,
-      folderId: media.folderId ?? null,
-      folderName: media.folder?.name ?? null,
-      publicUrl: this.buildPublicUrl(media.relativePath),
-      createdAt: media.createdAt.toISOString(),
-      updatedAt: media.updatedAt.toISOString(),
-      expiresAt: media.expiresAt ? media.expiresAt.toISOString() : null,
-    };
+  }): MediaResponse {
+    return toMediaResponse(media, this.storage);
   }
 
   private safeExt(originalName: string, mime: string): string {

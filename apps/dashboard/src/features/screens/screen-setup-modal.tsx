@@ -151,7 +151,7 @@ export function ScreenSetupModal({
   const [playlists, setPlaylists] = useState<PlaylistOption[]>([]);
   const [schedules, setSchedules] = useState<ScheduleOpt[]>([]);
   const [tickerText, setTickerText] = useState('');
-  const [orientation, setOrientation] = useState<'AUTO' | 'LANDSCAPE' | 'PORTRAIT'>('AUTO');
+  const [orientation, setOrientation] = useState<'AUTO' | 'LANDSCAPE' | 'PORTRAIT' | 'SQUARE'>('AUTO');
   const [overridePlId, setOverridePlId] = useState('');
   const [overrideDuration, setOverrideDuration] = useState(480);
   const [screenName, setScreenName] = useState('');
@@ -174,7 +174,7 @@ export function ScreenSetupModal({
   const [pendingSettings, setPendingSettings] = useState<null | {
     name: string;
     location: string;
-    orientation: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
+    orientation: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT' | 'SQUARE';
     tickerText: string;
     overridePlId: string;
     overrideDuration: number;

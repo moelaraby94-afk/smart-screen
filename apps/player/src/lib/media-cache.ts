@@ -2,6 +2,15 @@ import { devWarn } from '@/lib/dev-log';
 
 const CACHE_NAME = 'smartscreen-player-v1';
 
+/**
+ * Maximum number of entries to keep in the Cache API. Beyond this, the oldest
+ * entries (by cache key insertion order, which approximates LRU for a player
+ * that receives sequential playlist updates) are evicted. Set high enough that
+ * a normal playlist's media all fits, but low enough to bound disk usage on
+ * long-running kiosks.
+ */
+const MAX_CACHE_ENTRIES = 200;
+
 /** Maps canonical media URL → object URL (deduped until cleared). */
 const urlToBlob = new Map<string, string>();
 
@@ -56,6 +65,43 @@ export async function warmMediaUrls(urls: string[]): Promise<void> {
       }
     }),
   );
+  await evictStaleMedia(unique);
+}
+
+/**
+ * Removes Cache API entries that are no longer part of the current playlist,
+ * plus enforces a hard cap on total entry count to bound disk usage on
+ * long-running kiosks. Entries not in `currentUrls` are deleted first; if
+ * the remaining count still exceeds MAX_CACHE_ENTRIES, the oldest entries
+ * (by cache.keys() order) are trimmed.
+ */
+export async function evictStaleMedia(currentUrls: string[]): Promise<void> {
+  try {
+    const cache = await openCache();
+    const keepSet = new Set(currentUrls);
+    const keys = await cache.keys();
+
+    // Phase 1: delete entries not in the current playlist
+    const stale = keys.filter((k) => !keepSet.has(k.url));
+    await Promise.all(
+      stale.map((k) => cache.delete(k).catch(() => {})),
+    );
+
+    // Phase 2: if still over the cap, trim oldest entries
+    if (stale.length > 0) {
+      // Re-read keys after deletions
+      const remaining = await cache.keys();
+      if (remaining.length > MAX_CACHE_ENTRIES) {
+        const excess = remaining.length - MAX_CACHE_ENTRIES;
+        const toTrim = remaining.slice(0, excess);
+        await Promise.all(
+          toTrim.map((k) => cache.delete(k).catch(() => {})),
+        );
+      }
+    }
+  } catch {
+    // Cache API may be unavailable (private browsing, quota exceeded)
+  }
 }
 
 /**
@@ -103,8 +149,13 @@ export async function getMediaCacheSize(): Promise<number> {
     for (const key of keys) {
       const res = await cache.match(key);
       if (res) {
-        const blob = await res.blob();
-        total += blob.size;
+        const len = res.headers.get('Content-Length');
+        if (len) {
+          total += Number(len);
+        } else {
+          const blob = await res.blob();
+          total += blob.size;
+        }
       }
     }
     return total;

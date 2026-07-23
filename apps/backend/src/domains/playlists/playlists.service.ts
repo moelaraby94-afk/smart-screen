@@ -10,6 +10,7 @@ import {
   PaginationQueryDto,
   skipFor,
 } from '../../common/pagination/pagination-query.dto';
+import { mapWithConcurrency } from '../../common/utils/map-with-concurrency';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { AccountContextHelper } from '../../common/auth/account-context.helper';
 
@@ -22,12 +23,15 @@ import { CanvasesService } from '../canvases/canvases.service';
 
 import { SchedulingService } from '../schedules/scheduling.service';
 
-import type { Playlist, PlaylistItem, Media, Canvas } from '@prisma/client';
+import type { Playlist, PlaylistItem, Media, Canvas, ScreenOrientation, RenderMode } from '@prisma/client';
 
 import type { ReplacePlaylistItemsDto } from './dto/replace-playlist-items.dto';
 import type { UpdatePlaylistDto } from './dto/update-playlist.dto';
 import { PlaylistGroupsService } from './playlist-groups.service';
 import { PlaylistResolutionService } from './playlist-resolution.service';
+
+/** Max screens to emit to in parallel during emitForPlaylist. */
+const EMIT_BATCH_SIZE = 5;
 
 @Injectable()
 export class PlaylistsService {
@@ -54,8 +58,8 @@ export class PlaylistsService {
     workspaceId: string | null,
     name: string,
     groupId?: string | null,
-    orientation?: string,
-    renderMode?: string,
+    orientation?: ScreenOrientation,
+    renderMode?: RenderMode,
     targetWidth?: number,
     targetHeight?: number,
   ) {
@@ -65,8 +69,8 @@ export class PlaylistsService {
         workspaceId: workspaceId ?? undefined,
         name,
         groupId: groupId ?? undefined,
-        ...(orientation ? { orientation: orientation as any } : {}),
-        ...(renderMode ? { renderMode: renderMode as any } : {}),
+        ...(orientation ? { orientation } : {}),
+        ...(renderMode ? { renderMode } : {}),
         ...(targetWidth !== undefined ? { targetWidth } : {}),
         ...(targetHeight !== undefined ? { targetHeight } : {}),
       },
@@ -157,8 +161,8 @@ export class PlaylistsService {
     const data: {
       name?: string;
       isPublished?: boolean;
-      orientation?: any;
-      renderMode?: any;
+      orientation?: ScreenOrientation;
+      renderMode?: RenderMode;
       targetWidth?: number;
       targetHeight?: number;
     } = {};
@@ -652,6 +656,10 @@ export class PlaylistsService {
         items: [],
 
         activeSource: resolved.source,
+        renderMode: 'CONTAIN',
+        orientation: 'AUTO',
+        targetWidth: null,
+        targetHeight: null,
       };
     }
 
@@ -686,6 +694,10 @@ export class PlaylistsService {
         items: [],
 
         activeSource: 'default',
+        renderMode: 'CONTAIN',
+        orientation: 'AUTO',
+        targetWidth: null,
+        targetHeight: null,
       };
     }
 
@@ -725,7 +737,11 @@ export class PlaylistsService {
     }
   }
 
-  async emitForPlaylist(playlistId: string): Promise<void> {
+  async emitForPlaylist(playlistId: string, visited?: Set<string>): Promise<void> {
+    const seen = visited ?? new Set<string>();
+    if (seen.has(playlistId)) return;
+    seen.add(playlistId);
+
     const direct = await this.prisma.screen.findMany({
       where: {
         OR: [
@@ -773,12 +789,14 @@ export class PlaylistsService {
     });
     const parentIds = [...new Set(parentItems.map((p) => p.playlistId))];
     for (const parentId of parentIds) {
-      await this.emitForPlaylist(parentId);
+      await this.emitForPlaylist(parentId, seen);
     }
 
-    for (const id of ids) {
-      await this.emitPlaylistForScreen(id);
-    }
+    await mapWithConcurrency(
+      [...ids],
+      EMIT_BATCH_SIZE,
+      (id) => this.emitPlaylistForScreen(id),
+    );
   }
 
   private async ensurePlaylist(

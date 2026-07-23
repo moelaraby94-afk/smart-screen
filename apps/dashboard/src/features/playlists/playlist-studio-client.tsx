@@ -70,7 +70,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
     if (workspaceId && playlistId && (patch.orientation || patch.renderMode)) {
       const apiData: Record<string, unknown> = {};
       if (patch.orientation) {
-        const ortMap: Record<string, string> = { landscape: 'LANDSCAPE', portrait: 'PORTRAIT', square: 'AUTO' };
+        const ortMap: Record<string, string> = { landscape: 'LANDSCAPE', portrait: 'PORTRAIT', square: 'SQUARE' };
         apiData.orientation = ortMap[patch.orientation] ?? 'AUTO';
       }
       if (patch.renderMode) {
@@ -117,7 +117,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
       latestNameRef.current = '';
       void loadPlaylistDetail(playlistId).then((serverMeta) => {
         if (!serverMeta) return;
-        const ortMap: Record<string, string> = { LANDSCAPE: 'landscape', PORTRAIT: 'portrait', AUTO: 'landscape' };
+        const ortMap: Record<string, string> = { LANDSCAPE: 'landscape', PORTRAIT: 'portrait', SQUARE: 'square', AUTO: 'landscape' };
         const serverOrientation = serverMeta.orientation ? (ortMap[serverMeta.orientation] ?? 'landscape') : undefined;
         const serverRenderMode = serverMeta.renderMode as PlaylistLocalMeta['renderMode'] | undefined;
         if (serverOrientation || serverRenderMode) {

@@ -32,9 +32,9 @@ import { PlayerPairingWait } from '@/components/player-pairing-wait';
 import { PrayerPauseOverlay } from '@/components/prayer-pause-overlay';
 import {
   PlaylistEngine,
-  renderModeToFitMode,
   type PlaylistPlaybackErrorPayload,
 } from '@/components/playlist-engine';
+import { computeMediaRenderDecision } from '@/rendering/rendering-strategy';
 
 const HEARTBEAT_INTERVAL_MS = 30_000;
 const SCHEDULE_POLL_MS = 60_000;
@@ -89,7 +89,7 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
   const [bootMode, setBootMode] = useState<BootMode>('pending');
   const [playlist, setPlaylist] = useState<PlaylistPayload | null>(null);
   const [ticker, setTicker] = useState<string | null>(null);
-  const [orientation, setOrientation] = useState<'AUTO' | 'LANDSCAPE' | 'PORTRAIT'>('AUTO');
+  const [orientation, setOrientation] = useState<'AUTO' | 'LANDSCAPE' | 'PORTRAIT' | 'SQUARE'>('AUTO');
   const [displaySerial, setDisplaySerial] = useState<string>('');
   const [identifyOpen, setIdentifyOpen] = useState(false);
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
@@ -117,6 +117,7 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
   const offlineRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const kioskSocketRef = useRef<Socket | null>(null);
   const playlistRef = useRef<PlaylistPayload | null>(null);
+  const playlistGenerationRef = useRef(0);
 
   useEffect(() => {
     playlistRef.current = playlist;
@@ -144,6 +145,7 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
   const applyPlaylistPayload = useCallback((raw: unknown) => {
     const next = parsePlaylistPayload(raw);
     if (!next) return;
+    const gen = ++playlistGenerationRef.current;
     const urls = collectMediaUrls(next);
     void (async () => {
       try {
@@ -151,6 +153,7 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
       } catch (e) {
         devWarn('[player-runtime] warmMediaUrls failed (continuing with playlist)', e);
       }
+      if (gen !== playlistGenerationRef.current) return;
       setLiveCanvasLayouts({});
       setPlaylist(next);
       const serial = displaySerialRef.current || kioskSerialRef.current;
@@ -729,13 +732,24 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
   const showBootstrapSplash =
     (bootMode === 'jwt' || bootMode === 'kiosk') && !playlist && !bootstrapError;
 
+  const renderDecision = computeMediaRenderDecision(
+    playlist?.renderMode ?? 'CONTAIN',
+    orientation,
+    {
+      screenWidth: typeof window !== 'undefined' ? window.screen.width : null,
+      screenHeight: typeof window !== 'undefined' ? window.screen.height : null,
+      targetWidth: playlist?.targetWidth,
+      targetHeight: playlist?.targetHeight,
+    },
+  );
+
   const orientationStyle: React.CSSProperties =
-    orientation === 'PORTRAIT'
+    renderDecision.rotation !== 0
       ? {
-          transform: 'rotate(90deg)',
+          transform: `rotate(${renderDecision.rotation}deg)`,
           transformOrigin: 'center center',
-          width: '100vh',
-          height: '100vw',
+          width: renderDecision.swapDimensions ? '100vh' : '100vw',
+          height: renderDecision.swapDimensions ? '100vw' : '100vh',
           position: 'absolute',
           top: '50%',
           left: '50%',
@@ -776,7 +790,9 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
               <PlaylistEngine
                 items={playlist.items}
                 liveCanvasLayouts={liveCanvasLayouts}
-                mediaObjectFit={renderModeToFitMode(playlist.renderMode)}
+                mediaObjectFit={renderDecision.objectFit}
+                renderMode={playlist.renderMode ?? 'CONTAIN'}
+                orientation={orientation}
                 onPlaybackMediaError={
                   bootMode === 'kiosk' ? reportPlaybackMediaError : undefined
                 }

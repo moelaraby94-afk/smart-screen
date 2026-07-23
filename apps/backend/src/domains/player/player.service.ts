@@ -108,6 +108,10 @@ export class PlayerService {
         playlistId: null,
         name: null,
         items: [],
+        renderMode: 'CONTAIN',
+        orientation: screen.orientation,
+        targetWidth: null,
+        targetHeight: null,
       },
     };
   }
@@ -226,6 +230,10 @@ export class PlayerService {
         playlistId: null,
         name: null,
         items: [],
+        renderMode: 'CONTAIN',
+        orientation: screen.orientation,
+        targetWidth: null,
+        targetHeight: null,
       },
     };
   }

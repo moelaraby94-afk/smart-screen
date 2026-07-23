@@ -183,10 +183,10 @@ export class PlaylistResolutionService {
       workspaceId: playlist.workspaceId ?? null,
       name: playlist.name,
       isPublished: playlist.isPublished,
-      orientation: (playlist as any).orientation ?? 'AUTO',
-      renderMode: (playlist as any).renderMode ?? 'CONTAIN',
-      targetWidth: (playlist as any).targetWidth ?? null,
-      targetHeight: (playlist as any).targetHeight ?? null,
+      orientation: playlist.orientation,
+      renderMode: playlist.renderMode,
+      targetWidth: playlist.targetWidth,
+      targetHeight: playlist.targetHeight,
       createdAt: playlist.createdAt.toISOString(),
       updatedAt: playlist.updatedAt.toISOString(),
       items: playlist.items.map((item) => this.serializeItem(item)),
@@ -279,6 +279,10 @@ export class PlaylistResolutionService {
         isPublished: false,
         activeSource: 'rotation' as const,
         items: [],
+        renderMode: 'CONTAIN',
+        orientation: 'AUTO',
+        targetWidth: null,
+        targetHeight: null,
       };
     }
 
@@ -319,13 +323,18 @@ export class PlaylistResolutionService {
       }
     }
 
+    const firstPlaylist = published[0].playlist;
     return {
       workspaceId: screen.workspaceId,
       screenId,
-      playlistId: published[0].playlist.id,
+      playlistId: firstPlaylist.id,
       name: published.map((a) => a.playlist.name).join(' → '),
       isPublished: true,
       activeSource: 'rotation' as const,
+      renderMode: firstPlaylist.renderMode,
+      orientation: firstPlaylist.orientation,
+      targetWidth: firstPlaylist.targetWidth,
+      targetHeight: firstPlaylist.targetHeight,
       items: mergedItems,
     };
   }
@@ -359,10 +368,10 @@ export class PlaylistResolutionService {
       name: playlist.name,
       isPublished: playlist.isPublished,
       activeSource,
-      renderMode: (playlist as any).renderMode ?? 'CONTAIN',
-      orientation: (playlist as any).orientation ?? 'AUTO',
-      targetWidth: (playlist as any).targetWidth ?? null,
-      targetHeight: (playlist as any).targetHeight ?? null,
+      renderMode: playlist.renderMode,
+      orientation: playlist.orientation,
+      targetWidth: playlist.targetWidth,
+      targetHeight: playlist.targetHeight,
       items: resolvedItems.map((item) => {
         if (item.kind === 'media') {
           return {

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { PlaylistsService } from '../playlists/playlists.service';
+import { MAX_PAGE_SIZE } from '../../common/pagination/pagination-query.dto';
 
 /**
  * Screen-playlist assignment management: list, add, remove, reorder.
@@ -22,6 +23,7 @@ export class ScreenAssignmentsService {
     return this.prisma.screenPlaylistAssignment.findMany({
       where: { screenId },
       orderBy: { orderIndex: 'asc' },
+      take: MAX_PAGE_SIZE,
       include: {
         playlist: { select: { id: true, name: true, isPublished: true } },
       },
@@ -87,6 +89,7 @@ export class ScreenAssignmentsService {
     const result = await this.prisma.screenPlaylistAssignment.findMany({
       where: { screenId },
       orderBy: { orderIndex: 'asc' },
+      take: MAX_PAGE_SIZE,
       include: {
         playlist: { select: { id: true, name: true, isPublished: true } },
       },

@@ -9,12 +9,17 @@ import {
   type CanvasObjectJson,
   parseCanvasLayout,
 } from '@/types/canvas-layout';
+import { computeCanvasRenderDecision } from '@/rendering/rendering-strategy';
 
 type Props = {
   designWidth: number;
   designHeight: number;
   layoutData: unknown;
   liveOverride?: unknown | null;
+  /** Render mode from playlist — controls canvas scaling behavior */
+  renderMode?: 'CONTAIN' | 'COVER' | 'CENTER' | 'FIT_WIDTH' | 'FIT_HEIGHT';
+  /** Orientation from playlist/screen */
+  orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT' | 'SQUARE';
 };
 
 function CanvasImageNode({ obj }: { obj: CanvasObjectJson }) {
@@ -161,7 +166,7 @@ function CanvasQrCodeNode({ obj }: { obj: CanvasObjectJson }) {
   return <KonvaImage image={img} x={obj.x} y={obj.y} width={obj.width} height={obj.height} opacity={obj.opacity ?? 1} />;
 }
 
-export function CanvasKonvaView({ designWidth, designHeight, layoutData, liveOverride }: Props) {
+export function CanvasKonvaView({ designWidth, designHeight, layoutData, liveOverride, renderMode = 'CONTAIN', orientation = 'AUTO' }: Props) {
   const doc: CanvasLayoutV1 = useMemo(
     () => parseCanvasLayout(liveOverride ?? layoutData),
     [layoutData, liveOverride],
@@ -181,10 +186,16 @@ export function CanvasKonvaView({ designWidth, designHeight, layoutData, liveOve
     return () => ro.disconnect();
   }, []);
 
-  /** Contain viewport (like object-fit: contain) — entire canvas visible, centered with black bars. */
-  const scale = Math.min(size.w / designWidth, size.h / designHeight, 4);
-  const ox = (size.w - designWidth * scale) / 2;
-  const oy = (size.h - designHeight * scale) / 2;
+  const canvasDecision = computeCanvasRenderDecision(
+    renderMode,
+    orientation,
+    designWidth,
+    designHeight,
+    { screenWidth: size.w, screenHeight: size.h },
+  );
+  const scale = canvasDecision.canvasScale.scale;
+  const ox = canvasDecision.canvasScale.offsetX;
+  const oy = canvasDecision.canvasScale.offsetY;
 
   return (
     <div ref={containerRef} className="flex h-full w-full items-center justify-center bg-black">

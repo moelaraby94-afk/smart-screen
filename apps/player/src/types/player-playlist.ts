@@ -2,6 +2,10 @@ export type PlaylistMedia = {
   id: string;
   mimeType: string;
   publicUrl: string;
+  width?: number | null;
+  height?: number | null;
+  durationSec?: number | null;
+  rotation?: number | null;
 };
 
 export type PlaylistCanvasCompiled = {
@@ -39,7 +43,7 @@ export type PlaylistPayload = {
   /** override | schedule | rotation | default — from scheduling engine */
   activeSource?: 'override' | 'schedule' | 'rotation' | 'default';
   renderMode?: RenderMode;
-  orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
+  orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT' | 'SQUARE';
   targetWidth?: number | null;
   targetHeight?: number | null;
   items: PlaylistItemUnion[];
@@ -52,7 +56,7 @@ export type BootstrapResponse = {
   /** Display name for idle / placeholder UI when no playlist is assigned. */
   workspaceName?: string | null;
   ticker: string | null;
-  orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT';
+  orientation?: 'AUTO' | 'LANDSCAPE' | 'PORTRAIT' | 'SQUARE';
   resolutionWidth?: number;
   resolutionHeight?: number;
   playlist: PlaylistPayload;
