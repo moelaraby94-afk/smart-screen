@@ -532,8 +532,16 @@ html:not(.dark) .vc-aurora-orb-b {
 /* ── Screen cards ── */
 .ngl-screen-card-live {
   box-shadow:
-    0 0 0 1px hsl(221 83% 53% / 0.15),
-    0 4px 16px hsl(221 83% 53% / 0.06);
+    0 0 0 1px hsl(221 83% 53% / 0.12),
+    0 2px 8px hsl(220 26% 14% / 0.06),
+    0 4px 20px hsl(221 83% 53% / 0.05);
+}
+
+.ngl-screen-card-live:hover {
+  box-shadow:
+    0 0 0 1px hsl(221 83% 53% / 0.20),
+    0 8px 24px hsl(220 26% 14% / 0.10),
+    0 4px 20px hsl(221 83% 53% / 0.08);
 }
 
 /* ── Media tiles ── */

@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from 'framer-motion';
 import {
+  ChevronDown,
   Loader2,
   MapPin,
   MoreHorizontal,
@@ -13,6 +14,7 @@ import {
   Trash2,
   ListMusic,
   FolderTree,
+  Maximize,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -80,13 +82,19 @@ export function ScreenVisualCard({
     : reach === 'maintenance' ? t('fleetStatus.maintenance')
     : t('fleetStatus.offline');
 
+  const reachDotColor =
+    reach === 'online' ? 'bg-success'
+    : reach === 'stale' ? 'bg-warning'
+    : reach === 'maintenance' ? 'bg-warning'
+    : 'bg-destructive';
+
   return (
     <motion.article
       layout
       initial={prefersReducedMotion ? false : { opacity: 0, y: 14, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.04, type: 'spring', stiffness: 420, damping: 28 }}
-      whileHover={prefersReducedMotion ? undefined : { scale: 1.015, y: -2 }}
+      whileHover={prefersReducedMotion ? undefined : { y: -4 }}
       role="button"
       tabIndex={0}
       aria-label={`${screen.name}, ${statusText}`}
@@ -94,15 +102,16 @@ export function ScreenVisualCard({
         if (e.key === 'Enter') onCardClick(screen);
       }}
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-lg',
-        'border border-border bg-card shadow-sm',
-        'transition-colors duration-200 hover:border-primary/30 hover:shadow-md',
+        'group relative flex flex-col overflow-hidden rounded-xl',
+        'border border-border bg-card',
+        'shadow-[0_2px_8px_hsl(220_26%_14%/0.06)]',
+        'transition-all duration-300 hover:border-primary/25 hover:shadow-[0_8px_24px_hsl(220_26%_14%/0.10)]',
         reach === 'online' && 'ngl-screen-card-live',
         selected && 'ring-2 ring-primary/40',
       )}
     >
       {onToggleSelect && (
-        <div className="absolute start-2 top-2 z-card">
+        <div className="absolute start-2.5 top-2.5 z-card">
           <Checkbox
             checked={selected ?? false}
             onCheckedChange={() => onToggleSelect(screen.id, false)}
@@ -111,42 +120,56 @@ export function ScreenVisualCard({
           />
         </div>
       )}
+
+      {/* ── Preview area ── */}
       <button
         type="button"
         onClick={() => onCardClick(screen)}
         className="relative block w-full text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
       >
-        <div className="relative aspect-video w-full overflow-hidden bg-muted">
+        <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-muted/80 to-muted">
           {previewUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               key={`${previewUrl}-${previewRev}`}
               src={previewUrl}
               alt={t('screenPreviewAlt', { name: screen.name })}
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+              className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-muted">
-              <Monitor className="h-12 w-12 text-white/25" strokeWidth={1.25} />
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-muted/60 to-muted/20">
+              <Monitor className="h-14 w-14 text-muted-foreground/30" strokeWidth={1} />
+              <span className="text-xs font-medium text-muted-foreground/40">{t('noContentAssigned')}</span>
             </div>
           )}
           {loading ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-xs font-medium text-foreground backdrop-blur-[1px]">
-              {t('loadingPreview')}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+              <Loader2 className="h-6 w-6 animate-spin text-white/80" />
             </div>
           ) : null}
-          <div className="absolute start-3 top-3">
+
+          {/* Status badge — top end */}
+          <div className="absolute end-3 top-3 z-card">
             <ScreenFleetStatusBadge
               status={screen.status}
               lastSeenAt={screen.lastSeenAt}
               locale={locale}
             />
           </div>
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent p-4 pt-10">
-            <p className="truncate text-base font-semibold text-white drop-shadow-md">{screen.name}</p>
-            <p className="font-mono text-xs text-white/70">{screen.serialNumber}</p>
+
+          {/* Bottom gradient overlay with name + meta */}
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-4 pb-3 pt-12">
+            <div className="flex items-end justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-base font-bold text-white drop-shadow-lg">{screen.name}</p>
+                <p className="mt-0.5 font-mono text-[11px] text-white/60">{screen.serialNumber}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <span className={cn('h-2 w-2 rounded-full', reachDotColor, reach === 'online' && 'animate-pulse shadow-[0_0_6px_rgba(52,211,153,0.8)]')} />
+              </div>
+            </div>
             {(screen.playlistGroup?.name || screen.location || (screen.resolutionWidth && screen.resolutionHeight)) && (
-              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-white/60">
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/55">
                 {screen.playlistGroup?.name && (
                   <span className="inline-flex items-center gap-1">
                     <FolderTree className="h-3 w-3" strokeWidth={1.5} />
@@ -161,7 +184,7 @@ export function ScreenVisualCard({
                 )}
                 {screen.resolutionWidth && screen.resolutionHeight && (
                   <span className="inline-flex items-center gap-1">
-                    <Monitor className="h-3 w-3" strokeWidth={1.5} />
+                    <Maximize className="h-3 w-3" strokeWidth={1.5} />
                     {screen.resolutionWidth}×{screen.resolutionHeight}
                   </span>
                 )}
@@ -171,22 +194,25 @@ export function ScreenVisualCard({
         </div>
       </button>
 
-      <div className="flex flex-1 flex-col gap-3 border-t border-border bg-card p-4">
-        <div className="space-y-1.5">
-          <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      {/* ── Body ── */}
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        {/* Playlist selector */}
+        <div className="space-y-1.5" onClick={(e) => e.stopPropagation()}>
+          <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            <ListMusic className="h-3 w-3" />
             {t('playbackPlaylist')}
           </label>
           <div className="relative">
             <select
               className={cn(
-                'h-9 w-full cursor-pointer appearance-none rounded-lg border border-border bg-background px-3 pe-9 text-sm font-medium text-foreground outline-none',
+                'h-10 w-full cursor-pointer appearance-none rounded-xl border border-border bg-background px-3 pe-9 text-sm font-medium text-foreground outline-none transition-colors',
+                'hover:border-primary/30',
                 'focus-visible:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20',
                 'disabled:cursor-not-allowed disabled:opacity-50',
               )}
               disabled={!canAssignPlayback || assignPlaylistBusy}
               value={screen.activePlaylistId ?? ''}
               aria-label={t('playbackPlaylistAria')}
-              onClick={(e) => e.stopPropagation()}
               onChange={(e) => {
                 const v = e.target.value;
                 void onAssignPlaybackPlaylist(screen.id, v || null);
@@ -199,34 +225,38 @@ export function ScreenVisualCard({
                 </option>
               ))}
             </select>
-            {assignPlaylistBusy ? (
-              <span className="pointer-events-none absolute end-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center">
+            <div className="pointer-events-none absolute end-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center text-muted-foreground">
+              {assignPlaylistBusy ? (
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              </span>
-            ) : null}
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </div>
           </div>
         </div>
 
+        {/* Status badges */}
         <div className="flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
           {screen.overridePlaylistId && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning/10 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-warning">
+            <span className="inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-warning">
               <Zap className="h-3 w-3" />
               {t('overrideBadge')}
             </span>
           )}
           {!screen.overridePlaylistId && !screen.activePlaylistId && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
               {t('noContentAssigned')}
             </span>
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-2" onClick={(e) => e.stopPropagation()}>
+        {/* Action bar */}
+        <div className="mt-auto flex items-center gap-1.5 pt-1" onClick={(e) => e.stopPropagation()}>
           <Button
             type="button"
             size="sm"
             variant="outline"
-            className="h-9 flex-1 rounded-lg text-sm font-medium"
+            className="h-9 flex-1 rounded-xl border-border text-xs font-semibold transition-all hover:border-primary/30 hover:bg-primary/5"
             onClick={() => onRemote(screen.id, 'refresh_content')}
           >
             <RefreshCw className="me-1.5 h-3.5 w-3.5" />
@@ -236,7 +266,7 @@ export function ScreenVisualCard({
             type="button"
             size="sm"
             variant="outline"
-            className="h-9 flex-1 rounded-lg text-sm font-medium"
+            className="h-9 flex-1 rounded-xl border-border text-xs font-semibold transition-all hover:border-primary/30 hover:bg-primary/5"
             onClick={() => onRemote(screen.id, 'identify')}
           >
             <BadgeAlert className="me-1.5 h-3.5 w-3.5" />
@@ -244,41 +274,41 @@ export function ScreenVisualCard({
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0 rounded-lg" aria-label={t('screenActionsAria')}>
+              <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0 rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={t('screenActionsAria')}>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[11rem] rounded-lg">
-              <DropdownMenuItem onClick={() => onCardClick(screen)}>
-                <Monitor className="me-2 h-4 w-4" />
+            <DropdownMenuContent align="end" className="min-w-[12rem] rounded-xl">
+              <DropdownMenuItem className="gap-2 rounded-lg font-medium" onClick={() => onCardClick(screen)}>
+                <Monitor className="h-4 w-4 text-primary" />
                 {t('viewDetail')}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onEdit(screen)}>
-                <PenLine className="me-2 h-4 w-4" />
+              <DropdownMenuItem className="gap-2 rounded-lg font-medium" onClick={() => onEdit(screen)}>
+                <PenLine className="h-4 w-4 text-primary" />
                 {t('renameScreen')}
               </DropdownMenuItem>
               {canAssignPlayback && (
-                <DropdownMenuItem onClick={() => onAssignContent(screen)}>
-                  <ListMusic className="me-2 h-4 w-4" />
+                <DropdownMenuItem className="gap-2 rounded-lg font-medium" onClick={() => onAssignContent(screen)}>
+                  <ListMusic className="h-4 w-4 text-primary" />
                   {t('assignContent')}
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={() => onRemote(screen.id, 'refresh_content')}>
-                <RefreshCw className="me-2 h-4 w-4" />
+              <DropdownMenuItem className="gap-2 rounded-lg font-medium" onClick={() => onRemote(screen.id, 'refresh_content')}>
+                <RefreshCw className="h-4 w-4 text-primary" />
                 {t('syncContent')}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onRemote(screen.id, 'identify')}>
-                <BadgeAlert className="me-2 h-4 w-4" />
+              <DropdownMenuItem className="gap-2 rounded-lg font-medium" onClick={() => onRemote(screen.id, 'identify')}>
+                <BadgeAlert className="h-4 w-4 text-primary" />
                 {t('identify')}
               </DropdownMenuItem>
               {canAssignPlayback && (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
+                    className="gap-2 rounded-lg font-medium text-destructive focus:text-destructive"
                     onClick={() => onDelete(screen.id)}
                   >
-                    <Trash2 className="me-2 h-4 w-4" />
+                    <Trash2 className="h-4 w-4" />
                     {t('deleteScreen')}
                   </DropdownMenuItem>
                 </>
