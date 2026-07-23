@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { ListVideo } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { PlaylistToolbar } from './playlist-toolbar';
-import { PlaylistCard } from './playlist-card';
+import { UnifiedPlaylistCard } from '@/features/playlists/components/unified-playlist-card';
 import type { PlaylistSummary } from '../types';
 import type { WorkspaceSummary } from '@/features/workspace/workspace-context';
 
@@ -76,7 +76,7 @@ export function PlaylistGridView({
           {playlists.map((p, i) => {
             const ws = workspaces.find((w) => w.id === p.workspaceId);
             return (
-              <PlaylistCard
+              <UnifiedPlaylistCard
                 key={p.id}
                 playlist={p}
                 workspace={ws}
@@ -84,6 +84,8 @@ export function PlaylistGridView({
                 onOpen={onOpenPlaylist}
                 onDuplicate={onDuplicatePlaylist}
                 onDelete={onDeletePlaylist}
+                canEdit
+                canDelete
               />
             );
           })}

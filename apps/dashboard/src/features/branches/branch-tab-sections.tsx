@@ -1,6 +1,5 @@
 'use client';
 
-import type { MouseEvent as ReactMouseEvent } from 'react';
 import Link from 'next/link';
 import type { Route } from 'next';
 import { useTranslations, useLocale } from 'next-intl';
@@ -8,30 +7,18 @@ import { motion } from 'framer-motion';
 import {
   CalendarClock,
   Clapperboard,
-  Copy,
   FolderTree,
   HardDrive,
   Image as ImageIcon,
-  Loader2,
   Monitor,
-  MoreVertical,
-  PenLine,
-  Play,
   Power,
   Radio,
   Settings,
-  Trash2,
   Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { ScreenVisualCard } from '@/features/screens/screen-visual-card';
+import { UnifiedPlaylistCard } from '@/features/playlists/components/unified-playlist-card';
 import { type ScreenRow } from '@/features/screens/useApiScreens';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
@@ -420,106 +407,23 @@ export function BranchPlaylistsSection(props: PlaylistsSectionProps) {
       </h2>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {props.playlists.map((pl, i) => {
-          const totalScreens = pl._count.screensInGroup;
           const online = props.onlineByPlaylistId.get(pl.id) ?? 0;
           const dupBusy = props.duplicatingId === pl.id;
           return (
-            <motion.div
+            <UnifiedPlaylistCard
               key={pl.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.03 * i, duration: 0.3 }}
-              className="group/card relative"
-            >
-              <Link
-                href={`/${props.locale}/content/playlists/${pl.id}/studio` as Route}
-                className={cn(
-                  'flex flex-col rounded-lg border border-border bg-card p-5 pe-12 transition-all duration-200',
-                  'hover:border-primary/30 hover:bg-primary/[0.03] hover:shadow-md',
-                  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
-                )}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold text-foreground dark:text-white">{pl.name}</p>
-                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                      {t('playlistScreenStats', { total: totalScreens, online })}
-                    </p>
-                    <p className="mt-1 text-[10px] text-muted-foreground/90">
-                      {t('playlistItemsCount', { count: pl._count.items })}
-                    </p>
-                  </div>
-                  <Clapperboard className="h-5 w-5 shrink-0 text-primary" strokeWidth={ICON_STROKE} />
-                </div>
-                <span className="mt-4 inline-flex items-center text-xs font-semibold text-primary">
-                  {t('openPlaylist')} →
-                </span>
-              </Link>
-              {props.canEditPlaylist ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute end-2 top-2 z-card h-9 w-9 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
-                      aria-label={t('playlistActionsAria')}
-                      onClick={(e: ReactMouseEvent) => e.preventDefault()}
-                    >
-                      {dupBusy ? (
-                        <Loader2 className="h-4 w-4 animate-spin" strokeWidth={ICON_STROKE} />
-                      ) : (
-                        <MoreVertical className="h-4 w-4" strokeWidth={ICON_STROKE} />
-                      )}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="min-w-[12rem]">
-                    <DropdownMenuItem
-                      className="gap-2 font-semibold"
-                      onClick={() => props.onEdit(pl)}
-                    >
-                      <PenLine className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
-                      {t('playlistEdit')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="gap-2 font-semibold"
-                      onClick={() => void props.onDuplicate(pl)}
-                    >
-                      <Copy className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
-                      {t('playlistDuplicate')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="gap-2 font-semibold"
-                      onClick={() => props.onMove(pl)}
-                    >
-                      <Monitor className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
-                      {t('playlistMoveToBranch')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="gap-2 font-semibold"
-                      asChild
-                    >
-                      <Link href={`/${props.locale}/content/playlists/${pl.id}/studio` as Route} className="flex items-center gap-2">
-                        <Play className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
-                        {t('openInStudio')}
-                      </Link>
-                    </DropdownMenuItem>
-                    {props.canDeletePlaylist ? (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="gap-2 font-semibold text-destructive focus:text-destructive"
-                          onClick={() => props.onDelete(pl)}
-                        >
-                          <Trash2 className="h-4 w-4" strokeWidth={ICON_STROKE} />
-                          {t('playlistDelete')}
-                        </DropdownMenuItem>
-                      </>
-                    ) : null}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : null}
-            </motion.div>
+              playlist={pl}
+              index={i}
+              onOpen={() => props.onEdit(pl)}
+              onEdit={() => props.onEdit(pl)}
+              onDuplicate={() => void props.onDuplicate(pl)}
+              onMove={() => props.onMove(pl)}
+              onDelete={() => props.onDelete(pl)}
+              canEdit={props.canEditPlaylist}
+              canDelete={props.canDeletePlaylist}
+              duplicating={dupBusy}
+              onlineCount={online}
+            />
           );
         })}
       </div>

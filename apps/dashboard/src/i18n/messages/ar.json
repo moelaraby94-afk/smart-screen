@@ -3022,7 +3022,10 @@
     "publishedToScreens": "تم النشر إلى {count} شاشة.",
     "publishFailed": "فشل النشر. حاول مرة أخرى.",
     "loadErrorTitle": "فشل تحميل قائمة التشغيل. حاول مرة أخرى.",
-    "retry": "إعادة المحاولة"
+    "retry": "إعادة المحاولة",
+    "openInStudio": "فتح في الاستوديو",
+    "moveToBranch": "نسخ إلى فرع آخر…",
+    "online": "متصل"
   },
   "playlistWizard": {
     "createPlaylist": "إنشاء قائمة تشغيل جديدة",

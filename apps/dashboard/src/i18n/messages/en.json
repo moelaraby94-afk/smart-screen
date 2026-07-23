@@ -3022,7 +3022,10 @@
     "publishedToScreens": "Published to {count} screen(s).",
     "publishFailed": "Failed to publish. Try again.",
     "loadErrorTitle": "Failed to load playlist. Please try again.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "openInStudio": "Open in Studio",
+    "moveToBranch": "Copy to another branch…",
+    "online": "Online"
   },
   "playlistWizard": {
     "createPlaylist": "Create new playlist",

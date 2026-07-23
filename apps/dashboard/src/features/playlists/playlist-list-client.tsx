@@ -4,8 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import { motion } from 'framer-motion';
-import { Plus, Search, ListVideo, MoreVertical, Pencil, Copy, Trash2, Eye, AlertCircle, RotateCcw, Clock, Play } from 'lucide-react';
+import { Plus, Search, ListVideo, AlertCircle, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,14 +20,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
 import { apiFetch } from '@/features/auth/session';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
@@ -37,7 +28,7 @@ import {
   fetchPlaylists as apiFetchPlaylists,
   createPlaylist as apiCreatePlaylist,
 } from '@/features/playlists/api/playlists-api';
-import { loadPlaylistMeta } from '@/features/playlists/playlist-transitions';
+import { UnifiedPlaylistCard } from '@/features/playlists/components/unified-playlist-card';
 import { PlaylistCreateWizard } from '@/features/playlists/playlist-create-wizard';
 import { PlaylistPreviewOverlay } from '@/features/playlists/playlist-preview-overlay';
 import type { PlaylistSummary } from '@/features/playlists/studio/types';
@@ -366,151 +357,26 @@ export function PlaylistListClient() {
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((p, i) => {
-            const meta = loadPlaylistMeta(p.id);
-            return (
-              <motion.div
-                key={p.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.15, delay: Math.min(i * 0.03, 0.2) }}
-                className="group relative flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm transition-all hover:border-primary/30 hover:shadow-lg"
-              >
-                <button
-                  type="button"
-                  onClick={() => router.push(`/${locale}/content/playlists/${p.id}/studio` as Route)}
-                  className="flex flex-1 flex-col text-start"
-                  aria-label={`${p.name}, ${p.isPublished ? t('publishedBadge') : t('draftPlaylists')}, ${p._count.items} ${t('itemsCount', { count: p._count.items })}`}
-                >
-                  <div className="relative flex aspect-video items-center justify-center overflow-hidden bg-gradient-to-br from-muted/40 to-muted/5">
-                    {(() => {
-                      const firstItem = p.items?.[0];
-                      if (firstItem?.media?.publicUrl && firstItem.media.mimeType.startsWith('image/')) {
-                        return (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={firstItem.media.publicUrl} alt={firstItem.media.originalName} className="h-full w-full object-cover transition duration-200 group-hover:scale-105" />
-                        );
-                      }
-                      if (firstItem?.media?.publicUrl && firstItem.media.mimeType.startsWith('video/')) {
-                        return <video src={firstItem.media.publicUrl} className="h-full w-full object-cover" muted playsInline />;
-                      }
-                      if (firstItem?.canvas) {
-                        return (
-                          <div className="flex flex-col items-center gap-1.5">
-                            <Pencil className="h-8 w-8 text-primary/40" strokeWidth={1.5} />
-                            <span className="text-[10px] text-muted-foreground">{firstItem.canvas.name}</span>
-                          </div>
-                        );
-                      }
-                      return <ListVideo className="h-10 w-10 text-muted-foreground/20 transition group-hover:text-primary/40" strokeWidth={1.5} />;
-                    })()}
-
-                    <div className="absolute inset-x-2 top-2 flex items-center justify-between">
-                      <div className="flex flex-wrap gap-1.5">
-                        {p.isPublished ? (
-                          <Badge variant="success" className="shadow-sm">
-                            <Eye className="me-1 h-2.5 w-2.5" />
-                            {t('publishedBadge')}
-                          </Badge>
-                        ) : (
-                          <Badge variant="muted" className="shadow-sm">
-                            {t('draftPlaylists')}
-                          </Badge>
-                        )}
-                        {p.expiresAt && (() => {
-                          const now = Date.now();
-                          const exp = new Date(p.expiresAt).getTime();
-                          const isExpired = exp < now;
-                          const sevenDays = 7 * 24 * 60 * 60 * 1000;
-                          const isExpiringSoon = !isExpired && exp - now <= sevenDays;
-                          if (isExpired) {
-                            return (
-                              <Badge variant="destructive" className="shadow-sm">
-                                <Clock className="me-1 h-2.5 w-2.5" />
-                                {t('expiredBadge')}
-                              </Badge>
-                            );
-                          }
-                          if (isExpiringSoon) {
-                            return (
-                              <Badge variant="warning" className="shadow-sm">
-                                <Clock className="me-1 h-2.5 w-2.5" />
-                                {t('expiringSoonBadge')}
-                              </Badge>
-                            );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                      <span className="rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white/90 backdrop-blur-sm">
-                        {p._count.items} {t('itemsCount', { count: p._count.items })}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5 p-3.5">
-                    <h3 className="truncate text-sm font-bold text-foreground transition group-hover:text-primary">{p.name}</h3>
-                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                      <span>{p._count.screensInGroup ?? 0} {t('screens')}</span>
-                      {p.updatedAt && (
-                        <>
-                          <span>·</span>
-                          <span>{new Date(p.updatedAt).toLocaleDateString(locale, { dateStyle: 'medium' })}</span>
-                        </>
-                      )}
-                    </div>
-                    <div className="mt-1 flex items-center gap-1.5">
-                      <Badge variant="muted" className="text-[9px]">
-                        {meta.orientation === 'portrait' ? t('orientPortrait') : meta.orientation === 'square' ? t('orientSquare') : t('orientLandscape')}
-                      </Badge>
-                      <Badge variant="muted" className="text-[9px]">
-                        {meta.layoutType === 'single' ? t('singleZone') : t('multiZone')}
-                      </Badge>
-                    </div>
-                  </div>
-                </button>
-
-                {canEdit && (
-                  <div className="absolute end-2 top-2 z-card opacity-0 transition group-hover:opacity-100">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          type="button"
-                          className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-muted-foreground shadow-sm backdrop-blur transition hover:bg-white hover:text-foreground"
-                          onClick={(e) => e.stopPropagation()}
-                          aria-label={t('actions')}
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44">
-                        <DropdownMenuItem onClick={() => void openPreview(p)} disabled={previewLoading}>
-                          <Play className="me-2 h-4 w-4" />
-                          {previewLoading ? t('loading') : t('preview')}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => router.push(`/${locale}/content/playlists/${p.id}/studio` as Route)}>
-                          <Pencil className="me-2 h-4 w-4" />
-                          {t('edit')}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => void handleDuplicate(p.id)}>
-                          <Copy className="me-2 h-4 w-4" />
-                          {t('duplicate')}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => void openDeleteDialog(p)}
-                        >
-                          <Trash2 className="me-2 h-4 w-4" />
-                          {t('delete')}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                )}
-              </motion.div>
-            );
-          })}
+          {filtered.map((p, i) => (
+            <UnifiedPlaylistCard
+              key={p.id}
+              playlist={p}
+              index={i}
+              onOpen={(id) => router.push(`/${locale}/content/playlists/${id}/studio` as Route)}
+              onPreview={(id) => {
+                const target = filtered.find((pl) => pl.id === id);
+                if (target) void openPreview(target);
+              }}
+              onDuplicate={(id) => void handleDuplicate(id)}
+              onDelete={(id) => {
+                const target = filtered.find((pl) => pl.id === id);
+                if (target) void openDeleteDialog(target);
+              }}
+              canEdit={!!canEdit}
+              canDelete={!!canEdit}
+              previewLoading={previewLoading}
+            />
+          ))}
         </div>
       )}
 
