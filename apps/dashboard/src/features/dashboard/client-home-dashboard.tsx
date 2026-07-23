@@ -34,8 +34,10 @@ import {
   RenameBranchDialog,
   DeleteBranchDialog,
 } from '@/features/dashboard/home-dashboard-dialogs';
+import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardGridSkeleton } from '@/components/ui/skeleton-patterns';
+import { ErrorState } from '@/components/ui/error-state';
 import { UsageIndicator } from '@/components/usage-indicator';
 import { WidgetErrorBoundary } from '@/components/widget-error-boundary';
 import { fetchMediaStats } from '@/features/dashboard/dashboard-api';
@@ -252,19 +254,12 @@ export function ClientHomeDashboard() {
 
   if (!insights) {
     return (
-      <div
-        className="flex min-h-[40vh] flex-col items-center justify-center gap-3 px-4 text-center"
-        role="alert"
-      >
-        <p className="text-sm font-medium text-muted-foreground">{t('loadFailed')}</p>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => void load()}
-        >
-          {t('retry')}
-        </Button>
-      </div>
+      <ErrorState
+        icon={AlertCircle}
+        title={t('loadFailed')}
+        retryLabel={t('retry')}
+        onRetry={() => void load()}
+      />
     );
   }
 

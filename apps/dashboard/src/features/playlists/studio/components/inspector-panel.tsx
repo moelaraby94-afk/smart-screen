@@ -60,7 +60,7 @@ export function InspectorPanel({
   return (
     <div className="flex h-full flex-col gap-4 overflow-y-auto rounded-lg border border-border/60 bg-card/40 p-4">
       <div className="flex items-center gap-2">
-        <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+        <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
           {t('inspector')}
         </h3>
       </div>
@@ -69,7 +69,7 @@ export function InspectorPanel({
       {(selectionContext === 'playlist' || selectionContext === 'zone') && (
         <>
           <div className="space-y-2 border-b border-border/40 pb-4">
-            <Label className="text-[11px] font-medium text-muted-foreground">{t('orientation')}</Label>
+            <Label className="text-xs font-medium text-muted-foreground">{t('orientation')}</Label>
             <div className="flex items-center gap-1">
               {([
                 { id: 'landscape' as const, icon: Monitor },
@@ -85,7 +85,7 @@ export function InspectorPanel({
                     className={cn(
                       'flex h-8 w-8 items-center justify-center rounded-lg transition-all',
                       playlistMeta.orientation === opt.id
-                        ? 'bg-primary text-white shadow-sm'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
                         : 'border border-border bg-background text-muted-foreground hover:border-primary/30 hover:text-foreground',
                     )}
                     title={opt.id}
@@ -95,13 +95,13 @@ export function InspectorPanel({
                 );
               })}
             </div>
-            <p className="text-[10px] leading-tight text-muted-foreground">
+            <p className="text-xs leading-tight text-muted-foreground">
               {t('recommendedSize')}: {presetW}×{presetH}px
             </p>
           </div>
 
           <div className="space-y-2 border-b border-border/40 pb-4">
-            <Label className="text-[11px] font-medium text-muted-foreground">{t('renderMode')}</Label>
+            <Label className="text-xs font-medium text-muted-foreground">{t('renderMode')}</Label>
             <select
               className="h-8 w-full rounded-lg border border-border bg-background px-2.5 text-xs font-medium outline-none focus:border-primary/40"
               value={playlistMeta.renderMode ?? 'CONTAIN'}
@@ -113,7 +113,7 @@ export function InspectorPanel({
               <option value="FIT_WIDTH">{t('renderFitWidth')}</option>
               <option value="FIT_HEIGHT">{t('renderFitHeight')}</option>
             </select>
-            <p className="text-[10px] leading-tight text-muted-foreground">
+            <p className="text-xs leading-tight text-muted-foreground">
               {(playlistMeta.renderMode ?? 'CONTAIN') === 'CONTAIN' && t('renderContainDesc')}
               {(playlistMeta.renderMode ?? 'CONTAIN') === 'COVER' && t('renderCoverDesc')}
               {(playlistMeta.renderMode ?? 'CONTAIN') === 'CENTER' && t('renderCenterDesc')}
@@ -123,7 +123,7 @@ export function InspectorPanel({
           </div>
 
           <div className="space-y-2 border-b border-border/40 pb-4">
-            <Label className="text-[11px] font-medium text-muted-foreground">{t('layoutType')}</Label>
+            <Label className="text-xs font-medium text-muted-foreground">{t('layoutType')}</Label>
             <div className="flex items-center gap-1">
               <button
                 type="button"
@@ -131,7 +131,7 @@ export function InspectorPanel({
                 className={cn(
                   'flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-medium transition-all',
                   playlistMeta.layoutType === 'single'
-                    ? 'bg-primary text-white shadow-sm'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'border border-border bg-background text-muted-foreground hover:border-primary/30 hover:text-foreground',
                 )}
               >
@@ -144,7 +144,7 @@ export function InspectorPanel({
                 className={cn(
                   'flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-medium transition-all',
                   playlistMeta.layoutType === 'multi_zone'
-                    ? 'bg-primary text-white shadow-sm'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'border border-border bg-background text-muted-foreground hover:border-primary/30 hover:text-foreground',
                 )}
               >
@@ -156,7 +156,7 @@ export function InspectorPanel({
 
           {playlistMeta.layoutType === 'multi_zone' && (
             <div className="space-y-2 border-b border-border/40 pb-4">
-              <Label className="text-[11px] font-medium text-muted-foreground">{t('zonePreset')}</Label>
+              <Label className="text-xs font-medium text-muted-foreground">{t('zonePreset')}</Label>
               <select
                 className="h-8 w-full rounded-lg border border-border bg-background px-2.5 text-xs font-medium outline-none focus:border-primary/40"
                 value={selectedZonePreset?.id ?? ''}
@@ -174,7 +174,7 @@ export function InspectorPanel({
 
               {selectedZonePreset && (
                 <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border/40 bg-muted/20 px-3 py-2">
-                  <div className="relative h-10 w-16 overflow-hidden rounded-md border border-border/40 bg-background">
+                  <div className="relative h-10 w-16 overflow-hidden rounded-lg border border-border/40 bg-background">
                     {selectedZonePreset.zones.map((z, i) => (
                       <div
                         key={i}
@@ -198,7 +198,7 @@ export function InspectorPanel({
                         type="button"
                         onClick={() => setSelectedZoneId(z.name)}
                         className={cn(
-                          'rounded-md px-2 py-0.5 text-[11px] font-medium transition',
+                          'rounded-lg px-2 py-0.5 text-xs font-medium transition',
                           selectedZoneId === z.name ? 'bg-primary text-primary-foreground' : 'bg-success/15 text-success hover:bg-success/25',
                         )}
                       >
@@ -212,7 +212,7 @@ export function InspectorPanel({
           )}
 
           <div className="space-y-2 border-b border-border/40 pb-4">
-            <Label className="text-[11px] font-medium text-muted-foreground">{t('transitionLabel')}</Label>
+            <Label className="text-xs font-medium text-muted-foreground">{t('transitionLabel')}</Label>
             <div className="flex items-center gap-2">
               <Wand2 className="h-4 w-4 text-primary" />
               <select
@@ -232,7 +232,7 @@ export function InspectorPanel({
                 onChange={(e) => updatePlaylistMeta({ transitionDuration: Number(e.target.value) })}
                 className="h-1.5 flex-1 cursor-pointer accent-primary"
               />
-              <span className="font-mono-nums text-[11px] text-muted-foreground">{playlistMeta.transitionDuration.toFixed(1)}s</span>
+              <span className="font-mono-nums text-xs text-muted-foreground">{playlistMeta.transitionDuration.toFixed(1)}s</span>
             </div>
           </div>
         </>
@@ -245,13 +245,13 @@ export function InspectorPanel({
             <p className="truncate text-sm font-semibold text-foreground">
               {selectedRow.kind === 'media' ? selectedRow.media.originalName : selectedRow.canvas.name}
             </p>
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            <span className="text-xs uppercase tracking-wide text-muted-foreground">
               {selectedRow.kind === 'media' ? t('media') : t('canvas')}
             </span>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[11px] font-medium text-muted-foreground">{t('durationSec')}</Label>
+            <Label className="text-xs font-medium text-muted-foreground">{t('durationSec')}</Label>
             <div className="flex items-center gap-2">
               <input
                 type="number"
@@ -265,7 +265,7 @@ export function InspectorPanel({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[11px] font-medium text-muted-foreground">{t('transitionLabel')}</Label>
+            <Label className="text-xs font-medium text-muted-foreground">{t('transitionLabel')}</Label>
             <div className="flex items-center gap-2">
               <Wand2 className="h-4 w-4 text-primary" />
               <select
@@ -282,7 +282,7 @@ export function InspectorPanel({
 
           {playlistMeta.layoutType === 'multi_zone' && selectedZonePreset && (
             <div className="space-y-2">
-              <Label className="text-[11px] font-medium text-muted-foreground">{t('zoneAssignment')}</Label>
+              <Label className="text-xs font-medium text-muted-foreground">{t('zoneAssignment')}</Label>
               <select
                 className="h-8 w-full rounded-lg border border-border bg-background px-2.5 text-xs font-medium outline-none focus:border-primary/40"
                 value={selectedRow.zoneName ?? ''}
@@ -305,17 +305,17 @@ export function InspectorPanel({
       {/* Playlist Info (merged from detail page) */}
       {playlistInfo && (
         <div className="mt-auto space-y-3 border-t border-border/40 pt-4">
-          <h4 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{t('metadata')}</h4>
+          <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">{t('metadata')}</h4>
           <dl className="space-y-2">
             <div className="flex items-center justify-between">
-              <dt className="text-[11px] text-muted-foreground">{t('created')}</dt>
-              <dd className="text-[11px] font-medium text-foreground">
+              <dt className="text-xs text-muted-foreground">{t('created')}</dt>
+              <dd className="text-xs font-medium text-foreground">
                 {new Date(playlistInfo.createdAt).toLocaleDateString(locale, { dateStyle: 'medium' })}
               </dd>
             </div>
             <div className="flex items-center justify-between">
-              <dt className="text-[11px] text-muted-foreground">{t('modified')}</dt>
-              <dd className="text-[11px] font-medium text-foreground">
+              <dt className="text-xs text-muted-foreground">{t('modified')}</dt>
+              <dd className="text-xs font-medium text-foreground">
                 {new Date(playlistInfo.updatedAt).toLocaleDateString(locale, { dateStyle: 'medium' })}
               </dd>
             </div>
@@ -326,9 +326,9 @@ export function InspectorPanel({
       {/* Assigned Screens (merged from detail page) */}
       {assignedScreens && (
         <div className="space-y-2 border-t border-border/40 pt-4">
-          <h4 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{t('assignedScreens')}</h4>
+          <h4 className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">{t('assignedScreens')}</h4>
           {assignedScreens.length === 0 ? (
-            <p className="text-[11px] text-muted-foreground">{t('noAssignedScreens')}</p>
+            <p className="text-xs text-muted-foreground">{t('noAssignedScreens')}</p>
           ) : (
             <ul className="space-y-1.5" role="list">
               {assignedScreens.map((screen) => (
@@ -337,13 +337,13 @@ export function InspectorPanel({
                     href={`/${locale}/screens/${screen.id}` as Route}
                     className="flex items-center justify-between gap-2 rounded-lg border border-border/40 p-2 transition-colors hover:bg-muted/30"
                   >
-                    <span className="truncate text-[11px] font-medium text-foreground">{screen.name}</span>
+                    <span className="truncate text-xs font-medium text-foreground">{screen.name}</span>
                     <ScreenFleetStatusBadge
                       status={screen.status}
                       lastSeenAt={screen.lastSeenAt}
                       locale={locale}
                       tone="card"
-                      className="text-[10px]"
+                      className="text-xs"
                     />
                   </Link>
                 </li>

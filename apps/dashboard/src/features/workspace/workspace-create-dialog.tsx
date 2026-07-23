@@ -92,7 +92,7 @@ export function WorkspaceCreateDialog({ open, onOpenChange, onCreated }: Props) 
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t('namePlaceholder')}
-            className="rounded-xl"
+            className="rounded-lg"
             disabled={saving}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !saving) void submit();
@@ -112,7 +112,7 @@ export function WorkspaceCreateDialog({ open, onOpenChange, onCreated }: Props) 
           <Button
             type="button"
             disabled={saving}
-            className="rounded-xl font-semibold" variant="cta"
+            className="rounded-lg font-semibold" variant="cta"
             onClick={() => void submit()}
           >
             {saving ? (

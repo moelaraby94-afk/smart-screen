@@ -62,7 +62,7 @@ export function ScreenAnalyticsPanel() {
   ];
 
   return (
-    <div className="vc-glass vc-card-surface rounded-lg p-5 sm:p-6" role="region" aria-label={t('title')}>
+    <div className="rounded-lg border border-border bg-card p-5 shadow-sm sm:p-6" role="region" aria-label={t('title')}>
       <div className="mb-4 flex items-center gap-2">
         <Activity className="h-5 w-5 text-primary" />
         <h3 className="text-sm font-semibold tracking-tight text-foreground">

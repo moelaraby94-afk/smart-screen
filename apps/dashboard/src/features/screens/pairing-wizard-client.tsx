@@ -152,7 +152,7 @@ export function PairingWizardClient({ locale }: Props) {
         </span>
       </nav>
 
-      <div className="rounded-xl border border-border bg-card p-8 shadow-sm">
+      <div className="rounded-lg border border-border bg-card p-8 shadow-sm">
         {pairing.success && pairing.claimedScreen ? (
           /* Success State */
           <div className="space-y-6">
@@ -269,7 +269,7 @@ export function PairingWizardClient({ locale }: Props) {
                       {t('pairingProgress')}
                     </p>
                     <div className="space-y-1.5">
-                      <p className="text-center text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      <p className="text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         {t('wizardTroubleshootingTitle')}
                       </p>
                       <ul className="space-y-1 text-xs leading-relaxed text-muted-foreground">

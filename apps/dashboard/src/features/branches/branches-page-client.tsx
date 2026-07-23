@@ -104,11 +104,11 @@ function BranchCard({
               'h-1.5 w-1.5 rounded-full',
               ws.isPaused ? 'bg-warning' : 'bg-success',
             )} />
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {ws.isPaused ? tWs('statusPaused') : tWs('statusActive')}
             </span>
             {ws.role && (
-              <span className="text-[10px] text-muted-foreground/70">· {ws.role}</span>
+              <span className="text-xs text-muted-foreground/70">· {ws.role}</span>
             )}
           </div>
         </div>
@@ -233,15 +233,9 @@ export function BranchesPageClient({ locale }: Props) {
   }, [selectedBranch, renaming, renameValue, refreshWorkspaces, bumpWorkspaceDataEpoch, t, toastResponseError]);
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* ── Page header ── */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground lg:text-2xl">
-            {t('title')}
-          </h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">{t('subtitle')}</p>
-        </div>
+    <div className="space-y-6">
+      {/* ── Action row ── */}
+      <div className="flex items-center justify-end">
         <Button
           variant="cta"
           className="rounded-lg gap-2 shrink-0"
@@ -317,11 +311,11 @@ export function BranchesPageClient({ locale }: Props) {
                       'h-1.5 w-1.5 rounded-full',
                       selectedBranch.isPaused ? 'bg-warning' : 'bg-success',
                     )} />
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {selectedBranch.isPaused ? tWs('statusPaused') : tWs('statusActive')}
                     </span>
                     {selectedBranch.role && (
-                      <span className="text-[10px] text-muted-foreground/70">· {selectedBranch.role}</span>
+                      <span className="text-xs text-muted-foreground/70">· {selectedBranch.role}</span>
                     )}
                   </div>
                 </div>
@@ -405,7 +399,7 @@ export function BranchesPageClient({ locale }: Props) {
                 void handleDeleteBranch();
               }}
               disabled={deleting}
-              className="bg-destructive text-white hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {t('deleteConfirmYes')}
             </AlertDialogAction>

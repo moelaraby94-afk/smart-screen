@@ -74,7 +74,7 @@ function ZoneContent({
   }, [playing, index, rows]);
 
   if (rows.length === 0 || !current) {
-    return <div className="flex h-full w-full items-center justify-center bg-black/40 text-[10px] text-white/20">Empty</div>;
+    return <div className="flex h-full w-full items-center justify-center bg-black/40 text-xs text-white/20">Empty</div>;
   }
 
   const currentTransition = current.transition ?? defaultTransition;
@@ -102,7 +102,7 @@ function ZoneContent({
         ) : (
           <div className="flex flex-col items-center gap-1 text-white/60">
             <span className="text-lg font-bold">{current.canvas.name.charAt(0)}</span>
-            <span className="text-[8px]">{current.canvas.name}</span>
+            <span className="text-xs">{current.canvas.name}</span>
           </div>
         )}
       </motion.div>
@@ -192,8 +192,8 @@ export function PlaylistZonePreview({
                 >
                   {/* Zone label */}
                   <div className={cn(
-                    'absolute start-1 top-1 z-card rounded-md px-1.5 py-0.5 text-[10px] font-semibold backdrop-blur-sm',
-                    isSelected ? 'bg-primary text-white' : 'bg-black/50 text-white/80',
+                    'absolute start-1 top-1 z-card rounded-lg px-1.5 py-0.5 text-xs font-semibold backdrop-blur-sm',
+                    isSelected ? 'bg-primary text-primary-foreground' : 'bg-black/50 text-white/80',
                   )}>
                     {zone.name}
                   </div>
@@ -204,7 +204,7 @@ export function PlaylistZonePreview({
                   {/* Empty state overlay when selected */}
                   {isSelected && zoneRows.length === 0 && (
                     <div className="absolute inset-0 flex items-center justify-center bg-primary/5">
-                      <span className="text-[10px] font-medium text-primary/60">{t('clickToAssign')}</span>
+                      <span className="text-xs font-medium text-primary/60">{t('clickToAssign')}</span>
                     </div>
                   )}
                 </div>
@@ -227,13 +227,13 @@ export function PlaylistZonePreview({
                 className={cn(
                   'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all',
                   selectedZoneId === zone.id
-                    ? 'bg-primary text-white shadow-sm'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'border border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground',
                 )}
               >
                 <span>{zone.name}</span>
                 <span className={cn(
-                  'rounded-full px-1.5 text-[9px] font-bold',
+                  'rounded-full px-1.5 text-xs font-bold',
                   selectedZoneId === zone.id ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground',
                 )}>
                   {count}

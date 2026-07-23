@@ -44,6 +44,8 @@ import { useScreenRealtime } from './useScreenRealtime';
 import { ScreenVisualCard } from '@/features/screens/screen-visual-card';
 import { ScreenFleetStatusBadge } from '@/features/screens/screen-fleet-status';
 import { ScreenAnalyticsPanel } from '@/features/screens/screen-analytics-panel';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
 
 type Props = {
   locale: string;
@@ -682,52 +684,28 @@ export function ScreensClient({ locale }: Props) {
           <CardGridSkeleton />
         </div>
       ) : isError ? (
-        <div className="vc-card-surface flex flex-col items-center gap-4 rounded-lg py-16" role="alert">
-          <AlertTriangle className="h-12 w-12 text-destructive/50" />
-          <p className="font-medium text-foreground">{t('errorLoadFailed')}</p>
-          <Button
-            variant="outline"
-            className="rounded-lg"
-            onClick={() => void reload()}
-          >
-            <RefreshCw className="me-2 h-4 w-4" />
-            {t('errorRetry')}
-          </Button>
-        </div>
+        <ErrorState
+          icon={AlertTriangle}
+          title={t('errorLoadFailed')}
+          retryLabel={t('errorRetry')}
+          onRetry={() => void reload()}
+        />
       ) : screens.length === 0 ? (
-        <div className="vc-card-surface flex flex-col items-center gap-4 rounded-lg py-16">
-          <Monitor className="h-12 w-12 text-muted-foreground/40" />
-          <p className="font-medium text-foreground">{t('emptyTitle')}</p>
-          <p className="max-w-md text-center text-sm text-muted-foreground">
-            {t('emptyDescription')}
-          </p>
-          {canClaimPairing && (
-            <Button
-              variant="cta"
-              className="rounded-lg font-semibold"
-              onClick={openPairing}
-            >
-              <Radio className="me-2 h-4 w-4" />
-              {t('pairScreenPrimary')}
-            </Button>
-          )}
-          <p className="max-w-sm text-center text-xs text-muted-foreground">
-            {t('emptyPairHint')}
-          </p>
-        </div>
+        <EmptyState
+          icon={Monitor}
+          title={t('emptyTitle')}
+          description={t('emptyDescription')}
+          actionLabel={canClaimPairing ? t('pairScreenPrimary') : undefined}
+          onAction={canClaimPairing ? openPairing : undefined}
+        />
       ) : filteredScreens.length === 0 ? (
-        <div className="vc-card-surface flex flex-col items-center gap-4 rounded-lg py-16">
-          <Monitor className="h-12 w-12 text-muted-foreground/40" />
-          <p className="font-medium text-foreground">{t('noResults')}</p>
-          <p className="max-w-md text-center text-sm text-muted-foreground">
-            {t('noResultsDesc')}
-          </p>
-          {hasActiveFilters && (
-            <Button variant="outline" className="rounded-lg" onClick={clearAllFilters}>
-              {t('noResultsClear')}
-            </Button>
-          )}
-        </div>
+        <EmptyState
+          icon={Monitor}
+          title={t('noResults')}
+          description={t('noResultsDesc')}
+          actionLabel={hasActiveFilters ? t('noResultsClear') : undefined}
+          onAction={hasActiveFilters ? clearAllFilters : undefined}
+        />
       ) : viewMode === 'table' ? (
         <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-sm">

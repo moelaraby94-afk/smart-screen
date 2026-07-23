@@ -94,16 +94,16 @@ export function PlaylistTopBar({
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-border/60 bg-card/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-2.5">
-        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-xl" onClick={onBack} title={t('backToList')} aria-label={t('backToList')}>
+        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-lg" onClick={onBack} title={t('backToList')} aria-label={t('backToList')}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
           <Icon className="h-4.5 w-4.5 text-primary" />
         </div>
         <Input
           value={playlistName}
           onChange={(e) => onNameChange(e.target.value)}
-          className="h-9 max-w-[220px] rounded-xl border-transparent bg-transparent text-base font-bold hover:border-border focus:border-border"
+          className="h-9 max-w-[220px] rounded-lg border-transparent bg-transparent text-base font-bold hover:border-border focus:border-border"
           onBlur={onNameBlur}
         />
         {isPublished && (

@@ -132,7 +132,7 @@ export function GroupSidebar({
               <Input
                 value={renameGroupValue}
                 onChange={(e) => setRenameGroupValue(e.target.value)}
-                className="h-7 flex-1 rounded-md text-sm"
+                className="h-7 flex-1 rounded-lg text-sm"
                 autoFocus
                 onKeyDown={(e) => { if (e.key === 'Enter') void onRenameGroup(node.id, renameGroupValue); }}
               />
@@ -242,7 +242,7 @@ export function GroupSidebar({
               value={subgroupName}
               onChange={(e) => setSubgroupName(e.target.value)}
               placeholder={t('subgroupPlaceholder')}
-              className="h-7 flex-1 rounded-md text-sm"
+              className="h-7 flex-1 rounded-lg text-sm"
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter') submitSubgroup();
@@ -269,7 +269,7 @@ export function GroupSidebar({
 
   return (
     <aside className="flex w-full flex-col gap-3 rounded-lg border border-border/60 bg-card/40 p-3 xl:w-[240px] xl:shrink-0">
-      <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+      <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
         {t('groups')}
       </h3>
 

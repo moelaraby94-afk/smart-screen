@@ -7,6 +7,7 @@ import { ScrollText, Shield, Globe, Search, Download } from 'lucide-react';
 import { fetchAuditLog, type AuditLogRow } from './audit-log-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { ListSkeleton } from '@/components/ui/skeleton-patterns';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -123,22 +124,22 @@ export function AuditLogPageClient() {
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16 text-center">
-        <ScrollText className="mb-3 h-8 w-8 text-muted-foreground/50" />
-        <p className="text-sm text-muted-foreground">{t('empty')}</p>
-      </div>
+      <EmptyState
+        icon={ScrollText}
+        title={t('empty')}
+      />
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
-            className="ps-8"
+            className="rounded-lg ps-9"
             placeholder={t('searchPlaceholder')}
             value={search}
             onChange={(e) => {
@@ -148,7 +149,7 @@ export function AuditLogPageClient() {
           />
         </div>
         <select
-          className="h-9 rounded-lg border border-border bg-card px-3 text-sm"
+          className="h-9 rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
           value={actionFilter}
           onChange={(e) => {
             setActionFilter(e.target.value);
@@ -168,7 +169,7 @@ export function AuditLogPageClient() {
         <Button
           variant="outline"
           size="sm"
-          className="rounded-xl"
+          className="rounded-lg"
           disabled={!filtered.length}
           onClick={exportCsv}
         >
@@ -179,10 +180,10 @@ export function AuditLogPageClient() {
 
       {/* List */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16 text-center">
-          <Search className="mb-3 h-8 w-8 text-muted-foreground/50" />
-          <p className="text-sm text-muted-foreground">{t('noSearchResults')}</p>
-        </div>
+        <EmptyState
+          icon={Search}
+          title={t('noSearchResults')}
+        />
       ) : (
         <>
           <div className="space-y-3">
@@ -196,11 +197,11 @@ export function AuditLogPageClient() {
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(0.01 * i, 0.2), duration: 0.2 }}
-                  className="flex items-start gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm"
+                  className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-sm"
                 >
                   <span
                     className={cn(
-                      'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
+                      'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
                       colorClass,
                     )}
                   >
@@ -208,7 +209,7 @@ export function AuditLogPageClient() {
                   </span>
                   <div className="min-w-0 flex-1 space-y-0.5">
                     <div className="flex items-center gap-2">
-                      <span className={cn('rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide', colorClass)}>
+                      <span className={cn('rounded-lg px-2 py-0.5 text-xs font-bold uppercase tracking-wide', colorClass)}>
                         {labelKey ? t(labelKey) : item.action}
                       </span>
                       <span className="text-xs text-muted-foreground">{formatTime(item.createdAt)}</span>
@@ -218,7 +219,7 @@ export function AuditLogPageClient() {
                       <p className="text-xs text-muted-foreground">{metaStr}</p>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Globe className="h-3 w-3" />
                     <span className="font-mono">{item.ipAddress}</span>
                   </div>
@@ -236,7 +237,7 @@ export function AuditLogPageClient() {
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-xl"
+                className="rounded-lg"
                 onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
               >
                 {t('loadMore')}

@@ -17,7 +17,7 @@ type Props = {
 export function MetricCard({ label, value, unit, trend, icon: Icon, loading }: Props) {
   if (loading) {
     return (
-      <div className="rounded-lg border border-border bg-card p-5 shadow-xs">
+      <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <div className="flex items-center justify-between">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-5 w-5 rounded" />
@@ -36,7 +36,7 @@ export function MetricCard({ label, value, unit, trend, icon: Icon, loading }: P
     <div
       role="region"
       aria-label={ariaLabel}
-      className="rounded-lg border border-border bg-card p-5 shadow-xs"
+      className="rounded-lg border border-border bg-card p-5 shadow-sm"
     >
       <div className="flex items-center justify-between">
         <span className="text-sm font-normal text-muted-foreground">{label}</span>

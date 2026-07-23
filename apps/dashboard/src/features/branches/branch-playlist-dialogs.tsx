@@ -81,19 +81,19 @@ export function BranchPlaylistDialogs(props: PlaylistDialogsProps) {
               value={props.newName}
               onChange={(e) => props.setNewName(e.target.value)}
               placeholder={t('playlistNamePlaceholder')}
-              className="rounded-xl"
+              className="rounded-lg"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') void props.onCreatePlaylist();
               }}
             />
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button type="button" variant="outline" className="rounded-xl" onClick={() => props.setCreateOpen(false)}>
+            <Button type="button" variant="outline" className="rounded-lg" onClick={() => props.setCreateOpen(false)}>
               {t('cancel')}
             </Button>
             <Button
               type="button"
-              className="rounded-xl font-semibold"
+              className="rounded-lg font-semibold"
               variant="cta"
               disabled={props.isCreating || !props.newName.trim()}
               onClick={() => void props.onCreatePlaylist()}
@@ -123,7 +123,7 @@ export function BranchPlaylistDialogs(props: PlaylistDialogsProps) {
                 id="pl-edit-name"
                 value={props.editPlaylistName}
                 onChange={(e) => props.setEditPlaylistName(e.target.value)}
-                className="rounded-xl"
+                className="rounded-lg"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') void props.savePlaylistEdit();
                 }}
@@ -137,7 +137,7 @@ export function BranchPlaylistDialogs(props: PlaylistDialogsProps) {
                 onChange={(e) => props.setEditPlaylistPublished(e.target.checked)}
               />
               <span>
-                <span className="font-medium text-foreground dark:text-white">{t('playlistPublishedLabel')}</span>
+                <span className="font-medium text-foreground">{t('playlistPublishedLabel')}</span>
                 <span className="mt-1 block text-xs text-muted-foreground">{t('playlistPublishedHint')}</span>
               </span>
             </label>
@@ -146,7 +146,7 @@ export function BranchPlaylistDialogs(props: PlaylistDialogsProps) {
             <Button
               type="button"
               variant="outline"
-              className="rounded-xl"
+              className="rounded-lg"
               onClick={() => {
                 props.setEditOpen(false);
                 props.setPlaylistToEdit(null);
@@ -156,7 +156,7 @@ export function BranchPlaylistDialogs(props: PlaylistDialogsProps) {
             </Button>
             <Button
               type="button"
-              className="rounded-xl font-semibold"
+              className="rounded-lg font-semibold"
               variant="cta"
               disabled={props.isSavingEdit || !props.editPlaylistName.trim()}
               onClick={() => void props.savePlaylistEdit()}
@@ -191,7 +191,7 @@ export function BranchPlaylistDialogs(props: PlaylistDialogsProps) {
             <select
               id="move-branch"
               className={cn(
-                'flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background',
+                'flex h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background',
                 'focus-visible:outline focus-visible:ring-2 focus-visible:ring-primary/40',
               )}
               value={props.moveTargetId}
@@ -211,7 +211,7 @@ export function BranchPlaylistDialogs(props: PlaylistDialogsProps) {
             <Button
               type="button"
               variant="outline"
-              className="rounded-xl"
+              className="rounded-lg"
               onClick={() => {
                 props.setPlaylistToMove(null);
                 props.setMoveTargetId('');
@@ -221,7 +221,7 @@ export function BranchPlaylistDialogs(props: PlaylistDialogsProps) {
             </Button>
             <Button
               type="button"
-              className="rounded-xl font-semibold"
+              className="rounded-lg font-semibold"
               variant="cta"
               disabled={
                 !props.moveTargetId ||
@@ -267,7 +267,7 @@ export function BranchPlaylistDialogs(props: PlaylistDialogsProps) {
               onChange={(e) => props.setPlaylistDeleteForce(e.target.checked)}
             />
             <span>
-              <span className="font-medium text-foreground dark:text-white">{t('playlistDeleteForceLabel')}</span>
+              <span className="font-medium text-foreground">{t('playlistDeleteForceLabel')}</span>
               <span className="mt-1 block text-xs text-muted-foreground">{t('playlistDeleteForceHint')}</span>
             </span>
           </label>
@@ -277,7 +277,7 @@ export function BranchPlaylistDialogs(props: PlaylistDialogsProps) {
             </AlertDialogCancel>
             <Button
               type="button"
-              className="rounded-lg bg-destructive font-semibold text-white hover:bg-destructive/90"
+              className="rounded-lg bg-destructive font-semibold text-destructive-foreground hover:bg-destructive/90"
               disabled={props.isDeleting}
               onClick={() => void props.confirmDeletePlaylist()}
             >

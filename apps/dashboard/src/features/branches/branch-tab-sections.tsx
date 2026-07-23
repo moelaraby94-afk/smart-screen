@@ -167,13 +167,13 @@ export function BranchStatsSection({ stats, loading, showHero = true }: StatsSec
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Button asChild variant="outline" size="sm" className="rounded-xl gap-2">
+              <Button asChild variant="outline" size="sm" className="rounded-lg gap-2">
                 <Link href={`/${locale}/settings/workspace` as Route}>
                   <Settings className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
                   {t('settingsLink')}
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="sm" className="rounded-xl gap-2">
+              <Button asChild variant="outline" size="sm" className="rounded-lg gap-2">
                 <Link href={`/${locale}/team` as Route}>
                   <Users className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
                   {t('teamLink')}
@@ -197,14 +197,14 @@ export function BranchStatsSection({ stats, loading, showHero = true }: StatsSec
             <div className={cn('pointer-events-none absolute inset-0 bg-gradient-to-br opacity-60', item.accent)} />
             <div className="relative flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
                   {item.label}
                 </p>
                 <p className="mt-1.5 font-mono text-2xl font-bold tabular-nums text-foreground">
                   {item.value}
                 </p>
                 {'sub' in item && item.sub ? (
-                  <p className="mt-0.5 text-[10px] text-muted-foreground">{item.sub}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{item.sub}</p>
                 ) : null}
                 {'progress' in item && typeof item.progress === 'number' && item.progress >= 0 ? (
                   <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-muted/50">
@@ -218,7 +218,7 @@ export function BranchStatsSection({ stats, loading, showHero = true }: StatsSec
                   </div>
                 ) : null}
               </div>
-              <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', item.iconBg)}>
+              <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', item.iconBg)}>
                 <item.icon className="h-5 w-5" strokeWidth={ICON_STROKE} />
               </div>
             </div>
@@ -377,7 +377,7 @@ export function BranchPlaylistsSection(props: PlaylistsSectionProps) {
   if (props.isLoading) {
     return (
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">
           {t('playlistsTitle')}
         </h2>
         <ListSkeleton count={4} />
@@ -388,10 +388,10 @@ export function BranchPlaylistsSection(props: PlaylistsSectionProps) {
   if (props.playlists.length === 0) {
     return (
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">
           {t('playlistsTitle')}
         </h2>
-        <div className="vc-card-surface rounded-lg border border-dashed border-border p-10 text-center">
+        <div className="rounded-lg border border-dashed border-border bg-card p-10 text-center">
           <Clapperboard className="mx-auto h-10 w-10 text-muted-foreground" strokeWidth={ICON_STROKE} />
           <p className="mt-3 text-sm font-medium text-foreground">{t('noPlaylists')}</p>
           <p className="mt-1 text-sm text-muted-foreground">{t('noPlaylistsHint')}</p>
@@ -402,7 +402,7 @@ export function BranchPlaylistsSection(props: PlaylistsSectionProps) {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
+      <h2 className="text-lg font-semibold tracking-tight text-foreground">
         {t('playlistsTitle')}
       </h2>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -453,7 +453,7 @@ export function BranchScreensSection(props: ScreensSectionProps) {
     return (
       <section className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
+          <h2 className="text-lg font-semibold tracking-tight text-foreground">
             {t('screensTitle')}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">{t('screensSub')}</p>
@@ -467,12 +467,12 @@ export function BranchScreensSection(props: ScreensSectionProps) {
     return (
       <section className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
+          <h2 className="text-lg font-semibold tracking-tight text-foreground">
             {t('screensTitle')}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">{t('screensSub')}</p>
         </div>
-        <div className="vc-card-surface rounded-lg border border-dashed border-border p-10 text-center">
+        <div className="rounded-lg border border-dashed border-border bg-card p-10 text-center">
           <Monitor className="mx-auto h-10 w-10 text-muted-foreground" strokeWidth={ICON_STROKE} />
           <p className="mt-3 text-sm font-medium text-foreground">{t('noScreens')}</p>
         </div>
@@ -483,7 +483,7 @@ export function BranchScreensSection(props: ScreensSectionProps) {
   return (
     <section className="space-y-4">
       <div>
-        <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">
           {t('screensTitle')}
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">{t('screensSub')}</p>
@@ -540,7 +540,7 @@ export function BranchMediaSection({ mediaItems, isLoading }: MediaSectionProps)
     return (
       <section className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
+          <h2 className="text-lg font-semibold tracking-tight text-foreground">
             {t('mediaTitle')}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">{t('mediaSub')}</p>
@@ -554,12 +554,12 @@ export function BranchMediaSection({ mediaItems, isLoading }: MediaSectionProps)
     return (
       <section className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
+          <h2 className="text-lg font-semibold tracking-tight text-foreground">
             {t('mediaTitle')}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">{t('mediaSub')}</p>
         </div>
-        <div className="vc-card-surface rounded-lg border border-dashed border-border p-10 text-center">
+        <div className="rounded-lg border border-dashed border-border bg-card p-10 text-center">
           <ImageIcon className="mx-auto h-10 w-10 text-muted-foreground" strokeWidth={ICON_STROKE} />
           <p className="mt-3 text-sm font-medium text-foreground">{t('noMedia')}</p>
         </div>
@@ -570,7 +570,7 @@ export function BranchMediaSection({ mediaItems, isLoading }: MediaSectionProps)
   return (
     <section className="space-y-4">
       <div>
-        <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">
           {t('mediaTitle')}
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">{t('mediaSub')}</p>
@@ -581,7 +581,7 @@ export function BranchMediaSection({ mediaItems, isLoading }: MediaSectionProps)
           return (
             <div
               key={item.id}
-              className="vc-card-surface overflow-hidden rounded-lg border border-border/60 dark:border-white/10"
+              className="overflow-hidden rounded-lg border border-border/60 bg-card shadow-sm"
             >
               <div className="relative aspect-video w-full overflow-hidden bg-muted/30">
                 {hasThumb && item.publicUrl ? (
@@ -611,14 +611,14 @@ export function BranchMediaSection({ mediaItems, isLoading }: MediaSectionProps)
                 )}
               </div>
               <div className="p-3">
-                <p className="truncate text-sm font-semibold text-foreground dark:text-white">{item.originalName}</p>
+                <p className="truncate text-sm font-semibold text-foreground">{item.originalName}</p>
                 <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground">
                   <span>{formatFileSize(item.sizeBytes)}</span>
                   <span aria-hidden>·</span>
                   <span className="truncate">{item.mimeType}</span>
                 </div>
                 {item.createdAt ? (
-                  <p className="mt-1 text-[10px] text-muted-foreground/80">
+                  <p className="mt-1 text-xs text-muted-foreground/80">
                     {new Date(item.createdAt).toLocaleDateString()}
                   </p>
                 ) : null}

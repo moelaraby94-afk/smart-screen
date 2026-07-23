@@ -134,7 +134,7 @@ export function PrayerConfigPanel() {
   }
 
   return (
-    <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
+    <div className="rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
       <div className="flex items-center gap-2.5">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-success/10 ring-1 ring-ring/20">
           <Compass className="h-4 w-4 text-success" strokeWidth={ICON_STROKE} />

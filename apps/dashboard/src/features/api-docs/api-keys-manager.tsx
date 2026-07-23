@@ -140,7 +140,7 @@ export function ApiKeysManager() {
         <Button
           size="sm"
           variant="outline"
-          className="rounded-xl"
+          className="rounded-lg"
           onClick={() => setShowCreate(true)}
         >
           <Plus className="me-1.5 h-4 w-4" />
@@ -153,7 +153,7 @@ export function ApiKeysManager() {
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       ) : keys.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border/60 p-6 text-center">
+        <div className="rounded-lg border border-dashed border-border/60 p-6 text-center">
           <Key className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" strokeWidth={ICON_STROKE} />
           <p className="text-sm text-muted-foreground">{t('keys.empty')}</p>
         </div>
@@ -162,7 +162,7 @@ export function ApiKeysManager() {
           {keys.map((key) => (
             <div
               key={key.id}
-              className="flex items-center justify-between rounded-xl border border-border/70 bg-muted/20 px-4 py-3"
+              className="flex items-center justify-between rounded-lg border border-border/70 bg-muted/20 px-4 py-3"
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
@@ -217,7 +217,7 @@ export function ApiKeysManager() {
                 <DialogTitle>{t('keys.createdTitle')}</DialogTitle>
                 <DialogDescription>{t('keys.createdDesc')}</DialogDescription>
               </DialogHeader>
-              <div className="flex items-center gap-2 rounded-xl bg-muted/50 p-3">
+              <div className="flex items-center gap-2 rounded-lg bg-muted/50 p-3">
                 <code className="flex-1 truncate font-mono text-xs text-foreground">{createdKey}</code>
                 <button
                   type="button"

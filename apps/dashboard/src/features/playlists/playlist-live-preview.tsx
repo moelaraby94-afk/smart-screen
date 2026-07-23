@@ -91,7 +91,7 @@ export function PlaylistLivePreview({
         </div>
         {rows.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
               <Wand2 className="h-3 w-3" />
               {currentTransition}
             </span>

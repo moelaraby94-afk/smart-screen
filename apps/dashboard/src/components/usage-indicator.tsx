@@ -57,7 +57,7 @@ export function UsageIndicator({ screenCount, storageUsedBytes }: Props) {
       {showScreen && (
         <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-4 py-2">
           <div className="flex-1 min-w-[120px]">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {t('screens')}
             </p>
             <p className="text-sm font-medium">
@@ -80,7 +80,7 @@ export function UsageIndicator({ screenCount, storageUsedBytes }: Props) {
       {showStorage && (
         <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-4 py-2">
           <div className="flex-1 min-w-[120px]">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {t('storage')}
             </p>
             <p className="text-sm font-medium">

@@ -35,7 +35,7 @@ export default function SchedulingRouteError({ error, reset }: Props) {
       <button
         type="button"
         onClick={() => reset()}
-        className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+        className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
       >
         <RefreshCw className="h-4 w-4" strokeWidth={1.8} />
         {t('reload')}

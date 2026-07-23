@@ -547,6 +547,7 @@
     "deleting": "Deleting…"
   },
   "teamPage": {
+    "kicker": "Team",
     "title": "Team",
     "description": "Members, roles, and invitations for this branch."
   },
@@ -1258,7 +1259,10 @@
     "profileDescription": "Update your business name, phone, and email.",
     "workspaceKicker": "Branch",
     "workspaceTitle": "Branch settings",
-    "workspaceDescription": "Manage branch name, timezone, default language, and playback pause."
+    "workspaceDescription": "Manage branch name, timezone, default language, and playback pause.",
+    "securityKicker": "Security",
+    "notificationsKicker": "Notifications",
+    "apiKicker": "Developer"
   },
   "homeOverview": {
     "kicker": "Command",
@@ -1552,6 +1556,7 @@
     "screenActionsAria": "Screen actions"
   },
   "branchesPage": {
+    "kicker": "Branches",
     "title": "Branches",
     "subtitle": "Manage all your branches in one place. Select a branch to view its details.",
     "selectPlaceholder": "Select a branch",

@@ -229,7 +229,7 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
   const loading = screensLoading || branchPlaylists.isLoading;
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-6">
       {/* Inline toolbar for branches page (header inset is skipped when workspaceIdOverride is set) */}
       {workspaceIdOverride && (
         <BranchWorkspaceToolbar
@@ -389,7 +389,7 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
               {t('cancel')}
             </AlertDialogCancel>
             <AlertDialogAction
-              className="rounded-lg bg-destructive font-semibold text-white hover:bg-destructive/90"
+              className="rounded-lg bg-destructive font-semibold text-destructive-foreground hover:bg-destructive/90"
               disabled={screenDeleting}
               onClick={(e) => {
                 e.preventDefault();

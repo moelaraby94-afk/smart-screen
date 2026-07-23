@@ -74,13 +74,13 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
             >
               <span className={cn('flex min-w-0 flex-1 items-center gap-2.5', compact && 'flex-none')}>
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
-                  <BriefcaseBusiness className="h-4 w-4 text-white" strokeWidth={ICON_STROKE} aria-hidden />
+                  <BriefcaseBusiness className="h-4 w-4 text-primary-foreground" strokeWidth={ICON_STROKE} aria-hidden />
                 </span>
                 {!compact && (
                   <span className="min-w-0 flex-1 text-start leading-snug">
                     <span
                       className={cn(
-                        'line-clamp-3 break-words text-[13px] font-semibold sm:text-[14px]',
+                        'line-clamp-3 break-words text-sm font-semibold sm:text-base',
                         isOverviewHome && workspaces.length > 0
                           ? 'text-muted-foreground'
                           : 'text-foreground',
@@ -112,7 +112,7 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
             )}
             onCloseAutoFocus={(e) => e.preventDefault()}
           >
-            <DropdownMenuLabel className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <DropdownMenuLabel className="px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               {tWs('menuLabel')}
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-border/60" />
@@ -141,7 +141,7 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
                   <DropdownMenuItem
                     key={workspace.id}
                     className={cn(
-                      'flex cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5 text-[15px]',
+                      'flex cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5 text-sm',
                       active && 'bg-primary/10 text-foreground',
                     )}
                     onSelect={(event) => {

@@ -113,7 +113,7 @@ export function ApiDocsClient() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Overview cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {[
@@ -126,9 +126,9 @@ export function ApiDocsClient() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.04 * i, duration: 0.3 }}
-            className="vc-card-surface rounded-xl border border-border bg-card p-5"
+            className="rounded-lg border border-border bg-card p-5 shadow-sm"
           >
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
               <card.icon className="h-5 w-5 text-primary" strokeWidth={ICON_STROKE} />
             </div>
             <p className="font-medium text-foreground">{card.title}</p>
@@ -138,7 +138,7 @@ export function ApiDocsClient() {
       </div>
 
       {/* Base URL */}
-      <section className="vc-card-surface rounded-xl border border-border bg-card p-5">
+      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           {t('baseUrlLabel')}
         </h2>
@@ -160,7 +160,7 @@ export function ApiDocsClient() {
       </section>
 
       {/* Auth example */}
-      <section className="vc-card-surface rounded-xl border border-border bg-card p-5">
+      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           {t('authExampleTitle')}
         </h2>
@@ -180,7 +180,7 @@ export function ApiDocsClient() {
           return (
             <div
               key={group.key}
-              className="vc-card-surface overflow-hidden rounded-xl border border-border bg-card"
+              className="overflow-hidden rounded-lg border border-border bg-card shadow-sm"
             >
               <button
                 type="button"
@@ -214,7 +214,7 @@ export function ApiDocsClient() {
                       >
                         <span
                           className={cn(
-                            'inline-flex w-16 shrink-0 justify-center rounded-md px-2 py-1 text-[10px] font-bold uppercase ring-1',
+                            'inline-flex w-16 shrink-0 justify-center rounded-lg px-2 py-1 text-xs font-bold uppercase ring-1',
                             methodColor[ep.method],
                           )}
                         >
@@ -237,12 +237,12 @@ export function ApiDocsClient() {
       </section>
 
       {/* API Keys Management */}
-      <section className="vc-card-surface rounded-xl border border-border bg-card p-5">
+      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <ApiKeysManager />
       </section>
 
       {/* Webhooks Management */}
-      <section className="vc-card-surface rounded-xl border border-border bg-card p-5">
+      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <WebhooksManager />
       </section>
     </div>

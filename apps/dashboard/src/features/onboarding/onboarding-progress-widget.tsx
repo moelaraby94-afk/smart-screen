@@ -128,7 +128,7 @@ export function OnboardingProgressWidget() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="vc-card-surface relative overflow-hidden rounded-lg border border-border p-6"
+      className="relative overflow-hidden rounded-lg border border-border bg-card p-6 shadow-sm"
     >
       <div className="pointer-events-none absolute -end-8 -top-8 h-32 w-32 rounded-full bg-primary/8 blur-3xl" />
 

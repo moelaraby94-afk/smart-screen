@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 import { Plus, Megaphone, MoreHorizontal, Eye, Pencil, Trash2, Send, Check, X, Play, Pause, Square, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
+import { TableSkeleton } from '@/components/ui/skeleton-patterns';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -212,39 +214,33 @@ export function CampaignsClient() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-48" />
+      <div className="space-y-4" aria-busy="true" aria-live="polite">
+        <div className="flex items-center justify-end">
           <Skeleton className="h-9 w-32" />
         </div>
-        <Skeleton className="h-64 w-full" />
+        <div className="overflow-x-auto rounded-lg border border-border bg-card">
+          <TableSkeleton rows={6} cols={5} />
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <EmptyState
+      <ErrorState
         icon={Megaphone}
         title={t('errorTitle')}
         description={t('errorDescription')}
-        actionLabel={t('retry')}
-        onAction={() => void loadCampaigns()}
+        retryLabel={t('retry')}
+        onRetry={() => void loadCampaigns()}
       />
     );
   }
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between border-b border-border pb-4">
-        <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {t('section')}
-          </p>
-          <h1 className="text-xl font-semibold tracking-tight">{t('title')}</h1>
-          <p className="max-w-2xl text-sm text-muted-foreground">{t('description')}</p>
-        </div>
-        {role !== 'VIEWER' && (
+      {role !== 'VIEWER' && (
+        <div className="flex items-center justify-end">
           <Button
             onClick={() => {
               setEditingCampaign(null);
@@ -254,8 +250,8 @@ export function CampaignsClient() {
             <Plus className="h-4 w-4" />
             {t('createCampaign')}
           </Button>
-        )}
-      </header>
+        </div>
+      )}
 
       {campaigns.length === 0 ? (
         <EmptyState

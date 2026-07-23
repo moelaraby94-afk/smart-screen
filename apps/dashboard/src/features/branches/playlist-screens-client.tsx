@@ -28,7 +28,7 @@ function StatusBadge({ status }: { status: ScreenRow['status'] }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em]',
+        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-[0.12em]',
         live &&
           'border border-success/40 bg-success/15 text-success',
         !live &&
@@ -106,7 +106,7 @@ export function PlaylistScreensClient({ locale }: Props) {
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 px-4 text-center">
         <p className="text-sm font-medium text-muted-foreground">{t('branchNotFound')}</p>
-        <Button type="button" variant="outline" className="rounded-xl" asChild>
+        <Button type="button" variant="outline" className="rounded-lg" asChild>
           <Link href={`/${locale}/overview` as Route}>{t('backOverview')}</Link>
         </Button>
       </div>
@@ -114,13 +114,13 @@ export function PlaylistScreensClient({ locale }: Props) {
   }
 
   return (
-    <div className="space-y-8 pb-12">
-      <header className="space-y-1">
-        <p className="vc-page-kicker">{t('kicker')}</p>
-        <h1 className="vc-page-title text-balance dark:text-white">
+    <div className="space-y-6 pb-12">
+      <header className="space-y-1 border-b border-border pb-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('kicker')}</p>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">
           {playlistName ? playlistName : t('title')}
         </h1>
-        <p className="vc-page-desc max-w-2xl text-balance dark:text-white/65">
+        <p className="max-w-2xl text-sm text-muted-foreground">
           {t('description', { branch: branch.name })}
         </p>
       </header>
@@ -128,13 +128,13 @@ export function PlaylistScreensClient({ locale }: Props) {
       {isLoading ? (
         <CardGridSkeleton />
       ) : screens.length === 0 ? (
-        <div className="vc-card-surface rounded-lg border border-dashed border-border p-10 text-center">
+        <div className="rounded-lg border border-dashed border-border bg-card p-10 text-center">
           <Monitor className="mx-auto h-10 w-10 text-muted-foreground" strokeWidth={ICON_STROKE} />
           <p className="mt-3 text-sm font-medium text-foreground">{t('empty')}</p>
           <Button
             type="button"
             variant="cta"
-            className="mt-6 rounded-xl font-semibold"
+            className="mt-6 rounded-lg font-semibold"
             onClick={() => setCreateScreenOpen(true)}
           >
             {t('addScreen')}
@@ -149,12 +149,12 @@ export function PlaylistScreensClient({ locale }: Props) {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.03 * i, duration: 0.3 }}
-              className="vc-card-surface flex flex-col rounded-lg border border-border/60 p-5 dark:border-white/10"
+              className="flex flex-col rounded-lg border border-border/60 bg-card p-5 shadow-sm"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h3 className="truncate font-semibold text-foreground dark:text-white">{screen.name}</h3>
-                  <p className="mt-1 font-mono text-[11px] text-muted-foreground">{screen.serialNumber}</p>
+                  <h3 className="truncate font-semibold text-foreground">{screen.name}</h3>
+                  <p className="mt-1 font-mono text-xs text-muted-foreground">{screen.serialNumber}</p>
                 </div>
                 <StatusBadge status={screen.status} />
               </div>
@@ -166,7 +166,7 @@ export function PlaylistScreensClient({ locale }: Props) {
                   type="button"
                   size="sm"
                   variant="cta"
-                  className="rounded-xl font-semibold"
+                  className="rounded-lg font-semibold"
                   onClick={() => openEdit(screen)}
                 >
                   <PenLine className="me-2 h-3.5 w-3.5" strokeWidth={ICON_STROKE} />

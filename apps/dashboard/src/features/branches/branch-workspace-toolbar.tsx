@@ -34,7 +34,7 @@ type Props = {
 
 const tabButtonClass = (active: boolean, inline: boolean) =>
   cn(
-    'inline-flex items-center gap-2 rounded-xl border font-semibold transition',
+    'inline-flex items-center gap-2 rounded-lg border font-semibold transition',
     inline
       ? 'px-2.5 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm'
       : 'px-3.5 py-2.5 text-sm',
@@ -89,7 +89,7 @@ export function BranchWorkspaceToolbar({
         type="button"
         variant="cta"
         className={cn(
-          'shrink-0 gap-2 rounded-xl font-semibold',
+          'shrink-0 gap-2 rounded-lg font-semibold',
           inline ? 'h-8 px-2.5 text-xs sm:h-9 sm:px-3 sm:text-sm' : 'h-10 px-3.5 text-sm',
         )}
         onClick={onOpenPairingModal}

@@ -19,17 +19,17 @@ export function PlaylistHeader({ total, published, draft }: PlaylistHeaderProps)
         <p className="mt-0.5 max-w-2xl text-sm text-muted-foreground">{t('pageDescription')}</p>
       </div>
       <div className="flex items-center gap-2.5">
-        <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-card/40 px-3 py-1.5">
+        <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-card/40 px-3 py-1.5">
           <ListVideo className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-semibold text-foreground">{total}</span>
           <span className="text-xs text-muted-foreground">{t('totalPlaylists')}</span>
         </div>
-        <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-card/40 px-3 py-1.5">
+        <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-card/40 px-3 py-1.5">
           <CheckCircle2 className="h-4 w-4 text-success" />
           <span className="text-sm font-semibold text-foreground">{published}</span>
           <span className="text-xs text-muted-foreground">{t('publishedPlaylists')}</span>
         </div>
-        <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-card/40 px-3 py-1.5">
+        <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-card/40 px-3 py-1.5">
           <FileEdit className="h-4 w-4 text-warning" />
           <span className="text-sm font-semibold text-foreground">{draft}</span>
           <span className="text-xs text-muted-foreground">{t('draftPlaylists')}</span>

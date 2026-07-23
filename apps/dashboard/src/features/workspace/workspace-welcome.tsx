@@ -59,7 +59,7 @@ export function WorkspaceWelcome() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          className="vc-card-surface relative max-w-lg overflow-hidden rounded-lg border border-border p-10 text-center shadow-sm"
+          className="relative max-w-lg overflow-hidden rounded-lg border border-border bg-card p-10 text-center shadow-sm"
         >
           <div className="pointer-events-none absolute -start-20 -top-20 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-16 -end-16 h-48 w-48 rounded-full bg-accent/10 blur-3xl" />
@@ -71,7 +71,7 @@ export function WorkspaceWelcome() {
           <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
             {t('title')}
           </h1>
-          <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
             {t('description')}
           </p>
 
@@ -79,7 +79,7 @@ export function WorkspaceWelcome() {
             <Button
               type="button"
               size="lg"
-              className="h-12 rounded-xl px-8 text-base font-semibold" variant="cta"
+              className="h-10 rounded-lg px-8 text-base font-semibold" variant="cta"
               onClick={() => setCreateOpen(true)}
             >
               <Building2 className="me-2 h-5 w-5" />
@@ -89,7 +89,7 @@ export function WorkspaceWelcome() {
               type="button"
               size="lg"
               variant="outline"
-              className="h-12 rounded-xl px-8 text-base font-semibold"
+              className="h-10 rounded-lg px-8 text-base font-semibold"
               disabled={demoLoading}
               onClick={() => void handleBootstrapDemo()}
             >

@@ -42,7 +42,7 @@ export function LanguageSwitcher({ className, compact = false }: Props) {
         <button
           type="button"
           className={cn(
-            'inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-2 text-[11px] font-semibold uppercase tracking-wide text-foreground transition hover:bg-muted',
+            'inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-2 text-xs font-semibold uppercase tracking-wide text-foreground transition hover:bg-muted',
             className,
           )}
         >

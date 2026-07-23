@@ -127,7 +127,7 @@ export function UnifiedPlaylistCard({
                     className="h-8 w-8 text-primary/40"
                     strokeWidth={1.5}
                   />
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {firstItem.canvas.name}
                   </span>
                 </div>
@@ -180,7 +180,7 @@ export function UnifiedPlaylistCard({
                   return null;
                 })()}
             </div>
-            <span className="rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white/90 backdrop-blur-sm">
+            <span className="rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white/90 backdrop-blur-sm">
               {p._count.items} {t('itemsCount', { count: p._count.items })}
             </span>
           </div>
@@ -191,7 +191,7 @@ export function UnifiedPlaylistCard({
           <h3 className="truncate text-sm font-bold text-foreground transition group-hover:text-primary">
             {p.name}
           </h3>
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             {ws && (
               <>
                 <span className="truncate">{ws.name}</span>
@@ -221,7 +221,7 @@ export function UnifiedPlaylistCard({
             )}
           </div>
           <div className="mt-1 flex items-center gap-1.5">
-            <Badge variant="muted" className="text-[9px]">
+            <Badge variant="muted" className="text-xs">
               {meta.orientation === 'portrait'
                 ? locale === 'ar'
                   ? 'عمودي'
@@ -234,7 +234,7 @@ export function UnifiedPlaylistCard({
                     ? 'أفقي'
                     : 'Landscape'}
             </Badge>
-            <Badge variant="muted" className="text-[9px]">
+            <Badge variant="muted" className="text-xs">
               {meta.layoutType === 'single' ? t('singleZone') : t('multiZone')}
             </Badge>
           </div>

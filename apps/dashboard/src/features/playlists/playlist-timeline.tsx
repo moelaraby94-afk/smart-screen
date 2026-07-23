@@ -71,7 +71,7 @@ export function PlaylistTimeline({
             className="min-h-[min(50vh,480px)] space-y-2 p-3"
           >
             {rows.length === 0 && !provided.placeholder ? (
-              <div className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border/40 py-12">
+              <div className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border/40 py-12">
                 <Layers className="h-8 w-8 text-muted-foreground/30" />
                 <p className="text-sm text-muted-foreground">{t('dragHereHint')}</p>
               </div>
@@ -88,7 +88,7 @@ export function PlaylistTimeline({
                       aria-selected={selectedRowClientId === row.clientId}
                       onClick={() => onSelectRow?.(selectedRowClientId === row.clientId ? null : row.clientId)}
                       className={cn(
-                        'cursor-pointer rounded-xl border bg-background p-3 transition hover:border-primary/30 hover:shadow-sm',
+                        'cursor-pointer rounded-lg border bg-background p-3 transition hover:border-primary/30 hover:shadow-sm',
                         selectedRowClientId === row.clientId ? 'border-primary ring-1 ring-primary/20' : 'border-border/60',
                       )}
                     >
@@ -102,7 +102,7 @@ export function PlaylistTimeline({
                           >
                             <GripVertical className="h-4 w-4" />
                           </button>
-                          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-muted text-[10px] font-bold text-muted-foreground">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-xs font-bold text-muted-foreground">
                             {index + 1}
                           </span>
                         </div>
@@ -129,7 +129,7 @@ export function PlaylistTimeline({
                             {row.kind === 'media' ? row.media.originalName : row.canvas.name}
                           </p>
                           <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                            <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                            <span className="rounded-lg bg-muted px-1.5 py-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                               {row.kind === 'media' ? t('media') : t('canvas')}
                             </span>
 
@@ -138,18 +138,18 @@ export function PlaylistTimeline({
                               <Input
                                 type="number"
                                 min={1}
-                                className="h-7 w-16 rounded-md border-border/60 bg-background px-2 text-xs font-mono-nums"
+                                className="h-7 w-16 rounded-lg border-border/60 bg-background px-2 text-xs font-mono-nums"
                                 value={row.durationSec}
                                 onChange={(e) => onUpdateDuration(row.clientId, Number(e.target.value) || 1)}
                               />
-                              <span className="text-[10px] text-muted-foreground">s</span>
+                              <span className="text-xs text-muted-foreground">s</span>
                             </div>
 
                             {/* Transition */}
                             <div className="flex items-center gap-1">
                               <Wand2 className="h-3 w-3 text-primary/60" />
                               <select
-                                className="h-7 rounded-md border border-border/60 bg-background px-1.5 text-[11px] outline-none focus:border-primary/40"
+                                className="h-7 rounded-lg border border-border/60 bg-background px-1.5 text-xs outline-none focus:border-primary/40"
                                 value={rowTransition}
                                 onChange={(e) => onUpdateTransition(row.clientId, e.target.value as TransitionType)}
                                 aria-label={t('transitionLabel')}
@@ -164,7 +164,7 @@ export function PlaylistTimeline({
                               {row.transition && (
                                 <button
                                   type="button"
-                                  className="text-[10px] text-muted-foreground hover:text-primary"
+                                  className="text-xs text-muted-foreground hover:text-primary"
                                   onClick={() => onUpdateTransition(row.clientId, defaultTransition)}
                                   title={t('resetTransition')}
                                 >
@@ -179,7 +179,7 @@ export function PlaylistTimeline({
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                className="h-7 w-7 rounded-md"
+                                className="h-7 w-7 rounded-lg"
                                 disabled={index === 0}
                                 title={t('moveUp')}
                                 aria-label={t('moveUp')}
@@ -191,7 +191,7 @@ export function PlaylistTimeline({
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                className="h-7 w-7 rounded-md"
+                                className="h-7 w-7 rounded-lg"
                                 disabled={index >= rows.length - 1}
                                 title={t('moveDown')}
                                 aria-label={t('moveDown')}
@@ -203,7 +203,7 @@ export function PlaylistTimeline({
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                className="h-7 w-7 rounded-md text-muted-foreground hover:text-primary"
+                                className="h-7 w-7 rounded-lg text-muted-foreground hover:text-primary"
                                 title={t('duplicateItem')}
                                 aria-label={t('duplicateItem')}
                                 onClick={() => onDuplicateRow(row.clientId)}
@@ -214,7 +214,7 @@ export function PlaylistTimeline({
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                className="h-7 w-7 rounded-md text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive"
                                 title={t('delete')}
                                 aria-label={t('delete')}
                                 onClick={() => onRemoveRow(row.clientId)}

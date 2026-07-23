@@ -119,7 +119,7 @@ export function ForgotPasswordClient() {
               <p className="text-sm text-muted-foreground" role="status">{t('successMessage')}</p>
               <Link
                 href={`/${locale}/login` as Route}
-                className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 {t('backToSignIn')}
               </Link>

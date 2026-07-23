@@ -11,7 +11,7 @@ export function MediaPreviewImage({ src, alt }: { src: string; alt: string }) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-muted p-2 text-center">
         <ImageIcon className="h-8 w-8 shrink-0 text-primary/60" strokeWidth={1.5} />
-        <span className="px-1 text-[10px] leading-tight text-muted-foreground">{t('previewUnavailable')}</span>
+        <span className="px-1 text-xs leading-tight text-muted-foreground">{t('previewUnavailable')}</span>
       </div>
     );
   }
@@ -33,7 +33,7 @@ export function MediaPreviewVideo({ src }: { src: string }) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-muted p-2 text-center">
         <Film className="h-8 w-8 shrink-0 text-primary/60" strokeWidth={1.5} />
-        <span className="px-1 text-[10px] leading-tight text-muted-foreground">{t('previewUnavailable')}</span>
+        <span className="px-1 text-xs leading-tight text-muted-foreground">{t('previewUnavailable')}</span>
       </div>
     );
   }

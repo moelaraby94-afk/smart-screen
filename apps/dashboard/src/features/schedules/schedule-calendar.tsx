@@ -105,7 +105,7 @@ export function ScheduleCalendar({
   return (
     <section className="relative overflow-hidden rounded-lg border border-border bg-card p-4 shadow-sm sm:p-6">
       <div className="mb-4 flex items-center justify-between">
-        <div className="inline-flex rounded-xl border border-border bg-muted/30 p-0.5">
+        <div className="inline-flex rounded-lg border border-border bg-card p-0.5">
           <button
             type="button"
             onClick={() => setViewMode('day')}
@@ -202,7 +202,7 @@ function WeekView({
   return (
         <div className="flex gap-2 overflow-x-auto pb-2">
           <div
-            className="sticky start-0 z-sticky flex shrink-0 flex-col border-e border-border/60 pe-2 text-[11px] text-muted-foreground"
+            className="sticky start-0 z-sticky flex shrink-0 flex-col border-e border-border/60 pe-2 text-xs text-muted-foreground"
             style={{ width: 48, height: TOTAL_H + 28 }}
           >
             <div className="h-7 shrink-0" />
@@ -224,11 +224,11 @@ function WeekView({
                 className="relative min-w-[100px] flex-1 rounded-lg border border-border bg-muted/20"
                 style={{ height: TOTAL_H + 28 }}
               >
-                <div className="sticky top-0 z-sticky mb-1 flex h-7 items-center justify-center rounded-t-xl bg-muted/50 text-center text-xs font-semibold text-foreground">
+                <div className="sticky top-0 z-sticky mb-1 flex h-7 items-center justify-center rounded-t-lg bg-muted/50 text-center text-xs font-semibold text-foreground">
                   {dayShort(dow)}
                 </div>
                 <div
-                  className="relative mx-0.5 rounded-xl border border-border/40"
+                  className="relative mx-0.5 rounded-lg border border-border/40"
                   style={{ height: TOTAL_H }}
                 >
                   {Array.from({ length: 24 }, (_, h) => (
@@ -263,7 +263,7 @@ function WeekView({
                           initial={{ opacity: 0, y: prefersReduced ? 0 : 6 }}
                           animate={{ opacity: 1, y: 0 }}
                           className={cn(
-                            'absolute start-0.5 end-0.5 cursor-grab overflow-hidden rounded-lg px-1.5 py-1 text-[10px] font-medium leading-tight text-white shadow-lg active:cursor-grabbing',
+                            'absolute start-0.5 end-0.5 cursor-grab overflow-hidden rounded-lg px-1.5 py-1 text-xs font-medium leading-tight text-white shadow-lg active:cursor-grabbing',
                             isOver
                               ? 'ring-2 ring-destructive ring-offset-1 ring-offset-transparent'
                               : 'ring-1 ring-white/20',
@@ -302,7 +302,7 @@ function WeekView({
                           }}
                         >
                           <p className="truncate opacity-95">{sch.playlist.name}</p>
-                          <p className="truncate text-[9px] opacity-75">
+                          <p className="truncate text-xs opacity-75">
                             {sch.startTime} – {sch.endTime}
                           </p>
                         </motion.div>
@@ -360,7 +360,7 @@ function DayView({
 
       <div className="flex gap-2 overflow-x-auto pb-2">
         <div
-          className="sticky start-0 z-sticky flex shrink-0 flex-col border-e border-border/60 pe-2 text-[11px] text-muted-foreground"
+          className="sticky start-0 z-sticky flex shrink-0 flex-col border-e border-border/60 pe-2 text-xs text-muted-foreground"
           style={{ width: 56, height: TOTAL_H + 28 }}
         >
           <div className="h-7 shrink-0" />
@@ -376,11 +376,11 @@ function DayView({
         </div>
 
         <div className="relative min-w-0 flex-1 rounded-lg border border-border bg-muted/20" style={{ height: TOTAL_H + 28 }}>
-          <div className="sticky top-0 z-sticky mb-1 flex h-7 items-center justify-center rounded-t-xl bg-muted/50 text-center text-sm font-semibold text-foreground">
+          <div className="sticky top-0 z-sticky mb-1 flex h-7 items-center justify-center rounded-t-lg bg-muted/50 text-center text-sm font-semibold text-foreground">
             {dayShort(selectedDow)}
           </div>
           <div
-            className="relative mx-1 rounded-xl border border-border/40"
+            className="relative mx-1 rounded-lg border border-border/40"
             style={{ height: TOTAL_H }}
           >
             {Array.from({ length: 24 }, (_, h) => (
@@ -449,11 +449,11 @@ function DayView({
                     }}
                   >
                     <p className="truncate opacity-95">{sch.playlist.name}</p>
-                    <p className="truncate text-[10px] opacity-75">
+                    <p className="truncate text-xs opacity-75">
                       {sch.startTime} – {sch.endTime}
                     </p>
                     {sch.screen && (
-                      <p className="truncate text-[10px] opacity-60">
+                      <p className="truncate text-xs opacity-60">
                         {sch.screen.name}
                       </p>
                     )}
@@ -703,7 +703,7 @@ export function ScheduleList({ schedules, overlapIds, dayShort, onDelete, onEdit
   }, [schedules, overlapIds]);
 
   return (
-    <section className="vc-glass vc-card-surface rounded-lg p-6">
+    <section className="rounded-lg border border-border bg-card p-6 shadow-sm">
       <h3 className="mb-4 text-base font-semibold">{t('listTitle')}</h3>
       <ul className="space-y-2">
         {sorted.map((s) => {
@@ -730,7 +730,7 @@ export function ScheduleList({ schedules, overlapIds, dayShort, onDelete, onEdit
                     <p className="font-medium">{s.playlist.name}</p>
                     {isOver && (
                       <span
-                        className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive"
+                        className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive"
                         role="status"
                       >
                         <AlertTriangle className="h-3 w-3" />

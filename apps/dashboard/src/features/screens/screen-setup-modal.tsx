@@ -521,7 +521,7 @@ export function ScreenSetupModal({
                     </span>
                   )}
                   {overridePlaylistId && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning/10 px-2 py-0.5 text-xs font-bold text-warning">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning/10 px-2.5 py-0.5 text-xs font-bold text-warning">
                       <Zap className="h-3 w-3" />
                       {t('overrideActive')}
                     </span>
@@ -692,7 +692,7 @@ export function ScreenSetupModal({
                             {t('pairingProgress')}
                           </p>
                           <div className="space-y-1.5">
-                            <p className="text-center text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            <p className="text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                               {t('wizardTroubleshootingTitle')}
                             </p>
                             <ul className="space-y-1 text-xs leading-relaxed text-muted-foreground">
@@ -947,14 +947,14 @@ export function ScreenSetupModal({
                   <div className="space-y-2">
                     {[...assignments].sort((a, b) => a.orderIndex - b.orderIndex).map((a, idx) => (
                       <div key={a.id} className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-xs font-bold text-primary">{idx + 1}</span>
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">{idx + 1}</span>
                         <span className="flex-1 truncate text-sm font-medium">{a.playlist.name}</span>
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
                             disabled={busy || idx === 0}
                             onClick={() => void handleReorderAssignment(a.id, 'up')}
-                            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+                            className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
                           >
                             <ArrowUp className="h-4 w-4" />
                           </button>
@@ -962,7 +962,7 @@ export function ScreenSetupModal({
                             type="button"
                             disabled={busy || idx === assignments.length - 1}
                             onClick={() => void handleReorderAssignment(a.id, 'down')}
-                            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+                            className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
                           >
                             <ArrowDown className="h-4 w-4" />
                           </button>
@@ -970,7 +970,7 @@ export function ScreenSetupModal({
                             type="button"
                             disabled={busy}
                             onClick={() => void handleRemoveAssignment(a.id)}
-                            className="rounded-md p-1 text-destructive hover:bg-destructive/10"
+                            className="rounded-lg p-1 text-destructive hover:bg-destructive/10"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -1123,7 +1123,7 @@ export function ScreenSetupModal({
                           type="button"
                           disabled={busy}
                           onClick={() => void handleDeleteSchedule(s.id)}
-                          className="rounded-md p-1 text-destructive hover:bg-destructive/10"
+                          className="rounded-lg p-1 text-destructive hover:bg-destructive/10"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

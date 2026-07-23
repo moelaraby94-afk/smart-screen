@@ -114,14 +114,14 @@ export function TwoFactorSettings() {
 
   if (loading) {
     return (
-      <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
+      <div className="rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
+    <div className="rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
       <div className="flex items-center gap-3">
         {enabled ? (
           <ShieldCheck className="h-6 w-6 text-success" />
@@ -151,7 +151,7 @@ export function TwoFactorSettings() {
         <Button
           type="button"
           variant="cta"
-          className="mt-6 rounded-xl font-semibold"
+          className="mt-6 rounded-lg font-semibold"
           disabled={busy}
           onClick={() => void startSetup()}
         >
@@ -166,7 +166,7 @@ export function TwoFactorSettings() {
             <img
               src={setupData.qrCodeDataUrl}
               alt={t('manualEntry')}
-              className="h-48 w-48 rounded-xl border border-border"
+              className="h-48 w-48 rounded-lg border border-border"
             />
             <div className="space-y-2">
               <Label>{t('manualEntry')}</Label>
@@ -184,14 +184,14 @@ export function TwoFactorSettings() {
               placeholder="000000"
               maxLength={6}
               aria-label={t('enterCode')}
-              className="max-w-[200px] rounded-xl font-mono text-center text-lg tracking-widest"
+              className="max-w-[200px] rounded-lg font-mono text-center text-lg tracking-widest"
             />
           </div>
           <div className="flex gap-2">
             <Button
               type="button"
               variant="cta"
-              className="rounded-xl font-semibold"
+              className="rounded-lg font-semibold"
               disabled={busy || token.trim().length !== 6}
               onClick={() => void confirmEnable()}
             >
@@ -201,7 +201,7 @@ export function TwoFactorSettings() {
             <Button
               type="button"
               variant="outline"
-              className="rounded-xl"
+              className="rounded-lg"
               onClick={() => {
                 setSetupData(null);
                 setToken('');
@@ -215,7 +215,7 @@ export function TwoFactorSettings() {
 
       {/* Backup codes display */}
       {backupCodes && (
-        <div className="mt-6 space-y-3 rounded-xl border border-warning/30 bg-warning/5 p-4">
+        <div className="mt-6 space-y-3 rounded-lg border border-warning/30 bg-warning/5 p-4">
           <div className="flex items-center justify-between">
             <Label className="text-warning">{t('backupCodes')}</Label>
             <Button
@@ -244,7 +244,7 @@ export function TwoFactorSettings() {
         <Button
           type="button"
           variant="outline"
-          className="mt-6 rounded-xl font-semibold text-destructive"
+          className="mt-6 rounded-lg font-semibold text-destructive"
           disabled={busy}
           onClick={() => setDisabling(true)}
         >
@@ -254,7 +254,7 @@ export function TwoFactorSettings() {
       )}
 
       {enabled && disabling && (
-        <div className="mt-6 space-y-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+        <div className="mt-6 space-y-4 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
           <p className="text-sm text-destructive">{t('disablePrompt')}</p>
           <div className="space-y-2">
             <Label>{t('enterCode')}</Label>
@@ -264,14 +264,14 @@ export function TwoFactorSettings() {
               placeholder="000000"
               maxLength={8}
               autoComplete="one-time-code"
-              className="max-w-[200px] rounded-xl font-mono text-center text-lg tracking-widest"
+              className="max-w-[200px] rounded-lg font-mono text-center text-lg tracking-widest"
             />
           </div>
           <div className="flex gap-2">
             <Button
               type="button"
               variant="outline"
-              className="rounded-xl font-semibold text-destructive"
+              className="rounded-lg font-semibold text-destructive"
               disabled={busy || disableToken.trim().length < 6}
               onClick={() => void disable()}
             >
@@ -281,7 +281,7 @@ export function TwoFactorSettings() {
             <Button
               type="button"
               variant="ghost"
-              className="rounded-xl"
+              className="rounded-lg"
               onClick={() => {
                 setDisabling(false);
                 setDisableToken('');

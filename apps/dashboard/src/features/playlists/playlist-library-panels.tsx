@@ -78,7 +78,7 @@ export function MediaLibraryPanel({ library }: MediaLibraryPanelProps) {
                         )}
                       </span>
                     </div>
-                    <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-foreground">
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
                       {m.originalName}
                     </span>
                   </div>
@@ -133,10 +133,10 @@ export function CanvasLibraryPanel({ canvasLibrary }: CanvasLibraryPanelProps) {
                       className="flex items-center gap-3 rounded-lg border border-border/80 bg-card/80 px-3 py-2.5 shadow-sm transition hover:scale-[1.01] hover:shadow-md dark:bg-card/50"
                     >
                       <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary">
-                        <PenLine className="h-5 w-5 text-white" />
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary">
+                        <PenLine className="h-5 w-5 text-primary-foreground" />
                       </span>
-                      <span className="min-w-0 flex-1 truncate text-[15px] font-medium text-foreground">
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
                         {c.name}
                       </span>
                     </div>

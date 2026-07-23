@@ -36,7 +36,7 @@ export function SettingsTabs() {
   return (
     <nav
       aria-label={t('profileSettings')}
-      className="inline-flex flex-wrap items-center gap-1 rounded-xl border border-border bg-muted/30 p-1"
+      className="inline-flex flex-wrap items-center gap-1 rounded-lg border border-border bg-muted/30 p-1"
     >
       {visibleTabs.map((tab) => {
         const href = `/${locale}/settings/${tab.segment}`;

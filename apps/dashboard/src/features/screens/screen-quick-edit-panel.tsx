@@ -253,7 +253,7 @@ export function ScreenQuickEditPanel({
             role="dialog"
             aria-modal
             className={cn(
-              'fixed inset-y-0 z-drawer flex w-full max-w-md flex-col border-l border-white/15 bg-background/80 shadow-2xl backdrop-blur-2xl dark:bg-background/70',
+              'fixed inset-y-0 z-drawer flex w-full max-w-md flex-col border-l border-border bg-background/80 shadow-2xl backdrop-blur-2xl dark:bg-background/70',
               'end-0',
             )}
             initial={{ x: `${100 * dir}%` }}
@@ -261,7 +261,7 @@ export function ScreenQuickEditPanel({
             exit={{ x: `${100 * dir}%` }}
             transition={{ type: 'spring', stiffness: 380, damping: 38 }}
           >
-            <div className="flex items-start justify-between gap-3 border-b border-white/10 px-6 py-5">
+            <div className="flex items-start justify-between gap-3 border-b border-border px-6 py-5">
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {t('quickEdit')}
@@ -287,7 +287,7 @@ export function ScreenQuickEditPanel({
               </Button>
             </div>
 
-            <div className="flex-1 space-y-8 overflow-y-auto px-6 py-6">
+            <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
               <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {t('contentStatus')}
@@ -540,11 +540,11 @@ export function ScreenQuickEditPanel({
                 <p className="text-xs text-muted-foreground">{t('orientationHint')}</p>
               </div>
 
-              <div className="flex flex-col gap-2 border-t border-white/10 pt-6">
+              <div className="flex flex-col gap-2 border-t border-border pt-6">
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-9 w-full rounded-lg border-white/20"
+                  className="h-9 w-full rounded-lg"
                   onClick={() => {
                     onEditScreen();
                     onOpenChange(false);

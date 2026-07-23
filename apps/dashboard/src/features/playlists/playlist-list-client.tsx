@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
+import { CardGridSkeleton } from '@/components/ui/skeleton-patterns';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -251,7 +253,7 @@ export function PlaylistListClient() {
   return (
     <div className="flex flex-1 flex-col gap-4" role="region" aria-label={t('pageTitle')}>
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3">
+      <div className="flex flex-wrap items-center gap-3">
         <div className="relative min-w-[200px] flex-1">
           <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -264,9 +266,9 @@ export function PlaylistListClient() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Label className="text-[11px] font-medium text-muted-foreground">{t('sortBy')}</Label>
+          <Label className="text-xs font-medium text-muted-foreground">{t('sortBy')}</Label>
           <select
-            className="h-9 rounded-lg border border-border bg-background px-3 text-sm font-medium outline-none focus:border-primary/40"
+            className="h-9 rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             aria-label={t('sortBy')}
@@ -280,9 +282,9 @@ export function PlaylistListClient() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Label className="text-[11px] font-medium text-muted-foreground">{tDetail('statusFilter')}</Label>
+          <Label className="text-xs font-medium text-muted-foreground">{tDetail('statusFilter')}</Label>
           <select
-            className="h-9 rounded-lg border border-border bg-background px-3 text-sm font-medium outline-none focus:border-primary/40"
+            className="h-9 rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
             aria-label={tDetail('statusFilter')}
@@ -294,9 +296,9 @@ export function PlaylistListClient() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Label className="text-[11px] font-medium text-muted-foreground">{t('expiryFilter')}</Label>
+          <Label className="text-xs font-medium text-muted-foreground">{t('expiryFilter')}</Label>
           <select
-            className="h-9 rounded-lg border border-border bg-background px-3 text-sm font-medium outline-none focus:border-primary/40"
+            className="h-9 rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
             value={expiryFilter}
             onChange={(e) => setExpiryFilter(e.target.value as ExpiryFilter)}
             aria-label={t('expiryFilter')}
@@ -308,7 +310,7 @@ export function PlaylistListClient() {
         </div>
 
         {canEdit && (
-          <Button variant="default" className="ms-auto rounded-lg" onClick={() => setWizardOpen(true)}>
+          <Button variant="cta" className="ms-auto rounded-lg" onClick={() => setWizardOpen(true)}>
             <Plus className="me-2 h-4 w-4" />
             {tDetail('createPlaylist')}
           </Button>
@@ -317,29 +319,15 @@ export function PlaylistListClient() {
 
       {/* Grid */}
       {loadError ? (
-        <div className="flex flex-col items-center gap-4 py-20 text-center">
-          <AlertCircle className="h-10 w-10 text-destructive/50" strokeWidth={1.5} />
-          <p className="text-sm font-medium text-foreground">{t('loadErrorTitle')}</p>
-          <Button variant="outline" onClick={() => void loadPlaylists()}>
-            <RotateCcw className="me-2 h-4 w-4" />
-            {t('retry')}
-          </Button>
-        </div>
+        <ErrorState
+          icon={AlertCircle}
+          title={t('loadErrorTitle')}
+          retryLabel={t('retry')}
+          onRetry={() => void loadPlaylists()}
+        />
       ) : loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5" aria-label={tDetail('loading')}>
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
-              <div className="aspect-video animate-pulse bg-muted/40" />
-              <div className="space-y-2 p-3.5">
-                <div className="h-4 w-3/4 animate-pulse rounded bg-muted/40" />
-                <div className="h-3 w-1/2 animate-pulse rounded bg-muted/40" />
-                <div className="flex gap-1.5">
-                  <div className="h-4 w-16 animate-pulse rounded bg-muted/40" />
-                  <div className="h-4 w-16 animate-pulse rounded bg-muted/40" />
-                </div>
-              </div>
-            </div>
-          ))}
+        <div aria-busy="true" aria-live="polite">
+          <CardGridSkeleton count={8} />
         </div>
       ) : filtered.length === 0 ? (
         <EmptyState

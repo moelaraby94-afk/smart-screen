@@ -226,7 +226,7 @@ export function GlobalSearch() {
       >
         <Search className="h-4 w-4" strokeWidth={ICON_STROKE} />
         <span className="text-xs">{t('placeholder')}</span>
-        <kbd className="ms-4 rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+        <kbd className="ms-4 rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
           Ctrl K
         </kbd>
       </button>
@@ -272,7 +272,7 @@ export function GlobalSearch() {
                     onKeyDown={handleKeyDown}
                     placeholder={t('placeholder')}
                     aria-label={t('placeholder')}
-                    className="flex-1 bg-transparent text-[15px] text-foreground outline-none placeholder:text-muted-foreground"
+                    className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
                   />
                   <button
                     type="button"
@@ -291,7 +291,7 @@ export function GlobalSearch() {
                     </div>
                   ) : query.trim() === '' ? (
                     <div className="py-2">
-                      <p className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      <p className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         {t('quickNav')}
                       </p>
                       <ul role="listbox" aria-label={t('placeholder')}>
@@ -304,7 +304,7 @@ export function GlobalSearch() {
                             >
                               <cmd.icon className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
                               <span className="flex-1 truncate font-medium">{tNav(cmd.labelKey)}</span>
-                              <span className="shrink-0 rounded-md border border-border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                              <span className="shrink-0 rounded-lg border border-border px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 {t('command')}
                               </span>
                             </Link>
@@ -337,7 +337,7 @@ export function GlobalSearch() {
                                 {r.sublabel}
                               </p>
                             </div>
-                            <span className="shrink-0 rounded-md border border-border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            <span className="shrink-0 rounded-lg border border-border px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                               {t(r.type)}
                             </span>
                           </Link>
@@ -347,7 +347,7 @@ export function GlobalSearch() {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[11px] text-muted-foreground">
+                <div className="flex items-center justify-between border-t border-border px-4 py-2 text-xs text-muted-foreground">
                   <span>{t('navigateHint')}</span>
                   <span>{t('resultsCount', { count: results.length })}</span>
                 </div>

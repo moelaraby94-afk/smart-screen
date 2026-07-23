@@ -134,7 +134,7 @@ export function PlaylistPreviewOverlay({ open, onClose, rows, defaultTransition,
               {current.durationSec}s
             </span>
           )}
-          <span className="flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-white/70">
+          <span className="flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/70">
             <Wand2 className="h-3 w-3" />
             {currentTransition}
           </span>

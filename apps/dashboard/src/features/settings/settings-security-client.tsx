@@ -133,8 +133,8 @@ export function SettingsSecurityClient() {
   }, [tProfile]);
 
   return (
-    <div className="space-y-8">
-      <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
+    <div className="space-y-6">
+      <div className="rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
         <h2 className="text-lg font-semibold tracking-tight">{t('changePasswordTitle')}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t('changePasswordSubtitle')}</p>
 
@@ -148,7 +148,7 @@ export function SettingsSecurityClient() {
                 autoComplete="current-password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className="rounded-xl pe-10"
+                className="rounded-lg pe-10"
               />
               <button
                 type="button"
@@ -176,7 +176,7 @@ export function SettingsSecurityClient() {
                   }
                 }}
                 aria-invalid={!!newPasswordError}
-                className="rounded-xl pe-10"
+                className="rounded-lg pe-10"
               />
               <button
                 type="button"
@@ -206,7 +206,7 @@ export function SettingsSecurityClient() {
                   }
                 }}
                 aria-invalid={!!confirmPasswordError}
-                className="rounded-xl pe-10"
+                className="rounded-lg pe-10"
               />
               <button
                 type="button"
@@ -229,7 +229,7 @@ export function SettingsSecurityClient() {
           <Button
             type="button"
             variant="cta"
-            className="rounded-xl font-semibold"
+            className="rounded-lg font-semibold"
             disabled={saving}
             onClick={() => void handleChangePassword()}
           >
@@ -241,14 +241,14 @@ export function SettingsSecurityClient() {
 
       <TwoFactorSettings />
 
-      <div className="vc-card-surface rounded-lg border border-destructive/20 bg-card p-6 shadow-sm md:p-8">
+      <div className="rounded-lg border border-destructive/20 bg-card p-6 shadow-sm md:p-8">
         <h2 className="text-lg font-semibold tracking-tight">{tProfile('gdprTitle')}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{tProfile('gdprSubtitle')}</p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Button
             type="button"
             variant="outline"
-            className="rounded-xl"
+            className="rounded-lg"
             disabled={exporting}
             onClick={() => void handleExport()}
           >
@@ -257,7 +257,7 @@ export function SettingsSecurityClient() {
           <Button
             type="button"
             variant="destructive"
-            className="rounded-xl"
+            className="rounded-lg"
             onClick={() => setDeleteOpen(true)}
           >
             {tProfile('deleteAccount')}
@@ -277,7 +277,7 @@ export function SettingsSecurityClient() {
               value={deleteConfirm}
               onChange={(e) => setDeleteConfirm(e.target.value)}
               placeholder={tProfile('deleteAccountConfirmPlaceholder')}
-              className="rounded-xl"
+              className="rounded-lg"
             />
           </div>
           <DialogFooter>

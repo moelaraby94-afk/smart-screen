@@ -43,7 +43,7 @@ export function SchedulesTimelineView({
           <div className="w-[60px] shrink-0" />
           <div className="flex flex-1">
             {HOURS.map((h) => (
-              <div key={h} className="flex-1 text-center text-[10px] font-medium text-muted-foreground">
+              <div key={h} className="flex-1 text-center text-xs font-medium text-muted-foreground">
                 {h.toString().padStart(2, '0')}
               </div>
             ))}
@@ -67,7 +67,7 @@ export function SchedulesTimelineView({
                   return (
                     <div
                       key={s.id}
-                      className="absolute top-0.5 h-7 rounded-md bg-primary/80 px-1.5 text-[10px] font-medium text-white flex items-center truncate cursor-pointer hover:bg-primary z-card"
+                      className="absolute top-0.5 h-7 rounded-lg bg-primary/80 px-1.5 text-xs font-medium text-primary-foreground flex items-center truncate cursor-pointer hover:bg-primary z-card"
                       style={{
                         left: `${leftPct}%`,
                         width: `${widthPct}%`,

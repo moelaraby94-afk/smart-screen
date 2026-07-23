@@ -84,7 +84,7 @@ export function HelpSupportClient() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Quick guides */}
       <section className="space-y-4">
         <h2 className="text-lg font-semibold tracking-tight text-foreground">
@@ -98,9 +98,9 @@ export function HelpSupportClient() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.04 * i, duration: 0.3 }}
-              className="vc-card-surface group flex items-start gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/30"
+              className="group flex items-start gap-4 rounded-lg border border-border bg-card p-5 shadow-sm transition-colors hover:border-primary/30"
             >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
                 <guide.icon className="h-5 w-5 text-primary" strokeWidth={ICON_STROKE} />
               </div>
               <div className="min-w-0 flex-1">
@@ -122,7 +122,7 @@ export function HelpSupportClient() {
           {faqs.map((faq, i) => (
             <div
               key={i}
-              className="vc-card-surface overflow-hidden rounded-xl border border-border bg-card"
+              className="overflow-hidden rounded-lg border border-border bg-card shadow-sm"
             >
               <button
                 type="button"
@@ -153,9 +153,9 @@ export function HelpSupportClient() {
       </section>
 
       {/* Contact */}
-      <section className="vc-card-surface rounded-xl border border-border bg-card p-6 sm:p-8">
+      <section className="rounded-lg border border-border bg-card p-6 shadow-sm sm:p-8">
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
             <LifeBuoy className="h-6 w-6 text-primary" strokeWidth={ICON_STROKE} />
           </div>
           <div className="flex-1">
@@ -166,7 +166,7 @@ export function HelpSupportClient() {
             <div className="mt-4 flex flex-wrap gap-3">
               <a
                 href="mailto:support@smartscreen.app"
-                className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
               >
                 <Mail className="h-4 w-4" />
                 support@smartscreen.app

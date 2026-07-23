@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
 import { Search } from 'lucide-react';
 import {
   AlertDialog,
@@ -384,30 +385,23 @@ export function TeamClient() {
 
   if (!workspaceId) {
     return (
-      <p className="text-[15px] text-muted-foreground">{t('selectWorkspace')}</p>
+      <p className="text-sm text-muted-foreground">{t('selectWorkspace')}</p>
     );
   }
 
   return (
-    <div className="mx-auto max-w-[1000px] px-6 py-6">
-      <div className="flex flex-col gap-6">
-        {/* ─── Page Header ─────────────────────────────────────── */}
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight">{t('teamTitle')}</h2>
-            <p className="text-sm text-muted-foreground">
-              {t('memberCount', { count: members.length })}
-            </p>
-          </div>
-          {isOwner && (
-            <Button variant="default" onClick={() => setInviteDialogOpen(true)}>
-              <UserPlus className="me-2 h-4 w-4" />
-              {t('inviteMember')}
-            </Button>
-          )}
+    <div className="space-y-6">
+      {/* ─── Invite action row ─────────────────────────────────── */}
+      {isOwner && (
+        <div className="flex items-center justify-end gap-4">
+          <Button variant="default" onClick={() => setInviteDialogOpen(true)}>
+            <UserPlus className="me-2 h-4 w-4" />
+            {t('inviteMember')}
+          </Button>
         </div>
+      )}
 
-        {/* ─── Pending Invites (conditional) ──────────────────── */}
+      {/* ─── Pending Invites (conditional) ──────────────────── */}
         {!loading && pendingInvites.length > 0 && (
           <motion.section
             initial={{ opacity: 0, y: 12 }}
@@ -426,7 +420,7 @@ export function TeamClient() {
                   key={inv.id}
                   role="listitem"
                   aria-label={`${inv.email}, pending, ${inv.role}`}
-                  className="flex flex-col gap-2 rounded-xl border border-border/70 bg-muted/20 p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
+                  className="flex flex-col gap-2 rounded-lg border border-border/70 bg-muted/20 p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-medium text-foreground">{inv.email}</p>
@@ -435,7 +429,7 @@ export function TeamClient() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={cn('rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide', ROLE_COLORS[inv.role] ?? ROLE_COLORS.VIEWER)}>
+                    <span className={cn('rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide', ROLE_COLORS[inv.role] ?? ROLE_COLORS.VIEWER)}>
                       {inv.role}
                     </span>
                     {isOwner && (
@@ -489,13 +483,12 @@ export function TeamClient() {
           {loading ? (
             <ListSkeleton count={4} />
           ) : membersError ? (
-            <div className="flex flex-col items-center gap-3 py-8">
-              <AlertCircle className="h-8 w-8 text-destructive" />
-              <p className="text-sm text-muted-foreground">{t('loadError')}</p>
-              <Button variant="outline" size="sm" onClick={() => void load()}>
-                {t('retry')}
-              </Button>
-            </div>
+            <ErrorState
+              icon={AlertCircle}
+              title={t('loadError')}
+              retryLabel={t('retry')}
+              onRetry={() => void load()}
+            />
           ) : members.length === 0 ? (
             <EmptyState
               icon={UserCheck}
@@ -508,17 +501,17 @@ export function TeamClient() {
             <>
               <div className="mb-4 flex flex-wrap items-center gap-3">
                 <div className="relative min-w-[180px] flex-1">
-                  <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     type="search"
-                    className="ps-8"
+                    className="rounded-lg ps-9"
                     placeholder={t('searchPlaceholder')}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
                 </div>
                 <select
-                  className="h-9 rounded-lg border border-border bg-card px-3 text-sm"
+                  className="h-9 rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
                   value={roleFilter}
                   onChange={(e) => setRoleFilter(e.target.value)}
                   aria-label={t('filterByRole')}
@@ -540,7 +533,7 @@ export function TeamClient() {
                       <li
                         key={m.membershipId}
                         role="listitem"
-                        className="flex flex-col gap-2 rounded-xl border border-border/70 bg-muted/20 p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
+                        className="flex flex-col gap-2 rounded-lg border border-border/70 bg-muted/20 p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div
@@ -559,7 +552,7 @@ export function TeamClient() {
                         </div>
                         <div className="flex items-center gap-3">
                           {m.role === 'OWNER' || !isOwner ? (
-                            <span className={cn('rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide', ROLE_COLORS[m.role] ?? ROLE_COLORS.VIEWER)}>
+                            <span className={cn('rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide', ROLE_COLORS[m.role] ?? ROLE_COLORS.VIEWER)}>
                               {m.role}
                             </span>
                           ) : (
@@ -609,7 +602,7 @@ export function TeamClient() {
             aria-label={t('accountMembers')}
             className="rounded-lg border border-border bg-card p-6"
           >
-            <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
+            <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
               <div className="space-y-4">
                 <div>
                   <h3 className="mb-1 flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -634,7 +627,7 @@ export function TeamClient() {
                       <li
                         key={m.membershipId}
                         role="listitem"
-                        className="flex flex-col gap-2 rounded-xl border border-border/70 bg-muted/20 p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
+                        className="flex flex-col gap-2 rounded-lg border border-border/70 bg-muted/20 p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div
@@ -649,7 +642,7 @@ export function TeamClient() {
                             {m.workspaceScopes && m.workspaceScopes.length > 0 && (
                               <div className="mt-1 flex flex-wrap gap-1">
                                 {m.workspaceScopes.map((s) => (
-                                  <span key={s.id} className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                                  <span key={s.id} className="rounded bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
                                     {s.workspaceName}: {s.role}
                                   </span>
                                 ))}
@@ -695,7 +688,7 @@ export function TeamClient() {
               </div>
 
               {isOwner && (
-                <div className="rounded-xl border border-border bg-muted/20 p-6">
+                <div className="rounded-lg border border-border bg-muted/20 p-6">
                   <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold">
                     <UserPlus className="h-4 w-4 text-primary" />
                     {t('createAccountMember')}
@@ -813,7 +806,7 @@ export function TeamClient() {
                       <UserPlus className="me-2 h-4 w-4" />
                       {creating ? t('creating') : t('createAccountMember')}
                     </Button>
-                    <p className="text-[11px] leading-relaxed text-muted-foreground">
+                    <p className="text-xs leading-relaxed text-muted-foreground">
                       {t('createAccountHint')}
                     </p>
                   </div>
@@ -975,7 +968,6 @@ export function TeamClient() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </div>
     </div>
   );
 }

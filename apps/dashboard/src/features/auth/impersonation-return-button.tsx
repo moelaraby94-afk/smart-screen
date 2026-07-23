@@ -33,7 +33,7 @@ export function ImpersonationReturnButton() {
   };
 
   return (
-    <div className="sticky top-0 z-debug -mx-3 mb-4 border-b border-red-500/35 bg-gradient-to-r from-[#2e0707] via-[#5a0b0b] to-[#2e0707] px-3 py-2 shadow-[0_8px_26px_-16px_rgba(255,0,0,0.7)] sm:-mx-6 sm:px-6 lg:-mx-14 lg:px-14">
+    <div className="sticky top-0 z-debug -mx-3 mb-4 border-b border-destructive/35 bg-gradient-to-r from-[#2e0707] via-[#5a0b0b] to-[#2e0707] px-3 py-2 shadow-[0_8px_26px_-16px_rgba(255,0,0,0.7)] sm:-mx-6 sm:px-6 lg:-mx-14 lg:px-14">
       <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3">
         <p className="text-sm font-semibold text-primary">
           {t('impersonatingAs')}{' '}
@@ -42,7 +42,7 @@ export function ImpersonationReturnButton() {
         <Button
           type="button"
           onClick={() => void onExit()}
-          className="h-9 gap-2 rounded-xl border border-primary/40 bg-primary px-4 font-semibold text-white hover:bg-primary/90"
+          className="h-9 gap-2 rounded-lg border border-primary/40 bg-primary px-4 font-semibold text-primary-foreground hover:bg-primary/90"
         >
           <Shield className="h-4 w-4" />
           {t('returnToAdmin')}

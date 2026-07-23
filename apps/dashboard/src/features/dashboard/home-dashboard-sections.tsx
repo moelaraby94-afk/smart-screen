@@ -114,11 +114,11 @@ export function WorkspaceCardsSection(props: WorkspaceCardsSectionProps) {
                         row.isPaused ? 'bg-warning' : 'bg-success',
                       )}
                     />
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {t(`health.${h}`)}
                     </span>
                     {row.isPaused === true && (
-                      <span className="text-[10px] text-muted-foreground/70">· {t('health.paused')}</span>
+                      <span className="text-xs text-muted-foreground/70">· {t('health.paused')}</span>
                     )}
                   </div>
                 </div>

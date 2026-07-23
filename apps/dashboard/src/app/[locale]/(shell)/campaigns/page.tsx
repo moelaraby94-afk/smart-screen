@@ -15,10 +15,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function CampaignsPage({ params }: Props) {
-  await params;
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'campaigns' });
 
   return (
     <main className="space-y-6">
+      <header className="space-y-1 border-b border-border pb-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {t('section')}
+        </p>
+        <h1 className="text-xl font-semibold tracking-tight">{t('title')}</h1>
+        <p className="max-w-2xl text-sm text-muted-foreground">{t('description')}</p>
+      </header>
       <CampaignsClient />
     </main>
   );

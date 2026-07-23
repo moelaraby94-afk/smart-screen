@@ -117,13 +117,13 @@ export function NotificationPreferences() {
       <p className="text-sm text-muted-foreground">{t('prefsSubtitle')}</p>
 
       {CATEGORIES.map((category) => (
-        <div key={category.key} className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
+        <div key={category.key} className="rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
           <h3 className="text-sm font-semibold tracking-tight text-foreground">{t(category.key)}</h3>
           <ul className="mt-4 space-y-3">
             {category.types.map((type) => (
               <li
                 key={type}
-                className="flex items-center justify-between rounded-xl border border-border/70 bg-muted/20 px-4 py-3"
+                className="flex items-center justify-between rounded-lg border border-border/70 bg-muted/20 px-4 py-3"
               >
                 <div>
                   <p className="text-sm font-medium text-foreground">{t(`pref_${type}`)}</p>
@@ -144,7 +144,7 @@ export function NotificationPreferences() {
         <Button
           type="button"
           variant="ghost"
-          className="rounded-xl"
+          className="rounded-lg"
           onClick={() => setResetDialogOpen(true)}
         >
           <RotateCcw className="me-2 h-4 w-4" />
@@ -152,7 +152,7 @@ export function NotificationPreferences() {
         </Button>
         <Button
           type="button"
-          className="rounded-xl font-semibold"
+          className="rounded-lg font-semibold"
           variant="cta"
           disabled={saving}
           onClick={() => void save()}

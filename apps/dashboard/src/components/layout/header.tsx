@@ -242,7 +242,7 @@ function MobileMoreMenu({ navLocale, rtl }: { navLocale: 'ar' | 'en'; rtl: boole
         <DropdownMenuSeparator />
 
         <div className="flex items-center justify-between gap-2 rounded-lg px-3 py-2">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {tUser('language')}
           </span>
           <div
@@ -254,9 +254,9 @@ function MobileMoreMenu({ navLocale, rtl }: { navLocale: 'ar' | 'en'; rtl: boole
               type="button"
               onClick={() => switchLocale('ar')}
               className={cn(
-                'rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all',
+                'rounded-full px-2.5 py-1 text-xs font-semibold transition-all',
                 activeLocale === 'ar'
-                  ? 'bg-primary text-white'
+                  ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
@@ -266,9 +266,9 @@ function MobileMoreMenu({ navLocale, rtl }: { navLocale: 'ar' | 'en'; rtl: boole
               type="button"
               onClick={() => switchLocale('en')}
               className={cn(
-                'rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all',
+                'rounded-full px-2.5 py-1 text-xs font-semibold transition-all',
                 activeLocale === 'en'
-                  ? 'bg-primary text-white'
+                  ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >

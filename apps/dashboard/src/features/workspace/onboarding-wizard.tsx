@@ -150,9 +150,9 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
                   type="button"
                   onClick={() => void handleSeedDemo()}
                   disabled={seeding}
-                  className="vc-card-surface flex w-full items-center gap-4 rounded-lg border border-border p-4 text-start transition hover:border-primary/40 hover:bg-primary/5 disabled:opacity-60"
+                  className="flex w-full items-center gap-4 rounded-lg border border-border p-4 text-start transition hover:border-primary/40 hover:bg-primary/5 disabled:opacity-60"
                 >
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                     {seeding ? <Loader2 className="h-6 w-6 animate-spin text-primary" /> : <Wand2 className="h-6 w-6 text-primary" />}
                   </span>
                   <div className="flex-1">
@@ -165,9 +165,9 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
                   type="button"
                   onClick={handleSkip}
                   disabled={seeding}
-                  className="vc-card-surface flex w-full items-center gap-4 rounded-lg border border-border p-4 text-start transition hover:border-primary/40 hover:bg-primary/5 disabled:opacity-60"
+                  className="flex w-full items-center gap-4 rounded-lg border border-border p-4 text-start transition hover:border-primary/40 hover:bg-primary/5 disabled:opacity-60"
                 >
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-muted">
                     <Rocket className="h-6 w-6 text-muted-foreground" />
                   </span>
                   <div className="flex-1">
@@ -209,9 +209,9 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
                       router.push(link.href as Route);
                       router.refresh();
                     }}
-                    className="vc-card-surface flex w-full items-center gap-4 rounded-lg border border-border p-4 text-start transition hover:border-primary/40 hover:bg-primary/5"
+                    className="flex w-full items-center gap-4 rounded-lg border border-border p-4 text-start transition hover:border-primary/40 hover:bg-primary/5"
                   >
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                       <link.icon className="h-5 w-5 text-primary" />
                     </span>
                     <div className="flex-1">
@@ -227,7 +227,7 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
                 <Button
                   type="button"
                   variant="outline"
-                  className="rounded-xl"
+                  className="rounded-lg"
                   onClick={() => setStep('content')}
                 >
                   <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
@@ -236,7 +236,7 @@ export function OnboardingWizard({ open, onOpenChange, workspaceId, workspaceNam
                 <Button
                   type="button"
                   variant="cta"
-                  className="rounded-xl font-semibold"
+                  className="rounded-lg font-semibold"
                   onClick={handleFinish}
                 >
                   {t('goToDashboard')}

@@ -119,8 +119,8 @@ export function SettingsProfileClient() {
   if (loading || !data) return <p className="text-sm text-muted-foreground">{t('loading')}</p>;
 
   return (
-    <div className="space-y-8">
-      <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
+    <div className="space-y-6">
+      <div className="rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
         <h2 className="text-lg font-semibold tracking-tight">{t('title')}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t('subtitle')}</p>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -135,23 +135,23 @@ export function SettingsProfileClient() {
                 }
               }}
               aria-invalid={!!nameError}
-              className="rounded-xl"
+              className="rounded-lg"
             />
             {nameError && <p className="text-sm text-destructive" role="alert">{nameError}</p>}
           </div>
           <div className="space-y-2">
             <Label>{t('businessName')}</Label>
-            <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} className="rounded-xl" />
+            <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} className="rounded-lg" />
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label>{t('phone')}</Label>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} className="rounded-xl" />
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} className="rounded-lg" />
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label>{t('email')}</Label>
             <div className="flex flex-wrap items-center gap-2">
-              <Input value={data.email} readOnly className="rounded-xl font-mono text-sm" />
-              <Button type="button" variant="outline" className="rounded-xl" onClick={() => setEmailOpen(true)}>
+              <Input value={data.email} readOnly className="rounded-lg font-mono text-sm" />
+              <Button type="button" variant="outline" className="rounded-lg" onClick={() => setEmailOpen(true)}>
                 {t('changeEmail')}
               </Button>
             </div>
@@ -159,7 +159,7 @@ export function SettingsProfileClient() {
         </div>
         <Button
           type="button"
-          className="mt-6 rounded-xl font-semibold" variant="cta"
+          className="mt-6 rounded-lg font-semibold" variant="cta"
           disabled={saving}
           onClick={() => void saveProfile()}
         >
@@ -186,7 +186,7 @@ export function SettingsProfileClient() {
                   }}
                   type="email"
                   aria-invalid={!!newEmailError}
-                  className="rounded-xl"
+                  className="rounded-lg"
                 />
                 {newEmailError && <p className="text-sm text-destructive" role="alert">{newEmailError}</p>}
               </div>
@@ -203,7 +203,7 @@ export function SettingsProfileClient() {
                 <Input
                   value={emailOtp}
                   onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="rounded-xl font-mono text-center text-lg tracking-widest"
+                  className="rounded-lg font-mono text-center text-lg tracking-widest"
                   maxLength={6}
                 />
               </div>

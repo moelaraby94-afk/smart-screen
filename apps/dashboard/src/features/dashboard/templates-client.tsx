@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
 import { CardGridSkeleton } from '@/components/ui/skeleton-patterns';
+import { ErrorState } from '@/components/ui/error-state';
 import {
   Dialog,
   DialogContent,
@@ -143,7 +144,7 @@ export function TemplatesClient() {
   const tplUsage = (tpl: CanvasTemplate) => locale === 'ar' ? tpl.usageAr : tpl.usage;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* ── Template Gallery ── */}
       <section aria-labelledby="gallery-heading">
         <div className="mb-4 flex items-center gap-2">
@@ -295,19 +296,13 @@ export function TemplatesClient() {
         </div>
 
         {loadError ? (
-          <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-border bg-card px-6 py-16 text-center">
-            <span className="flex h-16 w-16 items-center justify-center rounded-xl bg-destructive/10">
-              <AlertCircle className="h-8 w-8 text-destructive" strokeWidth={1.75} aria-hidden />
-            </span>
-            <div className="space-y-2">
-              <p className="text-lg font-semibold text-foreground">{t('errorTitle')}</p>
-              <p className="max-w-md text-sm text-muted-foreground">{t('errorDesc')}</p>
-            </div>
-            <Button variant="outline" onClick={() => void reload()}>
-              <RotateCcw className="me-1.5 h-4 w-4" />
-              {t('retry')}
-            </Button>
-          </div>
+          <ErrorState
+            icon={AlertCircle}
+            title={t('errorTitle')}
+            description={t('errorDesc')}
+            retryLabel={t('retry')}
+            onRetry={() => void reload()}
+          />
         ) : isLoading ? (
           <CardGridSkeleton />
         ) : filteredUserTemplates.length === 0 ? (

@@ -102,7 +102,7 @@ export function ScreenVisualCard({
         if (e.key === 'Enter') onCardClick(screen);
       }}
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-xl',
+        'group relative flex flex-col overflow-hidden rounded-lg',
         'border border-border bg-card',
         'shadow-[0_2px_8px_hsl(220_26%_14%/0.06)]',
         'transition-all duration-300 hover:border-primary/25 hover:shadow-[0_8px_24px_hsl(220_26%_14%/0.10)]',
@@ -162,14 +162,14 @@ export function ScreenVisualCard({
             <div className="flex items-end justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-base font-bold text-white drop-shadow-lg">{screen.name}</p>
-                <p className="mt-0.5 font-mono text-[11px] text-white/60">{screen.serialNumber}</p>
+                <p className="mt-0.5 font-mono text-xs text-white/60">{screen.serialNumber}</p>
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
                 <span className={cn('h-2 w-2 rounded-full', reachDotColor, reach === 'online' && 'animate-pulse shadow-[0_0_6px_rgba(52,211,153,0.8)]')} />
               </div>
             </div>
             {(screen.playlistGroup?.name || screen.location || (screen.resolutionWidth && screen.resolutionHeight)) && (
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/55">
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/55">
                 {screen.playlistGroup?.name && (
                   <span className="inline-flex items-center gap-1">
                     <FolderTree className="h-3 w-3" strokeWidth={1.5} />
@@ -198,14 +198,14 @@ export function ScreenVisualCard({
       <div className="flex flex-1 flex-col gap-3 p-4">
         {/* Playlist selector */}
         <div className="space-y-1.5" onClick={(e) => e.stopPropagation()}>
-          <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
             <ListMusic className="h-3 w-3" />
             {t('playbackPlaylist')}
           </label>
           <div className="relative">
             <select
               className={cn(
-                'h-10 w-full cursor-pointer appearance-none rounded-xl border border-border bg-background px-3 pe-9 text-sm font-medium text-foreground outline-none transition-colors',
+                'h-9 w-full cursor-pointer appearance-none rounded-lg border border-border bg-background px-3 pe-9 text-sm font-medium text-foreground outline-none transition-colors',
                 'hover:border-primary/30',
                 'focus-visible:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20',
                 'disabled:cursor-not-allowed disabled:opacity-50',
@@ -238,13 +238,13 @@ export function ScreenVisualCard({
         {/* Status badges */}
         <div className="flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
           {screen.overridePlaylistId && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-warning">
+            <span className="inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning/10 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-warning">
               <Zap className="h-3 w-3" />
               {t('overrideBadge')}
             </span>
           )}
           {!screen.overridePlaylistId && !screen.activePlaylistId && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
               {t('noContentAssigned')}
             </span>
           )}
@@ -256,7 +256,7 @@ export function ScreenVisualCard({
             type="button"
             size="sm"
             variant="outline"
-            className="h-9 flex-1 rounded-xl border-border text-xs font-semibold transition-all hover:border-primary/30 hover:bg-primary/5"
+            className="h-9 flex-1 rounded-lg border-border text-xs font-semibold transition-all hover:border-primary/30 hover:bg-primary/5"
             onClick={() => onRemote(screen.id, 'refresh_content')}
           >
             <RefreshCw className="me-1.5 h-3.5 w-3.5" />
@@ -266,7 +266,7 @@ export function ScreenVisualCard({
             type="button"
             size="sm"
             variant="outline"
-            className="h-9 flex-1 rounded-xl border-border text-xs font-semibold transition-all hover:border-primary/30 hover:bg-primary/5"
+            className="h-9 flex-1 rounded-lg border-border text-xs font-semibold transition-all hover:border-primary/30 hover:bg-primary/5"
             onClick={() => onRemote(screen.id, 'identify')}
           >
             <BadgeAlert className="me-1.5 h-3.5 w-3.5" />
@@ -274,11 +274,11 @@ export function ScreenVisualCard({
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0 rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={t('screenActionsAria')}>
+              <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0 rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={t('screenActionsAria')}>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[12rem] rounded-xl">
+            <DropdownMenuContent align="end" className="min-w-[12rem] rounded-lg">
               <DropdownMenuItem className="gap-2 rounded-lg font-medium" onClick={() => onCardClick(screen)}>
                 <Monitor className="h-4 w-4 text-primary" />
                 {t('viewDetail')}

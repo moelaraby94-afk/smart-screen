@@ -46,7 +46,7 @@ export function FolderSection(props: FolderSectionProps) {
   const t = useTranslations('mediaClient');
 
   return (
-    <div className="vc-card-surface rounded-lg border border-border/70 p-4">
+    <div className="rounded-lg border border-border/70 bg-card p-4 shadow-sm">
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <Folder className="h-4 w-4 text-primary" />
         <p className="text-sm font-semibold text-foreground">{t('foldersTitle')}</p>
@@ -192,7 +192,7 @@ export function MediaGrid(props: MediaGridProps) {
                   type="button"
                   onClick={() => setViewMode('cards')}
                   className={cn(
-                    'flex h-7 w-7 items-center justify-center rounded-md transition',
+                    'flex h-7 w-7 items-center justify-center rounded-lg transition',
                     viewMode === 'cards' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
                   )}
                   aria-label={t('viewCards')}
@@ -204,7 +204,7 @@ export function MediaGrid(props: MediaGridProps) {
                   type="button"
                   onClick={() => setViewMode('table')}
                   className={cn(
-                    'flex h-7 w-7 items-center justify-center rounded-md transition',
+                    'flex h-7 w-7 items-center justify-center rounded-lg transition',
                     viewMode === 'table' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
                   )}
                   aria-label={t('viewTable')}
@@ -264,7 +264,7 @@ export function MediaGrid(props: MediaGridProps) {
                   <td className="px-4 py-3 font-mono-nums text-xs text-muted-foreground">{new Date(m.createdAt).toLocaleDateString(props.locale)}</td>
                   <td className="px-4 py-3">
                     {(() => { const badge = getExpiryBadge(m, t); return badge ? (
-                      <span className={cn('inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-semibold', badge.className)}>
+                      <span className={cn('inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-semibold', badge.className)}>
                         <badge.icon className="h-3 w-3" />
                         {badge.label}
                       </span>
@@ -325,7 +325,7 @@ export function MediaGrid(props: MediaGridProps) {
                     props.onToggleSelect(m.id);
                   }}
                   className={cn(
-                    'absolute start-2 top-2 z-card flex h-6 w-6 items-center justify-center rounded-md border-2 transition',
+                    'absolute start-2 top-2 z-card flex h-6 w-6 items-center justify-center rounded-lg border-2 transition',
                     props.selectedIds.has(m.id)
                       ? 'border-primary bg-primary text-primary-foreground'
                       : 'border-white/70 bg-black/40 text-transparent hover:border-white',
@@ -339,7 +339,7 @@ export function MediaGrid(props: MediaGridProps) {
                 ) : (
                   <MediaPreviewVideo src={m.publicUrl} />
                 )}
-                <div className="absolute start-2 top-2 flex items-center gap-1 rounded-lg border border-border bg-card/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-foreground shadow-sm backdrop-blur-sm">
+                <div className="absolute start-2 top-2 flex items-center gap-1 rounded-lg border border-border bg-card/90 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-foreground shadow-sm backdrop-blur-sm">
                   {m.mimeType.startsWith('video/') ? (
                     <Film className="ngl-media-icon-accent h-3 w-3" />
                   ) : (
@@ -349,7 +349,7 @@ export function MediaGrid(props: MediaGridProps) {
                 </div>
                 <div className="absolute end-2 top-2 flex gap-1.5 opacity-0 transition group-hover:opacity-100">
                   {(() => { const badge = getExpiryBadge(m, t); return badge ? (
-                    <span className={cn('flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-semibold', badge.className)}>
+                    <span className={cn('flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-semibold', badge.className)}>
                       <badge.icon className="h-3 w-3" />
                       {badge.label}
                     </span>
@@ -359,7 +359,7 @@ export function MediaGrid(props: MediaGridProps) {
                     <button
                       type="button"
                       onClick={(e) => e.stopPropagation()}
-                      className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/55 text-white shadow-lg backdrop-blur transition hover:bg-primary/90"
+                      className="flex h-9 w-9 items-center justify-center rounded-lg bg-black/55 text-white shadow-lg backdrop-blur transition hover:bg-primary/90 hover:text-primary-foreground"
                       aria-label={t('quickPublish')}
                     >
                       <Zap className="h-4 w-4" />
@@ -370,7 +370,7 @@ export function MediaGrid(props: MediaGridProps) {
                     href={m.publicUrl}
                     download={m.originalName}
                     onClick={(e) => e.stopPropagation()}
-                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/55 text-white shadow-lg backdrop-blur transition hover:bg-primary/90"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-black/55 text-white shadow-lg backdrop-blur transition hover:bg-primary/90 hover:text-primary-foreground"
                     aria-label={t('download')}
                   >
                     <Download className="h-4 w-4" />
@@ -381,7 +381,7 @@ export function MediaGrid(props: MediaGridProps) {
                       e.stopPropagation();
                       props.onAddToPlaylist(m);
                     }}
-                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/55 text-white shadow-lg backdrop-blur transition hover:bg-primary/90"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-black/55 text-white shadow-lg backdrop-blur transition hover:bg-primary/90 hover:text-primary-foreground"
                     aria-label={t('addToPlaylist')}
                   >
                     <ListPlus className="h-4 w-4" />
@@ -392,7 +392,7 @@ export function MediaGrid(props: MediaGridProps) {
                       e.stopPropagation();
                       props.onInfo(m);
                     }}
-                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/55 text-white shadow-lg backdrop-blur transition hover:bg-primary/90"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-black/55 text-white shadow-lg backdrop-blur transition hover:bg-primary/90 hover:text-primary-foreground"
                     aria-label={t('info')}
                   >
                     <Info className="h-4 w-4" />
@@ -404,7 +404,7 @@ export function MediaGrid(props: MediaGridProps) {
                       e.stopPropagation();
                       props.onDelete(m);
                     }}
-                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/55 text-white shadow-lg backdrop-blur transition hover:bg-destructive/90"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-black/55 text-white shadow-lg backdrop-blur transition hover:bg-destructive/90 hover:text-destructive-foreground"
                     aria-label={t('delete')}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -415,7 +415,7 @@ export function MediaGrid(props: MediaGridProps) {
               <div className="space-y-1 p-3">
                 {props.scope === 'branch' && props.canEdit ? (
                   <select
-                    className="h-7 w-full rounded border border-border bg-background px-2 text-[11px]"
+                    className="h-7 w-full rounded-lg border border-border bg-background px-2 text-xs"
                     value={m.folderId ?? 'all'}
                     aria-label={t('moveToFolderAria', { name: m.originalName })}
                     onChange={(e) => {
@@ -431,7 +431,7 @@ export function MediaGrid(props: MediaGridProps) {
                   </select>
                 ) : null}
                 {m.workspaceName ? (
-                  <p className="mb-1 truncate text-[10px] font-bold uppercase tracking-wide text-primary">
+                  <p className="mb-1 truncate text-xs font-bold uppercase tracking-wide text-primary">
                     {m.workspaceName}
                   </p>
                 ) : null}
@@ -442,7 +442,7 @@ export function MediaGrid(props: MediaGridProps) {
                   {new Intl.NumberFormat(props.locale, { maximumFractionDigits: 2 }).format(m.sizeBytes / 1024 / 1024)} MB
                 </p>
                 {(() => { const badge = getExpiryBadge(m, t); return badge ? (
-                  <span className={cn('mt-1 inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-semibold', badge.className)}>
+                  <span className={cn('mt-1 inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-semibold', badge.className)}>
                     <badge.icon className="h-3 w-3" />
                     {badge.label}
                   </span>

@@ -215,7 +215,7 @@ export function SettingsBillingClient() {
   const isPro = plan === 'PRO' || plan === 'ENTERPRISE';
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {showRetention && (
         <div className={`rounded-lg border p-6 shadow-sm ${isCancelled ? 'border-destructive/30 bg-destructive/5' : 'border-warning/30 bg-warning/5'}`}>
           <div className="flex items-start gap-3">
@@ -232,7 +232,7 @@ export function SettingsBillingClient() {
                   <Button
                     type="button"
                     variant="cta"
-                    className="rounded-xl font-semibold"
+                    className="rounded-lg font-semibold"
                     disabled={portalBusy}
                     onClick={() => void openBillingPortal()}
                   >
@@ -243,7 +243,7 @@ export function SettingsBillingClient() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="rounded-xl"
+                  className="rounded-lg"
                   onClick={() => {
                     const el = document.getElementById('plans-section');
                     if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -257,7 +257,7 @@ export function SettingsBillingClient() {
         </div>
       )}
 
-      <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
+      <div className="rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
         <h2 className="text-lg font-semibold tracking-tight">{t('currentPlan')}</h2>
         <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
           <div>
@@ -307,7 +307,7 @@ export function SettingsBillingClient() {
 
       {/* Usage bars */}
       {!subLoading && sub && (
-        <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
+        <div className="rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
           <h2 className="text-lg font-semibold tracking-tight">{t('usageTitle')}</h2>
           <div className="mt-6 space-y-5">
             {/* Screens usage */}
@@ -376,7 +376,7 @@ export function SettingsBillingClient() {
         </div>
       )}
 
-      <div className="vc-card-surface overflow-hidden rounded-lg border border-border">
+      <div className="overflow-hidden rounded-lg border border-border">
         <div className="border-b border-border/60 px-6 py-4">
           <h3 className="font-semibold">{t('paymentHistory')}</h3>
         </div>
@@ -435,11 +435,11 @@ export function SettingsBillingClient() {
         id="plans-section"
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="vc-glass vc-card-surface rounded-lg p-8"
+        className="rounded-lg p-8"
       >
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="vc-page-kicker">{tBilling('kicker')}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{tBilling('kicker')}</p>
             <h2 className="mt-1 text-2xl font-semibold tracking-tight">{tBilling('title')}</h2>
             <p className="mt-2 max-w-xl text-sm text-muted-foreground">
               {tBilling('description')}
@@ -481,7 +481,7 @@ export function SettingsBillingClient() {
             )}
           >
             {!isPro ? (
-              <span className="absolute end-4 top-4 rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+              <span className="absolute end-4 top-4 rounded-full bg-primary px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary-foreground">
                 {tBilling('current')}
               </span>
             ) : null}
@@ -513,7 +513,7 @@ export function SettingsBillingClient() {
               <Button
                 type="button"
                 variant="outline"
-                className="mt-8 w-full rounded-xl border-border"
+                className="mt-8 w-full rounded-lg border-border"
                 disabled={!!savingPlan}
                 onClick={() => void applyMockPlan('FREE')}
               >
@@ -535,7 +535,7 @@ export function SettingsBillingClient() {
             )}
           >
             {plan === 'STARTER' ? (
-              <span className="absolute end-4 top-4 rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+              <span className="absolute end-4 top-4 rounded-full bg-primary px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary-foreground">
                 {tBilling('current')}
               </span>
             ) : null}
@@ -562,7 +562,7 @@ export function SettingsBillingClient() {
             <Button
               type="button"
               variant="outline"
-              className="mt-8 w-full rounded-xl font-semibold"
+              className="mt-8 w-full rounded-lg font-semibold"
               disabled={!!savingPlan || plan === 'STARTER'}
               onClick={() => void startStripeCheckout('STARTER')}
             >
@@ -579,12 +579,12 @@ export function SettingsBillingClient() {
             )}
           >
             {isPro ? (
-              <span className="absolute end-4 top-4 rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+              <span className="absolute end-4 top-4 rounded-full bg-primary px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary-foreground">
                 {tBilling('current')}
               </span>
             ) : null}
             <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
                 <Sparkles className="h-6 w-6 text-primary" />
               </div>
               <div>
@@ -611,7 +611,7 @@ export function SettingsBillingClient() {
             <div className="mt-8 flex flex-col gap-3">
               <Button
                 type="button"
-                className="w-full rounded-xl font-semibold" variant="cta"
+                className="w-full rounded-lg font-semibold" variant="cta"
                 disabled={!!savingPlan || isPro}
                 onClick={() => void startStripeCheckout('PRO')}
               >
@@ -621,7 +621,7 @@ export function SettingsBillingClient() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full rounded-xl border-dashed border-primary/40"
+                  className="w-full rounded-lg border-dashed border-primary/40"
                   disabled={!!savingPlan || isPro}
                   onClick={() => void applyMockPlan('PRO')}
                 >
@@ -640,12 +640,12 @@ export function SettingsBillingClient() {
             )}
           >
             {plan === 'ENTERPRISE' ? (
-              <span className="absolute end-4 top-4 rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+              <span className="absolute end-4 top-4 rounded-full bg-primary px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary-foreground">
                 {tBilling('current')}
               </span>
             ) : null}
             <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
                 <Sparkles className="h-6 w-6 text-primary" />
               </div>
               <div>
@@ -667,7 +667,7 @@ export function SettingsBillingClient() {
             <Button
               type="button"
               variant="outline"
-              className="mt-8 w-full rounded-xl font-semibold"
+              className="mt-8 w-full rounded-lg font-semibold"
               disabled={!!savingPlan || plan === 'ENTERPRISE'}
               onClick={() => void startStripeCheckout('ENTERPRISE')}
             >
@@ -682,17 +682,17 @@ export function SettingsBillingClient() {
           </p>
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             <div>
-              <p className="text-[11px] text-muted-foreground">{tBilling('plan')}</p>
+              <p className="text-xs text-muted-foreground">{tBilling('plan')}</p>
               <p className="font-mono-nums text-lg font-semibold">{subLoading ? '…' : plan}</p>
             </div>
             <div>
-              <p className="text-[11px] text-muted-foreground">{tBilling('seats')}</p>
+              <p className="text-xs text-muted-foreground">{tBilling('seats')}</p>
               <p className="font-mono-nums text-lg font-semibold">
                 {subLoading ? '…' : sub?.seats ?? tBilling('dash')}
               </p>
             </div>
             <div>
-              <p className="text-[11px] text-muted-foreground">{tBilling('screenLimit')}</p>
+              <p className="text-xs text-muted-foreground">{tBilling('screenLimit')}</p>
               <p className="font-mono-nums text-lg font-semibold">
                 {subLoading ? '…' : sub?.screenLimit ?? tBilling('dash')}
               </p>
@@ -707,24 +707,24 @@ export function SettingsBillingClient() {
               <h3 className="text-sm font-semibold tracking-tight">{tBilling('perScreenBilling')}</h3>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-xl bg-muted/30 p-4">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              <div className="rounded-lg bg-muted/30 p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {tBilling('activeScreens')}
                 </p>
                 <p className="mt-1 text-2xl font-bold text-foreground">
                   {sub.activeScreenCount ?? 0}
                 </p>
               </div>
-              <div className="rounded-xl bg-muted/30 p-4">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              <div className="rounded-lg bg-muted/30 p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {tBilling('includedScreens')}
                 </p>
                 <p className="mt-1 text-2xl font-bold text-foreground">
                   {sub.perScreenPricing.includedScreens}
                 </p>
               </div>
-              <div className="rounded-xl bg-muted/30 p-4">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              <div className="rounded-lg bg-muted/30 p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {tBilling('perScreenPrice')}
                 </p>
                 <p className="mt-1 text-2xl font-bold text-foreground">
@@ -733,8 +733,8 @@ export function SettingsBillingClient() {
                     : tBilling('included')}
                 </p>
               </div>
-              <div className="rounded-xl bg-primary/10 p-4 ring-1 ring-primary/20">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              <div className="rounded-lg bg-primary/10 p-4 ring-1 ring-primary/20">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {tBilling('estimatedMonthly')}
                 </p>
                 <p className="mt-1 text-2xl font-bold text-primary">
@@ -783,7 +783,7 @@ export function SettingsBillingClient() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="vc-card-surface overflow-hidden rounded-lg border border-border"
+        className="overflow-hidden rounded-lg border border-border"
       >
         <div className="border-b border-border/60 px-6 py-4">
           <h3 className="text-lg font-semibold tracking-tight">{tBilling('comparisonTitle')}</h3>

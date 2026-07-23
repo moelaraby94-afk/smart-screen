@@ -132,7 +132,7 @@ export function MediaLibrary({ library, canvasLibrary, onUploadComplete, workspa
                           ref={p.innerRef}
                           {...p.draggableProps}
                           {...p.dragHandleProps}
-                          className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-background px-2.5 py-2 transition hover:border-primary/30 hover:bg-primary/[0.03]"
+                          className="flex items-center gap-2.5 rounded-lg border border-border/60 bg-background px-2.5 py-2 transition hover:border-primary/30 hover:bg-primary/[0.03]"
                         >
                           <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
                           <div className="relative h-10 w-14 shrink-0 overflow-hidden rounded-lg bg-muted">
@@ -156,13 +156,13 @@ export function MediaLibrary({ library, canvasLibrary, onUploadComplete, workspa
                           {playlistMeta && isMediaOrientationMismatch(m, playlistMeta.orientation) && (
                             <span
                               title={t('orientationMismatchWarning')}
-                              className="shrink-0 text-amber-500"
+                              className="shrink-0 text-warning"
                             >
                               <AlertTriangle className="h-3.5 w-3.5" />
                             </span>
                           )}
                           {m.width && m.height && (
-                            <span className="shrink-0 text-[10px] text-muted-foreground">
+                            <span className="shrink-0 text-xs text-muted-foreground">
                               {m.width}×{m.height}
                             </span>
                           )}
@@ -195,7 +195,7 @@ export function MediaLibrary({ library, canvasLibrary, onUploadComplete, workspa
                           ref={p.innerRef}
                           {...p.draggableProps}
                           {...p.dragHandleProps}
-                          className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-background px-2.5 py-2 transition hover:border-primary/30 hover:bg-primary/[0.03]"
+                          className="flex items-center gap-2.5 rounded-lg border border-border/60 bg-background px-2.5 py-2 transition hover:border-primary/30 hover:bg-primary/[0.03]"
                         >
                           <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
                           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
@@ -220,7 +220,7 @@ export function MediaLibrary({ library, canvasLibrary, onUploadComplete, workspa
             {[...filtered].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10).map((m) => (
               <div
                 key={m.id}
-                className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-background px-2.5 py-2 mb-1.5"
+                className="flex items-center gap-2.5 rounded-lg border border-border/60 bg-background px-2.5 py-2 mb-1.5"
               >
                 <div className="relative h-10 w-14 shrink-0 overflow-hidden rounded-lg bg-muted">
                   {m.mimeType.startsWith('image/') ? (

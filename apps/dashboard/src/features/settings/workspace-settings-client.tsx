@@ -128,24 +128,24 @@ export function WorkspaceSettingsClient() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
+    <div className="space-y-6">
+      <div className="rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
         <h2 className="text-lg font-semibold tracking-tight">{t('generalTitle')}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t('generalDesc')}</p>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label>{t('workspaceName')}</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} className="rounded-xl" />
+            <Input value={name} onChange={(e) => setName(e.target.value)} className="rounded-lg" />
           </div>
           <div className="space-y-2">
             <Label>{t('workspaceId')}</Label>
             <div className="flex items-center gap-2">
-              <Input value={details.id} readOnly aria-readonly className="rounded-xl font-mono text-sm" />
+              <Input value={details.id} readOnly aria-readonly className="rounded-lg font-mono text-sm" />
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-10 shrink-0 rounded-xl"
+                className="h-9 shrink-0 rounded-lg"
                 onClick={() => {
                   void navigator.clipboard.writeText(details.id);
                   setCopiedId(true);
@@ -160,7 +160,7 @@ export function WorkspaceSettingsClient() {
           <div className="space-y-2">
             <Label>{t('defaultLocale')}</Label>
             <select
-              className="h-10 w-full rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+              className="h-9 w-full rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
               value={defaultLocale}
               onChange={(e) => setDefaultLocale(e.target.value)}
               aria-label={t('defaultLocale')}
@@ -172,7 +172,7 @@ export function WorkspaceSettingsClient() {
           <div className="space-y-2 md:col-span-2">
             <Label>{t('timezone')}</Label>
             <select
-              className="h-10 w-full rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+              className="h-9 w-full rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
               value={timezone}
               onChange={(e) => setTimezone(e.target.value)}
               aria-label={t('timezone')}
@@ -200,7 +200,7 @@ export function WorkspaceSettingsClient() {
         </div>
         <Button
           type="button"
-          className="mt-6 rounded-xl font-semibold"
+          className="mt-6 rounded-lg font-semibold"
           variant="cta"
           disabled={saving || name.trim().length < 2}
           onClick={() => void saveGeneral()}
@@ -210,14 +210,14 @@ export function WorkspaceSettingsClient() {
         </Button>
       </div>
 
-      <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
+      <div className="rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
         <h2 className="text-lg font-semibold tracking-tight">{t('pauseTitle')}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t('pauseDesc')}</p>
         <div className="mt-4 flex items-center gap-3">
           <Button
             type="button"
             variant={isPaused ? 'cta' : 'outline'}
-            className="rounded-xl font-semibold"
+            className="rounded-lg font-semibold"
             disabled={togglingPause}
             onClick={() => void togglePause()}
           >

@@ -112,7 +112,7 @@ export function RamadanSettingsPanel({
   }
 
   return (
-    <div className="vc-card-surface rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
+    <div className="rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
       <div className="flex items-center gap-2.5">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-success/10 ring-1 ring-ring/20">
           <Moon className="h-[18px] w-[18px] text-success" strokeWidth={ICON_STROKE} />

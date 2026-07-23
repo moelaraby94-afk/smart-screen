@@ -49,7 +49,7 @@ export function BranchPairingDialog({ pairing, branchName, canClaim }: Props) {
       <DialogContent className="max-h-[min(90vh,560px)] overflow-y-auto rounded-lg border-border sm:max-w-md">
         <DialogHeader className="space-y-1 text-center sm:text-center">
           <DialogTitle className="text-xl font-semibold">{t('pairingModalTitle')}</DialogTitle>
-          <DialogDescription className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <DialogDescription className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             {tToolbar('branchLabel')} · {branchName}
           </DialogDescription>
         </DialogHeader>
@@ -69,14 +69,14 @@ export function BranchPairingDialog({ pairing, branchName, canClaim }: Props) {
                 strokeWidth={ICON_STROKE}
                 aria-hidden
               />
-              <p className="text-base font-semibold text-foreground dark:text-white">
+              <p className="text-base font-semibold text-foreground">
                 {t('pairingSuccessMessage')}
               </p>
               <div className="flex gap-2">
                 <Button
                   type="button"
                   variant="outline"
-                  className="rounded-xl"
+                  className="rounded-lg"
                   onClick={() => pairing.close()}
                 >
                   {t('pairingDone')}
@@ -84,7 +84,7 @@ export function BranchPairingDialog({ pairing, branchName, canClaim }: Props) {
                 <Button
                   type="button"
                   variant="cta"
-                  className="rounded-xl font-semibold"
+                  className="rounded-lg font-semibold"
                   onClick={() => {
                     pairing.close();
                     setTimeout(() => pairing.open(), 100);
@@ -104,7 +104,7 @@ export function BranchPairingDialog({ pairing, branchName, canClaim }: Props) {
               </p>
               {pairing.error ? (
                 <p
-                  className="rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-center text-sm text-destructive"
+                  className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-center text-sm text-destructive"
                   role="alert"
                 >
                   {pairing.error}
@@ -125,7 +125,7 @@ export function BranchPairingDialog({ pairing, branchName, canClaim }: Props) {
                   placeholder={t('pairingCodePlaceholder')}
                   value={pairing.code}
                   onChange={(e) => pairing.setCode(e.target.value)}
-                  className="h-14 rounded-xl text-center font-mono text-3xl font-semibold tracking-[0.35em] text-foreground"
+                  className="h-14 rounded-lg text-center font-mono text-3xl font-semibold tracking-[0.35em] text-foreground"
                   aria-invalid={Boolean(pairing.error)}
                 />
               </div>
@@ -136,7 +136,7 @@ export function BranchPairingDialog({ pairing, branchName, canClaim }: Props) {
                   value={pairing.name}
                   onChange={(e) => pairing.setName(e.target.value)}
                   placeholder={t('pairingNamePlaceholder')}
-                  className="rounded-xl"
+                  className="rounded-lg"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') void pairing.claim();
                   }}
@@ -144,7 +144,7 @@ export function BranchPairingDialog({ pairing, branchName, canClaim }: Props) {
               </div>
               <Button
                 type="button"
-                className="h-11 w-full rounded-xl font-semibold"
+                className="h-11 w-full rounded-lg font-semibold"
                 variant="cta"
                 disabled={pairing.busy || pairing.code.length !== 6}
                 onClick={() => void pairing.claim()}
@@ -160,7 +160,7 @@ export function BranchPairingDialog({ pairing, branchName, canClaim }: Props) {
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 w-full rounded-xl"
+                className="h-11 w-full rounded-lg"
                 disabled={pairing.busy}
                 onClick={() => pairing.close()}
               >

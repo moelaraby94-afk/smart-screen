@@ -143,7 +143,7 @@ export function LoginForm() {
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">{t('twoFactorPrompt')}</p>
             <label
-              className="text-[13px] font-medium text-foreground"
+              className="text-sm font-medium text-foreground"
               htmlFor="twoFactorToken"
             >
               {t('twoFactorLabel')}

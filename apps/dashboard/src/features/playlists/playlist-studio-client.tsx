@@ -441,7 +441,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
   };
 
   if (!workspaceId) {
-    return <p className="text-[15px] text-muted-foreground">{t('selectWorkspaceFirst')}</p>;
+    return <p className="text-sm text-muted-foreground">{t('selectWorkspaceFirst')}</p>;
   }
 
   // ── Editor View ────────────────────────────────────────
@@ -481,7 +481,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
   return (
     <>
       {viewportWidth >= 768 && viewportWidth < 1024 && (
-        <div className="mb-4 flex items-center gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-600 dark:text-yellow-400">
+        <div className="mb-4 flex items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
           <AlertCircle className="h-5 w-5 shrink-0" />
           <p>{t('tabletWarning')}</p>
         </div>
@@ -647,7 +647,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
                       lastSeenAt={screen.lastSeenAt}
                       locale={locale}
                       tone="card"
-                      className="text-[11px]"
+                      className="text-xs"
                     />
                   </label>
                 </div>

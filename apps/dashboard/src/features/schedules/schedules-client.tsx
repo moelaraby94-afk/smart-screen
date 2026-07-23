@@ -11,6 +11,7 @@ import { CalendarClock, Play, Plus, CalendarDays, Calendar, List, LayoutDashboar
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
+import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogTrigger,
@@ -298,12 +299,12 @@ export function SchedulesClient({
   }
 
   return (
-    <div className="space-y-8">
-      <section className="vc-card-surface rounded-lg border border-border p-6 shadow-sm">
+    <div className="space-y-6">
+      <section className="rounded-lg border border-border bg-card p-6 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
-              <CalendarClock className="h-6 w-6 text-primary" strokeWidth={1.75} />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
+              <CalendarClock className="h-5 w-5 text-primary" strokeWidth={1.75} />
             </div>
             <div>
               <h2 className="text-lg font-semibold tracking-tight">{t('engineTitle')}</h2>
@@ -311,12 +312,16 @@ export function SchedulesClient({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex rounded-xl border border-border bg-muted/50 p-1">
+            <div className="flex items-center rounded-lg border border-border bg-card p-0.5">
               <button
                 type="button"
                 onClick={() => setViewMode('calendar')}
                 aria-label={t('viewCalendar')}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${viewMode === 'calendar' ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'}`}
+                aria-pressed={viewMode === 'calendar'}
+                className={cn(
+                  'flex h-8 w-8 items-center justify-center rounded-lg transition',
+                  viewMode === 'calendar' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+                )}
               >
                 <Calendar className="h-4 w-4" />
               </button>
@@ -324,7 +329,11 @@ export function SchedulesClient({
                 type="button"
                 onClick={() => setViewMode('timeline')}
                 aria-label={t('viewTimeline')}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${viewMode === 'timeline' ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'}`}
+                aria-pressed={viewMode === 'timeline'}
+                className={cn(
+                  'flex h-8 w-8 items-center justify-center rounded-lg transition',
+                  viewMode === 'timeline' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+                )}
               >
                 <LayoutDashboard className="h-4 w-4" />
               </button>
@@ -332,13 +341,17 @@ export function SchedulesClient({
                 type="button"
                 onClick={() => setViewMode('list')}
                 aria-label={t('viewList')}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${viewMode === 'list' ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'}`}
+                aria-pressed={viewMode === 'list'}
+                className={cn(
+                  'flex h-8 w-8 items-center justify-center rounded-lg transition',
+                  viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+                )}
               >
                 <List className="h-4 w-4" />
               </button>
             </div>
             <select
-              className="h-9 rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+              className="h-9 rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               aria-label={t('sortBy')}
@@ -351,7 +364,7 @@ export function SchedulesClient({
             {canEdit && (
               <Dialog open={openCreate} onOpenChange={setOpenCreate}>
                 <DialogTrigger asChild>
-                  <Button className="rounded-xl font-semibold" variant="cta">
+                  <Button className="rounded-lg font-semibold" variant="cta">
                     <Plus className="me-2 h-4 w-4" />
                     {t('addSchedule')}
                   </Button>
@@ -393,14 +406,14 @@ export function SchedulesClient({
         </div>
       </section>
 
-      <section className="vc-card-surface rounded-lg border border-border p-6 shadow-sm">
+      <section className="rounded-lg border border-border bg-card p-6 shadow-sm">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 className="text-base font-semibold tracking-tight">{t('filterTitle')}</h3>
           </div>
           <div className="flex flex-wrap gap-2">
             <select
-              className="h-9 rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+              className="h-9 rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
               value={filterScreenId}
               onChange={(e) => setFilterScreenId(e.target.value)}
               aria-label={t('filterByScreen')}
@@ -411,7 +424,7 @@ export function SchedulesClient({
               ))}
             </select>
             <select
-              className="h-9 rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+              className="h-9 rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
               value={filterPlaylistId}
               onChange={(e) => setFilterPlaylistId(e.target.value)}
               aria-label={t('filterByPlaylist')}
@@ -426,7 +439,7 @@ export function SchedulesClient({
       </section>
 
       {canEdit && (
-        <section className="vc-card-surface rounded-lg border border-border p-6 shadow-sm">
+        <section className="rounded-lg border border-border bg-card p-6 shadow-sm">
           <h3 className="mb-4 text-base font-semibold tracking-tight">{t('overrideTitle')}</h3>
           <p className="mb-4 text-sm text-muted-foreground">{t('overrideDesc')}</p>
           <div className="flex flex-wrap items-end gap-3">
@@ -434,7 +447,7 @@ export function SchedulesClient({
               <Label htmlFor="override-screen">{t('fieldScreen')}</Label>
               <select
                 id="override-screen"
-                className="h-10 min-w-[200px] rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+                className="h-9 min-w-[200px] rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
                 value={overrideScreenId}
                 onChange={(e) => setOverrideScreenId(e.target.value)}
               >
@@ -450,7 +463,7 @@ export function SchedulesClient({
               <Label htmlFor="override-playlist">{t('fieldPlaylist')}</Label>
               <select
                 id="override-playlist"
-                className="h-10 min-w-[200px] rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+                className="h-9 min-w-[200px] rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
                 value={overridePlaylistId}
                 onChange={(e) => setOverridePlaylistId(e.target.value)}
               >
@@ -466,7 +479,7 @@ export function SchedulesClient({
               <Label htmlFor="override-duration">{t('fieldDuration')}</Label>
               <select
                 id="override-duration"
-                className="h-10 min-w-[160px] rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+                className="h-9 min-w-[160px] rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
                 value={overrideDuration}
                 onChange={(e) => setOverrideDuration(Number(e.target.value))}
               >
@@ -482,7 +495,7 @@ export function SchedulesClient({
             <Button
               type="button"
               onClick={() => void applyOverride()}
-              className="rounded-xl font-semibold" variant="cta"
+              className="rounded-lg font-semibold" variant="cta"
             >
               <Play className="me-2 h-4 w-4" />
               {t('overrideCta')}
@@ -492,10 +505,10 @@ export function SchedulesClient({
       )}
 
       {error ? (
-        <div className="flex flex-col items-center gap-4 rounded-lg border border-destructive/30 bg-destructive/5 p-12 text-center">
-          <AlertCircle className="h-10 w-10 text-destructive" />
-          <p className="text-sm text-destructive">{t('errorFetch')}</p>
-          <Button variant="outline" onClick={() => void load()}>
+        <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-card p-12 text-center shadow-sm">
+          <AlertCircle className="h-12 w-12 text-destructive/50" strokeWidth={1.5} />
+          <p className="text-lg font-semibold text-foreground">{t('errorFetch')}</p>
+          <Button variant="outline" className="rounded-lg" onClick={() => void load()}>
             {t('retry')}
           </Button>
         </div>

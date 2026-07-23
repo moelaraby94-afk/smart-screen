@@ -331,7 +331,7 @@ html:not(.dark) ::-webkit-scrollbar-thumb {
 
 /* ── Cards — clean, solid, no glass ── */
 .vc-card-surface {
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   background: hsl(var(--card));
   backdrop-filter: none;
   -webkit-backdrop-filter: none;

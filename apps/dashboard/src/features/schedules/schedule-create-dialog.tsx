@@ -223,7 +223,7 @@ export function CreateScheduleForm({
   };
 
   return (
-    <DialogContent className="max-w-[600px] rounded-lg border border-white/10 bg-card/95 backdrop-blur-xl">
+    <DialogContent className="max-w-[600px] rounded-lg border-border">
       <DialogHeader>
         <DialogTitle>{isEdit ? t('editTitle') : t('createTitle')}</DialogTitle>
         <DialogDescription>{isEdit ? t('editDesc') : t('createDesc')}</DialogDescription>
@@ -262,7 +262,7 @@ export function CreateScheduleForm({
           <Label htmlFor="sched-playlist">{t('fieldPlaylist')}</Label>
           <select
             id="sched-playlist"
-            className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm"
+            className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm"
             value={playlistId}
             onChange={(e) => { setPlaylistId(e.target.value); setErrors((p) => ({ ...p, playlist: '' })); }}
             aria-invalid={!!errors.playlist}
@@ -281,7 +281,7 @@ export function CreateScheduleForm({
           <Label htmlFor="sched-screen">{t('fieldScreenOptional')}</Label>
           <select
             id="sched-screen"
-            className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm"
+            className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm"
             value={screenId}
             onChange={(e) => setScreenId(e.target.value)}
           >
@@ -295,7 +295,7 @@ export function CreateScheduleForm({
         </div>
         <div className="grid gap-2">
           <Label>{t('fieldRecurrence')}</Label>
-          <div className="flex rounded-xl border border-border bg-background p-0.5">
+          <div className="flex rounded-lg border border-border bg-background p-0.5">
             {(['ONCE', 'DAILY', 'WEEKLY', 'MONTHLY'] as const).map((r) => (
               <button
                 key={r}
@@ -305,7 +305,7 @@ export function CreateScheduleForm({
                 className={cn(
                   'flex-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors',
                   recurrence === r
-                    ? 'bg-primary text-white shadow-sm'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >
@@ -327,7 +327,7 @@ export function CreateScheduleForm({
                   className={cn(
                     'rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
                     days.includes(d)
-                      ? 'bg-primary text-white shadow-sm'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'bg-muted text-muted-foreground hover:bg-muted/80',
                   )}
                 >
@@ -335,7 +335,7 @@ export function CreateScheduleForm({
                 </button>
               ))}
             </div>
-            <p className="text-[11px] text-muted-foreground">{t('dayHint')}</p>
+            <p className="text-xs text-muted-foreground">{t('dayHint')}</p>
           </div>
         ) : (
           <div className="grid gap-2">
@@ -350,7 +350,7 @@ export function CreateScheduleForm({
                   className={cn(
                     'h-8 w-8 rounded-lg text-xs font-medium tabular-nums transition-colors',
                     daysOfMonth.includes(d)
-                      ? 'bg-primary text-white shadow-sm'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'bg-muted text-muted-foreground hover:bg-muted/80',
                   )}
                 >
@@ -358,7 +358,7 @@ export function CreateScheduleForm({
                 </button>
               ))}
             </div>
-            <p className="text-[11px] text-muted-foreground">{t('dayOfMonthHint')}</p>
+            <p className="text-xs text-muted-foreground">{t('dayOfMonthHint')}</p>
           </div>
         )}
         <div className="grid grid-cols-2 gap-3">
@@ -369,7 +369,7 @@ export function CreateScheduleForm({
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="rounded-xl"
+              className="rounded-lg"
               aria-label={t('fieldStart')}
             />
           </div>
@@ -380,7 +380,7 @@ export function CreateScheduleForm({
               type="time"
               value={endTime}
               onChange={(e) => { setEndTime(e.target.value); setErrors((p) => ({ ...p, endTime: '' })); }}
-              className="rounded-xl"
+              className="rounded-lg"
               aria-invalid={!!errors.endTime}
               aria-describedby={errors.endTime ? 'err-end' : undefined}
               aria-label={t('fieldEnd')}
@@ -396,7 +396,7 @@ export function CreateScheduleForm({
             min={0}
             value={priority}
             onChange={(e) => setPriority(Number(e.target.value))}
-            className="rounded-xl"
+            className="rounded-lg"
             aria-label={t('fieldPriority')}
           />
         </div>
@@ -407,7 +407,7 @@ export function CreateScheduleForm({
             <Button
               type="button"
               variant="destructive"
-              className="rounded-xl"
+              className="rounded-lg"
               onClick={() => void handleDelete()}
               disabled={deleting}
               aria-label={t('deleteScheduleAria')}
@@ -417,7 +417,7 @@ export function CreateScheduleForm({
             <Button
               type="button"
               variant="outline"
-              className="rounded-xl"
+              className="rounded-lg"
               onClick={() => void handleDeactivate()}
               disabled={deactivating}
             >
@@ -432,7 +432,7 @@ export function CreateScheduleForm({
         <Button
           type="button"
           disabled={saving}
-          className="rounded-xl font-semibold" variant="cta"
+          className="rounded-lg font-semibold" variant="cta"
           onClick={() => void submit()}
           aria-busy={saving}
         >

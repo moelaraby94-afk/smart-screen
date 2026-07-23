@@ -99,7 +99,7 @@ export function PlaylistMediaLibrary({ library, canvasLibrary, onUploadComplete,
           <h3 className="text-xs font-semibold tracking-tight text-foreground">
             {t('mediaLibrary')}
           </h3>
-          <span className="ms-auto font-mono-nums text-[10px] text-muted-foreground">
+          <span className="ms-auto font-mono-nums text-xs text-muted-foreground">
             {filtered.length}
           </span>
         </div>
@@ -122,7 +122,7 @@ export function PlaylistMediaLibrary({ library, canvasLibrary, onUploadComplete,
                         ref={p.innerRef}
                         {...p.draggableProps}
                         {...p.dragHandleProps}
-                        className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-background px-2.5 py-2 transition hover:border-primary/30 hover:bg-primary/[0.03]"
+                        className="flex items-center gap-2.5 rounded-lg border border-border/60 bg-background px-2.5 py-2 transition hover:border-primary/30 hover:bg-primary/[0.03]"
                       >
                         <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
                         <div className="relative h-10 w-14 shrink-0 overflow-hidden rounded-lg bg-muted">
@@ -161,7 +161,7 @@ export function PlaylistMediaLibrary({ library, canvasLibrary, onUploadComplete,
           <h3 className="text-xs font-semibold tracking-tight text-foreground">
             {t('canvasDesigns')}
           </h3>
-          <span className="ms-auto font-mono-nums text-[10px] text-muted-foreground">
+          <span className="ms-auto font-mono-nums text-xs text-muted-foreground">
             {canvasLibrary.length}
           </span>
         </div>
@@ -184,7 +184,7 @@ export function PlaylistMediaLibrary({ library, canvasLibrary, onUploadComplete,
                         ref={p.innerRef}
                         {...p.draggableProps}
                         {...p.dragHandleProps}
-                        className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-background px-2.5 py-2 transition hover:border-primary/30 hover:bg-primary/[0.03]"
+                        className="flex items-center gap-2.5 rounded-lg border border-border/60 bg-background px-2.5 py-2 transition hover:border-primary/30 hover:bg-primary/[0.03]"
                       >
                         <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">

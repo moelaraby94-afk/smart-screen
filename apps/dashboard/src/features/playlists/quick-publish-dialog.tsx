@@ -128,7 +128,7 @@ export function QuickPublishDialog({ media, children }: Props) {
             type="button"
             variant="outline"
             size="sm"
-            className="rounded-xl"
+            className="rounded-lg"
           >
             <Zap className="me-1.5 h-4 w-4" />
             {t('quickPublish')}
@@ -149,7 +149,7 @@ export function QuickPublishDialog({ media, children }: Props) {
           </div>
         ) : (
           <div className="space-y-4 py-2">
-            <div className="rounded-xl border border-border bg-muted/30 px-3 py-2">
+            <div className="rounded-lg border border-border bg-muted/30 px-3 py-2">
               <p className="text-xs text-muted-foreground">{t('mediaLabel')}</p>
               <p className="truncate text-sm font-medium">{media.originalName}</p>
             </div>
@@ -157,7 +157,7 @@ export function QuickPublishDialog({ media, children }: Props) {
             <div className="space-y-2">
               <Label>{t('targetScreen')}</Label>
               <select
-                className="h-10 w-full rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+                className="h-9 w-full rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
                 value={screenId}
                 onChange={(e) => setScreenId(e.target.value)}
                 aria-label={t('targetScreen')}
@@ -176,14 +176,14 @@ export function QuickPublishDialog({ media, children }: Props) {
               <div className="flex gap-2">
                 <button
                   type="button"
-                  className={`flex-1 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${mode === 'new' ? 'border-primary bg-primary/10 text-foreground' : 'border-border text-muted-foreground hover:text-foreground'}`}
+                  className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${mode === 'new' ? 'border-primary bg-primary/10 text-foreground' : 'border-border text-muted-foreground hover:text-foreground'}`}
                   onClick={() => setMode('new')}
                 >
                   {t('createNew')}
                 </button>
                 <button
                   type="button"
-                  className={`flex-1 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${mode === 'existing' ? 'border-primary bg-primary/10 text-foreground' : 'border-border text-muted-foreground hover:text-foreground'}`}
+                  className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${mode === 'existing' ? 'border-primary bg-primary/10 text-foreground' : 'border-border text-muted-foreground hover:text-foreground'}`}
                   onClick={() => setMode('existing')}
                 >
                   {t('useExisting')}
@@ -197,7 +197,7 @@ export function QuickPublishDialog({ media, children }: Props) {
                   <Label>{t('playlistName')}</Label>
                   <input
                     type="text"
-                    className="h-10 w-full rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+                    className="h-9 w-full rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
                     value={playlistName}
                     onChange={(e) => setPlaylistName(e.target.value)}
                     aria-label={t('playlistName')}
@@ -206,7 +206,7 @@ export function QuickPublishDialog({ media, children }: Props) {
                 <div className="space-y-2">
                   <Label>{t('durationSec')}</Label>
                   <select
-                    className="h-10 w-full rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+                    className="h-9 w-full rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
                     value={duration}
                     onChange={(e) => setDuration(Number(e.target.value))}
                     aria-label={t('durationSec')}
@@ -223,7 +223,7 @@ export function QuickPublishDialog({ media, children }: Props) {
               <div className="space-y-2">
                 <Label>{t('existingPlaylist')}</Label>
                 <select
-                  className="h-10 w-full rounded-xl border border-border bg-background/80 px-3 text-sm backdrop-blur"
+                  className="h-9 w-full rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
                   value={existingPlaylistId}
                   onChange={(e) => setExistingPlaylistId(e.target.value)}
                   aria-label={t('existingPlaylist')}

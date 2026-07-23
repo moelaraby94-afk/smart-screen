@@ -93,7 +93,7 @@ export function CrystalShell({ children, locale }: CrystalShellProps) {
     <div className="relative flex h-screen h-dvh min-h-0 flex-col overflow-x-hidden overflow-y-hidden bg-background text-foreground dark:bg-transparent">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-tooltip focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg"
+        className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-tooltip focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground focus:shadow-lg"
       >
         {t('skipToContent')}
       </a>

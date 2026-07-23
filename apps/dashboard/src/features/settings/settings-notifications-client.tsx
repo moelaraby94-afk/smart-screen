@@ -4,7 +4,7 @@ import { NotificationPreferences } from '@/features/settings/notification-prefer
 
 export function SettingsNotificationsClient() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <NotificationPreferences />
     </div>
   );

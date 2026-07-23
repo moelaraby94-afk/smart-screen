@@ -18,6 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
 import { useNotifications } from './notification-provider';
 
@@ -97,7 +98,7 @@ export function NotificationsPageClient() {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex flex-wrap rounded-lg border border-border bg-card p-0.5">
@@ -107,7 +108,7 @@ export function NotificationsPageClient() {
               type="button"
               onClick={() => setFilter(btn.value)}
               className={cn(
-                'rounded-md px-3 py-1.5 text-xs font-medium transition',
+                'rounded-lg px-3 py-1.5 text-xs font-medium transition',
                 filter === btn.value
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground',
@@ -115,7 +116,7 @@ export function NotificationsPageClient() {
             >
               {btn.label}
               {btn.value === 'unread' && unreadCount > 0 && (
-                <span className="ms-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white">
+                <span className="ms-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-xs font-bold text-destructive-foreground">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
@@ -168,22 +169,12 @@ export function NotificationsPageClient() {
       {/* List */}
       <div role="list" aria-label={tPage('listLabel')}>
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16 text-center">
-          <Bell className="mb-3 h-8 w-8 text-muted-foreground/50" />
-          <p className="text-sm text-muted-foreground">
-            {notifications.length === 0 ? tPage('empty') : tPage('noFilterResults')}
-          </p>
-          {notifications.length > 0 && filter !== 'all' && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-4 rounded-xl"
-              onClick={() => setFilter('all')}
-            >
-              {tPage('clearFilter')}
-            </Button>
-          )}
-        </div>
+        <EmptyState
+          icon={Bell}
+          title={notifications.length === 0 ? tPage('empty') : tPage('noFilterResults')}
+          actionLabel={notifications.length > 0 && filter !== 'all' ? tPage('clearFilter') : undefined}
+          onAction={notifications.length > 0 && filter !== 'all' ? () => setFilter('all') : undefined}
+        />
       ) : (
         <div className="space-y-2">
           {filtered.map((n, i) => {
@@ -195,7 +186,7 @@ export function NotificationsPageClient() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(0.02 * i, 0.2), duration: 0.25 }}
                 className={cn(
-                  'group flex items-start gap-3 rounded-xl border border-border bg-card px-4 py-3',
+                  'group flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3',
                   !n.read && 'ring-1 ring-primary/20',
                   n.link && 'cursor-pointer hover:border-primary/30',
                 )}
@@ -205,7 +196,7 @@ export function NotificationsPageClient() {
               >
                 <span
                   className={cn(
-                    'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
+                    'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
                     iconClass,
                   )}
                 >

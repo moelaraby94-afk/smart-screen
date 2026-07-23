@@ -12,8 +12,8 @@ export default async function PlaylistStudioRoute({ params }: Props) {
   const tNav = await getTranslations({ locale, namespace: 'nav' });
 
   return (
-    <main className="space-y-4">
-      <header className="space-y-1 border-b border-border pb-3">
+    <main className="space-y-6">
+      <header className="space-y-1 border-b border-border pb-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {tNav('studio')}
         </p>

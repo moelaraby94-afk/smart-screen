@@ -47,7 +47,7 @@ export function BranchReviewSection({ playlists, workspaceId, onReviewed }: Prop
     <motion.section
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="vc-card-surface rounded-lg border border-border p-6 shadow-sm"
+      className="rounded-lg border border-border bg-card p-6 shadow-sm"
     >
       <div className="mb-4 flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10 ring-1 ring-warning/20">

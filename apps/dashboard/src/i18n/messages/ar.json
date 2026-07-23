@@ -547,6 +547,7 @@
     "deleting": "جارٍ الحذف…"
   },
   "teamPage": {
+    "kicker": "الفريق",
     "title": "الفريق",
     "description": "الأعضاء والأدوار والدعوات لهذا الفرع."
   },
@@ -1258,7 +1259,10 @@
     "profileDescription": "حدّث اسم النشاط التجاري والهاتف والبريد الإلكتروني.",
     "workspaceKicker": "الفرع",
     "workspaceTitle": "إعدادات الفرع",
-    "workspaceDescription": "إدارة اسم الفرع والمنطقة الزمنية واللغة الافتراضية وإيقاف التشغيل."
+    "workspaceDescription": "إدارة اسم الفرع والمنطقة الزمنية واللغة الافتراضية وإيقاف التشغيل.",
+    "securityKicker": "الأمان",
+    "notificationsKicker": "الإشعارات",
+    "apiKicker": "المطور"
   },
   "homeOverview": {
     "kicker": "القيادة",
@@ -1552,6 +1556,7 @@
     "screenActionsAria": "إجراءات الشاشة"
   },
   "branchesPage": {
+    "kicker": "الفروع",
     "title": "الفروع",
     "subtitle": "إدارة كل الفروع من مكان واحد. اختر فرعاً لعرض تفاصيله.",
     "selectPlaceholder": "اختر فرعاً",

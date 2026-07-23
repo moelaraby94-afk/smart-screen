@@ -40,7 +40,7 @@ export function PlaylistToolbar({
       </div>
 
       <div className="flex items-center gap-2">
-        <Label className="text-[11px] font-medium text-muted-foreground">{t('sortBy')}</Label>
+        <Label className="text-xs font-medium text-muted-foreground">{t('sortBy')}</Label>
         <select
           className="h-9 rounded-lg border border-border bg-background px-3 text-sm font-medium outline-none focus:border-primary/40"
           value={playlistSort}
@@ -57,10 +57,10 @@ export function PlaylistToolbar({
           placeholder={t('newPlaylistPlaceholder')}
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
-          className="h-9 max-w-[220px] rounded-xl"
+          className="h-9 max-w-[220px] rounded-lg"
           onKeyDown={(e) => { if (e.key === 'Enter') void onCreatePlaylist(newName); }}
         />
-        <Button variant="default" className="rounded-xl" onClick={() => void onCreatePlaylist(newName)}>
+        <Button variant="default" className="rounded-lg" onClick={() => void onCreatePlaylist(newName)}>
           <Plus className="me-2 h-4 w-4" />
           {t('create')}
         </Button>

@@ -164,10 +164,10 @@ export function PlaylistEditorView(props: PlaylistEditorViewProps) {
             <div className="flex items-center gap-2 px-1">
               <Clock className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="text-xs font-semibold text-foreground">{t('zoneTimeline')}</span>
-              <Badge variant="muted" className="text-[10px]">
+              <Badge variant="muted" className="text-xs">
                 {props.layoutType === 'single' ? t('singleZone') : (props.selectedZoneId ?? '—')}
               </Badge>
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 {t('itemsCount', { count: props.currentZoneRows.length })}
               </span>
             </div>

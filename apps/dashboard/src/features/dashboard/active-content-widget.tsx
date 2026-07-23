@@ -115,7 +115,7 @@ export function ActiveContentWidget() {
               <li key={screen.id}>
                 <Link
                   href={`/${locale}/screens/${screen.id}` as Route}
-                  className="flex items-center justify-between gap-3 py-2.5 transition-colors hover:bg-muted/30 -mx-2 px-2 rounded-md"
+                  className="flex items-center justify-between gap-3 py-2.5 transition-colors hover:bg-muted/30 -mx-2 px-2 rounded-lg"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-foreground">{screen.name}</p>
@@ -129,7 +129,7 @@ export function ActiveContentWidget() {
                       lastSeenAt={screen.lastSeenAt}
                       locale={locale}
                       tone="card"
-                      className="text-[11px]"
+                      className="text-xs"
                     />
                     <ChevronRight
                       className={cn('h-4 w-4 text-muted-foreground/50', isAr && 'rotate-180')}

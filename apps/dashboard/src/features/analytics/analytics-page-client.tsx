@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MetricCard } from './metric-card';
 import { TrendChart } from './trend-chart';
@@ -199,20 +200,13 @@ export function AnalyticsPageClient() {
 
   if (error) {
     return (
-      <div
-        role="alert"
-        className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center"
-      >
-        <AlertCircle className="h-12 w-12 text-destructive" strokeWidth={1.5} aria-hidden />
-        <div className="space-y-1.5">
-          <p className="text-lg font-semibold text-foreground">{t('errorTitle')}</p>
-          <p className="text-sm text-muted-foreground">{t('errorDescription')}</p>
-        </div>
-        <Button variant="outline" onClick={() => void load()}>
-          <RefreshCw className="me-1.5 h-4 w-4" />
-          {t('retry')}
-        </Button>
-      </div>
+      <ErrorState
+        icon={AlertCircle}
+        title={t('errorTitle')}
+        description={t('errorDescription')}
+        retryLabel={t('retry')}
+        onRetry={() => void load()}
+      />
     );
   }
 
@@ -385,7 +379,7 @@ function AnalyticsContent({
         ))}
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-5 shadow-xs" role="region" aria-label={t('trendTitle')}>
+      <div className="rounded-lg border border-border bg-card p-5 shadow-sm" role="region" aria-label={t('trendTitle')}>
         <div className="mb-4 flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-primary" aria-hidden />
           <h3 className="text-sm font-semibold tracking-tight">{t('trendTitle')}</h3>
@@ -403,7 +397,7 @@ function AnalyticsContent({
         />
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-5 shadow-xs" role="region" aria-label={t('performersTitle')}>
+      <div className="rounded-lg border border-border bg-card p-5 shadow-sm" role="region" aria-label={t('performersTitle')}>
         <div className="mb-4 flex items-center gap-2">
           <BarChart3 className="h-5 w-5 text-primary" aria-hidden />
           <h3 className="text-sm font-semibold tracking-tight">{t('performersTitle')}</h3>
@@ -453,7 +447,7 @@ function AnalyticsContent({
       </div>
 
       {bottomPerformers.length > 0 && (
-        <div className="rounded-lg border border-border bg-card p-5 shadow-xs" role="region" aria-label={t('bottomPerformersTitle')}>
+        <div className="rounded-lg border border-border bg-card p-5 shadow-sm" role="region" aria-label={t('bottomPerformersTitle')}>
           <div className="mb-4 flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-muted-foreground rotate-180" aria-hidden />
             <h3 className="text-sm font-semibold tracking-tight">{t('bottomPerformersTitle')}</h3>
@@ -521,7 +515,7 @@ function PerScreenTable({
   onRowClick: (id: string) => void;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-card shadow-xs overflow-hidden">
+    <div className="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
       <div className="border-b border-border p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -584,7 +578,7 @@ function PerScreenTable({
                 >
                   <td className="px-4 py-3">
                     <div className="font-medium text-foreground">{s.name}</div>
-                    <div className="font-mono text-[10px] text-muted-foreground">{s.serialNumber}</div>
+                    <div className="font-mono text-xs text-muted-foreground">{s.serialNumber}</div>
                   </td>
                   <td className="px-4 py-3">
                     <span className="inline-flex items-center gap-1.5">

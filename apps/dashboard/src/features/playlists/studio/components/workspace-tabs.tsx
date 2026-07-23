@@ -19,9 +19,9 @@ export function WorkspaceTabs({ workspaces, filterWorkspaceId, setFilterWorkspac
         type="button"
         onClick={() => setFilterWorkspaceId('')}
         className={cn(
-          'rounded-xl px-3.5 py-1.5 text-sm font-semibold transition-all',
+          'rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-all',
           !filterWorkspaceId
-            ? 'bg-primary text-white shadow-sm'
+            ? 'bg-primary text-primary-foreground shadow-sm'
             : 'border border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground',
         )}
       >
@@ -33,9 +33,9 @@ export function WorkspaceTabs({ workspaces, filterWorkspaceId, setFilterWorkspac
           type="button"
           onClick={() => setFilterWorkspaceId(w.id)}
           className={cn(
-            'rounded-xl px-3.5 py-1.5 text-sm font-semibold transition-all',
+            'rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-all',
             filterWorkspaceId === w.id
-              ? 'bg-primary text-white shadow-sm'
+              ? 'bg-primary text-primary-foreground shadow-sm'
               : 'border border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground',
           )}
         >

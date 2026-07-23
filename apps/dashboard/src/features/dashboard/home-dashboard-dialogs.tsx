@@ -59,7 +59,7 @@ export function RenameBranchDialog(props: RenameDialogProps) {
           </Button>
           <Button
             type="button"
-            className="rounded-lg bg-primary font-semibold text-white hover:bg-primary/90"
+            className="rounded-lg bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
             disabled={props.busy || !props.value.trim() || props.value.trim().length < 2}
             onClick={() => void props.onSubmit()}
           >
@@ -94,7 +94,7 @@ export function DeleteBranchDialog(props: DeleteDialogProps) {
           </AlertDialogCancel>
           <Button
             type="button"
-            className="rounded-lg bg-destructive font-semibold text-white hover:bg-destructive/90"
+            className="rounded-lg bg-destructive font-semibold text-destructive-foreground hover:bg-destructive/90"
             disabled={props.busy}
             onClick={() => void props.onConfirm()}
           >

@@ -25,7 +25,7 @@ export function ContentTabs() {
   return (
     <nav
       aria-label={t('title')}
-      className="inline-flex flex-wrap items-center gap-1 rounded-xl border border-border bg-muted/30 p-1"
+      className="inline-flex flex-wrap items-center gap-1 rounded-lg border border-border bg-muted/30 p-1"
     >
       {ALL_TABS.map((tab) => {
         const href = `/${locale}/${tab.href}`;

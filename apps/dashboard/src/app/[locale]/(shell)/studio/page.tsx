@@ -12,7 +12,7 @@ export default async function StudioPage({ params }: PageProps) {
   return (
     <main className="space-y-6">
       <header className="space-y-1 border-b border-border pb-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {tCommon('canvas')}
         </p>
         <h1 className="text-xl font-semibold tracking-tight">{t('title')}</h1>

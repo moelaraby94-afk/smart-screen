@@ -266,7 +266,7 @@ export function NotificationBell() {
         >
           <Bell className="h-4 w-4" strokeWidth={ICON_STROKE} />
           {unreadCount > 0 && (
-            <span className="absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white">
+            <span className="absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-xs font-bold text-destructive-foreground">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -279,7 +279,7 @@ export function NotificationBell() {
             <button
               type="button"
               onClick={markAllRead}
-              className="text-[10px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 rounded"
+              className="text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 rounded"
               aria-label={t('markAllRead')}
             >
               {t('markAllRead')}
@@ -308,8 +308,8 @@ export function NotificationBell() {
                   <Icon className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
                 </span>
                 <div className="min-w-0 flex-1 space-y-0.5">
-                  <p className="text-[13px] leading-tight text-foreground">{n.message}</p>
-                  <p className="text-[10px] text-muted-foreground">{formatTime(n.timestamp)}</p>
+                  <p className="text-sm leading-tight text-foreground">{n.message}</p>
+                  <p className="text-xs text-muted-foreground">{formatTime(n.timestamp)}</p>
                 </div>
                 {!n.read && (
                   <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />

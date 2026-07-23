@@ -19,7 +19,7 @@ export function HomeOverview({ appTitle, headline, description }: Props) {
   const firstName = userFullName?.split(' ')[0] ?? '';
 
   return (
-    <section className="space-y-8" aria-label={t('kicker')}>
+    <section className="space-y-6" aria-label={t('kicker')}>
       <h1 className="sr-only">{t('pageTitle')}</h1>
       <motion.section
         initial={{ opacity: 0, y: 14 }}

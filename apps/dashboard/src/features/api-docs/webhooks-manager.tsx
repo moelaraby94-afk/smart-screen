@@ -194,7 +194,7 @@ export function WebhooksManager() {
         <Button
           size="sm"
           variant="outline"
-          className="rounded-xl"
+          className="rounded-lg"
           onClick={() => setShowCreate(true)}
         >
           <Plus className="me-1.5 h-4 w-4" />
@@ -207,7 +207,7 @@ export function WebhooksManager() {
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       ) : webhooks.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border/60 p-6 text-center">
+        <div className="rounded-lg border border-dashed border-border/60 p-6 text-center">
           <Webhook className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" strokeWidth={ICON_STROKE} />
           <p className="text-sm text-muted-foreground">{t('webhooks.empty')}</p>
         </div>
@@ -216,7 +216,7 @@ export function WebhooksManager() {
           {webhooks.map((wh) => (
             <div
               key={wh.id}
-              className="rounded-xl border border-border/70 bg-muted/20 px-4 py-3"
+              className="rounded-lg border border-border/70 bg-muted/20 px-4 py-3"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
@@ -228,7 +228,7 @@ export function WebhooksManager() {
                   </div>
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     {wh.events.split(' ').map((event) => (
-                      <code key={event} className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                      <code key={event} className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
                         {event}
                       </code>
                     ))}
@@ -288,14 +288,14 @@ export function WebhooksManager() {
                 <DialogTitle>{t('webhooks.createdTitle')}</DialogTitle>
                 <DialogDescription>{t('webhooks.createdDesc')}</DialogDescription>
               </DialogHeader>
-              <div className="flex items-center gap-2 rounded-xl bg-muted/50 p-3">
+              <div className="flex items-center gap-2 rounded-lg bg-muted/50 p-3">
                 <code className="flex-1 truncate font-mono text-xs text-foreground">{createdSecret}</code>
                 <button
                   type="button"
                   onClick={copySecret}
                   className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:text-foreground"
                 >
-                  {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                  {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
                 </button>
               </div>
               <DialogFooter>

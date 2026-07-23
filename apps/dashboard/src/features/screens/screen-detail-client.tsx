@@ -11,9 +11,10 @@ import {
   MapPin, Monitor, RefreshCw, BadgeAlert, Activity, Clock, Film, Zap,
   Megaphone, ListMusic, CalendarClock, ChevronRight, MoreHorizontal,
   PenLine, Trash2, BarChart3, RotateCcw, Check, X, Calendar,
-  Wifi, WifiOff, Radio, Wrench, ArrowLeft,
+  Wifi, WifiOff, Radio, Wrench, ArrowLeft, AlertCircle,
 } from 'lucide-react';
 import { useWorkspace } from '@/features/workspace/workspace-context';
+import { ErrorState } from '@/components/ui/error-state';
 import {
   fetchScreenById, fetchScreenAnalytics, fetchPlaylistOptions,
   sendRemoteCommand, updateScreen, setScreenOverride,
@@ -484,13 +485,12 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
   if (error) {
     return (
       <div className="mx-auto max-w-[1200px] px-6 py-6">
-        <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4" role="alert">
-          <p className="text-lg font-semibold">{tDetail('errorLoadFailed')}</p>
-          <Button variant="outline" onClick={() => void loadAll()}>
-            <RefreshCw className="me-2 h-4 w-4" />
-            {tDetail('errorRetry')}
-          </Button>
-        </div>
+        <ErrorState
+          icon={AlertCircle}
+          title={tDetail('errorLoadFailed')}
+          retryLabel={tDetail('errorRetry')}
+          onRetry={() => void loadAll()}
+        />
       </div>
     );
   }
@@ -540,7 +540,7 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
 
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold tracking-tight">{screen.name}</h1>
+          <h1 className="text-xl font-semibold tracking-tight">{screen.name}</h1>
           <ScreenFleetStatusBadge
             status={screen.status}
             lastSeenAt={screen.lastSeenAt}
@@ -604,7 +604,7 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
               <ScreenPreview screenId={screenId} workspaceId={workspaceId} altText={tDetail('screenPreviewAlt')} />
               {screen.overridePlaylistId && (
                 <div className="absolute start-2 top-2">
-                  <span className="inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning/15 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-warning">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning/10 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-warning">
                     <Zap className="h-3 w-3" />
                     {tDetail('overrideActive')}
                   </span>
@@ -862,7 +862,7 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
                 <li key={sched.id}>
                   <Link
                     href={`/${locale}/scheduling` as Route}
-                    className="flex items-center justify-between gap-4 py-3 transition-colors hover:bg-muted/40 -mx-2 px-2 rounded-md"
+                    className="flex items-center justify-between gap-4 py-3 transition-colors hover:bg-muted/40 -mx-2 px-2 rounded-lg"
                   >
                     <div className="flex items-center gap-3">
                       <CalendarClock className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
@@ -912,7 +912,7 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
                   <li
                     key={evt.id}
                     role="listitem"
-                    className="flex items-center gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-muted/40"
+                    className="flex items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-muted/40"
                   >
                     <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted/50', colorClass)}>
                       <Icon className="h-4 w-4" strokeWidth={1.5} />

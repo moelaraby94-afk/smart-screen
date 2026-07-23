@@ -48,7 +48,7 @@ export function PlaylistCreateWizard({ open, onClose, onCreate }: Props) {
 
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-border px-6 py-4 pe-12">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
             <Sparkles className="h-5 w-5 text-primary" />
           </div>
           <div>

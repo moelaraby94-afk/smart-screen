@@ -121,7 +121,7 @@ export function CampaignForm({
             <Label htmlFor="campaign-playlist">{t('fields.playlist')}</Label>
             <select
               id="campaign-playlist"
-              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-primary/40"
+              className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary/40"
               value={playlistId}
               onChange={(e) => setPlaylistId(e.target.value)}
             >
@@ -138,7 +138,7 @@ export function CampaignForm({
             <Label htmlFor="campaign-screen">{t('fields.screen')}</Label>
             <select
               id="campaign-screen"
-              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-primary/40"
+              className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary/40"
               value={screenId}
               onChange={(e) => setScreenId(e.target.value)}
             >

@@ -81,7 +81,7 @@ export function CampaignDetailDialog({ open, onOpenChange, campaign }: Props) {
           </div>
 
           {campaign.reviewComment && (
-            <div className="rounded-md border border-border bg-muted/30 p-3">
+            <div className="rounded-lg border border-border bg-muted/30 p-3">
               <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 {t('reviewComment')}
               </span>
@@ -100,7 +100,7 @@ export function CampaignDetailDialog({ open, onOpenChange, campaign }: Props) {
                 {history.map((entry) => (
                   <li
                     key={entry.id}
-                    className="flex items-start gap-3 rounded-md border border-border/50 bg-card/30 p-2.5"
+                    className="flex items-start gap-3 rounded-lg border border-border/50 bg-card/30 p-2.5"
                   >
                     <div className="mt-0.5 flex flex-col items-center gap-1">
                       <span className="h-2 w-2 rounded-full bg-primary" />

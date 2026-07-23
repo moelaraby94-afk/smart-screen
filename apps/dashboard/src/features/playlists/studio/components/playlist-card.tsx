@@ -57,7 +57,7 @@ export function PlaylistCard({ playlist: p, workspace: ws, index, onOpen, onDupl
               return (
                 <div className="flex flex-col items-center gap-1.5">
                   <PenLine className="h-8 w-8 text-primary/40" strokeWidth={1.5} />
-                  <span className="text-[10px] text-muted-foreground">{firstItem.canvas.name}</span>
+                  <span className="text-xs text-muted-foreground">{firstItem.canvas.name}</span>
                 </div>
               );
             }
@@ -75,7 +75,7 @@ export function PlaylistCard({ playlist: p, workspace: ws, index, onOpen, onDupl
                 {t('draftPlaylists')}
               </Badge>
             )}
-            <span className="rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white/90 backdrop-blur-sm">
+            <span className="rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white/90 backdrop-blur-sm">
               {p._count.items} {t('itemsCount', { count: p._count.items })}
             </span>
           </div>
@@ -83,16 +83,16 @@ export function PlaylistCard({ playlist: p, workspace: ws, index, onOpen, onDupl
 
         <div className="flex flex-col gap-1.5 p-3.5">
           <h3 className="truncate text-sm font-bold text-foreground transition group-hover:text-primary">{p.name}</h3>
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             {ws && <span className="truncate">{ws.name}</span>}
             <span>·</span>
             <span>{p._count.screensInGroup ?? 0} {t('screens')}</span>
           </div>
           <div className="mt-1 flex items-center gap-1.5">
-            <Badge variant="muted" className="text-[9px]">
+            <Badge variant="muted" className="text-xs">
               {meta.orientation === 'portrait' ? (locale === 'ar' ? 'عمودي' : 'Portrait') : meta.orientation === 'square' ? (locale === 'ar' ? 'مربع' : 'Square') : (locale === 'ar' ? 'أفقي' : 'Landscape')}
             </Badge>
-            <Badge variant="muted" className="text-[9px]">
+            <Badge variant="muted" className="text-xs">
               {meta.layoutType === 'single' ? t('singleZone') : t('multiZone')}
             </Badge>
           </div>
