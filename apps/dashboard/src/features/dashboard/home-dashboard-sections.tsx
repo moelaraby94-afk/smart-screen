@@ -6,7 +6,9 @@ import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
+  Building2,
   Clock3,
+  Clapperboard,
   HardDrive,
   Image as ImageIcon,
   ListMusic,
@@ -35,7 +37,6 @@ import {
   canDeleteBranch,
   canManageBranch,
   formatBytes,
-  healthBadgeClass,
 } from '@/features/dashboard/home-dashboard-types';
 
 type WorkspaceCardsSectionProps = {
@@ -80,36 +81,44 @@ export function WorkspaceCardsSection(props: WorkspaceCardsSectionProps) {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.03 * i, duration: 0.25 }}
-              className="group relative overflow-hidden rounded-lg border border-border bg-card transition-all duration-fast hover:border-primary/30 hover:shadow-lg"
+              className="group relative flex flex-col gap-3 rounded-lg border border-border bg-card p-4 transition-all duration-200 hover:border-primary/20 hover:shadow-md"
             >
-              {/* Header */}
-              <div className="relative flex items-center justify-between gap-2 p-3.5">
+              {/* Header — matches branches page BranchCard */}
+              <div className="flex items-center gap-3">
+                <Link
+                  href={branchHref as Route}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    props.onOpenBranch(row.workspaceId);
+                  }}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:text-foreground"
+                  aria-label={t('openBranchAria', { name: w.name })}
+                >
+                  <Building2 className="h-5 w-5" strokeWidth={ICON_STROKE} />
+                </Link>
                 <div className="min-w-0 flex-1">
                   <Link
                     href={branchHref as Route}
-                    className="block truncate text-sm font-bold text-foreground underline-offset-4 hover:underline"
-                    aria-label={t('openBranchAria', { name: w.name })}
                     onClick={(e) => {
                       e.stopPropagation();
                       props.onOpenBranch(row.workspaceId);
                     }}
+                    className="block truncate text-sm font-medium text-foreground underline-offset-4 hover:underline"
                   >
                     {w.name}
                   </Link>
-                  <div className="mt-1 flex items-center gap-1.5">
+                  <div className="mt-0.5 flex items-center gap-1.5">
                     <span
                       className={cn(
-                        'shrink-0 rounded px-1.5 py-0.5 text-xs font-bold uppercase',
-                        healthBadgeClass(h),
+                        'h-1.5 w-1.5 rounded-full',
+                        row.isPaused ? 'bg-warning' : 'bg-success',
                       )}
-                    >
+                    />
+                    <span className="text-[10px] text-muted-foreground">
                       {t(`health.${h}`)}
                     </span>
                     {row.isPaused === true && (
-                      <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-warning">
-                        <span className="h-1 w-1 rounded-full bg-warning" />
-                        {t('health.paused')}
-                      </span>
+                      <span className="text-[10px] text-muted-foreground/70">· {t('health.paused')}</span>
                     )}
                   </div>
                 </div>
@@ -191,48 +200,40 @@ export function WorkspaceCardsSection(props: WorkspaceCardsSectionProps) {
                 ) : null}
               </div>
 
-              {/* Stats row */}
-              <div className="relative grid grid-cols-4 gap-px border-t border-border bg-border">
-                <div className="bg-card px-2 py-2.5 text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    <Monitor className="h-3 w-3 text-primary" strokeWidth={ICON_STROKE} />
-                  </div>
-                  <p className="mt-1 font-mono text-base font-bold tabular-nums text-foreground">
+              {/* Stats row — matches branches page style */}
+              <div className="flex flex-wrap items-center gap-4 border-t border-border/40 pt-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <Monitor className="h-3.5 w-3.5 text-primary" strokeWidth={ICON_STROKE} />
+                  <span className="font-mono font-bold text-foreground">
                     {props.loading ? '…' : row.screens}
-                  </p>
-                  <p className="text-xs font-medium text-muted-foreground">{t('card.screens')}</p>
-                </div>
-                <div className="bg-card px-2 py-2.5 text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    <ListMusic className="h-3 w-3 text-success" strokeWidth={ICON_STROKE} />
-                  </div>
-                  <p className="mt-1 font-mono text-base font-bold tabular-nums text-foreground">
+                  </span>
+                  {t('card.screens')}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Clapperboard className="h-3.5 w-3.5 text-success" strokeWidth={ICON_STROKE} />
+                  <span className="font-mono font-bold text-foreground">
                     {props.loading ? '…' : row.playlists}
-                  </p>
-                  <p className="text-xs font-medium text-muted-foreground">{t('card.playlists')}</p>
-                </div>
-                <div className="bg-card px-2 py-2.5 text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    <ImageIcon className="h-3 w-3 text-warning" strokeWidth={ICON_STROKE} />
-                  </div>
-                  <p className="mt-1 font-mono text-base font-bold tabular-nums text-foreground">
+                  </span>
+                  {t('card.playlists')}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <ImageIcon className="h-3.5 w-3.5 text-warning" strokeWidth={ICON_STROKE} />
+                  <span className="font-mono font-bold text-foreground">
                     {props.loading ? '…' : row.mediaCount}
-                  </p>
-                  <p className="text-xs font-medium text-muted-foreground">{t('card.media')}</p>
-                </div>
-                <div className="bg-card px-2 py-2.5 text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    <HardDrive className="h-3 w-3 text-primary" strokeWidth={ICON_STROKE} />
-                  </div>
-                  <p className="mt-1 font-mono text-xs font-bold tabular-nums text-foreground">
+                  </span>
+                  {t('card.media')}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <HardDrive className="h-3.5 w-3.5 text-primary" strokeWidth={ICON_STROKE} />
+                  <span className="font-mono font-bold text-foreground">
                     {props.loading ? '…' : formatBytes(row.storageBytes)}
-                  </p>
-                  <p className="text-xs font-medium text-muted-foreground">{t('card.storage')}</p>
-                </div>
+                  </span>
+                  {t('card.storage')}
+                </span>
               </div>
 
               {/* Bottom bar: online + open */}
-              <div className="relative flex items-center justify-between border-t border-border px-3.5 py-2">
+              <div className="flex items-center justify-between border-t border-border/40 pt-3">
                 <div className="flex items-center gap-1.5">
                   <span className={cn(
                     'h-1.5 w-1.5 rounded-full',
