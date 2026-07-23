@@ -1,11 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { Route } from 'next';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import type { Route } from 'next';
-import { AlertCircle, Monitor, MonitorOff, Smartphone, Square } from 'lucide-react';
+import { AlertCircle, Monitor, MonitorOff, Smartphone, Square, Send, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useWorkspace } from '@/features/workspace/workspace-context';
+import { apiFetch } from '@/features/auth/session';
+import { ScreenFleetStatusBadge } from '@/features/screens/screen-fleet-status';
 import { makeZonePresets, type ZonePreset } from '@/lib/zone-presets';
 import {
   DEFAULT_PLAYLIST_META,
@@ -14,6 +17,15 @@ import {
 } from '@/features/playlists/playlist-transitions';
 import { updatePlaylistMeta as apiUpdatePlaylistMeta } from '@/features/playlists/api/playlists-api';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 
 import { PlaylistEditorView } from './studio/components/playlist-editor-view';
@@ -26,6 +38,19 @@ import { usePlaylistMeta } from './studio/hooks/use-playlist-meta';
 
 import type { Row, Zone, SaveState, SelectionContext } from './studio/types';
 
+type AssignedScreen = {
+  id: string;
+  name: string;
+  status: 'ONLINE' | 'OFFLINE' | 'MAINTENANCE';
+  lastSeenAt?: string | null;
+};
+
+type PlaylistInfo = {
+  createdAt: string;
+  updatedAt: string;
+  isPublished: boolean;
+};
+
 export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?: string } = {}) {
   const t = useTranslations('playlistStudioClient');
   const locale = useLocale();
@@ -34,6 +59,9 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
   const currentWs = workspaces.find((w) => w.id === workspaceId);
   const canPublish = Boolean(
     currentWs && (currentWs.role === 'OWNER' || currentWs.role === 'ADMIN'),
+  );
+  const canEdit = Boolean(
+    currentWs && (currentWs.role === 'OWNER' || currentWs.role === 'ADMIN' || currentWs.role === 'EDITOR'),
   );
 
   // ── State ──────────────────────────────────────────────
@@ -50,6 +78,17 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
   const [previewOpen, setPreviewOpen] = useState(false);
   const pendingBackRef = useRef(false);
   const pendingMetaPatchRef = useRef<Partial<PlaylistLocalMeta> | null>(null);
+
+  // Merged from detail page
+  const [playlistInfo, setPlaylistInfo] = useState<PlaylistInfo | null>(null);
+  const [assignedScreens, setAssignedScreens] = useState<AssignedScreen[]>([]);
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
+  const [publishScreens, setPublishScreens] = useState<AssignedScreen[]>([]);
+  const [selectedScreenIds, setSelectedScreenIds] = useState<Set<string>>(new Set());
+  const [publishingScreens, setPublishingScreens] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [scheduleCount, setScheduleCount] = useState(0);
 
   // Account-level constants (grid view removed)
   const filterWorkspaceId = '';
@@ -134,6 +173,154 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
     }
   }, [playlistId, loadPlaylistDetail, setPlaylistMeta, clearHistory]);
 
+  // Fetch playlist metadata + assigned screens (merged from detail page)
+  const loadPlaylistInfo = useCallback(async () => {
+    if (!workspaceId || !playlistId) return;
+    try {
+      const [plRes, scrRes] = await Promise.all([
+        apiFetch(`/playlists/${playlistId}?workspaceId=${encodeURIComponent(workspaceId)}`),
+        apiFetch(`/screens?workspaceId=${encodeURIComponent(workspaceId)}&playlistId=${encodeURIComponent(playlistId)}`),
+      ]);
+      if (plRes.ok) {
+        const data = await plRes.json();
+        setPlaylistInfo({
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+          isPublished: data.isPublished,
+        });
+      }
+      if (scrRes.ok) {
+        const data = await scrRes.json();
+        const items = Array.isArray(data) ? data : data.items;
+        setAssignedScreens(Array.isArray(items) ? items : []);
+      }
+    } catch {
+      // non-critical — inspector info is supplementary
+    }
+  }, [workspaceId, playlistId]);
+
+  useEffect(() => {
+    if (playlistId) void loadPlaylistInfo();
+  }, [playlistId, loadPlaylistInfo]);
+
+  // ── Publish to Screens handlers ───────────────────────
+  const openPublishDialog = useCallback(async () => {
+    if (!workspaceId) return;
+    setPublishDialogOpen(true);
+    setSelectedScreenIds(new Set());
+    try {
+      const res = await apiFetch(`/screens?workspaceId=${encodeURIComponent(workspaceId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        const items = Array.isArray(data) ? data : data.items;
+        setPublishScreens(Array.isArray(items) ? items : []);
+      }
+    } catch {
+      setPublishScreens([]);
+    }
+  }, [workspaceId]);
+
+  const toggleScreenSelection = useCallback((id: string) => {
+    setSelectedScreenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleAllScreens = useCallback(() => {
+    setSelectedScreenIds((prev) => {
+      if (prev.size === publishScreens.length) return new Set();
+      return new Set(publishScreens.map((s) => s.id));
+    });
+  }, [publishScreens]);
+
+  const confirmPublishToScreens = useCallback(async () => {
+    if (!workspaceId || selectedScreenIds.size === 0) return;
+    setPublishingScreens(true);
+    try {
+      let successCount = 0;
+      for (const screenId of selectedScreenIds) {
+        const res = await apiFetch(
+          `/screens/${screenId}?workspaceId=${encodeURIComponent(workspaceId)}`,
+          {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ activePlaylistId: playlistId }),
+          },
+        );
+        if (res.ok) successCount++;
+      }
+      if (successCount > 0) {
+        const currentIsPublished = playlistInfo?.isPublished ?? false;
+        if (!currentIsPublished) {
+          await apiFetch(
+            `/playlists/${playlistId}?workspaceId=${encodeURIComponent(workspaceId)}`,
+            {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ isPublished: true }),
+            },
+          );
+        }
+        toast.success(t('publishedToScreens', { count: successCount }));
+        bumpWorkspaceDataEpoch();
+        setPublishDialogOpen(false);
+        void loadPlaylistInfo();
+      } else {
+        toast.error(t('publishFailed'));
+      }
+    } catch {
+      toast.error(t('publishFailed'));
+    }
+    setPublishingScreens(false);
+  }, [workspaceId, selectedScreenIds, playlistId, playlistInfo, bumpWorkspaceDataEpoch, loadPlaylistInfo, t]);
+
+  // ── Delete playlist handler ───────────────────────────
+  const openDeleteDialog = useCallback(async () => {
+    setDeleteDialogOpen(true);
+    setScheduleCount(0);
+    if (!workspaceId) return;
+    try {
+      const res = await apiFetch(`/schedules?workspaceId=${encodeURIComponent(workspaceId)}&playlistId=${encodeURIComponent(playlistId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        const items = Array.isArray(data) ? data : data.items;
+        setScheduleCount(Array.isArray(items) ? items.length : 0);
+      }
+    } catch {
+      // ignore
+    }
+  }, [workspaceId, playlistId]);
+
+  const handleDelete = useCallback(async () => {
+    if (!workspaceId) return;
+    setDeleting(true);
+    try {
+      const res = await apiFetch(
+        `/playlists/${playlistId}?workspaceId=${encodeURIComponent(workspaceId)}&force=true`,
+        { method: 'DELETE' },
+      );
+      if (!res.ok) {
+        toast.error(t('couldNotDeletePlaylist'));
+        return;
+      }
+      toast.success(t('playlistDeleted'));
+      bumpWorkspaceDataEpoch();
+      router.push(`/${locale}/content/playlists` as Route);
+    } catch {
+      toast.error(t('couldNotDeletePlaylist'));
+    }
+    setDeleting(false);
+    setDeleteDialogOpen(false);
+  }, [workspaceId, playlistId, bumpWorkspaceDataEpoch, router, locale, t]);
+
+  // ── Create schedule handler ───────────────────────────
+  const handleCreateSchedule = useCallback(() => {
+    router.push(`/${locale}/scheduling?playlistId=${playlistId}` as Route);
+  }, [router, locale, playlistId]);
+
   // Viewport width tracking for responsive guards
   useEffect(() => {
     const onResize = () => setViewportWidth(window.innerWidth);
@@ -214,11 +401,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
       setShowUnsavedDialog(true);
       return;
     }
-    if (initialPlaylistId) {
-      router.push(`/${locale}/content/playlists/${initialPlaylistId}` as Route);
-    } else {
-      router.push(`/${locale}/content/playlists` as Route);
-    }
+    router.push(`/${locale}/content/playlists` as Route);
   };
 
   const handleSave = async () => {
@@ -357,7 +540,12 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
       selectedRow={selectedRow}
       onUpdateRowZone={updateRowZone}
       onDragEnd={onDragEnd}
-      onAssignScreens={() => router.push(`/${locale}/content/playlists/${playlistId}` as Route)}
+      playlistInfo={playlistInfo}
+      assignedScreens={assignedScreens}
+      onPublishToScreens={() => void openPublishDialog()}
+      onCreateSchedule={handleCreateSchedule}
+      onDeletePlaylist={() => void openDeleteDialog()}
+      canEdit={canEdit}
       onPreview={() => setPreviewOpen(true)}
       onSelectRow={setSelectedRowClientId}
       selectedRowClientId={selectedRowClientId}
@@ -382,11 +570,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
             <AlertDialogCancel onClick={() => {
               if (pendingBackRef.current) {
                 pendingBackRef.current = false;
-                if (initialPlaylistId) {
-                  router.push(`/${locale}/content/playlists/${initialPlaylistId}` as Route);
-                } else {
-                  router.push(`/${locale}/content/playlists` as Route);
-                }
+                router.push(`/${locale}/content/playlists` as Route);
               }
               setShowUnsavedDialog(false);
             }}>{t('discard')}</AlertDialogCancel>
@@ -394,11 +578,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
               await handleSave();
               if (pendingBackRef.current) {
                 pendingBackRef.current = false;
-                if (initialPlaylistId) {
-                  router.push(`/${locale}/content/playlists/${initialPlaylistId}` as Route);
-                } else {
-                  router.push(`/${locale}/content/playlists` as Route);
-                }
+                router.push(`/${locale}/content/playlists` as Route);
               }
               setShowUnsavedDialog(false);
             }}>{t('save')}</AlertDialogAction>
@@ -425,6 +605,100 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
               }
               setShowZoneSwitchDialog(false);
             }}>{t('zoneSwitchConfirm')}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Publish to Screens Dialog (merged from detail page) */}
+      <Dialog open={publishDialogOpen} onOpenChange={setPublishDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{t('publishToScreens')}</DialogTitle>
+            <DialogDescription>{t('publishDialogDesc')}</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[50vh] space-y-2 overflow-y-auto py-2">
+            {publishScreens.length > 1 && (
+              <div className="flex items-center gap-2 border-b border-border pb-2">
+                <Checkbox
+                  checked={selectedScreenIds.size === publishScreens.length}
+                  onCheckedChange={() => toggleAllScreens()}
+                  id="select-all-screens"
+                />
+                <label htmlFor="select-all-screens" className="cursor-pointer text-sm font-medium text-foreground">
+                  {t('selectAllScreens')}
+                </label>
+              </div>
+            )}
+            {publishScreens.length === 0 ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">{t('noScreensToPublish')}</p>
+            ) : (
+              publishScreens.map((screen) => (
+                <div key={screen.id} className="flex items-center gap-3 rounded-lg border border-border p-2.5">
+                  <Checkbox
+                    checked={selectedScreenIds.has(screen.id)}
+                    onCheckedChange={() => toggleScreenSelection(screen.id)}
+                    id={`screen-${screen.id}`}
+                    aria-label={screen.name}
+                  />
+                  <label htmlFor={`screen-${screen.id}`} className="flex flex-1 cursor-pointer items-center justify-between gap-2">
+                    <span className="truncate text-sm font-medium text-foreground">{screen.name}</span>
+                    <ScreenFleetStatusBadge
+                      status={screen.status}
+                      lastSeenAt={screen.lastSeenAt}
+                      locale={locale}
+                      tone="card"
+                      className="text-[11px]"
+                    />
+                  </label>
+                </div>
+              ))
+            )}
+            {selectedScreenIds.size > 0 && publishScreens.some((s) => selectedScreenIds.has(s.id) && s.status !== 'ONLINE') && (
+              <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                <p className="text-xs text-warning">{t('offlineWarning')}</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPublishDialogOpen(false)} disabled={publishingScreens}>
+              {t('cancel')}
+            </Button>
+            <Button
+              variant="default"
+              onClick={() => void confirmPublishToScreens()}
+              disabled={selectedScreenIds.size === 0 || publishingScreens}
+            >
+              {publishingScreens ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Send className="me-2 h-4 w-4" />}
+              {publishingScreens ? t('publishing') : t('publishNow')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Playlist Dialog (merged from detail page) */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('deleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('deleteDescription', { name: selectedPlaylist?.name ?? '' })}
+              {scheduleCount > 0 && (
+                <span className="mt-2 block font-medium text-warning">
+                  {t('scheduleImpactWarning', { count: scheduleCount })}
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel autoFocus disabled={deleting}>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); void handleDelete(); }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? t('deleting') : t('deletePlaylist')}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

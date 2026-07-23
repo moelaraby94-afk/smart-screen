@@ -1,11 +1,14 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
+import Link from 'next/link';
+import type { Route } from 'next';
 import {
   Monitor, Smartphone, Square, Layout as LayoutIcon, MonitorPlay, Wand2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
+import { ScreenFleetStatusBadge } from '@/features/screens/screen-fleet-status';
 import {
   type TransitionType,
   type PlaylistLocalMeta,
@@ -29,6 +32,8 @@ type InspectorPanelProps = {
   onUpdateRowTransition?: (clientId: string, transition: TransitionType) => void;
   onUpdateRowDuration?: (clientId: string, value: number) => void;
   onUpdateRowZone?: (clientId: string, zoneName: string | null) => void;
+  playlistInfo?: { createdAt: string; updatedAt: string; isPublished: boolean } | null;
+  assignedScreens?: Array<{ id: string; name: string; status: 'ONLINE' | 'OFFLINE' | 'MAINTENANCE'; lastSeenAt?: string | null }>;
 };
 
 export function InspectorPanel({
@@ -46,6 +51,8 @@ export function InspectorPanel({
   onUpdateRowTransition,
   onUpdateRowDuration,
   onUpdateRowZone,
+  playlistInfo,
+  assignedScreens,
 }: InspectorPanelProps) {
   const t = useTranslations('playlistStudioClient');
   const locale = useLocale();
@@ -293,6 +300,57 @@ export function InspectorPanel({
 
       {selectionContext === 'item' && !selectedRow && (
         <p className="py-4 text-center text-xs text-muted-foreground">{t('noItemSelected')}</p>
+      )}
+
+      {/* Playlist Info (merged from detail page) */}
+      {playlistInfo && (
+        <div className="mt-auto space-y-3 border-t border-border/40 pt-4">
+          <h4 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{t('metadata')}</h4>
+          <dl className="space-y-2">
+            <div className="flex items-center justify-between">
+              <dt className="text-[11px] text-muted-foreground">{t('created')}</dt>
+              <dd className="text-[11px] font-medium text-foreground">
+                {new Date(playlistInfo.createdAt).toLocaleDateString(locale, { dateStyle: 'medium' })}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between">
+              <dt className="text-[11px] text-muted-foreground">{t('modified')}</dt>
+              <dd className="text-[11px] font-medium text-foreground">
+                {new Date(playlistInfo.updatedAt).toLocaleDateString(locale, { dateStyle: 'medium' })}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      )}
+
+      {/* Assigned Screens (merged from detail page) */}
+      {assignedScreens && (
+        <div className="space-y-2 border-t border-border/40 pt-4">
+          <h4 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{t('assignedScreens')}</h4>
+          {assignedScreens.length === 0 ? (
+            <p className="text-[11px] text-muted-foreground">{t('noAssignedScreens')}</p>
+          ) : (
+            <ul className="space-y-1.5" role="list">
+              {assignedScreens.map((screen) => (
+                <li key={screen.id}>
+                  <Link
+                    href={`/${locale}/screens/${screen.id}` as Route}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-border/40 p-2 transition-colors hover:bg-muted/30"
+                  >
+                    <span className="truncate text-[11px] font-medium text-foreground">{screen.name}</span>
+                    <ScreenFleetStatusBadge
+                      status={screen.status}
+                      lastSeenAt={screen.lastSeenAt}
+                      locale={locale}
+                      tone="card"
+                      className="text-[10px]"
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
     </div>
   );

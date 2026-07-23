@@ -155,7 +155,7 @@ export function PlaylistListClient() {
     toast.success(t('playlistCreated'));
     bumpWorkspaceDataEpoch();
     setWizardOpen(false);
-    router.push(`/${locale}/content/playlists/${created.id}` as Route);
+    router.push(`/${locale}/content/playlists/${created.id}/studio` as Route);
   };
 
   const handleDuplicate = async (id: string) => {
@@ -378,7 +378,7 @@ export function PlaylistListClient() {
               >
                 <button
                   type="button"
-                  onClick={() => router.push(`/${locale}/content/playlists/${p.id}` as Route)}
+                  onClick={() => router.push(`/${locale}/content/playlists/${p.id}/studio` as Route)}
                   className="flex flex-1 flex-col text-start"
                   aria-label={`${p.name}, ${p.isPublished ? t('publishedBadge') : t('draftPlaylists')}, ${p._count.items} ${t('itemsCount', { count: p._count.items })}`}
                 >
@@ -488,7 +488,7 @@ export function PlaylistListClient() {
                           <Play className="me-2 h-4 w-4" />
                           {previewLoading ? t('loading') : t('preview')}
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => router.push(`/${locale}/content/playlists/${p.id}` as Route)}>
+                        <DropdownMenuItem onClick={() => router.push(`/${locale}/content/playlists/${p.id}/studio` as Route)}>
                           <Pencil className="me-2 h-4 w-4" />
                           {t('edit')}
                         </DropdownMenuItem>

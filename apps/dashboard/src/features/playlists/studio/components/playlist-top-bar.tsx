@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import {
   ArrowLeft, Copy, Eye, EyeOff, FolderInput, MoreVertical,
-  Redo2, Save, Undo2, MonitorPlay, Play,
+  Redo2, Save, Undo2, MonitorPlay, Play, Send, CalendarPlus, Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -43,7 +43,10 @@ type PlaylistTopBarProps = {
   setCloneTargetWs: (ws: string) => void;
   workspaces: WorkspaceSummary[];
   workspaceId: string | null;
-  onAssignScreens?: () => void;
+  onPublishToScreens?: () => void;
+  onCreateSchedule?: () => void;
+  onDeletePlaylist?: () => void;
+  canEdit?: boolean;
   onPreview?: () => void;
 };
 
@@ -72,7 +75,10 @@ export function PlaylistTopBar({
   setCloneTargetWs,
   workspaces,
   workspaceId,
-  onAssignScreens,
+  onPublishToScreens,
+  onCreateSchedule,
+  onDeletePlaylist,
+  canEdit = false,
   onPreview,
 }: PlaylistTopBarProps) {
   const t = useTranslations('playlistStudioClient');
@@ -134,6 +140,21 @@ export function PlaylistTopBar({
               <Copy className="me-2 h-4 w-4" />
               {duplicating ? t('duplicating') : t('duplicate')}
             </DropdownMenuItem>
+            {onCreateSchedule && (
+              <DropdownMenuItem onClick={onCreateSchedule}>
+                <CalendarPlus className="me-2 h-4 w-4" />
+                {t('createSchedule')}
+              </DropdownMenuItem>
+            )}
+            {canEdit && onDeletePlaylist && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onDeletePlaylist} className="text-destructive focus:text-destructive">
+                  <Trash2 className="me-2 h-4 w-4" />
+                  {t('deletePlaylist')}
+                </DropdownMenuItem>
+              </>
+            )}
             {workspaces.length > 1 && (
               <>
                 <DropdownMenuSeparator />
@@ -202,10 +223,10 @@ export function PlaylistTopBar({
           </Button>
         ) : null}
 
-        {isPublished && onAssignScreens && (
-          <Button variant="outline" size="sm" className="rounded-lg" onClick={onAssignScreens}>
-            <MonitorPlay className="me-1.5 h-4 w-4" />
-            {t('assignScreens')}
+        {onPublishToScreens && (
+          <Button variant="outline" size="sm" className="rounded-lg" onClick={onPublishToScreens}>
+            <Send className="me-1.5 h-4 w-4" />
+            {t('publishToScreens')}
           </Button>
         )}
       </div>

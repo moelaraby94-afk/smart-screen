@@ -82,10 +82,17 @@ type PlaylistEditorViewProps = {
   selectedRow: Row | null;
   onUpdateRowZone?: (clientId: string, zoneName: string | null) => void;
 
+  // Playlist info (merged from detail page)
+  playlistInfo?: { createdAt: string; updatedAt: string; isPublished: boolean } | null;
+  assignedScreens?: Array<{ id: string; name: string; status: 'ONLINE' | 'OFFLINE' | 'MAINTENANCE'; lastSeenAt?: string | null }>;
+
   // Drag
   onDragEnd: (result: DropResult) => void;
 
-  onAssignScreens?: () => void;
+  onPublishToScreens?: () => void;
+  onCreateSchedule?: () => void;
+  onDeletePlaylist?: () => void;
+  canEdit?: boolean;
   onPreview?: () => void;
 };
 
@@ -119,7 +126,10 @@ export function PlaylistEditorView(props: PlaylistEditorViewProps) {
         setCloneTargetWs={props.setCloneTargetWs}
         workspaces={props.workspaces}
         workspaceId={props.workspaceId}
-        onAssignScreens={props.onAssignScreens}
+        onPublishToScreens={props.onPublishToScreens}
+        onCreateSchedule={props.onCreateSchedule}
+        onDeletePlaylist={props.onDeletePlaylist}
+        canEdit={props.canEdit}
         onPreview={props.onPreview}
       />
 
@@ -192,6 +202,8 @@ export function PlaylistEditorView(props: PlaylistEditorViewProps) {
               onUpdateRowTransition={props.onUpdateRowTransition}
               onUpdateRowDuration={props.onUpdateDuration}
               onUpdateRowZone={props.onUpdateRowZone}
+              playlistInfo={props.playlistInfo}
+              assignedScreens={props.assignedScreens}
             />
           </div>
         </div>

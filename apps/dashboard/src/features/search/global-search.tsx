@@ -171,7 +171,7 @@ export function GlobalSearch() {
           label: p.name,
           sublabel: p.isPublished ? t('published') : t('unpublished'),
           type: 'playlist',
-          href: `/${locale}/content/playlists/${p.id}` as string,
+          href: `/${locale}/content/playlists/${p.id}/studio` as string,
         });
       }
     }
