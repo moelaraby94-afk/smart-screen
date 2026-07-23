@@ -2785,6 +2785,8 @@
     }
   },
   "playlistStudioClient": {
+    "pageTitle": "Playlists",
+    "pageDescription": "Create and manage your screen playlists. Add media, canvases, and schedule content to your displays.",
     "couldNotCreatePlaylist": "Could not create playlist.",
     "playlistCreated": "Playlist created.",
     "playlistSaved": "Playlist saved. Connected screens will sync in real time.",
@@ -2912,8 +2914,6 @@
     "selectedZone": "Selected zone",
     "zoneTimeline": "Zone timeline",
     "actions": "Actions",
-    "pageTitle": "Playlists",
-    "pageDescription": "Create playlists from your media library, set durations, and reorder. Saving syncs connected screens instantly.",
     "pause": "Pause",
     "play": "Play",
     "dragHereHint": "Drag media or canvas designs here",

@@ -13,7 +13,7 @@ type TabDef = {
 };
 
 const ALL_TABS: TabDef[] = [
-  { key: 'tabPlaylists', segment: 'playlists', href: 'content/playlists' },
+  { key: 'tabPlaylists', segment: 'playlists', href: 'playlists' },
   { key: 'tabTemplates', segment: 'templates', href: 'templates' },
 ];
 

@@ -405,7 +405,7 @@ export function BranchPlaylistsSection(props: PlaylistsSectionProps) {
       <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
         {t('playlistsTitle')}
       </h2>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {props.playlists.map((pl, i) => {
           const online = props.onlineByPlaylistId.get(pl.id) ?? 0;
           const dupBusy = props.duplicatingId === pl.id;
@@ -488,7 +488,7 @@ export function BranchScreensSection(props: ScreensSectionProps) {
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">{t('screensSub')}</p>
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {props.screens.map((screen, i) => (
           <ScreenVisualCard
             key={screen.id}

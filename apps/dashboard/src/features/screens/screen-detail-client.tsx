@@ -619,7 +619,7 @@ export function ScreenDetailClient({ screenId, locale }: Props) {
                     <Film className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                     <span className="font-medium text-foreground">{screen.activePlaylist.name}</span>
                   </div>
-                  <Link href={`/${locale}/content/playlists/${screen.activePlaylist.id}/studio` as Route} className="text-sm text-primary hover:underline">
+                  <Link href={`/${locale}/playlists/${screen.activePlaylist.id}/studio` as Route} className="text-sm text-primary hover:underline">
                     {tDetail('editPlaylist')}
                   </Link>
                 </div>

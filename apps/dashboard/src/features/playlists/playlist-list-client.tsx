@@ -146,7 +146,7 @@ export function PlaylistListClient() {
     toast.success(t('playlistCreated'));
     bumpWorkspaceDataEpoch();
     setWizardOpen(false);
-    router.push(`/${locale}/content/playlists/${created.id}/studio` as Route);
+    router.push(`/${locale}/playlists/${created.id}/studio` as Route);
   };
 
   const handleDuplicate = async (id: string) => {
@@ -326,7 +326,7 @@ export function PlaylistListClient() {
           </Button>
         </div>
       ) : loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label={tDetail('loading')}>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5" aria-label={tDetail('loading')}>
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
               <div className="aspect-video animate-pulse bg-muted/40" />
@@ -356,13 +356,13 @@ export function PlaylistListClient() {
           }
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {filtered.map((p, i) => (
             <UnifiedPlaylistCard
               key={p.id}
               playlist={p}
               index={i}
-              onOpen={(id) => router.push(`/${locale}/content/playlists/${id}/studio` as Route)}
+              onOpen={(id) => router.push(`/${locale}/playlists/${id}/studio` as Route)}
               onPreview={(id) => {
                 const target = filtered.find((pl) => pl.id === id);
                 if (target) void openPreview(target);

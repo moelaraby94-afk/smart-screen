@@ -120,7 +120,7 @@ export function GlobalSearch() {
       { id: 'nav-emergency', labelKey: 'emergency', href: `/${locale}/emergency`, icon: AlertTriangle },
       { id: 'nav-media', labelKey: 'media', href: `/${locale}/media`, icon: FolderOpen },
       { id: 'nav-templates', labelKey: 'templates', href: `/${locale}/templates`, icon: LayoutTemplate },
-      { id: 'nav-playlists', labelKey: 'playlists', href: `/${locale}/content/playlists`, icon: Clapperboard },
+      { id: 'nav-playlists', labelKey: 'playlists', href: `/${locale}/playlists`, icon: Clapperboard },
       { id: 'nav-schedules', labelKey: 'schedules', href: `/${locale}/schedules`, icon: CalendarClock },
       { id: 'nav-analytics', labelKey: 'analytics', href: `/${locale}/analytics`, icon: Activity },
       { id: 'nav-ai', labelKey: 'ai', href: `/${locale}/ai`, icon: Sparkles },
@@ -171,7 +171,7 @@ export function GlobalSearch() {
           label: p.name,
           sublabel: p.isPublished ? t('published') : t('unpublished'),
           type: 'playlist',
-          href: `/${locale}/content/playlists/${p.id}/studio` as string,
+          href: `/${locale}/playlists/${p.id}/studio` as string,
         });
       }
     }

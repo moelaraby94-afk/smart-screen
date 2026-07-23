@@ -153,7 +153,7 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
     if (createdId) {
       setNewName('');
       setCreateOpen(false);
-      router.push(`/${locale}/content/playlists/${createdId}/studio` as Route);
+      router.push(`/${locale}/playlists/${createdId}/studio` as Route);
     }
   }, [branchPlaylists, newName, locale, router]);
 

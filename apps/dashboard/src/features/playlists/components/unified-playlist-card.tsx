@@ -75,7 +75,7 @@ export function UnifiedPlaylistCard({
         ? Square
         : Monitor;
 
-  const studioHref = `/${locale}/content/playlists/${p.id}/studio` as Route;
+  const studioHref = `/${locale}/playlists/${p.id}/studio` as Route;
 
   return (
     <motion.div

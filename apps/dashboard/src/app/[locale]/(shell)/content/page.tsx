@@ -5,5 +5,5 @@ type Props = { params: Promise<{ locale: string }> };
 
 export default async function ContentPage({ params }: Props) {
   const { locale } = await params;
-  redirect(`/${locale}/content/playlists` as Route);
+  redirect(`/${locale}/playlists` as Route);
 }

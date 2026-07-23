@@ -61,7 +61,7 @@ export function HelpSupportClient() {
       icon: Clapperboard,
       title: t('guides.playlists'),
       description: t('guides.playlistsDesc'),
-      href: `/${locale}/content/playlists`,
+      href: `/${locale}/playlists`,
     },
     {
       icon: CalendarClock,
@@ -79,7 +79,7 @@ export function HelpSupportClient() {
       icon: BookOpen,
       title: t('guides.studio'),
       description: t('guides.studioDesc'),
-      href: `/${locale}/content/playlists`,
+      href: `/${locale}/playlists`,
     },
   ];
 

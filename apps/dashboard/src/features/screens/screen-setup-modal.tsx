@@ -612,7 +612,7 @@ export function ScreenSetupModal({
                       className="rounded-lg font-semibold"
                       onClick={() => {
                         onOpenChange(false);
-                        router.push(`/${activeLocale}/content/playlists` as Route);
+                        router.push(`/${activeLocale}/playlists` as Route);
                       }}
                     >
                       {t('wizardAssignContent')}

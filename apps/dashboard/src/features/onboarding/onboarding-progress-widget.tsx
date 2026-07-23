@@ -40,8 +40,8 @@ const STEP_META: Record<
   { icon: typeof Monitor; href: string; key: string }
 > = {
   create_screen: { icon: Monitor, href: '/screens', key: 'stepCreateScreen' },
-  upload_media: { icon: Upload, href: '/content/media', key: 'stepUploadMedia' },
-  create_playlist: { icon: ListVideo, href: '/content/playlists', key: 'stepCreatePlaylist' },
+  upload_media: { icon: Upload, href: '/media', key: 'stepUploadMedia' },
+  create_playlist: { icon: ListVideo, href: '/playlists', key: 'stepCreatePlaylist' },
   schedule_content: { icon: CalendarClock, href: '/scheduling', key: 'stepScheduleContent' },
   invite_team: { icon: UserPlus, href: '/team', key: 'stepInviteTeam' },
 };

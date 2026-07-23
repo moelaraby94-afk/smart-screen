@@ -22,6 +22,7 @@ import {
   Sun,
   Users,
   ImageIcon,
+  LayoutTemplate,
   LifeBuoy,
   ScrollText,
 } from 'lucide-react';
@@ -283,14 +284,13 @@ export function ShellSidebar({
                 }}
               />
 
-              {/* Content — links to /content/playlists (canonical default tab) */}
+              {/* Playlists — standalone page */}
               <NavItem
-                href={`/${navLocale}/content/playlists` as Route}
-                label={t('content')}
+                href={`/${navLocale}/playlists` as Route}
+                label={t('playlists')}
                 active={
-                  Boolean(pathname?.startsWith(`/${navLocale}/content`)) ||
                   Boolean(pathname?.startsWith(`/${navLocale}/playlists`)) ||
-                  Boolean(pathname?.startsWith(`/${navLocale}/templates`))
+                  Boolean(pathname?.startsWith(`/${navLocale}/content/playlists`))
                 }
                 icon={Clapperboard}
                 count={counts.playlists}
@@ -326,6 +326,20 @@ export function ShellSidebar({
                 onClick={(e) => {
                   if (isLoading) { e.preventDefault(); return; }
                   if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('studio')) {
+                    e.preventDefault(); toast.error(t('selectWorkspaceToast'));
+                  }
+                }}
+              />
+
+              {/* Templates — standalone page */}
+              <NavItem
+                href={hrefFor(navLocale, 'templates') as Route}
+                label={t('templates')}
+                active={Boolean(pathname?.startsWith(`/${navLocale}/templates`))}
+                icon={LayoutTemplate}
+                onClick={(e) => {
+                  if (isLoading) { e.preventDefault(); return; }
+                  if (isAuthenticated && !workspaceId && !CLIENT_NAV_ALLOW_WITHOUT_WORKSPACE.has('templates')) {
                     e.preventDefault(); toast.error(t('selectWorkspaceToast'));
                   }
                 }}

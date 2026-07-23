@@ -54,7 +54,7 @@ export function PlaylistGridView({
       />
 
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
               <div className="aspect-video animate-pulse bg-muted/40" />
@@ -72,7 +72,7 @@ export function PlaylistGridView({
       ) : playlists.length === 0 ? (
         <EmptyState icon={ListVideo} title={t('emptyTitle')} description={t('emptyDescription')} />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {playlists.map((p, i) => {
             const ws = workspaces.find((w) => w.id === p.workspaceId);
             return (

@@ -476,7 +476,7 @@ export function StudioEditorClient() {
       });
       if (!itemsRes.ok) throw new Error('fail-items');
       toast.success(t('playlistCreated'));
-      router.push(`/${locale}/content/playlists/${created.id}/studio` as Route);
+      router.push(`/${locale}/playlists/${created.id}/studio` as Route);
     } catch {
       toast.error(t('playlistCreateFailed'));
     }

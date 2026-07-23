@@ -308,7 +308,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
       }
       toast.success(t('playlistDeleted'));
       bumpWorkspaceDataEpoch();
-      router.push(`/${locale}/content/playlists` as Route);
+      router.push(`/${locale}/playlists` as Route);
     } catch {
       toast.error(t('couldNotDeletePlaylist'));
     }
@@ -401,7 +401,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
       setShowUnsavedDialog(true);
       return;
     }
-    router.push(`/${locale}/content/playlists` as Route);
+    router.push(`/${locale}/playlists` as Route);
   };
 
   const handleSave = async () => {
@@ -570,7 +570,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
             <AlertDialogCancel onClick={() => {
               if (pendingBackRef.current) {
                 pendingBackRef.current = false;
-                router.push(`/${locale}/content/playlists` as Route);
+                router.push(`/${locale}/playlists` as Route);
               }
               setShowUnsavedDialog(false);
             }}>{t('discard')}</AlertDialogCancel>
@@ -578,7 +578,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
               await handleSave();
               if (pendingBackRef.current) {
                 pendingBackRef.current = false;
-                router.push(`/${locale}/content/playlists` as Route);
+                router.push(`/${locale}/playlists` as Route);
               }
               setShowUnsavedDialog(false);
             }}>{t('save')}</AlertDialogAction>
