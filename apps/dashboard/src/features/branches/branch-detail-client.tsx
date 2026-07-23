@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { deleteBranchScreen as apiDeleteBranchScreen } from '@/features/branches/branches-api';
+import { useScreenActions } from '@/features/screens/hooks/use-screen-actions';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { CreateScreenDialog } from '@/features/branches/create-screen-dialog';
@@ -38,7 +39,6 @@ import {
   BranchScreensSection,
   BranchMediaSection,
 } from '@/features/branches/branch-tab-sections';
-import { BranchReviewSection } from '@/features/branches/branch-review-section';
 
 type Props = {
   locale: string;
@@ -188,7 +188,9 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
   }, [branchPlaylists, playlistToEdit, editPlaylistName, editPlaylistPublished]);
 
   const onDeleteScreen = useCallback(
-    async (screen: ScreenRow) => {
+    async (id: string) => {
+      const screen = screens.find((s) => s.id === id);
+      if (!screen) return;
       setScreenDeleting(true);
       try {
         const res = await apiDeleteBranchScreen(workspaceIdParam, screen.id);
@@ -203,8 +205,15 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
         setScreenDeleting(false);
       }
     },
-    [workspaceIdParam, reloadScreens, t, toastResponseError],
+    [workspaceIdParam, screens, reloadScreens, t, toastResponseError],
   );
+
+  const { sendRemoteCommand } = useScreenActions({
+    workspaceId: workspaceIdParam || null,
+    setScreens,
+    reload: reloadScreens,
+    bumpWorkspaceDataEpoch,
+  });
 
   if (!branch) {
     return (
@@ -247,14 +256,6 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
 
       <BranchStatsSection stats={stats} loading={loading} showHero={!workspaceIdOverride} />
 
-      {activeTab === 'playlists' && canDeletePlaylist ? (
-        <BranchReviewSection
-          playlists={branchPlaylists.playlists}
-          workspaceId={workspaceIdParam}
-          onReviewed={() => void branchPlaylists.reload()}
-        />
-      ) : null}
-
       {activeTab === 'playlists' ? (
         <BranchPlaylistsSection
           playlists={branchPlaylists.playlists}
@@ -284,15 +285,23 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
           screens={screens}
           isLoading={screensLoading}
           locale={locale}
+          workspaceId={workspaceIdParam}
           canEditPlaylist={canEditPlaylist}
           playlists={branchPlaylists.playlists}
           assigningScreenId={screenAssignment.assigningScreenId}
-          onAssign={(screenId, playlistId) => void screenAssignment.assign(screenId, playlistId)}
+          onAssign={async (screenId, playlistId) => {
+            await screenAssignment.assign(screenId, playlistId);
+          }}
           onQuickEdit={(screen) => {
             setEditScreen(screen);
             setEditOpen(true);
           }}
-          onDeleteScreen={async (screen) => setScreenToDelete(screen)}
+          onDeleteScreen={(id) => setScreenToDelete(screens.find((s) => s.id === id) ?? null)}
+          onRemote={(id, cmd) => void sendRemoteCommand(id, cmd)}
+          onCardClick={(screen) => {
+            setEditScreen(screen);
+            setEditOpen(true);
+          }}
         />
       ) : null}
 
@@ -384,7 +393,7 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
               disabled={screenDeleting}
               onClick={(e) => {
                 e.preventDefault();
-                if (screenToDelete) void onDeleteScreen(screenToDelete);
+                if (screenToDelete) void onDeleteScreen(screenToDelete.id);
               }}
             >
               {t('screenDelete')}

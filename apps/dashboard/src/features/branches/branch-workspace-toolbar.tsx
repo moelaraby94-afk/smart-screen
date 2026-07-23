@@ -9,11 +9,11 @@ import {
   Monitor,
   Plus,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ICON_STROKE } from '@/lib/icon-stroke';
@@ -62,6 +62,7 @@ export function BranchWorkspaceToolbar({
   ] as const;
 
   const iconClass = cn('shrink-0 text-primary', inline ? 'h-3.5 w-3.5 sm:h-4 sm:w-4' : 'h-4 w-4');
+  const ctaIconClass = inline ? 'h-3.5 w-3.5 sm:h-4 sm:w-4' : 'h-4 w-4';
 
   const inner = (
     <div
@@ -83,6 +84,21 @@ export function BranchWorkspaceToolbar({
         </button>
       ))}
 
+      {/* Prominent Link Display button */}
+      <Button
+        type="button"
+        variant="cta"
+        className={cn(
+          'shrink-0 gap-2 rounded-xl font-semibold',
+          inline ? 'h-8 px-2.5 text-xs sm:h-9 sm:px-3 sm:text-sm' : 'h-10 px-3.5 text-sm',
+        )}
+        onClick={onOpenPairingModal}
+      >
+        <Link2 className={ctaIconClass} strokeWidth={ICON_STROKE} />
+        {t('linkDisplay')}
+      </Button>
+
+      {/* Add dropdown for create operations */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
@@ -107,11 +123,6 @@ export function BranchWorkspaceToolbar({
           <DropdownMenuItem className="gap-2 font-semibold" onClick={() => onNewMedia()}>
             <ImageIcon className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
             {t('newMedia')}
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="gap-2 font-semibold" onClick={() => onOpenPairingModal()}>
-            <Link2 className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
-            {t('linkDisplay')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

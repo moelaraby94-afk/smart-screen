@@ -31,8 +31,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Label } from '@/components/ui/label';
-import { ScreenFleetStatusBadge } from '@/features/screens/screen-fleet-status';
+import { ScreenVisualCard } from '@/features/screens/screen-visual-card';
 import { type ScreenRow } from '@/features/screens/useApiScreens';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
@@ -532,12 +531,15 @@ type ScreensSectionProps = {
   screens: ScreenRow[];
   isLoading: boolean;
   locale: string;
+  workspaceId: string;
   canEditPlaylist: boolean;
   playlists: BranchPlaylistRow[];
   assigningScreenId: string | null;
-  onAssign: (screenId: string, playlistId: string | null) => void;
+  onAssign: (screenId: string, playlistId: string | null) => Promise<void>;
   onQuickEdit: (screen: ScreenRow) => void;
-  onDeleteScreen: (screen: ScreenRow) => Promise<void>;
+  onDeleteScreen: (id: string) => void;
+  onRemote: (id: string, c: 'refresh_content' | 'identify') => void;
+  onCardClick: (s: ScreenRow) => void;
 };
 
 export function BranchScreensSection(props: ScreensSectionProps) {
@@ -583,101 +585,23 @@ export function BranchScreensSection(props: ScreensSectionProps) {
         <p className="mt-1 text-sm text-muted-foreground">{t('screensSub')}</p>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {props.screens.map((screen) => (
-          <div
+        {props.screens.map((screen, i) => (
+          <ScreenVisualCard
             key={screen.id}
-            className="vc-card-surface rounded-lg border border-border/60 p-4 dark:border-white/10"
-          >
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold text-foreground dark:text-white">{screen.name}</p>
-                <p className="mt-1 font-mono text-xs text-muted-foreground">{screen.serialNumber}</p>
-              </div>
-              <ScreenFleetStatusBadge
-                tone="card"
-                status={screen.status}
-                lastSeenAt={screen.lastSeenAt}
-                locale={props.locale}
-                className="items-end"
-              />
-            </div>
-            <div className="mt-3 space-y-1.5">
-              <Label
-                htmlFor={`screen-pl-${screen.id}`}
-                className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground"
-              >
-                {t('screenPlaybackPlaylist')}
-              </Label>
-              <div className="relative">
-                <select
-                  id={`screen-pl-${screen.id}`}
-                  className={cn(
-                    'h-10 w-full cursor-pointer appearance-none rounded-xl border border-input bg-background px-3 pe-9 text-sm outline-none',
-                    'focus-visible:ring-2 focus-visible:ring-primary/25',
-                    'disabled:cursor-not-allowed disabled:opacity-50',
-                  )}
-                  disabled={!props.canEditPlaylist || props.assigningScreenId === screen.id}
-                  value={screen.activePlaylistId ?? ''}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    void props.onAssign(screen.id, v || null);
-                  }}
-                >
-                  <option value="">{t('screenPlaybackNone')}</option>
-                  {props.playlists.map((pl) => (
-                    <option key={pl.id} value={pl.id}>
-                      {pl.name}
-                    </option>
-                  ))}
-                </select>
-                {props.assigningScreenId === screen.id ? (
-                  <span className="pointer-events-none absolute end-2 top-1/2 -translate-y-1/2">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" strokeWidth={ICON_STROKE} />
-                  </span>
-                ) : null}
-              </div>
-            </div>
-            <div className="mt-3 flex items-center gap-2">
-              <Button
-                type="button"
-                size="sm"
-                className="rounded-lg px-3 font-semibold"
-                variant="cta"
-                onClick={() => props.onQuickEdit(screen)}
-              >
-                {t('screenQuickEdit')}
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    className="rounded-lg"
-                    aria-label={t('screenActionsAria')}
-                  >
-                    <MoreVertical className="h-4 w-4" strokeWidth={ICON_STROKE} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-[12rem]">
-                  <DropdownMenuItem className="gap-2 font-semibold" asChild>
-                    <Link href={`/${props.locale}/screens/${screen.id}` as Route}>
-                      <PenLine className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
-                      {t('screenFullEditor')}
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="gap-2 font-semibold text-destructive focus:text-destructive"
-                    onClick={() => void props.onDeleteScreen(screen)}
-                  >
-                    <Trash2 className="h-4 w-4" strokeWidth={ICON_STROKE} />
-                    {t('screenDelete')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
+            screen={screen}
+            locale={props.locale}
+            workspaceId={props.workspaceId}
+            index={i}
+            onCardClick={props.onCardClick}
+            onEdit={props.onQuickEdit}
+            onDelete={props.onDeleteScreen}
+            onRemote={props.onRemote}
+            onAssignContent={props.onQuickEdit}
+            playlists={props.playlists.map((pl) => ({ id: pl.id, name: pl.name, isPublished: pl.isPublished }))}
+            canAssignPlayback={props.canEditPlaylist}
+            assignPlaylistBusy={props.assigningScreenId === screen.id}
+            onAssignPlaybackPlaylist={props.onAssign}
+          />
         ))}
       </div>
     </section>
