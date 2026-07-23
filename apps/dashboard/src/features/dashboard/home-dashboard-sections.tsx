@@ -103,7 +103,7 @@ export function WorkspaceCardsSection(props: WorkspaceCardsSectionProps) {
                       e.stopPropagation();
                       props.onOpenBranch(row.workspaceId);
                     }}
-                    className="block truncate text-sm font-medium text-foreground underline-offset-4 hover:underline"
+                    className="block truncate text-sm font-medium text-foreground"
                   >
                     {w.name}
                   </Link>
@@ -201,7 +201,7 @@ export function WorkspaceCardsSection(props: WorkspaceCardsSectionProps) {
               </div>
 
               {/* Stats row — matches branches page style */}
-              <div className="flex flex-wrap items-center gap-4 border-t border-border/40 pt-3 text-xs text-muted-foreground">
+              <div className="flex items-center gap-4 border-t border-border/40 pt-3 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <Monitor className="h-3.5 w-3.5 text-primary" strokeWidth={ICON_STROKE} />
                   <span className="font-mono font-bold text-foreground">
