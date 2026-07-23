@@ -149,12 +149,13 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
   const stats = useMemo(() => computeBranchScreenStats(screens), [screens]);
 
   const onCreatePlaylist = useCallback(async () => {
-    const ok = await branchPlaylists.create(newName);
-    if (ok) {
+    const createdId = await branchPlaylists.create(newName);
+    if (createdId) {
       setNewName('');
       setCreateOpen(false);
+      router.push(`/${locale}/content/playlists/${createdId}/studio` as Route);
     }
-  }, [branchPlaylists, newName]);
+  }, [branchPlaylists, newName, locale, router]);
 
   const confirmDeletePlaylist = useCallback(async () => {
     if (!playlistToDelete) return;
@@ -264,7 +265,6 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
           workspaceIdParam={workspaceIdParam}
           canEditPlaylist={canEditPlaylist}
           canDeletePlaylist={canDeletePlaylist}
-          onNewPlaylist={() => setCreateOpen(true)}
           onDuplicate={(pl) => void branchPlaylists.duplicate(pl)}
           onEdit={(pl) => {
             setPlaylistToEdit(pl);

@@ -56,9 +56,9 @@ export function useBranchPlaylists(workspaceId: string, onMutated: () => void) {
   }, [reload]);
 
   const create = useCallback(
-    async (name: string): Promise<boolean> => {
+    async (name: string): Promise<string | null> => {
       const trimmed = name.trim();
-      if (!trimmed || !workspaceId) return false;
+      if (!trimmed || !workspaceId) return null;
       setIsCreating(true);
       try {
         const res = await apiFetch('/playlists', {
@@ -68,12 +68,13 @@ export function useBranchPlaylists(workspaceId: string, onMutated: () => void) {
         });
         if (!res.ok) {
           await toastResponseError(res);
-          return false;
+          return null;
         }
+        const created = await res.json() as { id: string };
         toast.success(t('playlistCreated'));
         await reload();
         onMutated();
-        return true;
+        return created.id ?? null;
       } finally {
         setIsCreating(false);
       }

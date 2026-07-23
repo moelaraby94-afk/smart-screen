@@ -12,13 +12,11 @@ import {
   FolderTree,
   HardDrive,
   Image as ImageIcon,
-  Link2,
   Loader2,
   Monitor,
   MoreVertical,
   PenLine,
   Play,
-  Plus,
   Power,
   Radio,
   Settings,
@@ -109,14 +107,39 @@ export function BranchStatsSection({ stats, loading, showHero = true }: StatsSec
     },
   ];
 
-  const quickActions = [
-    { label: t('quickNewScreen'), href: `/${locale}/screens` as Route, icon: Monitor, color: 'text-violet-400 bg-violet-500/10' },
-    { label: t('quickNewPlaylist'), href: `/${locale}/studio` as Route, icon: Clapperboard, color: 'text-blue-400 bg-blue-500/10' },
-    { label: t('quickUploadMedia'), href: `/${locale}/media` as Route, icon: ImageIcon, color: 'text-amber-400 bg-amber-500/10' },
-    { label: t('quickLinkDisplay'), href: `/${locale}/screens` as Route, icon: Link2, color: 'text-emerald-400 bg-emerald-500/10' },
-    { label: t('quickSchedule'), href: `/${locale}/schedules` as Route, icon: CalendarClock, color: 'text-cyan-400 bg-cyan-500/10' },
-    { label: t('quickTeam'), href: `/${locale}/team` as Route, icon: Users, color: 'text-pink-400 bg-pink-500/10' },
-  ];
+  // ── Compact mode (branches page context) ──
+  if (!showHero) {
+    return (
+      <div className="flex flex-wrap items-center gap-4 rounded-lg border border-border/60 bg-card/40 px-4 py-3 text-sm">
+        <span className="flex items-center gap-2">
+          <Monitor className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
+          <span className="font-mono font-bold text-foreground">{loading ? '…' : stats.total}</span>
+          <span className="text-muted-foreground">{t('statScreens')}</span>
+        </span>
+        <span className="flex items-center gap-2">
+          <Radio className="h-4 w-4 text-success" strokeWidth={ICON_STROKE} />
+          <span className="font-mono font-bold text-foreground">{loading ? '…' : stats.online}</span>
+          <span className="text-muted-foreground">{t('statOnline')}</span>
+        </span>
+        <span className="flex items-center gap-2">
+          <Clapperboard className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
+          <span className="font-mono font-bold text-foreground">{wsCounts.playlists}</span>
+          <span className="text-muted-foreground">{t('statPlaylists')}</span>
+        </span>
+        <span className="flex items-center gap-2">
+          <ImageIcon className="h-4 w-4 text-warning" strokeWidth={ICON_STROKE} />
+          <span className="font-mono font-bold text-foreground">{wsCounts.media}</span>
+          <span className="text-muted-foreground">{t('statMedia')}</span>
+        </span>
+        {stats.total > 0 && !loading && (
+          <div className="ms-auto flex h-1.5 w-24 overflow-hidden rounded-full bg-muted/50">
+            <div className="bg-success" style={{ width: `${onlinePct}%` }} />
+            <div className="bg-destructive/70" style={{ width: `${inactivePct}%` }} />
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <section className="space-y-6">
@@ -213,28 +236,6 @@ export function BranchStatsSection({ stats, loading, showHero = true }: StatsSec
                 <item.icon className="h-5 w-5" strokeWidth={ICON_STROKE} />
               </div>
             </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* ── Quick actions grid ── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {quickActions.map((action, i) => (
-          <motion.div
-            key={action.label}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.04 * i, duration: 0.3 }}
-          >
-            <Link
-              href={action.href}
-              className="group flex flex-col items-center gap-2.5 rounded-lg border border-border bg-card p-4 text-center transition-all duration-200 hover:border-primary/30 hover:bg-primary/[0.03] hover:shadow-md"
-            >
-              <div className={cn('flex h-11 w-11 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-110', action.color)}>
-                <action.icon className="h-5 w-5" strokeWidth={ICON_STROKE} />
-              </div>
-              <span className="text-xs font-semibold text-foreground">{action.label}</span>
-            </Link>
           </motion.div>
         ))}
       </div>
@@ -379,7 +380,6 @@ type PlaylistsSectionProps = {
   workspaceIdParam: string;
   canEditPlaylist: boolean;
   canDeletePlaylist: boolean;
-  onNewPlaylist: () => void;
   onDuplicate: (pl: BranchPlaylistRow) => void;
   onEdit: (pl: BranchPlaylistRow) => void;
   onMove: (pl: BranchPlaylistRow) => void;
@@ -392,25 +392,9 @@ export function BranchPlaylistsSection(props: PlaylistsSectionProps) {
   if (props.isLoading) {
     return (
       <section className="space-y-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
-              {t('playlistsTitle')}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">{t('playlistsSub')}</p>
-          </div>
-          <button
-            type="button"
-            className={cn(
-              'inline-flex shrink-0 items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition',
-              'border-border bg-background text-foreground hover:border-primary/30 hover:bg-muted',
-            )}
-            onClick={props.onNewPlaylist}
-          >
-            <Plus className="h-4 w-4 shrink-0 text-primary" strokeWidth={ICON_STROKE} />
-            {t('addPlaylist')}
-          </button>
-        </div>
+        <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
+          {t('playlistsTitle')}
+        </h2>
         <ListSkeleton count={4} />
       </section>
     );
@@ -419,25 +403,9 @@ export function BranchPlaylistsSection(props: PlaylistsSectionProps) {
   if (props.playlists.length === 0) {
     return (
       <section className="space-y-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
-              {t('playlistsTitle')}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">{t('playlistsSub')}</p>
-          </div>
-          <button
-            type="button"
-            className={cn(
-              'inline-flex shrink-0 items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition',
-              'border-border bg-background text-foreground hover:border-primary/30 hover:bg-muted',
-            )}
-            onClick={props.onNewPlaylist}
-          >
-            <Plus className="h-4 w-4 shrink-0 text-primary" strokeWidth={ICON_STROKE} />
-            {t('addPlaylist')}
-          </button>
-        </div>
+        <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
+          {t('playlistsTitle')}
+        </h2>
         <div className="vc-card-surface rounded-lg border border-dashed border-border p-10 text-center">
           <Clapperboard className="mx-auto h-10 w-10 text-muted-foreground" strokeWidth={ICON_STROKE} />
           <p className="mt-3 text-sm font-medium text-foreground">{t('noPlaylists')}</p>
@@ -449,25 +417,9 @@ export function BranchPlaylistsSection(props: PlaylistsSectionProps) {
 
   return (
     <section className="space-y-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
-            {t('playlistsTitle')}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t('playlistsSub')}</p>
-        </div>
-        <button
-          type="button"
-          className={cn(
-            'inline-flex shrink-0 items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition',
-            'border-border bg-background text-foreground hover:border-primary/30 hover:bg-muted',
-          )}
-          onClick={props.onNewPlaylist}
-        >
-          <Plus className="h-4 w-4 shrink-0 text-primary" strokeWidth={ICON_STROKE} />
-          {t('addPlaylist')}
-        </button>
-      </div>
+      <h2 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">
+        {t('playlistsTitle')}
+      </h2>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {props.playlists.map((pl, i) => {
           const totalScreens = pl._count.screensInGroup;
@@ -482,7 +434,7 @@ export function BranchPlaylistsSection(props: PlaylistsSectionProps) {
               className="group/card relative"
             >
               <Link
-                href={`/${props.locale}/branches/${props.workspaceIdParam}/playlists/${pl.id}` as Route}
+                href={`/${props.locale}/content/playlists/${pl.id}/studio` as Route}
                 className={cn(
                   'flex flex-col rounded-lg border border-border bg-card p-5 pe-12 transition-all duration-200',
                   'hover:border-primary/30 hover:bg-primary/[0.03] hover:shadow-md',
@@ -687,7 +639,7 @@ export function BranchScreensSection(props: ScreensSectionProps) {
                 ) : null}
               </div>
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 flex items-center gap-2">
               <Button
                 type="button"
                 size="sm"
@@ -697,27 +649,35 @@ export function BranchScreensSection(props: ScreensSectionProps) {
               >
                 {t('screenQuickEdit')}
               </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="rounded-lg"
-                asChild
-              >
-                <Link href={`/${props.locale}/screens/${screen.id}` as Route}>
-                  <PenLine className="me-1 h-3.5 w-3.5" />
-                  {t('screenFullEditor')}
-                </Link>
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive"
-                onClick={() => void props.onDeleteScreen(screen)}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="rounded-lg"
+                    aria-label={t('screenActionsAria')}
+                  >
+                    <MoreVertical className="h-4 w-4" strokeWidth={ICON_STROKE} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[12rem]">
+                  <DropdownMenuItem className="gap-2 font-semibold" asChild>
+                    <Link href={`/${props.locale}/screens/${screen.id}` as Route}>
+                      <PenLine className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
+                      {t('screenFullEditor')}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="gap-2 font-semibold text-destructive focus:text-destructive"
+                    onClick={() => void props.onDeleteScreen(screen)}
+                  >
+                    <Trash2 className="h-4 w-4" strokeWidth={ICON_STROKE} />
+                    {t('screenDelete')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         ))}

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2,
+  ChevronDown,
   Monitor,
   Clapperboard,
   Image as ImageIcon,
@@ -13,6 +14,7 @@ import {
   Pencil,
   Play,
   Plus,
+  Settings,
   Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,6 +30,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { useWorkspace } from '@/features/workspace/workspace-context';
@@ -317,49 +326,56 @@ export function BranchesPageClient({ locale }: Props) {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                {canTogglePause && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
                     size="sm"
                     className="rounded-lg gap-2"
-                    disabled={togglingPause}
-                    onClick={() => void handleTogglePause()}
+                    aria-label={t('manageBranch')}
                   >
-                    {selectedBranch.isPaused ? (
-                      <Play className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
-                    ) : (
-                      <Pause className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
-                    )}
-                    <span className="hidden sm:inline">
+                    <Settings className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
+                    <span className="hidden sm:inline">{t('manageBranch')}</span>
+                    <ChevronDown className="h-3.5 w-3.5 opacity-70" strokeWidth={ICON_STROKE} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[12rem]">
+                  {canTogglePause && (
+                    <DropdownMenuItem
+                      className="gap-2 font-semibold"
+                      disabled={togglingPause}
+                      onClick={() => void handleTogglePause()}
+                    >
+                      {selectedBranch.isPaused ? (
+                        <Play className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
+                      ) : (
+                        <Pause className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
+                      )}
                       {selectedBranch.isPaused ? t('resumeBranch') : t('pauseBranch')}
-                    </span>
-                  </Button>
-                )}
-                {canRenameBranch && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-lg gap-2"
-                    onClick={() => {
-                      setRenameValue(selectedBranch.name);
-                      setRenameOpen(true);
-                    }}
+                    </DropdownMenuItem>
+                  )}
+                  {canRenameBranch && (
+                    <DropdownMenuItem
+                      className="gap-2 font-semibold"
+                      onClick={() => {
+                        setRenameValue(selectedBranch.name);
+                        setRenameOpen(true);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4 text-primary" strokeWidth={ICON_STROKE} />
+                      {t('renameBranch')}
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="gap-2 font-semibold text-destructive focus:text-destructive"
+                    onClick={() => setDeleteOpen(true)}
                   >
-                    <Pencil className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
-                    <span className="hidden sm:inline">{t('renameBranch')}</span>
-                  </Button>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-lg gap-2 text-destructive hover:text-destructive"
-                  onClick={() => setDeleteOpen(true)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" strokeWidth={ICON_STROKE} />
-                  <span className="hidden sm:inline">{t('deleteBranch')}</span>
-                </Button>
-              </div>
+                    <Trash2 className="h-4 w-4" strokeWidth={ICON_STROKE} />
+                    {t('deleteBranch')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             {/* Branch detail content (tabs: playlists, screens, media) */}
