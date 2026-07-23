@@ -64,6 +64,11 @@ export class AccountController {
     return this.account.getInsights(user.sub);
   }
 
+  @Get('activity')
+  accountActivity(@CurrentUser() user: JwtUser) {
+    return this.account.getAccountActivity(user.sub);
+  }
+
   @Get('export')
   @Throttle({ default: { limit: 3, ttl: 60_000 } })
   exportData(@CurrentUser() user: JwtUser) {

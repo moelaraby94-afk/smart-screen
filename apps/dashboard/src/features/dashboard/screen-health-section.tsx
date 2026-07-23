@@ -23,7 +23,19 @@ type AnalyticsData = {
   peakHours: { hour: number; count: number }[];
 };
 
-export function ScreenHealthSection() {
+type ScreenStatusTotals = {
+  online: number;
+  offline: number;
+  maintenance: number;
+};
+
+type Props = {
+  /** Account-level screen status totals (sum of all branches). If provided, skips per-workspace API call. */
+  screenStatus?: ScreenStatusTotals;
+  totalScreens?: number;
+};
+
+export function ScreenHealthSection({ screenStatus, totalScreens }: Props = {}) {
   const t = useTranslations('clientHome.screenHealth');
   const locale = useLocale();
   const { workspaceId, workspaceDataEpoch } = useWorkspace();
@@ -31,7 +43,13 @@ export function ScreenHealthSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  const useAccountTotals = screenStatus !== undefined && totalScreens !== undefined;
+
   const load = useCallback(async () => {
+    if (useAccountTotals) {
+      setLoading(false);
+      return;
+    }
     if (!workspaceId) {
       setData(null);
       setLoading(false);
@@ -52,18 +70,34 @@ export function ScreenHealthSection() {
       setError(true);
     }
     setLoading(false);
-  }, [workspaceId]);
+  }, [workspaceId, useAccountTotals]);
 
   useEffect(() => {
     void load();
   }, [load, workspaceDataEpoch]);
 
-  const stats = data
+  const effectiveData: AnalyticsData | null = useAccountTotals && screenStatus && totalScreens !== undefined
+    ? {
+        total: totalScreens,
+        byStatus: {
+          ONLINE: screenStatus.online,
+          OFFLINE: screenStatus.offline,
+          MAINTENANCE: screenStatus.maintenance,
+        },
+        uptimePercent: 0,
+        withPlaylist: 0,
+        withoutPlaylist: 0,
+        hourlyActivity: [],
+        peakHours: [],
+      }
+    : data;
+
+  const stats = effectiveData
     ? [
         {
           key: 'online',
           label: t('online'),
-          value: data.byStatus.ONLINE,
+          value: effectiveData.byStatus.ONLINE,
           color: 'text-success',
           bg: 'bg-success/10',
           ring: 'ring-success/20',
@@ -73,7 +107,7 @@ export function ScreenHealthSection() {
         {
           key: 'offline',
           label: t('offline'),
-          value: data.byStatus.OFFLINE,
+          value: effectiveData.byStatus.OFFLINE,
           color: 'text-destructive',
           bg: 'bg-destructive/10',
           ring: 'ring-destructive/20',
@@ -83,7 +117,7 @@ export function ScreenHealthSection() {
         {
           key: 'maintenance',
           label: t('maintenance'),
-          value: data.byStatus.MAINTENANCE,
+          value: effectiveData.byStatus.MAINTENANCE,
           color: 'text-warning',
           bg: 'bg-warning/10',
           ring: 'ring-warning/20',
@@ -93,7 +127,7 @@ export function ScreenHealthSection() {
         {
           key: 'total',
           label: t('total'),
-          value: data.total,
+          value: effectiveData.total,
           color: 'text-foreground',
           bg: 'bg-muted',
           ring: 'ring-border',
@@ -137,7 +171,7 @@ export function ScreenHealthSection() {
             {t('retry')}
           </Button>
         </div>
-      ) : !data || data.total === 0 ? (
+      ) : !effectiveData || effectiveData.total === 0 ? (
         <div className="flex items-center justify-center gap-2 py-6 text-center">
           <Monitor className="h-4 w-4 text-muted-foreground/40" strokeWidth={ICON_STROKE} />
           <p className="text-xs text-muted-foreground">{t('empty')}</p>

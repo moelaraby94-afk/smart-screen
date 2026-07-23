@@ -40,7 +40,6 @@ import { CardGridSkeleton } from '@/components/ui/skeleton-patterns';
 import { ErrorState } from '@/components/ui/error-state';
 import { UsageIndicator } from '@/components/usage-indicator';
 import { WidgetErrorBoundary } from '@/components/widget-error-boundary';
-import { fetchMediaStats } from '@/features/dashboard/dashboard-api';
 
 export function ClientHomeDashboard() {
   const t = useTranslations('clientHome');
@@ -66,8 +65,6 @@ export function ClientHomeDashboard() {
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [pauseBusyId, setPauseBusyId] = useState<string | null>(null);
   const [seedDemoBusyId, setSeedDemoBusyId] = useState<string | null>(null);
-  const [storageUsed, setStorageUsed] = useState<number | undefined>(undefined);
-
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -90,23 +87,6 @@ export function ClientHomeDashboard() {
   useEffect(() => {
     void load();
   }, [load]);
-
-  const loadStorage = useCallback(async () => {
-    if (!workspaceId) return;
-    try {
-      const res = await fetchMediaStats(workspaceId);
-      if (res.ok) {
-        const data = (await res.json()) as { storageBytes?: number };
-        setStorageUsed(data.storageBytes ?? 0);
-      }
-    } catch {
-      // silent — storage indicator is optional
-    }
-  }, [workspaceId]);
-
-  useEffect(() => {
-    void loadStorage();
-  }, [loadStorage]);
 
   const daysRemaining = useMemo(() => {
     if (!insights) return null;
@@ -280,12 +260,20 @@ export function ClientHomeDashboard() {
           </WidgetErrorBoundary>
 
           <WidgetErrorBoundary>
-            <UsageIndicator screenCount={totalScreens} storageUsedBytes={storageUsed} />
+            <UsageIndicator
+              screenCount={totalScreens}
+              storageUsedBytes={insights.totals.storageBytes}
+              accountScreenLimit={insights.totals.screenLimit}
+              accountStorageLimitBytes={insights.totals.storageLimitBytes}
+            />
           </WidgetErrorBoundary>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             <WidgetErrorBoundary>
-              <ScreenHealthSection />
+              <ScreenHealthSection
+                screenStatus={insights.totals.screenStatus}
+                totalScreens={insights.totals.screens}
+              />
             </WidgetErrorBoundary>
             <WidgetErrorBoundary>
               <RecentActivityFeed />

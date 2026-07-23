@@ -46,6 +46,16 @@ export class WorkspaceCrudService {
         },
         select: { id: true, name: true, slug: true },
       });
+
+      await tx.mediaFolder.create({
+        data: {
+          ownerId: userId,
+          workspaceId: w.id,
+          name: name.trim(),
+          isDefault: true,
+        },
+      });
+
       return w;
     });
     return workspace;

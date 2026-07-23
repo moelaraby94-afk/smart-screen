@@ -50,6 +50,8 @@ export type InsightsPayload = {
     playlists: number;
     mediaCount: number;
     storageBytes: number;
+    screenLimit: number;
+    storageLimitBytes: number | null;
     screenStatus: { online: number; offline: number; maintenance: number };
   };
   branches: InsightsBranch[];

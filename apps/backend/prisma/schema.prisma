@@ -860,6 +860,8 @@ model MediaFolder {
 
   name        String
 
+  isDefault   Boolean  @default(false)
+
   createdAt   DateTime @default(now())
 
   updatedAt   DateTime @updatedAt
@@ -870,9 +872,11 @@ model MediaFolder {
 
   medias    Media[]
 
-  @@unique([ownerId, name])
+  @@unique([ownerId, workspaceId, name])
 
   @@index([ownerId, createdAt])
+
+  @@index([workspaceId, isDefault])
 
 }
 

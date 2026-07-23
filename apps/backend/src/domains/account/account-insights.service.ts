@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
+import { InvitationStatus } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { ConfigHelper } from '../../common/config/config.helper';
 import { fromStorageLimitBytes } from '../../common/product/storage-limit';
@@ -130,6 +131,12 @@ export class AccountInsightsService {
         acc.screenStatus.online += b.screenStatus.online;
         acc.screenStatus.offline += b.screenStatus.offline;
         acc.screenStatus.maintenance += b.screenStatus.maintenance;
+        if (b.subscription) {
+          acc.screenLimit += b.subscription.screenLimit;
+          if (b.subscription.storageLimitBytes != null && acc.storageLimitBytes != null) {
+            acc.storageLimitBytes += b.subscription.storageLimitBytes;
+          }
+        }
         return acc;
       },
       {
@@ -138,6 +145,8 @@ export class AccountInsightsService {
         playlists: 0,
         mediaCount: 0,
         storageBytes: 0,
+        screenLimit: 0,
+        storageLimitBytes: 0 as number | null,
         screenStatus: { online: 0, offline: 0, maintenance: 0 },
       },
     );
@@ -171,5 +180,124 @@ export class AccountInsightsService {
       throw new BadRequestException('Invoice PDF is not available yet');
     }
     return { url: pdfUrl };
+  }
+
+  async getAccountActivity(userId: string, limit = 20) {
+    const take = Math.min(Math.max(limit, 1), 50);
+
+    const memberships = await this.prisma.workspaceMember.findMany({
+      where: { userId },
+      select: {
+        workspace: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
+    const workspaceIds = memberships.map((m) => m.workspace.id);
+    if (workspaceIds.length === 0) return [];
+
+    const workspaceNameMap = new Map(
+      memberships.map((m) => [m.workspace.id, m.workspace.name]),
+    );
+
+    const [screens, mediaItems, playlists, schedules, invites] =
+      await Promise.all([
+        this.prisma.screen.findMany({
+          where: { workspaceId: { in: workspaceIds } },
+          select: { id: true, name: true, status: true, createdAt: true, workspaceId: true },
+          orderBy: { createdAt: 'desc' },
+          take,
+        }),
+        this.prisma.media.findMany({
+          where: { workspaceId: { in: workspaceIds } },
+          select: { id: true, originalName: true, mimeType: true, createdAt: true, workspaceId: true },
+          orderBy: { createdAt: 'desc' },
+          take,
+        }),
+        this.prisma.playlist.findMany({
+          where: { workspaceId: { in: workspaceIds } },
+          select: { id: true, name: true, isPublished: true, updatedAt: true, workspaceId: true },
+          orderBy: { updatedAt: 'desc' },
+          take,
+        }),
+        this.prisma.schedule.findMany({
+          where: { workspaceId: { in: workspaceIds } },
+          select: { id: true, startTime: true, endTime: true, createdAt: true, workspaceId: true },
+          orderBy: { createdAt: 'desc' },
+          take,
+        }),
+        this.prisma.workspaceInvitation.findMany({
+          where: { workspaceId: { in: workspaceIds }, status: InvitationStatus.PENDING },
+          select: { id: true, email: true, role: true, createdAt: true, workspaceId: true },
+          orderBy: { createdAt: 'desc' },
+          take,
+        }),
+      ]);
+
+    type ActivityItem = {
+      type: string;
+      id: string;
+      title: string;
+      subtitle: string;
+      timestamp: string;
+      workspaceName: string;
+    };
+
+    const items: ActivityItem[] = [];
+
+    for (const s of screens) {
+      items.push({
+        type: 'screen',
+        id: s.id,
+        title: s.name,
+        subtitle: s.status,
+        timestamp: s.createdAt.toISOString(),
+        workspaceName: workspaceNameMap.get(s.workspaceId) ?? '',
+      });
+    }
+    for (const m of mediaItems) {
+      items.push({
+        type: 'media',
+        id: m.id,
+        title: m.originalName,
+        subtitle: m.mimeType,
+        timestamp: m.createdAt.toISOString(),
+        workspaceName: workspaceNameMap.get(m.workspaceId ?? '') ?? '',
+      });
+    }
+    for (const p of playlists) {
+      items.push({
+        type: 'playlist',
+        id: p.id,
+        title: p.name,
+        subtitle: p.isPublished ? 'published' : 'draft',
+        timestamp: p.updatedAt.toISOString(),
+        workspaceName: workspaceNameMap.get(p.workspaceId ?? '') ?? '',
+      });
+    }
+    for (const s of schedules) {
+      items.push({
+        type: 'schedule',
+        id: s.id,
+        title: `${s.startTime} - ${s.endTime}`,
+        subtitle: 'schedule',
+        timestamp: s.createdAt.toISOString(),
+        workspaceName: workspaceNameMap.get(s.workspaceId) ?? '',
+      });
+    }
+    for (const inv of invites) {
+      items.push({
+        type: 'invite',
+        id: inv.id,
+        title: inv.email,
+        subtitle: inv.role,
+        timestamp: inv.createdAt.toISOString(),
+        workspaceName: workspaceNameMap.get(inv.workspaceId) ?? '',
+      });
+    }
+
+    items.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+    return items.slice(0, take);
   }
 }

@@ -11,7 +11,7 @@ import {
   CalendarClock,
   Activity as ActivityIcon,
 } from 'lucide-react';
-import { fetchRecentActivity } from '@/features/dashboard/dashboard-api';
+import { fetchAccountActivity } from '@/features/dashboard/dashboard-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
 import { ICON_STROKE } from '@/lib/icon-stroke';
 import { cn } from '@/lib/utils';
@@ -23,6 +23,7 @@ type ActivityItem = {
   title: string;
   subtitle: string;
   timestamp: string;
+  workspaceName?: string;
 };
 
 const typeIcon: Record<string, typeof MonitorSmartphone> = {
@@ -50,20 +51,19 @@ export function RecentActivityFeed() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    if (!workspaceId) {
-      setItems([]);
-      setLoading(false);
-      return;
-    }
     setLoading(true);
-    const res = await fetchRecentActivity(workspaceId);
-    if (res.ok) {
-      setItems((await res.json()) as ActivityItem[]);
-    } else {
+    try {
+      const res = await fetchAccountActivity();
+      if (res.ok) {
+        setItems((await res.json()) as ActivityItem[]);
+      } else {
+        setItems([]);
+      }
+    } catch {
       setItems([]);
     }
     setLoading(false);
-  }, [workspaceId]);
+  }, []);
 
   useEffect(() => {
     void load();
@@ -150,7 +150,7 @@ export function RecentActivityFeed() {
                       {item.title}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {t(`type.${item.type}`, { fallback: item.type })} · {item.subtitle}
+                      {t(`type.${item.type}`, { fallback: item.type })} · {item.subtitle}{item.workspaceName ? ` · ${item.workspaceName}` : ''}
                     </p>
                   </div>
                   <time className="shrink-0 font-mono text-xs text-muted-foreground">

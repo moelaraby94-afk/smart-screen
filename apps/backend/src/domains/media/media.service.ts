@@ -195,13 +195,23 @@ export class MediaService {
     // SHA-256 file hash for integrity checking
     const fileHash = createHash('sha256').update(uploadBuffer).digest('hex');
 
-    if (params.folderId) {
+    let effectiveFolderId = params.folderId ?? null;
+
+    if (effectiveFolderId) {
       const folder = await this.prisma.mediaFolder.findFirst({
-        where: { id: params.folderId, ownerId: params.ownerId },
+        where: { id: effectiveFolderId, ownerId: params.ownerId },
         select: { id: true },
       });
       if (!folder) {
         throw new BadRequestException('Folder not found');
+      }
+    } else if (params.workspaceId) {
+      const defaultFolder = await this.prisma.mediaFolder.findFirst({
+        where: { workspaceId: params.workspaceId, isDefault: true },
+        select: { id: true },
+      });
+      if (defaultFolder) {
+        effectiveFolderId = defaultFolder.id;
       }
     }
 
@@ -244,7 +254,7 @@ export class MediaService {
             mimeType: detected.mime,
             sizeBytes,
             relativePath,
-            folderId: params.folderId ?? null,
+            folderId: effectiveFolderId,
             fileHash,
             width: detectedWidth,
             height: detectedHeight,

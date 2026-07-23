@@ -99,9 +99,12 @@ export class MediaFoldersService {
     if (workspaceId) where.workspaceId = workspaceId;
     const folder = await this.prisma.mediaFolder.findFirst({
       where,
-      select: { id: true },
+      select: { id: true, isDefault: true },
     });
     if (!folder) throw new NotFoundException('Folder not found');
+    if (folder.isDefault) {
+      throw new BadRequestException('Cannot delete the default folder');
+    }
     const mediaWhere: {
       folderId: string;
       ownerId: string;

@@ -192,6 +192,10 @@ export class AccountService {
     return this.insightsService.getInsights(userId);
   }
 
+  async getAccountActivity(userId: string) {
+    return this.insightsService.getAccountActivity(userId);
+  }
+
   async getInvoicePdfUrl(userId: string, invoiceRef: string) {
     return this.insightsService.getInvoicePdfUrl(userId, invoiceRef);
   }

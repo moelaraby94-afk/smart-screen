@@ -17,9 +17,18 @@ type Props = {
   screenCount?: number;
   /** Current storage used in bytes (for storage indicator). Omit if not showing storage indicator. */
   storageUsedBytes?: number;
+  /** Account-level screen limit (sum of all branches). If provided, skips per-workspace API call. */
+  accountScreenLimit?: number;
+  /** Account-level storage limit in bytes (sum of all branches). If provided, skips per-workspace API call. */
+  accountStorageLimitBytes?: number | null;
 };
 
-export function UsageIndicator({ screenCount, storageUsedBytes }: Props) {
+export function UsageIndicator({
+  screenCount,
+  storageUsedBytes,
+  accountScreenLimit,
+  accountStorageLimitBytes,
+}: Props) {
   const t = useTranslations('usageIndicator');
   const locale = useLocale();
   const { workspaceId, workspaceDataEpoch } = useWorkspace();
@@ -38,18 +47,26 @@ export function UsageIndicator({ screenCount, storageUsedBytes }: Props) {
     void load();
   }, [load, workspaceDataEpoch]);
 
-  if (!sub) return null;
+  const effectiveSub: SubData | null =
+    accountScreenLimit !== undefined
+      ? {
+          screenLimit: accountScreenLimit,
+          storageLimitBytes: accountStorageLimitBytes ?? null,
+        }
+      : sub;
+
+  if (!effectiveSub) return null;
 
   const showScreen = screenCount !== undefined;
   const showStorage = storageUsedBytes !== undefined;
 
   if (!showScreen && !showStorage) return null;
 
-  const screenPct = showScreen && sub.screenLimit > 0
-    ? Math.min(100, Math.round((100 * screenCount!) / sub.screenLimit))
+  const screenPct = showScreen && effectiveSub.screenLimit > 0
+    ? Math.min(100, Math.round((100 * screenCount!) / effectiveSub.screenLimit))
     : null;
-  const storagePct = showStorage && sub.storageLimitBytes != null && sub.storageLimitBytes > 0
-    ? Math.min(100, Math.round((100 * storageUsedBytes!) / sub.storageLimitBytes))
+  const storagePct = showStorage && effectiveSub.storageLimitBytes != null && effectiveSub.storageLimitBytes > 0
+    ? Math.min(100, Math.round((100 * storageUsedBytes!) / effectiveSub.storageLimitBytes))
     : null;
 
   return (
@@ -61,7 +78,7 @@ export function UsageIndicator({ screenCount, storageUsedBytes }: Props) {
               {t('screens')}
             </p>
             <p className="text-sm font-medium">
-              {screenCount} / {sub.screenLimit}
+              {screenCount} / {effectiveSub.screenLimit}
               {screenPct != null && screenPct >= 70 && (
                 <span className={`ms-2 text-xs font-semibold ${screenPct >= 90 ? 'text-destructive' : 'text-warning'}`}>{t('nearLimit')}</span>
               )}
@@ -84,8 +101,8 @@ export function UsageIndicator({ screenCount, storageUsedBytes }: Props) {
               {t('storage')}
             </p>
             <p className="text-sm font-medium">
-              {sub.storageLimitBytes != null && sub.storageLimitBytes > 0
-                ? `${formatBytesLocale(storageUsedBytes!, locale)} / ${formatBytesLocale(sub.storageLimitBytes, locale)}`
+              {effectiveSub.storageLimitBytes != null && effectiveSub.storageLimitBytes > 0
+                ? `${formatBytesLocale(storageUsedBytes!, locale)} / ${formatBytesLocale(effectiveSub.storageLimitBytes, locale)}`
                 : formatBytesLocale(storageUsedBytes!, locale)}
               {storagePct != null && storagePct >= 70 && (
                 <span className={`ms-2 text-xs font-semibold ${storagePct >= 90 ? 'text-destructive' : 'text-warning'}`}>{t('nearLimit')}</span>
