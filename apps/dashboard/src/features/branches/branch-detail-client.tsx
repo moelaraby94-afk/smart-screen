@@ -262,7 +262,6 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
           duplicatingId={branchPlaylists.duplicatingId}
           onlineByPlaylistId={onlineByPlaylistId}
           locale={locale}
-          workspaceIdParam={workspaceIdParam}
           canEditPlaylist={canEditPlaylist}
           canDeletePlaylist={canDeletePlaylist}
           onDuplicate={(pl) => void branchPlaylists.duplicate(pl)}
@@ -285,7 +284,6 @@ export function BranchDetailClient({ locale, workspaceIdOverride }: Props) {
           screens={screens}
           isLoading={screensLoading}
           locale={locale}
-          workspaceIdParam={workspaceIdParam}
           canEditPlaylist={canEditPlaylist}
           playlists={branchPlaylists.playlists}
           assigningScreenId={screenAssignment.assigningScreenId}

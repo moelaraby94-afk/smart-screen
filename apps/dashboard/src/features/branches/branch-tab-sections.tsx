@@ -377,7 +377,6 @@ type PlaylistsSectionProps = {
   duplicatingId: string | null;
   onlineByPlaylistId: Map<string, number>;
   locale: string;
-  workspaceIdParam: string;
   canEditPlaylist: boolean;
   canDeletePlaylist: boolean;
   onDuplicate: (pl: BranchPlaylistRow) => void;
@@ -533,7 +532,6 @@ type ScreensSectionProps = {
   screens: ScreenRow[];
   isLoading: boolean;
   locale: string;
-  workspaceIdParam: string;
   canEditPlaylist: boolean;
   playlists: BranchPlaylistRow[];
   assigningScreenId: string | null;

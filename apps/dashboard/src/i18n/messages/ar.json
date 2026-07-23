@@ -1547,7 +1547,9 @@
     "reviewReject": "رفض",
     "reviewApproved": "تمت الموافقة على القائمة ونشرها.",
     "reviewRejected": "تمت إعادة القائمة للمراجعة.",
-    "reviewApproveFailed": "تعذر الموافقة على القائمة."
+    "reviewApproveFailed": "تعذر الموافقة على القائمة.",
+    "statScreens": "شاشات",
+    "screenActionsAria": "إجراءات الشاشة"
   },
   "branchesPage": {
     "title": "الفروع",
@@ -1582,6 +1584,7 @@
     "pauseSuccess": "تم إيقاف الفرع بنجاح.",
     "resumeSuccess": "تم استئناف الفرع بنجاح.",
     "togglePauseFailed": "تعذر تغيير حالة الفرع.",
+    "manageBranch": "إدارة",
     "statScreens": "شاشات",
     "statPlaylists": "قوائم",
     "statMedia": "وسائط"

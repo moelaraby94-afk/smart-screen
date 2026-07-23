@@ -1547,7 +1547,9 @@
     "reviewReject": "Reject",
     "reviewApproved": "Playlist approved and published.",
     "reviewRejected": "Playlist sent back for revision.",
-    "reviewApproveFailed": "Could not approve playlist."
+    "reviewApproveFailed": "Could not approve playlist.",
+    "statScreens": "screens",
+    "screenActionsAria": "Screen actions"
   },
   "branchesPage": {
     "title": "Branches",
@@ -1582,6 +1584,7 @@
     "pauseSuccess": "Branch paused successfully.",
     "resumeSuccess": "Branch resumed successfully.",
     "togglePauseFailed": "Could not change branch status.",
+    "manageBranch": "Manage",
     "statScreens": "screens",
     "statPlaylists": "playlists",
     "statMedia": "media"
