@@ -732,9 +732,17 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
   const showBootstrapSplash =
     (bootMode === 'jwt' || bootMode === 'kiosk') && !playlist && !bootstrapError;
 
+  // Playlist orientation takes priority over screen orientation.
+  // When a portrait playlist is assigned to a landscape screen, the player
+  // must rotate the container 90° to display portrait content correctly.
+  const effectiveOrientation =
+    playlist?.orientation && playlist.orientation !== 'AUTO'
+      ? playlist.orientation
+      : orientation;
+
   const renderDecision = computeMediaRenderDecision(
     playlist?.renderMode ?? 'CONTAIN',
-    orientation,
+    effectiveOrientation,
     {
       screenWidth: typeof window !== 'undefined' ? window.screen.width : null,
       screenHeight: typeof window !== 'undefined' ? window.screen.height : null,
@@ -792,7 +800,7 @@ export function PlayerRuntime({ kioskSecret = '' }: { kioskSecret?: string }) {
                 liveCanvasLayouts={liveCanvasLayouts}
                 mediaObjectFit={renderDecision.objectFit}
                 renderMode={playlist.renderMode ?? 'CONTAIN'}
-                orientation={orientation}
+                orientation={effectiveOrientation}
                 onPlaybackMediaError={
                   bootMode === 'kiosk' ? reportPlaybackMediaError : undefined
                 }
