@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Route } from 'next';
-import { Search, Eye, Trash2, Plus, Sparkles, LayoutTemplate, AlertCircle, RotateCcw } from 'lucide-react';
+import { Search, Eye, Trash2, Plus, Sparkles, LayoutTemplate, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -71,15 +71,12 @@ export function TemplatesClient() {
   const [preview, setPreview] = useState<CanvasTemplate | null>(null);
 
   const reload = useCallback(async () => {
-    if (!workspaceId) {
-      setTemplates([]);
-      setIsLoading(false);
-      return;
-    }
     setIsLoading(true);
     setLoadError(false);
     try {
-      const res = await apiFetch(`/canvases?workspaceId=${encodeURIComponent(workspaceId)}`);
+      const params = new URLSearchParams();
+      if (workspaceId) params.set('workspaceId', workspaceId);
+      const res = await apiFetch(`/canvases?${params.toString()}`);
       if (res.ok) {
         const items = await readPageItems<CanvasRow>(res);
         setTemplates(items);

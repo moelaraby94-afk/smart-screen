@@ -1,13 +1,14 @@
 import { apiFetch } from '@/features/auth/session';
 
 export async function fetchSchedules(
-  workspaceId: string,
+  workspaceId?: string | null,
   filters?: { screenId?: string; playlistId?: string },
 ): Promise<Response> {
-  let url = `/schedules?workspaceId=${encodeURIComponent(workspaceId)}`;
-  if (filters?.screenId) url += `&screenId=${encodeURIComponent(filters.screenId)}`;
-  if (filters?.playlistId) url += `&playlistId=${encodeURIComponent(filters.playlistId)}`;
-  return apiFetch(url);
+  const params = new URLSearchParams();
+  if (workspaceId) params.set('workspaceId', workspaceId);
+  if (filters?.screenId) params.set('screenId', filters.screenId);
+  if (filters?.playlistId) params.set('playlistId', filters.playlistId);
+  return apiFetch(`/schedules?${params.toString()}`);
 }
 
 export async function fetchScheduleById(

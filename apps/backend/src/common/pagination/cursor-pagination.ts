@@ -31,11 +31,13 @@ export function encodeCursor(lastItem: {
 }
 
 export function decodeCursor(cursor: string): CursorPayload {
-  const decoded = JSON.parse(Buffer.from(cursor, 'base64').toString('utf-8'));
+  const decoded = JSON.parse(
+    Buffer.from(cursor, 'base64').toString('utf-8'),
+  ) as CursorPayload;
   if (!decoded.id || !decoded.createdAt) {
     throw new Error('Invalid cursor format');
   }
-  return decoded as CursorPayload;
+  return decoded;
 }
 
 export function resolveLimit(limit?: number): number {

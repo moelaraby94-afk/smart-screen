@@ -14,10 +14,7 @@ import { ExchangeTokenService } from './exchange-token.service';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import type { JwtUser } from '../../common/auth/current-user.decorator';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
-import {
-  setAuthCookies,
-  extractRefreshTokenFromCookies,
-} from './auth-cookie.util';
+import { setAuthCookies } from './auth-cookie.util';
 import { ExchangeTokenDto } from './dto/exchange-token.dto';
 import { PLATFORM_ROUTES } from '../../common/constants/route-prefixes';
 import type { Request, Response } from 'express';

@@ -1091,7 +1091,9 @@
     "timing": "التوقيت",
     "workspace": "الفرع",
     "saas": "المنصة",
-    "content": "المحتوى"
+    "content": "المحتوى",
+    "allBranches": "كل الفروع",
+    "filterByBranch": "تصفية حسب الفرع"
   },
   "contentPage": {
     "title": "المحتوى",

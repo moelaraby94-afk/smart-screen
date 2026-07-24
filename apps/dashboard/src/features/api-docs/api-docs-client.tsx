@@ -23,10 +23,6 @@ type Endpoint = {
   description: string;
 };
 
-type EndpointGroup = {
-  title: string;
-  endpoints: Endpoint[];
-};
 
 const methodColor: Record<Endpoint['method'], string> = {
   GET: 'bg-primary/10 text-primary ring-primary/20',

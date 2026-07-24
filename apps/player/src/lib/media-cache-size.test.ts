@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { describe, it, mock } from 'node:test';
+import { describe, it } from 'node:test';
 
 /**
  * F-02 regression: getMediaCacheSize must read Content-Length from headers

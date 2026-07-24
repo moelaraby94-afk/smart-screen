@@ -46,7 +46,7 @@ export function RecentActivityFeed() {
   const t = useTranslations('activityFeed');
   const locale = useLocale();
   const dir = locale === 'ar' ? -1 : 1;
-  const { workspaceId, workspaceDataEpoch } = useWorkspace();
+  const { workspaceDataEpoch } = useWorkspace();
   const [items, setItems] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
 

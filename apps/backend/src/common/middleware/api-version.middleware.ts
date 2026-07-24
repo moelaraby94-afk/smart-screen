@@ -14,7 +14,7 @@ export class ApiVersionMiddleware implements NestMiddleware {
     const headerVersion = req.headers['x-api-version'] as string | undefined;
     if (headerVersion) return headerVersion;
 
-    const acceptHeader = req.headers['accept'] as string | undefined;
+    const acceptHeader = req.headers['accept'];
     if (acceptHeader) {
       const match = acceptHeader.match(/version=(\d+)/);
       if (match) return `v${match[1]}`;

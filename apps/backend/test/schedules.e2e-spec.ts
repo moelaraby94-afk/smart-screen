@@ -63,7 +63,10 @@ describe('Schedules API (e2e)', () => {
           useValue: { resolveEffectivePlaylistId: jest.fn() },
         },
         { provide: PrismaService, useValue: {} },
-        { provide: PlaylistsService, useValue: { emitPlaylistForScreen: jest.fn() } },
+        {
+          provide: PlaylistsService,
+          useValue: { emitPlaylistForScreen: jest.fn() },
+        },
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -90,30 +93,41 @@ describe('Schedules API (e2e)', () => {
 
   describe('GET /api/v1/customer/schedules/preview', () => {
     it('returns schedule preview for a workspace', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/api/v1/customer/schedules/preview?workspaceId=ws-1');
+      const res = await request(app.getHttpServer()).get(
+        '/api/v1/customer/schedules/preview?workspaceId=ws-1',
+      );
 
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty('date');
       expect(res.body).toHaveProperty('timezone');
       expect(res.body).toHaveProperty('activeSchedules');
       expect(res.body).toHaveProperty('allSchedules');
-      expect(schedulesService.preview).toHaveBeenCalledWith('ws-1', undefined, undefined);
+      expect(schedulesService.preview).toHaveBeenCalledWith(
+        'ws-1',
+        undefined,
+        undefined,
+      );
     });
 
     it('accepts optional screenId and date params', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/api/v1/customer/schedules/preview?workspaceId=ws-1&screenId=screen-1&date=2026-07-13');
+      const res = await request(app.getHttpServer()).get(
+        '/api/v1/customer/schedules/preview?workspaceId=ws-1&screenId=screen-1&date=2026-07-13',
+      );
 
       expect(res.status).toBe(200);
-      expect(schedulesService.preview).toHaveBeenCalledWith('ws-1', 'screen-1', '2026-07-13');
+      expect(schedulesService.preview).toHaveBeenCalledWith(
+        'ws-1',
+        'screen-1',
+        '2026-07-13',
+      );
     });
   });
 
   describe('GET /api/v1/customer/schedules/overlaps', () => {
     it('returns schedule overlaps', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/api/v1/customer/schedules/overlaps?workspaceId=ws-1');
+      const res = await request(app.getHttpServer()).get(
+        '/api/v1/customer/schedules/overlaps?workspaceId=ws-1',
+      );
 
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty('pairs');
@@ -122,8 +136,9 @@ describe('Schedules API (e2e)', () => {
 
   describe('Holiday endpoints', () => {
     it('GET /api/v1/holidays returns list', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/api/v1/holidays?workspaceId=ws-1');
+      const res = await request(app.getHttpServer()).get(
+        '/api/v1/holidays?workspaceId=ws-1',
+      );
 
       expect(res.status).toBe(200);
       expect(holidayService.list).toHaveBeenCalledWith('ws-1');

@@ -1,6 +1,9 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
-import { CurrentUser, type JwtUser } from '../../common/auth/current-user.decorator';
+import {
+  CurrentUser,
+  type JwtUser,
+} from '../../common/auth/current-user.decorator';
 import { AiService, type AiGenerateInput } from './ai.service';
 
 @UseGuards(JwtAuthGuard)

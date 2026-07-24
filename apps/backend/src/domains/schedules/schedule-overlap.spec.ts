@@ -33,8 +33,22 @@ describe('findOverlappingPairs (F-09)', () => {
 
   it('detects overlapping schedules on the same screen and day', () => {
     const schedules: ScheduleInput[] = [
-      { id: 's1', screenId: 'scr-1', daysOfWeek: [1], startTime: '09:00', endTime: '12:00', priority: 1 },
-      { id: 's2', screenId: 'scr-1', daysOfWeek: [1], startTime: '11:00', endTime: '14:00', priority: 2 },
+      {
+        id: 's1',
+        screenId: 'scr-1',
+        daysOfWeek: [1],
+        startTime: '09:00',
+        endTime: '12:00',
+        priority: 1,
+      },
+      {
+        id: 's2',
+        screenId: 'scr-1',
+        daysOfWeek: [1],
+        startTime: '11:00',
+        endTime: '14:00',
+        priority: 2,
+      },
     ];
     const pairs = service.findOverlappingPairs(schedules);
     expect(pairs).toHaveLength(1);
@@ -43,8 +57,22 @@ describe('findOverlappingPairs (F-09)', () => {
 
   it('does not report non-overlapping schedules', () => {
     const schedules: ScheduleInput[] = [
-      { id: 's1', screenId: 'scr-1', daysOfWeek: [1], startTime: '09:00', endTime: '12:00', priority: 1 },
-      { id: 's2', screenId: 'scr-1', daysOfWeek: [1], startTime: '12:00', endTime: '14:00', priority: 2 },
+      {
+        id: 's1',
+        screenId: 'scr-1',
+        daysOfWeek: [1],
+        startTime: '09:00',
+        endTime: '12:00',
+        priority: 1,
+      },
+      {
+        id: 's2',
+        screenId: 'scr-1',
+        daysOfWeek: [1],
+        startTime: '12:00',
+        endTime: '14:00',
+        priority: 2,
+      },
     ];
     const pairs = service.findOverlappingPairs(schedules);
     expect(pairs).toHaveLength(0);
@@ -52,8 +80,22 @@ describe('findOverlappingPairs (F-09)', () => {
 
   it('does not report schedules on different screens', () => {
     const schedules: ScheduleInput[] = [
-      { id: 's1', screenId: 'scr-1', daysOfWeek: [1], startTime: '09:00', endTime: '12:00', priority: 1 },
-      { id: 's2', screenId: 'scr-2', daysOfWeek: [1], startTime: '09:00', endTime: '12:00', priority: 2 },
+      {
+        id: 's1',
+        screenId: 'scr-1',
+        daysOfWeek: [1],
+        startTime: '09:00',
+        endTime: '12:00',
+        priority: 1,
+      },
+      {
+        id: 's2',
+        screenId: 'scr-2',
+        daysOfWeek: [1],
+        startTime: '09:00',
+        endTime: '12:00',
+        priority: 2,
+      },
     ];
     const pairs = service.findOverlappingPairs(schedules);
     expect(pairs).toHaveLength(0);
@@ -61,8 +103,22 @@ describe('findOverlappingPairs (F-09)', () => {
 
   it('does not report schedules on different days', () => {
     const schedules: ScheduleInput[] = [
-      { id: 's1', screenId: 'scr-1', daysOfWeek: [1], startTime: '09:00', endTime: '12:00', priority: 1 },
-      { id: 's2', screenId: 'scr-1', daysOfWeek: [2], startTime: '09:00', endTime: '12:00', priority: 2 },
+      {
+        id: 's1',
+        screenId: 'scr-1',
+        daysOfWeek: [1],
+        startTime: '09:00',
+        endTime: '12:00',
+        priority: 1,
+      },
+      {
+        id: 's2',
+        screenId: 'scr-1',
+        daysOfWeek: [2],
+        startTime: '09:00',
+        endTime: '12:00',
+        priority: 2,
+      },
     ];
     const pairs = service.findOverlappingPairs(schedules);
     expect(pairs).toHaveLength(0);
@@ -70,8 +126,22 @@ describe('findOverlappingPairs (F-09)', () => {
 
   it('handles midnight-crossing windows correctly', () => {
     const schedules: ScheduleInput[] = [
-      { id: 's1', screenId: 'scr-1', daysOfWeek: [1], startTime: '22:00', endTime: '02:00', priority: 1 },
-      { id: 's2', screenId: 'scr-1', daysOfWeek: [1], startTime: '23:00', endTime: '03:00', priority: 2 },
+      {
+        id: 's1',
+        screenId: 'scr-1',
+        daysOfWeek: [1],
+        startTime: '22:00',
+        endTime: '02:00',
+        priority: 1,
+      },
+      {
+        id: 's2',
+        screenId: 'scr-1',
+        daysOfWeek: [1],
+        startTime: '23:00',
+        endTime: '03:00',
+        priority: 2,
+      },
     ];
     const pairs = service.findOverlappingPairs(schedules);
     expect(pairs).toHaveLength(1);
@@ -79,8 +149,22 @@ describe('findOverlappingPairs (F-09)', () => {
 
   it('detects overlap when one crosses midnight and other does not', () => {
     const schedules: ScheduleInput[] = [
-      { id: 's1', screenId: 'scr-1', daysOfWeek: [1], startTime: '22:00', endTime: '02:00', priority: 1 },
-      { id: 's2', screenId: 'scr-1', daysOfWeek: [1], startTime: '01:00', endTime: '03:00', priority: 2 },
+      {
+        id: 's1',
+        screenId: 'scr-1',
+        daysOfWeek: [1],
+        startTime: '22:00',
+        endTime: '02:00',
+        priority: 1,
+      },
+      {
+        id: 's2',
+        screenId: 'scr-1',
+        daysOfWeek: [1],
+        startTime: '01:00',
+        endTime: '03:00',
+        priority: 2,
+      },
     ];
     const pairs = service.findOverlappingPairs(schedules);
     expect(pairs).toHaveLength(1);
@@ -88,8 +172,22 @@ describe('findOverlappingPairs (F-09)', () => {
 
   it('handles workspace-wide (null screenId) schedules', () => {
     const schedules: ScheduleInput[] = [
-      { id: 's1', screenId: null, daysOfWeek: [1], startTime: '09:00', endTime: '12:00', priority: 1 },
-      { id: 's2', screenId: null, daysOfWeek: [1], startTime: '11:00', endTime: '14:00', priority: 2 },
+      {
+        id: 's1',
+        screenId: null,
+        daysOfWeek: [1],
+        startTime: '09:00',
+        endTime: '12:00',
+        priority: 1,
+      },
+      {
+        id: 's2',
+        screenId: null,
+        daysOfWeek: [1],
+        startTime: '11:00',
+        endTime: '14:00',
+        priority: 2,
+      },
     ];
     const pairs = service.findOverlappingPairs(schedules);
     expect(pairs).toHaveLength(1);
@@ -97,8 +195,26 @@ describe('findOverlappingPairs (F-09)', () => {
 
   it('handles MONTHLY recurrence with daysOfMonth', () => {
     const schedules: ScheduleInput[] = [
-      { id: 's1', screenId: 'scr-1', daysOfWeek: [], startTime: '09:00', endTime: '12:00', priority: 1, recurrence: RecurrenceType.MONTHLY, daysOfMonth: [1, 15] },
-      { id: 's2', screenId: 'scr-1', daysOfWeek: [], startTime: '11:00', endTime: '14:00', priority: 2, recurrence: RecurrenceType.MONTHLY, daysOfMonth: [15] },
+      {
+        id: 's1',
+        screenId: 'scr-1',
+        daysOfWeek: [],
+        startTime: '09:00',
+        endTime: '12:00',
+        priority: 1,
+        recurrence: RecurrenceType.MONTHLY,
+        daysOfMonth: [1, 15],
+      },
+      {
+        id: 's2',
+        screenId: 'scr-1',
+        daysOfWeek: [],
+        startTime: '11:00',
+        endTime: '14:00',
+        priority: 2,
+        recurrence: RecurrenceType.MONTHLY,
+        daysOfMonth: [15],
+      },
     ];
     const pairs = service.findOverlappingPairs(schedules);
     expect(pairs).toHaveLength(1);
@@ -106,8 +222,26 @@ describe('findOverlappingPairs (F-09)', () => {
 
   it('does not overlap MONTHLY schedules on different days', () => {
     const schedules: ScheduleInput[] = [
-      { id: 's1', screenId: 'scr-1', daysOfWeek: [], startTime: '09:00', endTime: '12:00', priority: 1, recurrence: RecurrenceType.MONTHLY, daysOfMonth: [1] },
-      { id: 's2', screenId: 'scr-1', daysOfWeek: [], startTime: '09:00', endTime: '12:00', priority: 2, recurrence: RecurrenceType.MONTHLY, daysOfMonth: [15] },
+      {
+        id: 's1',
+        screenId: 'scr-1',
+        daysOfWeek: [],
+        startTime: '09:00',
+        endTime: '12:00',
+        priority: 1,
+        recurrence: RecurrenceType.MONTHLY,
+        daysOfMonth: [1],
+      },
+      {
+        id: 's2',
+        screenId: 'scr-1',
+        daysOfWeek: [],
+        startTime: '09:00',
+        endTime: '12:00',
+        priority: 2,
+        recurrence: RecurrenceType.MONTHLY,
+        daysOfMonth: [15],
+      },
     ];
     const pairs = service.findOverlappingPairs(schedules);
     expect(pairs).toHaveLength(0);
@@ -156,8 +290,22 @@ describe('findOverlappingPairs (F-09)', () => {
 
   it('preserves output format (array of [id1, id2] tuples)', () => {
     const schedules: ScheduleInput[] = [
-      { id: 'a', screenId: 'scr-1', daysOfWeek: [1, 2], startTime: '09:00', endTime: '12:00', priority: 1 },
-      { id: 'b', screenId: 'scr-1', daysOfWeek: [1], startTime: '11:00', endTime: '14:00', priority: 2 },
+      {
+        id: 'a',
+        screenId: 'scr-1',
+        daysOfWeek: [1, 2],
+        startTime: '09:00',
+        endTime: '12:00',
+        priority: 1,
+      },
+      {
+        id: 'b',
+        screenId: 'scr-1',
+        daysOfWeek: [1],
+        startTime: '11:00',
+        endTime: '14:00',
+        priority: 2,
+      },
     ];
     const pairs = service.findOverlappingPairs(schedules);
     // a and b overlap on day 1 only — should produce exactly 1 pair

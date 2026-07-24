@@ -3,16 +3,18 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
-  ConflictException,
 } from '@nestjs/common';
 import { Observable, of } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 import { PrismaService } from '../prisma/prisma.service';
 import { Request } from 'express';
 
 @Injectable()
 export class IdempotencyInterceptor implements NestInterceptor {
-  private readonly cache = new Map<string, { result: unknown; expiresAt: number }>();
+  private readonly cache = new Map<
+    string,
+    { result: unknown; expiresAt: number }
+  >();
   private readonly TTL_MS = 24 * 60 * 60 * 1000;
 
   constructor(private readonly prisma: PrismaService) {}

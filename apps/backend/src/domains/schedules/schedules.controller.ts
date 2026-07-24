@@ -14,6 +14,8 @@ import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/auth/roles.guard';
 import { Roles } from '../../common/auth/roles.decorator';
+import { CurrentUser } from '../../common/auth/current-user.decorator';
+import type { JwtUser } from '../../common/auth/current-user.decorator';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { ListSchedulesDto } from './dto/list-schedules.dto';
@@ -27,8 +29,8 @@ export class SchedulesController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get()
-  list(@Query() query: ListSchedulesDto) {
-    return this.schedulesService.list(query.workspaceId, query);
+  list(@Query() query: ListSchedulesDto, @CurrentUser() user: JwtUser) {
+    return this.schedulesService.list(query.workspaceId, user.sub, query);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)

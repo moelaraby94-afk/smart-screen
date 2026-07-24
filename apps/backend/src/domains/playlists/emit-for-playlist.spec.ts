@@ -35,9 +35,7 @@ function createFakePrismaForEmit(items: PlaylistItemRow[]) {
       const result = items.filter(
         (i) => i.nestedPlaylistId === where.nestedPlaylistId,
       );
-      return Promise.resolve(
-        result.map((r) => ({ playlistId: r.playlistId })),
-      );
+      return Promise.resolve(result.map((r) => ({ playlistId: r.playlistId })));
     },
   );
 
@@ -96,7 +94,11 @@ function makeService(prisma: PrismaService): PlaylistsService {
     resolveOwnerId: jest.fn().mockResolvedValue('owner-1'),
   } as unknown as AccountContextHelper;
   const groupsService = new PlaylistGroupsService(prisma, accountContext);
-  const resolutionService = new PlaylistResolutionService(prisma, media, canvases);
+  const resolutionService = new PlaylistResolutionService(
+    prisma,
+    media,
+    canvases,
+  );
   const heartbeat = {
     emit: jest.fn(),
   } as unknown as EventEmitter2;
@@ -168,9 +170,11 @@ describe('emitForPlaylist cycle protection (F-01)', () => {
     await service.emitForPlaylist('C');
 
     // playlistItem.findMany should have been called for 'C' (initial), 'B' (parent), 'A' (grandparent)
-    const findManyCalls = (prisma as unknown as {
-      playlistItem: { findMany: jest.Mock };
-    }).playlistItem.findMany.mock.calls;
+    const findManyCalls = (
+      prisma as unknown as {
+        playlistItem: { findMany: jest.Mock };
+      }
+    ).playlistItem.findMany.mock.calls;
     const queriedNestedIds = findManyCalls.map(
       (c: [{ where: { nestedPlaylistId: string } }]) =>
         c[0].where.nestedPlaylistId,
@@ -194,9 +198,11 @@ describe('emitForPlaylist cycle protection (F-01)', () => {
 
     await service.emitForPlaylist('D');
 
-    const findManyCalls = (prisma as unknown as {
-      playlistItem: { findMany: jest.Mock };
-    }).playlistItem.findMany.mock.calls;
+    const findManyCalls = (
+      prisma as unknown as {
+        playlistItem: { findMany: jest.Mock };
+      }
+    ).playlistItem.findMany.mock.calls;
     const queriedNestedIds = findManyCalls.map(
       (c: [{ where: { nestedPlaylistId: string } }]) =>
         c[0].where.nestedPlaylistId,
@@ -253,7 +259,11 @@ describe('emitForPlaylist batched concurrency (F-05)', () => {
       screen: {
         count: jest.fn(() => Promise.resolve(0)),
         findMany: jest.fn(
-          ({ where }: { where: { OR?: Array<Record<string, string>>; workspaceId?: string } }) => {
+          ({
+            where,
+          }: {
+            where: { OR?: Array<Record<string, string>>; workspaceId?: string };
+          }) => {
             if (where?.OR) {
               // Match by activePlaylistId or overridePlaylistId
               return Promise.resolve(
@@ -329,10 +339,11 @@ describe('emitForPlaylist batched concurrency (F-05)', () => {
     const service = makeService(prisma);
 
     const emitSpy = jest.spyOn(service, 'emitPlaylistForScreen');
-    emitSpy.mockImplementation(async (screenId: string) => {
+    emitSpy.mockImplementation((screenId: string) => {
       if (screenId === 'screen-2') {
-        throw new Error('DB connection lost');
+        return Promise.reject(new Error('DB connection lost'));
       }
+      return Promise.resolve();
     });
 
     // Should not throw — failures are swallowed by Promise.allSettled

@@ -23,27 +23,19 @@ export function useWorkspaceStats(
   });
 
   useEffect(() => {
-    if (!workspaceId) {
-      setCounts({ media: 0, screens: 0, playlists: 0 });
-      return;
-    }
     let cancelled = false;
-    /**
-     * Three counts, three `total` fields. This used to download the entire media
-     * library and the entire playlist list and take `.length` of each — a full
-     * table scan over the wire per sidebar render, and a wrong number as soon as
-     * the server's page cap bit. `limit=1` fetches one row for its `total`.
-     */
-    const countOnly = (path: string) =>
-      apiFetch(`${path}&page=1&limit=1`);
+    const buildUrl = (resource: string) => {
+      const params = new URLSearchParams({ page: '1', limit: '1' });
+      if (workspaceId) params.set('workspaceId', workspaceId);
+      return apiFetch(`/${resource}?${params.toString()}`);
+    };
 
     (async () => {
       try {
-        const ws = encodeURIComponent(workspaceId);
         const [mRes, sRes, pRes] = await Promise.all([
-          countOnly(`/media?workspaceId=${ws}`),
-          countOnly(`/screens?workspaceId=${ws}`),
-          countOnly(`/playlists?workspaceId=${ws}`),
+          buildUrl('media'),
+          buildUrl('screens'),
+          buildUrl('playlists'),
         ]);
         const [media, screens, playlists] = await Promise.all([
           readPage(mRes),

@@ -21,9 +21,9 @@ import { PLAYER_ROUTES } from '../../common/constants/route-prefixes';
 
 /**
  * Unauthenticated player endpoints (kiosk). Authenticated by the `x-player-secret`
- * header: a screen's own secret (Screen.pairingSecretHash), issued once by the
- * pairing poll below. The shared PLAYER_HEARTBEAT_SECRET is only accepted for
- * screens created outside the pairing flow, which have no per-screen hash.
+ * header: a screen's own per-screen secret (Screen.pairingSecretHash), issued
+ * once by the pairing poll below. Screens without a pairingSecretHash are
+ * rejected — the shared PLAYER_HEARTBEAT_SECRET fallback was removed in Phase 2.
  *
  * Exempt from the global per-IP rate limit: every screen in a venue shares one
  * public IP, and the pairing poll below runs every two seconds, so an IP bucket

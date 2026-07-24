@@ -27,9 +27,7 @@ describe('Bulk Operations API (e2e)', () => {
 
     const moduleRef = await Test.createTestingModule({
       controllers: [BulkOperationsController],
-      providers: [
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [{ provide: PrismaService, useValue: prisma }],
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: jest.fn().mockReturnValue(true) })

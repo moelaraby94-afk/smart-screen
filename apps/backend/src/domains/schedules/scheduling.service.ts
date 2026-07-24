@@ -145,7 +145,10 @@ export class SchedulingService {
       );
 
     if (matching.length > 0) {
-      const isHoliday = await this.holidayService.isHoliday(screen.workspaceId, at);
+      const isHoliday = await this.holidayService.isHoliday(
+        screen.workspaceId,
+        at,
+      );
       if (isHoliday) {
         matching = matching.filter((s) => !s.excludeHolidays);
       }
@@ -218,18 +221,20 @@ export class SchedulingService {
     const overlaps: Array<[string, string]> = [];
 
     // Group by (screenId, recurrence, day) — only schedules in the same group can overlap
-    const groups = new Map<string, Array<{
-      id: string;
-      start: number;
-      end: number;
-      crosses: boolean;
-    }>>();
+    const groups = new Map<
+      string,
+      Array<{
+        id: string;
+        start: number;
+        end: number;
+        crosses: boolean;
+      }>
+    >();
 
     for (const s of schedules) {
       const rec = s.recurrence ?? RecurrenceType.WEEKLY;
-      const days = rec === RecurrenceType.MONTHLY
-        ? (s.daysOfMonth ?? [])
-        : s.daysOfWeek;
+      const days =
+        rec === RecurrenceType.MONTHLY ? (s.daysOfMonth ?? []) : s.daysOfWeek;
       const start = parseHHmm(s.startTime);
       const end = parseHHmm(s.endTime);
       const crosses = start >= end;

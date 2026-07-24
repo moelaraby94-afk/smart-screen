@@ -4,6 +4,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
@@ -23,9 +24,15 @@ export class PlayerSecretGuard implements CanActivate {
   constructor(private readonly prisma: PrismaService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const serialNumber: string | undefined = request.query?.serialNumber;
-    const secret: string | undefined = request.headers?.['x-player-secret'];
+    const request = context
+      .switchToHttp()
+      .getRequest<
+        Request & { playerScreenId?: string; playerWorkspaceId?: string }
+      >();
+    const serialNumber: string | undefined = request.query?.serialNumber as
+      | string
+      | undefined;
+    const secret = request.headers?.['x-player-secret'] as string | undefined;
 
     if (!serialNumber?.trim() || !secret) {
       throw new UnauthorizedException('Invalid player credentials');
@@ -35,6 +42,7 @@ export class PlayerSecretGuard implements CanActivate {
       where: { serialNumber: serialNumber.trim() },
       select: {
         id: true,
+        workspaceId: true,
         pairingSecretHash: true,
       },
     });
@@ -49,6 +57,7 @@ export class PlayerSecretGuard implements CanActivate {
     }
 
     request.playerScreenId = screen.id;
+    request.playerWorkspaceId = screen.workspaceId;
     return true;
   }
 }

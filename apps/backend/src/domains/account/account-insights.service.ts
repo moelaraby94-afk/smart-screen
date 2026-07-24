@@ -133,7 +133,10 @@ export class AccountInsightsService {
         acc.screenStatus.maintenance += b.screenStatus.maintenance;
         if (b.subscription) {
           acc.screenLimit += b.subscription.screenLimit;
-          if (b.subscription.storageLimitBytes != null && acc.storageLimitBytes != null) {
+          if (
+            b.subscription.storageLimitBytes != null &&
+            acc.storageLimitBytes != null
+          ) {
             acc.storageLimitBytes += b.subscription.storageLimitBytes;
           }
         }
@@ -205,31 +208,64 @@ export class AccountInsightsService {
       await Promise.all([
         this.prisma.screen.findMany({
           where: { workspaceId: { in: workspaceIds } },
-          select: { id: true, name: true, status: true, createdAt: true, workspaceId: true },
+          select: {
+            id: true,
+            name: true,
+            status: true,
+            createdAt: true,
+            workspaceId: true,
+          },
           orderBy: { createdAt: 'desc' },
           take,
         }),
         this.prisma.media.findMany({
           where: { workspaceId: { in: workspaceIds } },
-          select: { id: true, originalName: true, mimeType: true, createdAt: true, workspaceId: true },
+          select: {
+            id: true,
+            originalName: true,
+            mimeType: true,
+            createdAt: true,
+            workspaceId: true,
+          },
           orderBy: { createdAt: 'desc' },
           take,
         }),
         this.prisma.playlist.findMany({
           where: { workspaceId: { in: workspaceIds } },
-          select: { id: true, name: true, isPublished: true, updatedAt: true, workspaceId: true },
+          select: {
+            id: true,
+            name: true,
+            isPublished: true,
+            updatedAt: true,
+            workspaceId: true,
+          },
           orderBy: { updatedAt: 'desc' },
           take,
         }),
         this.prisma.schedule.findMany({
           where: { workspaceId: { in: workspaceIds } },
-          select: { id: true, startTime: true, endTime: true, createdAt: true, workspaceId: true },
+          select: {
+            id: true,
+            startTime: true,
+            endTime: true,
+            createdAt: true,
+            workspaceId: true,
+          },
           orderBy: { createdAt: 'desc' },
           take,
         }),
         this.prisma.workspaceInvitation.findMany({
-          where: { workspaceId: { in: workspaceIds }, status: InvitationStatus.PENDING },
-          select: { id: true, email: true, role: true, createdAt: true, workspaceId: true },
+          where: {
+            workspaceId: { in: workspaceIds },
+            status: InvitationStatus.PENDING,
+          },
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            createdAt: true,
+            workspaceId: true,
+          },
           orderBy: { createdAt: 'desc' },
           take,
         }),

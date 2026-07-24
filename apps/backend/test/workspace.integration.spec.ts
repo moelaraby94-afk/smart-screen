@@ -48,9 +48,15 @@ describe('Workspace flow (integration)', () => {
         {
           provide: WorkspaceCrudService,
           useValue: {
-            createForUser: jest.fn().mockResolvedValue({ id: WS_ID, name: 'Test WS' }),
-            getWorkspace: jest.fn().mockResolvedValue({ id: WS_ID, name: 'Test WS' }),
-            updateWorkspace: jest.fn().mockResolvedValue({ id: WS_ID, name: 'Updated' }),
+            createForUser: jest
+              .fn()
+              .mockResolvedValue({ id: WS_ID, name: 'Test WS' }),
+            getWorkspace: jest
+              .fn()
+              .mockResolvedValue({ id: WS_ID, name: 'Test WS' }),
+            updateWorkspace: jest
+              .fn()
+              .mockResolvedValue({ id: WS_ID, name: 'Updated' }),
             deleteWorkspace: jest.fn().mockResolvedValue(undefined),
             notifyPairingStarted: jest.fn().mockResolvedValue(undefined),
             recentActivity: jest.fn().mockResolvedValue([]),
@@ -58,15 +64,28 @@ describe('Workspace flow (integration)', () => {
         },
         {
           provide: WorkspaceBootstrapService,
-          useValue: { bootstrapDemo: jest.fn().mockResolvedValue({ id: WS_ID }), seedDemoForMember: jest.fn().mockResolvedValue(undefined) },
+          useValue: {
+            bootstrapDemo: jest.fn().mockResolvedValue({ id: WS_ID }),
+            seedDemoForMember: jest.fn().mockResolvedValue(undefined),
+          },
         },
         {
           provide: WorkspaceMembersService,
-          useValue: { listMembers: jest.fn().mockResolvedValue([]), updateMemberRole: jest.fn(), removeMember: jest.fn() },
+          useValue: {
+            listMembers: jest.fn().mockResolvedValue([]),
+            updateMemberRole: jest.fn(),
+            removeMember: jest.fn(),
+          },
         },
         {
           provide: WorkspaceInvitesService,
-          useValue: { inviteMember: jest.fn(), listInvitations: jest.fn().mockResolvedValue([]), cancelInvitation: jest.fn(), resendInvitation: jest.fn(), acceptInvitation: jest.fn() },
+          useValue: {
+            inviteMember: jest.fn(),
+            listInvitations: jest.fn().mockResolvedValue([]),
+            cancelInvitation: jest.fn(),
+            resendInvitation: jest.fn(),
+            acceptInvitation: jest.fn(),
+          },
         },
         {
           provide: WorkspaceAccountsService,
@@ -82,14 +101,23 @@ describe('Workspace flow (integration)', () => {
         {
           provide: PairingService,
           useValue: {
-            startPairing: jest.fn().mockResolvedValue({ pairingCode: '123456' }),
-            completePairing: jest.fn().mockResolvedValue({ screenId: 'screen-1' }),
+            startPairing: jest
+              .fn()
+              .mockResolvedValue({ pairingCode: '123456' }),
+            completePairing: jest
+              .fn()
+              .mockResolvedValue({ screenId: 'screen-1' }),
             claimSession: jest.fn().mockResolvedValue({ screenId: 'screen-1' }),
           },
         },
         {
           provide: RedisService,
-          useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn(), ping: jest.fn() },
+          useValue: {
+            get: jest.fn(),
+            set: jest.fn(),
+            del: jest.fn(),
+            ping: jest.fn(),
+          },
         },
         {
           provide: PrismaService,

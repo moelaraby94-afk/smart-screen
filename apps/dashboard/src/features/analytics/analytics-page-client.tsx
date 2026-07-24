@@ -12,7 +12,6 @@ import {
   Film,
   Download,
   AlertCircle,
-  RefreshCw,
   MapPin,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -93,7 +92,6 @@ export function AnalyticsPageClient() {
   }, [workspaces, workspaceId]);
 
   const load = useCallback(async () => {
-    if (!workspaceId) return;
     setLoading(true);
     setError(false);
     try {

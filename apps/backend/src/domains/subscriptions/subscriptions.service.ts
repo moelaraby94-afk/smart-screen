@@ -1,16 +1,6 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  Prisma,
-  SubscriptionPlan,
-  SubscriptionStatus,
-  UserRole,
-} from '@prisma/client';
+import { Prisma, SubscriptionPlan, SubscriptionStatus } from '@prisma/client';
 import { DomainException } from '../../common/errors/domain.exception';
 import { ErrorCode } from '../../common/errors/error-codes';
 import { PrismaService } from '../../common/prisma/prisma.service';

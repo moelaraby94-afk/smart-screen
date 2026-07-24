@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
+import { useBranchFilter } from '@/lib/use-branch-filter';
 import { useTranslations, useLocale } from 'next-intl';
-import { Plus, Search, ListVideo, AlertCircle, RotateCcw } from 'lucide-react';
+import { Plus, Search, ListVideo, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +25,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { apiFetch } from '@/features/auth/session';
 import { useWorkspace } from '@/features/workspace/workspace-context';
+import { BranchFilterDropdown } from '@/components/branch-filter-dropdown';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import { readPageItems } from '@/features/api/page';
 import {
@@ -43,9 +45,10 @@ export function PlaylistListClient() {
   const t = useTranslations('playlistStudioClient');
   const tDetail = useTranslations('playlistDetail');
   const locale = useLocale();
-  const { workspaceId, workspaces, bumpWorkspaceDataEpoch } = useWorkspace();
+  const { workspaces, bumpWorkspaceDataEpoch } = useWorkspace();
   const { toastResponseError } = useApiErrorToast();
   const router = useRouter();
+  const { branchId: branchFilter, setBranchId: setBranchFilter } = useBranchFilter();
 
   const [playlists, setPlaylists] = useState<PlaylistSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,20 +66,16 @@ export function PlaylistListClient() {
   const [previewLoading, setPreviewLoading] = useState(false);
 
   const canEdit = useMemo(() => {
-    const ws = workspaces.find((w) => w.id === workspaceId);
+    if (!branchFilter) return false;
+    const ws = workspaces.find((w) => w.id === branchFilter);
     return ws && (ws.role === 'OWNER' || ws.role === 'ADMIN' || ws.role === 'EDITOR');
-  }, [workspaces, workspaceId]);
+  }, [workspaces, branchFilter]);
 
   const loadPlaylists = useCallback(async () => {
-    if (!workspaceId) {
-      setPlaylists([]);
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     setLoadError(false);
     try {
-      const res = await apiFetchPlaylists(workspaceId);
+      const res = await apiFetchPlaylists(branchFilter ?? undefined);
       if (res.ok) {
         setPlaylists(await readPageItems<PlaylistSummary>(res));
       } else {
@@ -88,7 +87,7 @@ export function PlaylistListClient() {
       setLoadError(true);
     }
     setLoading(false);
-  }, [workspaceId]);
+  }, [branchFilter]);
 
   useEffect(() => {
     void loadPlaylists();
@@ -138,8 +137,8 @@ export function PlaylistListClient() {
   }, [playlists, debouncedSearch, statusFilter, expiryFilter, sortBy]);
 
   const handleCreate = async (data: { name: string }) => {
-    if (!workspaceId) return;
-    const res = await apiCreatePlaylist(workspaceId, data.name);
+    if (!branchFilter) return;
+    const res = await apiCreatePlaylist(branchFilter, data.name);
     if (!res.ok) {
       toast.error(t('couldNotCreatePlaylist'));
       return;
@@ -152,9 +151,9 @@ export function PlaylistListClient() {
   };
 
   const handleDuplicate = async (id: string) => {
-    if (!workspaceId) return;
+    if (!branchFilter) return;
     try {
-      const res = await apiFetch(`/playlists/${id}/duplicate?workspaceId=${encodeURIComponent(workspaceId)}`, {
+      const res = await apiFetch(`/playlists/${id}/duplicate?workspaceId=${encodeURIComponent(branchFilter)}`, {
         method: 'POST',
       });
       if (!res.ok) {
@@ -170,11 +169,11 @@ export function PlaylistListClient() {
   };
 
   const handleDelete = async () => {
-    if (!deleteTarget || !workspaceId) return;
+    if (!deleteTarget || !branchFilter) return;
     setDeleting(true);
     try {
       const res = await apiFetch(
-        `/playlists/${deleteTarget.id}?workspaceId=${encodeURIComponent(workspaceId)}&force=true`,
+        `/playlists/${deleteTarget.id}?workspaceId=${encodeURIComponent(branchFilter)}&force=true`,
         { method: 'DELETE' },
       );
       if (!res.ok) {
@@ -192,10 +191,10 @@ export function PlaylistListClient() {
   };
 
   const openPreview = async (playlist: PlaylistSummary) => {
-    if (!workspaceId) return;
+    if (!branchFilter) return;
     setPreviewLoading(true);
     try {
-      const res = await apiFetch(`/playlists/${playlist.id}?workspaceId=${encodeURIComponent(workspaceId)}`);
+      const res = await apiFetch(`/playlists/${playlist.id}?workspaceId=${encodeURIComponent(branchFilter)}`);
       if (res.ok) {
         const data = await res.json();
         const rows: Row[] = (data.items ?? []).map((item: { id: string; kind: string; durationSec: number; media?: { id: string; publicUrl: string; mimeType: string; originalName: string } | null; canvas?: { id: string; name: string; width?: number; height?: number } | null }, i: number) => {
@@ -237,9 +236,9 @@ export function PlaylistListClient() {
   const openDeleteDialog = async (playlist: PlaylistSummary) => {
     setDeleteTarget(playlist);
     setScheduleCount(0);
-    if (!workspaceId) return;
+    if (!branchFilter) return;
     try {
-      const res = await apiFetch(`/schedules?workspaceId=${encodeURIComponent(workspaceId)}&playlistId=${encodeURIComponent(playlist.id)}`);
+      const res = await apiFetch(`/schedules?workspaceId=${encodeURIComponent(branchFilter)}&playlistId=${encodeURIComponent(playlist.id)}`);
       if (res.ok) {
         const data = await res.json();
         const items = Array.isArray(data) ? data : data.items;
@@ -254,6 +253,9 @@ export function PlaylistListClient() {
     <div className="flex flex-1 flex-col gap-4" role="region" aria-label={t('pageTitle')}>
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
+        {workspaces.length > 1 && (
+          <BranchFilterDropdown value={branchFilter} onChange={setBranchFilter} />
+        )}
         <div className="relative min-w-[200px] flex-1">
           <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input

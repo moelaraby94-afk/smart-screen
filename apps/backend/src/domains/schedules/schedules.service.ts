@@ -27,8 +27,23 @@ export class SchedulesService {
     private readonly playlists: PlaylistsService,
   ) {}
 
-  async list(workspaceId: string, query: PaginationQueryDto) {
-    const where = { workspaceId };
+  async list(
+    workspaceId: string | undefined,
+    userId: string | undefined,
+    query: PaginationQueryDto,
+  ) {
+    let workspaceFilter: { workspaceId?: string | { in: string[] } } = {};
+    if (workspaceId) {
+      workspaceFilter = { workspaceId };
+    } else if (userId) {
+      const memberships = await this.prisma.workspaceMember.findMany({
+        where: { userId },
+        select: { workspaceId: true },
+      });
+      const wsIds = memberships.map((m) => m.workspaceId);
+      workspaceFilter = wsIds.length > 0 ? { workspaceId: { in: wsIds } } : {};
+    }
+    const where = workspaceFilter;
     const [items, total] = await Promise.all([
       this.prisma.schedule.findMany({
         where,
@@ -170,7 +185,9 @@ export class SchedulesService {
           : {}),
         ...(dto.priority !== undefined ? { priority: dto.priority } : {}),
         ...(dto.enabled !== undefined ? { enabled: dto.enabled } : {}),
-        ...(dto.excludeHolidays !== undefined ? { excludeHolidays: dto.excludeHolidays } : {}),
+        ...(dto.excludeHolidays !== undefined
+          ? { excludeHolidays: dto.excludeHolidays }
+          : {}),
       },
       include: {
         playlist: { select: { id: true, name: true } },
@@ -218,8 +235,13 @@ export class SchedulesService {
     const minutes = hh * 60 + mm;
     const dayName = formatInTimeZone(targetDate, tz, 'EEEE', { locale: enUS });
     const dowMap: Record<string, number> = {
-      Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3,
-      Thursday: 4, Friday: 5, Saturday: 6,
+      Sunday: 0,
+      Monday: 1,
+      Tuesday: 2,
+      Wednesday: 3,
+      Thursday: 4,
+      Friday: 5,
+      Saturday: 6,
     };
     const dow = dowMap[dayName] ?? 0;
     const dom = parseInt(formatInTimeZone(targetDate, tz, 'd'), 10) || 1;

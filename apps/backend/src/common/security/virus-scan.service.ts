@@ -60,7 +60,9 @@ export class VirusScanService {
         socket.on('close', () => {
           const response = Buffer.concat(chunks).toString('utf-8').trim();
           const clean = response.includes('OK');
-          const threatName = clean ? undefined : response.replace('stream: ', '');
+          const threatName = clean
+            ? undefined
+            : response.replace('stream: ', '');
           resolve({
             clean,
             threatName: clean ? undefined : threatName,

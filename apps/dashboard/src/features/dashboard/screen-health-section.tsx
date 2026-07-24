@@ -51,7 +51,13 @@ export function ScreenHealthSection({ screenStatus, totalScreens }: Props = {}) 
       return;
     }
     if (!workspaceId) {
-      setData(null);
+      const res = await apiFetch('/screens/analytics');
+      if (res.ok) {
+        setData(await res.json());
+      } else {
+        setData(null);
+        setError(true);
+      }
       setLoading(false);
       return;
     }

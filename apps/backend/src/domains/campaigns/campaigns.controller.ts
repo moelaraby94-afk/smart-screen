@@ -30,8 +30,8 @@ export class CampaignsController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get()
-  list(@Query() query: ListCampaignsDto) {
-    return this.campaignsService.list(query.workspaceId, query);
+  list(@Query() query: ListCampaignsDto, @CurrentUser() user: JwtUser) {
+    return this.campaignsService.list(query.workspaceId, user.sub, query);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)

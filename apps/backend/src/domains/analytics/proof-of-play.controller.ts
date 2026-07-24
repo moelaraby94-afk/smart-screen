@@ -2,9 +2,11 @@ import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/auth/roles.guard';
 import { Roles } from '../../common/auth/roles.decorator';
-import { CurrentUser, type JwtUser } from '../../common/auth/current-user.decorator';
 import { UserRole } from '@prisma/client';
-import { ProofOfPlayService, type RecordProofOfPlayInput } from './proof-of-play.service';
+import {
+  ProofOfPlayService,
+  type RecordProofOfPlayInput,
+} from './proof-of-play.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller({ path: ['analytics'] })

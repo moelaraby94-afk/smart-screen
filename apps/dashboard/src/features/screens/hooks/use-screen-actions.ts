@@ -28,9 +28,10 @@ export function useScreenActions({
   const t = useTranslations('screensClient');
 
   const assignPlaybackPlaylist = useCallback(
-    async (screenId: string, playlistId: string | null, playlistName?: string | null) => {
-      if (!workspaceId) return;
-      const res = await apiUpdateScreen(workspaceId, screenId, { activePlaylistId: playlistId });
+    async (screenId: string, playlistId: string | null, playlistName?: string | null, wsId?: string) => {
+      const ws = wsId ?? workspaceId;
+      if (!ws) return;
+      const res = await apiUpdateScreen(ws, screenId, { activePlaylistId: playlistId });
       if (!res.ok) {
         toast.error(t('playlistAssignFailed'));
         return;
@@ -57,9 +58,10 @@ export function useScreenActions({
   );
 
   const onDelete = useCallback(
-    async (id: string) => {
-      if (!workspaceId) return;
-      const response = await apiDeleteScreen(workspaceId, id);
+    async (id: string, wsId?: string) => {
+      const ws = wsId ?? workspaceId;
+      if (!ws) return;
+      const response = await apiDeleteScreen(ws, id);
       if (!response.ok) {
         toast.error(t('deleteFailed'));
         return;
@@ -72,9 +74,10 @@ export function useScreenActions({
   );
 
   const sendRemoteCommand = useCallback(
-    async (screenId: string, command: RemoteCommand) => {
-      if (!workspaceId) return;
-      const response = await apiSendRemoteCommand(workspaceId, screenId, command);
+    async (screenId: string, command: RemoteCommand, wsId?: string) => {
+      const ws = wsId ?? workspaceId;
+      if (!ws) return;
+      const response = await apiSendRemoteCommand(ws, screenId, command);
       if (!response.ok) {
         toast.error(t('remoteFailed'));
         return;
@@ -92,9 +95,10 @@ export function useScreenActions({
   );
 
   const updateScreenInline = useCallback(
-    async (screenId: string, data: ScreenUpdateInput): Promise<boolean> => {
-      if (!workspaceId) return false;
-      const res = await apiUpdateScreen(workspaceId, screenId, data);
+    async (screenId: string, data: ScreenUpdateInput, wsId?: string): Promise<boolean> => {
+      const ws = wsId ?? workspaceId;
+      if (!ws) return false;
+      const res = await apiUpdateScreen(ws, screenId, data);
       if (!res.ok) return false;
       await reload();
       bumpWorkspaceDataEpoch();

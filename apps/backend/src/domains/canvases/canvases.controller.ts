@@ -32,8 +32,8 @@ export class CanvasesController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get()
-  list(@Query() query: ListCanvasesDto) {
-    return this.canvasesService.list(query.workspaceId, query);
+  list(@Query() query: ListCanvasesDto, @CurrentUser() user: JwtUser) {
+    return this.canvasesService.list(query.workspaceId, user.sub, query);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)

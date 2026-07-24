@@ -65,7 +65,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
   );
 
   // ── State ──────────────────────────────────────────────
-  const [playlistId, setPlaylistId] = useState<string>(initialPlaylistId ?? '');
+  const [playlistId] = useState<string>(initialPlaylistId ?? '');
   const [rows, setRows] = useState<Row[]>([]);
   const [selectedZonePreset, setSelectedZonePreset] = useState<ZonePreset | null>(null);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>('full');
@@ -123,7 +123,7 @@ export function PlaylistStudioClient({ initialPlaylistId }: { initialPlaylistId?
   const latestNameRef = useRef<string>('');
 
   const {
-    library, canvasLibrary, playlists, loading, detailError,
+    library, canvasLibrary, playlists, detailError,
     setPlaylists, loadPlaylists, loadLibrary, loadPlaylistDetail,
   } = usePlaylistData(
     workspaceId, filterWorkspaceId, filterGroupId,

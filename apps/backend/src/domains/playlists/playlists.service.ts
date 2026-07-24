@@ -23,7 +23,14 @@ import { CanvasesService } from '../canvases/canvases.service';
 
 import { SchedulingService } from '../schedules/scheduling.service';
 
-import type { Playlist, PlaylistItem, Media, Canvas, ScreenOrientation, RenderMode } from '@prisma/client';
+import type {
+  Playlist,
+  PlaylistItem,
+  Media,
+  Canvas,
+  ScreenOrientation,
+  RenderMode,
+} from '@prisma/client';
 
 import type { ReplacePlaylistItemsDto } from './dto/replace-playlist-items.dto';
 import type { UpdatePlaylistDto } from './dto/update-playlist.dto';
@@ -737,7 +744,10 @@ export class PlaylistsService {
     }
   }
 
-  async emitForPlaylist(playlistId: string, visited?: Set<string>): Promise<void> {
+  async emitForPlaylist(
+    playlistId: string,
+    visited?: Set<string>,
+  ): Promise<void> {
     const seen = visited ?? new Set<string>();
     if (seen.has(playlistId)) return;
     seen.add(playlistId);
@@ -792,10 +802,8 @@ export class PlaylistsService {
       await this.emitForPlaylist(parentId, seen);
     }
 
-    await mapWithConcurrency(
-      [...ids],
-      EMIT_BATCH_SIZE,
-      (id) => this.emitPlaylistForScreen(id),
+    await mapWithConcurrency([...ids], EMIT_BATCH_SIZE, (id) =>
+      this.emitPlaylistForScreen(id),
     );
   }
 

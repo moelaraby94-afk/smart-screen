@@ -1,5 +1,9 @@
 import { toMediaResponse } from '../media/media.mapper';
-import { isVideoMime, extractVideoMetadata, type VideoMetadata } from '../media/video-metadata';
+import {
+  isVideoMime,
+  extractVideoMetadata,
+  type VideoMetadata,
+} from '../media/video-metadata';
 import type { IStorageService } from '../../common/storage/storage.interface';
 
 // ─── Helpers ─────────────────────────────────────────────────────────

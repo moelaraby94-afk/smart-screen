@@ -12,12 +12,15 @@ export class HolidayService {
     });
   }
 
-  async create(workspaceId: string, data: {
-    name: string;
-    date: Date;
-    endDate?: Date;
-    isRecurring?: boolean;
-  }) {
+  async create(
+    workspaceId: string,
+    data: {
+      name: string;
+      date: Date;
+      endDate?: Date;
+      isRecurring?: boolean;
+    },
+  ) {
     return this.prisma.holiday.create({
       data: {
         workspaceId,
@@ -34,19 +37,34 @@ export class HolidayService {
   }
 
   async isHoliday(workspaceId: string, date: Date): Promise<boolean> {
-    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const dateOnly = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+    );
     const holidays = await this.prisma.holiday.findMany({
       where: { workspaceId },
     });
     return holidays.some((h) => {
-      const hDate = new Date(h.date.getFullYear(), h.date.getMonth(), h.date.getDate());
+      const hDate = new Date(
+        h.date.getFullYear(),
+        h.date.getMonth(),
+        h.date.getDate(),
+      );
       if (h.isRecurring) {
-        if (hDate.getMonth() === dateOnly.getMonth() && hDate.getDate() === dateOnly.getDate()) {
+        if (
+          hDate.getMonth() === dateOnly.getMonth() &&
+          hDate.getDate() === dateOnly.getDate()
+        ) {
           return true;
         }
       } else {
         if (h.endDate) {
-          const hEnd = new Date(h.endDate.getFullYear(), h.endDate.getMonth(), h.endDate.getDate());
+          const hEnd = new Date(
+            h.endDate.getFullYear(),
+            h.endDate.getMonth(),
+            h.endDate.getDate(),
+          );
           return dateOnly >= hDate && dateOnly <= hEnd;
         }
         return hDate.getTime() === dateOnly.getTime();

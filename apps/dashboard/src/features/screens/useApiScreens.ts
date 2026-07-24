@@ -8,6 +8,7 @@ export type ScreenStatus = 'ONLINE' | 'OFFLINE' | 'MAINTENANCE';
 
 export type ScreenRow = {
   id: string;
+  workspaceId: string;
   name: string;
   serialNumber: string;
   location?: string | null;
@@ -64,14 +65,14 @@ export function useApiScreens(workspaceId: string | null, options?: ScreensOptio
   const playlistGroupId = options?.playlistGroupId;
 
   const params = new URLSearchParams();
+  params.set('limit', '500');
+  params.set('page', '1');
   if (workspaceId) {
     params.set('workspaceId', workspaceId);
-    params.set('limit', '500');
-    params.set('page', '1');
   }
   if (playlistGroupId) params.set('playlistGroupId', playlistGroupId);
 
-  const key = workspaceId ? `/screens?${params.toString()}` : null;
+  const key = `/screens?${params.toString()}`;
 
   const { data, isLoading, error, mutate } = useSWR(key, screensFetcher, {
     fallbackData: [] as ScreenRow[],

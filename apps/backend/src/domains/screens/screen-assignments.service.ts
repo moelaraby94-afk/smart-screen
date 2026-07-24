@@ -36,6 +36,11 @@ export class ScreenAssignmentsService {
     dto: { playlistId: string; orderIndex?: number },
   ) {
     await this.assertScreenInWorkspace(workspaceId, screenId);
+    const pl = await this.prisma.playlist.findFirst({
+      where: { id: dto.playlistId, workspaceId },
+      select: { id: true },
+    });
+    if (!pl) throw new BadRequestException('Playlist not found in workspace');
     const existing = await this.prisma.screenPlaylistAssignment.findUnique({
       where: { screenId_playlistId: { screenId, playlistId: dto.playlistId } },
     });

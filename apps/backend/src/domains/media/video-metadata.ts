@@ -5,6 +5,10 @@
  * and a warning is logged. The upload is never failed due to metadata extraction.
  */
 
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { writeFileSync, unlinkSync } from 'fs';
+
 export type VideoMetadata = {
   width: number | null;
   height: number | null;
@@ -50,38 +54,44 @@ export async function extractVideoMetadata(
   let tmpFile: string | null = null;
 
   try {
-    const ffprobePath = require('@ffprobe-installer/ffprobe').path;
+    const ffprobePath = (await import('@ffprobe-installer/ffprobe')).path;
     const ffmpeg = (await import('fluent-ffmpeg')).default;
     ffmpeg.setFfprobePath(ffprobePath);
 
-    const { tmpdir } = require('os');
-    const { join } = require('path');
-    const { writeFileSync } = require('fs');
-    tmpFile = join(tmpdir(), `ffprobe-${Date.now()}-${Math.random().toString(36).slice(2)}.bin`);
+    tmpFile = join(
+      tmpdir(),
+      `ffprobe-${Date.now()}-${Math.random().toString(36).slice(2)}.bin`,
+    );
     writeFileSync(tmpFile, buffer);
 
-    const metadata = await new Promise<import('fluent-ffmpeg').FfprobeData>((resolve, reject) => {
-      ffmpeg(tmpFile!).ffprobe((err, data) => {
-        if (err) reject(err);
-        else resolve(data);
-      });
-    });
+    const metadata = await new Promise<import('fluent-ffmpeg').FfprobeData>(
+      (resolve, reject) => {
+        ffmpeg(tmpFile!).ffprobe((err, data) => {
+          if (err) reject(err instanceof Error ? err : new Error(String(err)));
+          else resolve(data);
+        });
+      },
+    );
 
-    const videoStream = metadata.streams.find((s: import('fluent-ffmpeg').FfprobeStream) => s.codec_type === 'video');
+    const videoStream = metadata.streams.find(
+      (s: import('fluent-ffmpeg').FfprobeStream) => s.codec_type === 'video',
+    );
     if (!videoStream) return empty;
 
     // Parse rotation from side_data_list (display matrix, older ffprobe) or tags
     let rotation: number | null = null;
     if (videoStream.side_data_list) {
       for (const sd of videoStream.side_data_list) {
-        if (sd.rotation !== undefined) {
-          rotation = Math.abs(sd.rotation) % 360;
+        const sdRotation = (sd as { rotation?: number }).rotation;
+        if (sdRotation !== undefined) {
+          rotation = Math.abs(sdRotation) % 360;
           break;
         }
       }
     }
     if (rotation === null && videoStream.tags) {
-      const rotateTag = videoStream.tags.rotate;
+      const rotateTag = (videoStream.tags as { rotate?: string | number })
+        .rotate;
       if (rotateTag !== undefined) {
         rotation = parseInt(String(rotateTag), 10) || null;
       }
@@ -97,10 +107,16 @@ export async function extractVideoMetadata(
     return {
       width: videoStream.width ?? null,
       height: videoStream.height ?? null,
-      durationSec: metadata.format.duration ? parseFloat(String(metadata.format.duration)) : null,
+      durationSec: metadata.format.duration
+        ? parseFloat(String(metadata.format.duration))
+        : null,
       rotation,
       codec: videoStream.codec_name ?? null,
-      bitrate: videoStream.bit_rate ? parseInt(String(videoStream.bit_rate), 10) : (metadata.format.bit_rate ? parseInt(String(metadata.format.bit_rate), 10) : null),
+      bitrate: videoStream.bit_rate
+        ? parseInt(String(videoStream.bit_rate), 10)
+        : metadata.format.bit_rate
+          ? parseInt(String(metadata.format.bit_rate), 10)
+          : null,
       frameRate,
     };
   } catch (err) {
@@ -109,7 +125,11 @@ export async function extractVideoMetadata(
     return empty;
   } finally {
     if (tmpFile) {
-      try { require('fs').unlinkSync(tmpFile); } catch { /* ignore cleanup errors */ }
+      try {
+        unlinkSync(tmpFile);
+      } catch {
+        /* ignore cleanup errors */
+      }
     }
   }
 }

@@ -15,9 +15,15 @@ export class OnboardingEmailService {
     private readonly configHelper: ConfigHelper,
   ) {}
 
-  async sendWelcome(userId: string, email: string, fullName: string): Promise<void> {
+  async sendWelcome(
+    userId: string,
+    email: string,
+    fullName: string,
+  ): Promise<void> {
     if (!this.email.isConfigured()) {
-      this.logger.warn(`[welcome] Email not configured; would send to ${email}`);
+      this.logger.warn(
+        `[welcome] Email not configured; would send to ${email}`,
+      );
       return;
     }
     const base = this.configHelper.getFrontendBaseUrl();
@@ -35,7 +41,11 @@ export class OnboardingEmailService {
     for (const day of days) {
       const targetDate = new Date(now);
       targetDate.setDate(targetDate.getDate() - day);
-      const startOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+      const startOfDay = new Date(
+        targetDate.getFullYear(),
+        targetDate.getMonth(),
+        targetDate.getDate(),
+      );
       const endOfDay = new Date(startOfDay);
       endOfDay.setDate(endOfDay.getDate() + 1);
 
@@ -79,7 +89,9 @@ export class OnboardingEmailService {
           });
           this.logger.log(`Sent onboarding day ${day} email to ${user.email}`);
         } catch (err) {
-          this.logger.error(`Failed to send onboarding day ${day} to ${user.email}: ${err}`);
+          this.logger.error(
+            `Failed to send onboarding day ${day} to ${user.email}: ${err}`,
+          );
         }
       }
     }

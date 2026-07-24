@@ -21,7 +21,11 @@ import { join } from 'path';
 import { createHash, randomUUID } from 'crypto';
 import { MediaFoldersService } from './media-folders.service';
 import { toMediaResponse, type MediaResponse } from './media.mapper';
-import { extractVideoMetadata, isVideoMime, type VideoMetadata } from './video-metadata';
+import {
+  extractVideoMetadata,
+  isVideoMime,
+  type VideoMetadata,
+} from './video-metadata';
 
 const ALLOWED_MIME = new Set([
   'image/jpeg',

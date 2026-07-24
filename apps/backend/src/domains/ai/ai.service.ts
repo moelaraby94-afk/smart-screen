@@ -56,7 +56,7 @@ export class AiService {
       });
 
       if (!res.ok) {
-        const body = await res.text();
+        await res.text();
         return {
           content: `AI generation failed (${res.status}). ${this.fallbackResponse(input)}`,
           type: input.type,
@@ -64,7 +64,7 @@ export class AiService {
         };
       }
 
-      const data = await res.json() as {
+      const data = (await res.json()) as {
         choices: Array<{ message: { content: string } }>;
         model: string;
       };

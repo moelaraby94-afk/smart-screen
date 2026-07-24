@@ -49,7 +49,6 @@ export function useCampaigns(workspaceId: string | null): UseCampaignsReturn {
   const [mutatingId, setMutatingId] = useState<string | null>(null);
 
   const loadCampaigns = useCallback(async () => {
-    if (!workspaceId) return;
     setLoading(true);
     setError(false);
     try {

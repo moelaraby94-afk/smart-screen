@@ -38,7 +38,7 @@ export function BranchReviewSection({ playlists, workspaceId, onReviewed }: Prop
     onReviewed();
   };
 
-  const reject = async (_pl: BranchPlaylistRow) => {
+  const reject = async () => {
     toast.info(t('reviewRejected'));
     onReviewed();
   };
@@ -84,7 +84,7 @@ export function BranchReviewSection({ playlists, workspaceId, onReviewed }: Prop
               size="sm"
               variant="outline"
               className="rounded-lg"
-              onClick={() => void reject(pl)}
+              onClick={() => void reject()}
             >
               <X className="me-1 h-3.5 w-3.5" />
               {t('reviewReject')}

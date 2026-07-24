@@ -27,15 +27,12 @@ export function ActiveContentWidget() {
   const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
-    if (!workspaceId) {
-      setScreens([]);
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     setError(false);
     try {
-      const res = await apiFetch(`/screens?workspaceId=${encodeURIComponent(workspaceId)}&page=1&limit=10`);
+      const params = new URLSearchParams({ page: '1', limit: '10' });
+      if (workspaceId) params.set('workspaceId', workspaceId);
+      const res = await apiFetch(`/screens?${params.toString()}`);
       if (res.ok) {
         const json = await res.json();
         const items = Array.isArray(json) ? json : json.items;

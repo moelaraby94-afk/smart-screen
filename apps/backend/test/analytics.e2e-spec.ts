@@ -101,8 +101,9 @@ describe('Analytics API (e2e)', () => {
 
   describe('GET /api/v1/analytics/proof-of-play', () => {
     it('returns a proof-of-play report', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/api/v1/analytics/proof-of-play?workspaceId=ws-1');
+      const res = await request(app.getHttpServer()).get(
+        '/api/v1/analytics/proof-of-play?workspaceId=ws-1',
+      );
 
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty('items');

@@ -3,7 +3,6 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { AuthTokenService } from './auth-token.service';
 import { AuthCredentialsService } from './auth-credentials.service';
-import { AuthRegistrationService } from './auth-registration.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { SessionRevocationService } from '../../common/auth/session-revocation.service';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -182,7 +181,7 @@ describe('AuthTokenService — multi-session refresh tokens (P1-T1)', () => {
     });
 
     const sessionRevocation = {
-      revokeAllSessions: jest.fn(async (userId: string) => {
+      revokeAllSessions: jest.fn((userId: string) => {
         for (const [key, row] of fake.tokens) {
           if (row.userId === userId) fake.tokens.delete(key);
         }

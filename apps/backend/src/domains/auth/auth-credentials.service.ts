@@ -16,17 +16,12 @@ import { CryptoService } from '../../common/crypto/crypto.service';
 import { LoginLockoutService } from './login-lockout.service';
 import { AuthTokenService } from './auth-token.service';
 import { AuthRegistrationService } from './auth-registration.service';
-import {
-  passwordResetEmail,
-  registerOtpEmail,
-  welcomeEmail,
-} from '../email/email-templates';
+import { passwordResetEmail } from '../email/email-templates';
 import { LoginDto } from './dto/login.dto';
 import { LoginTwoFactorDto } from './dto/login-two-factor.dto';
 import { RegisterStartDto } from './dto/register-start.dto';
 import { RegisterVerifyDto } from './dto/register-verify.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import type { JwtAudience } from '../../common/auth/current-user.decorator';
 import type { LoginResult } from './auth.types';
 import { resolveAudience, validateAudience } from './auth.types';
 

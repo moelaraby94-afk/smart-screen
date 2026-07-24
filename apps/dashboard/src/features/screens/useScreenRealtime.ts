@@ -20,7 +20,7 @@ export function useScreenRealtime(
   const socket = useRealtimeSocket();
 
   useEffect(() => {
-    if (!socket || !workspaceId) return;
+    if (!socket) return;
 
     socket.on('screen:status', (payload: ScreenStatusPayload) => {
       setScreens((prev) =>

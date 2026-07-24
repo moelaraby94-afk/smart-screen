@@ -9,8 +9,10 @@ import {
 } from 'react';
 import { CalendarClock, Play, Plus, CalendarDays, Calendar, List, LayoutDashboard, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useBranchFilter } from '@/lib/use-branch-filter';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
+import { BranchFilterDropdown } from '@/components/branch-filter-dropdown';
 import { cn } from '@/lib/utils';
 import {
   Dialog,
@@ -77,7 +79,9 @@ export function SchedulesClient({
   initialScreenId?: string;
 }) {
   const t = useTranslations('schedules');
-  const { workspaceId, bumpWorkspaceDataEpoch, workspaces } = useWorkspace();
+  const { branchId: urlBranch, setBranchId: setUrlBranch } = useBranchFilter();
+  const { bumpWorkspaceDataEpoch, workspaces } = useWorkspace();
+  const workspaceId = urlBranch;
   const [schedules, setSchedules] = useState<ScheduleApi[]>([]);
   const [pairs, setPairs] = useState<Array<[string, string]>>([]);
   const [playlists, setPlaylists] = useState<PlaylistOpt[]>([]);
@@ -138,19 +142,23 @@ export function SchedulesClient({
   }, [pairs]);
 
   const load = useCallback(async () => {
-    if (!workspaceId) return;
     setLoading(true);
     setError(false);
     try {
       const [sRes, oData, pData, scData] = await Promise.all([
-        fetchSchedules(workspaceId, {
+        fetchSchedules(urlBranch, {
           screenId: filterScreenId || undefined,
           playlistId: filterPlaylistId || undefined,
         }),
-        fetchScheduleOverlaps(workspaceId),
-        fetchPlaylistOptions(workspaceId),
-        fetchScreens(workspaceId),
+        urlBranch ? fetchScheduleOverlaps(urlBranch) : Promise.resolve({ pairs: [] }),
+        urlBranch ? fetchPlaylistOptions(urlBranch) : Promise.resolve([]),
+        urlBranch ? fetchScreens(urlBranch) : Promise.resolve([]),
       ]);
+      if (!urlBranch) {
+        setPairs([]);
+        setPlaylists([]);
+        setScreens([]);
+      }
       if (!sRes.ok) {
         setError(true);
         setSchedules([]);
@@ -165,7 +173,7 @@ export function SchedulesClient({
     } finally {
       setLoading(false);
     }
-  }, [workspaceId, filterScreenId, filterPlaylistId]);
+  }, [urlBranch, filterScreenId, filterPlaylistId]);
 
   useEffect(() => {
     void load();
@@ -220,9 +228,12 @@ export function SchedulesClient({
     const d = dragRef.current;
     dragRef.current = null;
     setDragActive(false);
-    if (!d || !workspaceId) return;
+    if (!d) return;
+    const sched = schedules.find((s) => s.id === d.id);
+    const ws = workspaceId ?? sched?.workspaceId;
+    if (!ws) return;
     if (d.currentStart === d.origStart && d.currentEnd === d.origEnd) return;
-    const res = await apiUpdateSchedule(workspaceId, d.id, {
+    const res = await apiUpdateSchedule(ws, d.id, {
       startTime: d.currentStart,
       endTime: d.currentEnd,
     });
@@ -234,7 +245,7 @@ export function SchedulesClient({
     toast.success(t('saved'));
     bumpWorkspaceDataEpoch();
     await load();
-  }, [workspaceId, load, t, bumpWorkspaceDataEpoch]);
+  }, [workspaceId, schedules, load, t, bumpWorkspaceDataEpoch]);
 
   useEffect(() => {
     if (!dragActive) return;
@@ -253,11 +264,16 @@ export function SchedulesClient({
   const [overrideDuration, setOverrideDuration] = useState(480);
 
   const applyOverride = async () => {
-    if (!workspaceId || !overrideScreenId || !overridePlaylistId) {
+    if (!overrideScreenId || !overridePlaylistId) {
       toast.error(t('overrideNeed'));
       return;
     }
-    const res = await apiSetScreenOverride(workspaceId, overrideScreenId, {
+    const ws = workspaceId;
+    if (!ws) {
+      toast.error(t('overrideNeed'));
+      return;
+    }
+    const res = await apiSetScreenOverride(ws, overrideScreenId, {
       playlistId: overridePlaylistId,
       durationMinutes: overrideDuration,
     });
@@ -275,10 +291,12 @@ export function SchedulesClient({
   };
 
   const onDeleteSchedule = async () => {
-    if (!workspaceId || !deleteTarget) return;
+    if (!deleteTarget) return;
+    const ws = workspaceId ?? deleteTarget.workspaceId;
+    if (!ws) return;
     setDeleting(true);
     try {
-      const res = await apiDeleteSchedule(workspaceId, deleteTarget.id);
+      const res = await apiDeleteSchedule(ws, deleteTarget.id);
       if (res.ok) {
         toast.success(t('deleted'));
         bumpWorkspaceDataEpoch();
@@ -292,7 +310,7 @@ export function SchedulesClient({
     }
   };
 
-  if (!workspaceId) {
+  if (workspaces.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">{t('needWorkspace')}</p>
     );
@@ -312,6 +330,9 @@ export function SchedulesClient({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            {workspaces.length > 1 && (
+              <BranchFilterDropdown value={urlBranch} onChange={setUrlBranch} />
+            )}
             <div className="flex items-center rounded-lg border border-border bg-card p-0.5">
               <button
                 type="button"
@@ -371,7 +392,7 @@ export function SchedulesClient({
                 </DialogTrigger>
                 <CreateScheduleForm
                   locale={locale}
-                  workspaceId={workspaceId}
+                  workspaceId={workspaceId ?? ''}
                   playlists={playlists}
                   screens={screens}
                   existingSchedules={schedules}
@@ -571,7 +592,7 @@ export function SchedulesClient({
         <Dialog open={openEdit} onOpenChange={setOpenEdit}>
           <CreateScheduleForm
             locale={locale}
-            workspaceId={workspaceId}
+            workspaceId={workspaceId ?? ''}
             playlists={playlists}
             screens={screens}
             existingSchedules={schedules}

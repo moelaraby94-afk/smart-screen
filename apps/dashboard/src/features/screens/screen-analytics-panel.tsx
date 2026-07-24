@@ -14,7 +14,6 @@ export function ScreenAnalyticsPanel() {
   const [data, setData] = useState<ScreenAnalytics | null>(null);
 
   useEffect(() => {
-    if (!workspaceId) return;
     void (async () => {
       const result = await fetchScreenAnalytics(workspaceId);
       setData(result);

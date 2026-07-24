@@ -10,7 +10,8 @@ import { PaginationQueryDto } from '../../../common/pagination/pagination-query.
  */
 export class ListScreensDto extends PaginationQueryDto {
   @IsString()
-  workspaceId!: string;
+  @IsOptional()
+  workspaceId?: string;
 
   @IsEnum(ScreenStatus)
   @IsOptional()

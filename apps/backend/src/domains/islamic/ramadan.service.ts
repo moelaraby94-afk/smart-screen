@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { formatInTimeZone } from 'date-fns-tz';
+import type { RamadanConfig } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { RedisService } from '../../common/redis/redis.service';
 import { PrayerTimesService } from './prayer-times.service';
@@ -16,7 +17,7 @@ export class RamadanService {
     private readonly prayerTimes: PrayerTimesService,
   ) {}
 
-  async getConfig(workspaceId: string) {
+  async getConfig(workspaceId: string): Promise<RamadanConfig> {
     const cacheKey = `${this.CACHE_PREFIX}:${workspaceId}`;
     const client = this.redis.getClient();
 
@@ -24,7 +25,7 @@ export class RamadanService {
       try {
         const cached = await client.get(cacheKey);
         if (cached) {
-          return JSON.parse(cached);
+          return JSON.parse(cached) as RamadanConfig;
         }
       } catch (err) {
         this.logger.warn(

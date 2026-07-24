@@ -35,7 +35,6 @@ import {
   DeleteBranchDialog,
 } from '@/features/dashboard/home-dashboard-dialogs';
 import { AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { CardGridSkeleton } from '@/components/ui/skeleton-patterns';
 import { ErrorState } from '@/components/ui/error-state';
 import { UsageIndicator } from '@/components/usage-indicator';
@@ -48,7 +47,6 @@ export function ClientHomeDashboard() {
   const { toastResponseError } = useApiErrorToast();
   const {
     workspaces,
-    workspaceId,
     setWorkspaceId,
     isSuperAdmin,
     bumpWorkspaceDataEpoch,

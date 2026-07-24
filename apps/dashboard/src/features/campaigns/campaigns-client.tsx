@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Plus, Megaphone, MoreHorizontal, Eye, Pencil, Trash2, Send, Check, X, Play, Pause, Square, RotateCcw } from 'lucide-react';
+import { useBranchFilter } from '@/lib/use-branch-filter';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
@@ -33,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useWorkspace } from '@/features/workspace/workspace-context';
+import { BranchFilterDropdown } from '@/components/branch-filter-dropdown';
 import { fetchScreens, fetchPlaylistOptions } from '@/features/screens/api/screens-api';
 import { useCampaigns } from './hooks/use-campaigns';
 import { CampaignStatusBadge } from './components/campaign-status-badge';
@@ -47,7 +49,8 @@ type ScreenOpt = { id: string; name: string };
 
 export function CampaignsClient() {
   const t = useTranslations('campaigns');
-  const { workspaceId, workspaces } = useWorkspace();
+  const { branchId: urlBranch, setBranchId: setUrlBranch } = useBranchFilter();
+  const { workspaces } = useWorkspace();
   const {
     campaigns,
     loading,
@@ -65,7 +68,7 @@ export function CampaignsClient() {
     endCampaign,
     fetchCampaignDetail,
     mutatingId,
-  } = useCampaigns(workspaceId);
+  } = useCampaigns(urlBranch);
 
   const [playlists, setPlaylists] = useState<PlaylistOpt[]>([]);
   const [screens, setScreens] = useState<ScreenOpt[]>([]);
@@ -80,18 +83,21 @@ export function CampaignsClient() {
   const [endTargetId, setEndTargetId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const currentWs = workspaces.find((w) => w.id === workspaceId);
+  const currentWs = workspaces.find((w) => w.id === urlBranch);
   const role = (currentWs?.role ?? 'VIEWER') as Role;
 
   useEffect(() => {
-    if (workspaceId) {
-      void loadCampaigns();
-      void fetchPlaylistOptions(workspaceId).then(setPlaylists);
-      void fetchScreens(workspaceId).then((s) =>
+    void loadCampaigns();
+    if (urlBranch) {
+      void fetchPlaylistOptions(urlBranch).then(setPlaylists);
+      void fetchScreens(urlBranch).then((s) =>
         setScreens(s.map((scr) => ({ id: scr.id, name: scr.name }))),
       );
+    } else {
+      setPlaylists([]);
+      setScreens([]);
     }
-  }, [workspaceId, loadCampaigns]);
+  }, [urlBranch, loadCampaigns]);
 
   const handleCreate = useCallback(
     async (data: CampaignFormData) => {
@@ -239,7 +245,11 @@ export function CampaignsClient() {
 
   return (
     <div className="space-y-6">
-      {role !== 'VIEWER' && (
+      <div className="flex items-center justify-between gap-2">
+        {workspaces.length > 1 && (
+          <BranchFilterDropdown value={urlBranch} onChange={setUrlBranch} />
+        )}
+        {role !== 'VIEWER' && (
         <div className="flex items-center justify-end">
           <Button
             onClick={() => {
@@ -252,6 +262,8 @@ export function CampaignsClient() {
           </Button>
         </div>
       )}
+
+      </div>
 
       {campaigns.length === 0 ? (
         <EmptyState

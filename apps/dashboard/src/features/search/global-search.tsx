@@ -93,13 +93,12 @@ export function GlobalSearch() {
   }, [open]);
 
   const loadAll = useCallback(async () => {
-    if (!workspaceId) return;
     setLoading(true);
     try {
       const [scr, med, plsRes] = await Promise.all([
         fetchScreens(workspaceId),
-        fetchMedia(workspaceId),
-        fetchPlaylists(workspaceId),
+        fetchMedia(workspaceId ?? undefined),
+        fetchPlaylists(workspaceId ?? undefined),
       ]);
       setScreens(scr);
       setMedia(med);

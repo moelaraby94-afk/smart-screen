@@ -1,5 +1,8 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
+import { RolesGuard } from '../../common/auth/roles.guard';
+import { Roles } from '../../common/auth/roles.decorator';
 import {
   CurrentUser,
   type JwtUser,
@@ -12,7 +15,8 @@ import {
 } from '../../common/dto/response-dtos';
 
 @Controller({ path: [...CUSTOMER_ROUTES.AUDIT_LOG] })
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
 export class AuditLogController {
   constructor(private readonly auditLogService: AuditLogService) {}
 

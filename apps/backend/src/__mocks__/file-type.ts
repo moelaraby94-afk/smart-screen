@@ -10,15 +10,24 @@ function matches(buf: Buffer, magic: number[], offset = 0): boolean {
   return magic.every((b, i) => buf[offset + i] === b);
 }
 
-export async function fileTypeFromBuffer(
+export function fileTypeFromBuffer(
   buf: Buffer,
 ): Promise<{ ext: string; mime: string } | null> {
-  if (matches(buf, PNG_MAGIC)) return { ext: 'png', mime: 'image/png' };
-  if (matches(buf, JPEG_MAGIC)) return { ext: 'jpg', mime: 'image/jpeg' };
-  if (matches(buf, GIF_MAGIC)) return { ext: 'gif', mime: 'image/gif' };
-  if (matches(buf, WEBP_MAGIC, 0) && buf.length >= 12 && matches(buf, [0x57, 0x45, 0x42, 0x50], 8))
-    return { ext: 'webp', mime: 'image/webp' };
-  if (buf.length >= 12 && matches(buf, MP4_MAGIC, 4)) return { ext: 'mp4', mime: 'video/mp4' };
-  if (matches(buf, WEBM_MAGIC)) return { ext: 'webm', mime: 'video/webm' };
-  return null;
+  if (matches(buf, PNG_MAGIC))
+    return Promise.resolve({ ext: 'png', mime: 'image/png' });
+  if (matches(buf, JPEG_MAGIC))
+    return Promise.resolve({ ext: 'jpg', mime: 'image/jpeg' });
+  if (matches(buf, GIF_MAGIC))
+    return Promise.resolve({ ext: 'gif', mime: 'image/gif' });
+  if (
+    matches(buf, WEBP_MAGIC, 0) &&
+    buf.length >= 12 &&
+    matches(buf, [0x57, 0x45, 0x42, 0x50], 8)
+  )
+    return Promise.resolve({ ext: 'webp', mime: 'image/webp' });
+  if (buf.length >= 12 && matches(buf, MP4_MAGIC, 4))
+    return Promise.resolve({ ext: 'mp4', mime: 'video/mp4' });
+  if (matches(buf, WEBM_MAGIC))
+    return Promise.resolve({ ext: 'webm', mime: 'video/webm' });
+  return Promise.resolve(null);
 }

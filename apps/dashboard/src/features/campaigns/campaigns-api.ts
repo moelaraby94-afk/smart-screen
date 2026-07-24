@@ -1,11 +1,11 @@
 import { apiFetch } from '@/features/auth/session';
 
 export async function fetchCampaigns(
-  workspaceId: string,
+  workspaceId?: string | null,
 ): Promise<Response> {
-  return apiFetch(
-    `/campaigns?workspaceId=${encodeURIComponent(workspaceId)}`,
-  );
+  const params = new URLSearchParams();
+  if (workspaceId) params.set('workspaceId', workspaceId);
+  return apiFetch(`/campaigns?${params.toString()}`);
 }
 
 export async function fetchCampaign(

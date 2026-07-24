@@ -1,12 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Route } from 'next';
 import { useLocale, useTranslations } from 'next-intl';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useBranchFilter } from '@/lib/use-branch-filter';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
-import { Upload, Search, Info as InfoIcon, ListPlus, AlertCircle, RotateCcw, X, Loader2 } from 'lucide-react';
+import { Upload, Search, Info as InfoIcon, ListPlus, AlertCircle, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -33,7 +32,6 @@ import { isApiError, readApiError } from '@/features/api/api-error';
 import { apiFetch } from '@/features/auth/session';
 import { useApiErrorToast } from '@/features/api/use-api-error-toast';
 import {
-  fetchMedia,
   fetchMediaPage,
   fetchMediaFolders,
   uploadMedia,
@@ -45,6 +43,7 @@ import {
   seedDemoContent,
 } from '@/features/media/api/media-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
+import { BranchFilterDropdown } from '@/components/branch-filter-dropdown';
 import { fetchCurrentSubscription } from '@/features/billing/billing-api';
 import { formatBytesLocale } from '@/features/dashboard/home-dashboard-types';
 import { cn } from '@/lib/utils';
@@ -73,15 +72,13 @@ export function MediaLibraryClient() {
   const locale = useLocale();
   const t = useTranslations('mediaClient');
   const { toastApiError } = useApiErrorToast();
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const scope = searchParams.get('scope') === 'all' ? 'all' : 'branch';
-  const { workspaceId, workspaces, bumpWorkspaceDataEpoch } = useWorkspace();
+  const { branchId: branchFilter, setBranchId: setBranchFilter } = useBranchFilter();
+  const { workspaces, bumpWorkspaceDataEpoch } = useWorkspace();
   const canEdit = useMemo(() => {
-    const ws = workspaces.find((w) => w.id === workspaceId);
+    if (!branchFilter) return false;
+    const ws = workspaces.find((w) => w.id === branchFilter);
     return Boolean(ws && (ws.role === 'OWNER' || ws.role === 'ADMIN' || ws.role === 'EDITOR'));
-  }, [workspaces, workspaceId]);
+  }, [workspaces, branchFilter]);
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState(false);
@@ -113,54 +110,17 @@ export function MediaLibraryClient() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const autoSeedAttemptedRef = useRef(false);
 
-  const setScope = useCallback(
-    (next: 'branch' | 'all') => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (next === 'all') params.set('scope', 'all');
-      else params.delete('scope');
-      const q = params.toString();
-      router.push((q ? `${pathname}?${q}` : pathname) as Route);
-    },
-    [pathname, router, searchParams],
-  );
-
   const load = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
     setMediaPage(1);
-    if (scope === 'all') {
-      if (workspaces.length === 0) {
-        setItems([]);
-        setLoading(false);
-        return;
-      }
-      try {
-        const results = await Promise.all(
-          workspaces.map(async (w) => {
-            const data = await fetchMedia(w.id);
-            return data.map((m) => ({
-              ...m,
-              workspaceId: w.id,
-              workspaceName: w.name,
-            }));
-          }),
-        );
-        setItems(results.flat());
-      } catch {
-        setLoadError(true);
-        setItems([]);
-      }
-      setLoading(false);
-      return;
-    }
-    if (!workspaceId) {
-      setItems([]);
-      setLoading(false);
-      return;
-    }
     try {
-      const data = await fetchMediaPage(workspaceId, 1);
-      setItems(data.items);
+      const data = await fetchMediaPage(branchFilter ?? undefined, 1);
+      const itemsWithName = data.items.map((m) => ({
+        ...m,
+        workspaceName: m.workspaceName ?? workspaces.find((w) => w.id === m.workspaceId)?.name,
+      }));
+      setItems(itemsWithName);
       setMediaTotalPages(data.totalPages);
       setMediaTotal(data.total);
     } catch {
@@ -168,15 +128,15 @@ export function MediaLibraryClient() {
       setItems([]);
     }
     setLoading(false);
-  }, [workspaceId, scope, workspaces]);
+  }, [branchFilter, workspaces]);
 
   const loadMore = useCallback(async () => {
-    if (!workspaceId || scope === 'all') return;
+    if (!branchFilter) return;
     const nextPage = mediaPage + 1;
     if (nextPage > mediaTotalPages) return;
     setLoadingMore(true);
     try {
-      const data = await fetchMediaPage(workspaceId, nextPage);
+      const data = await fetchMediaPage(branchFilter, nextPage);
       setItems((prev) => [...prev, ...data.items]);
       setMediaPage(nextPage);
       setMediaTotalPages(data.totalPages);
@@ -184,38 +144,32 @@ export function MediaLibraryClient() {
     } finally {
       setLoadingMore(false);
     }
-  }, [workspaceId, scope, mediaPage, mediaTotalPages]);
+  }, [branchFilter, mediaPage, mediaTotalPages]);
 
   const loadFolders = useCallback(async () => {
-    if (!workspaceId || scope === 'all') {
+    if (!branchFilter) {
       setFolders([]);
       return;
     }
-    const rows = await fetchMediaFolders(workspaceId);
+    const rows = await fetchMediaFolders(branchFilter);
     setFolders(rows);
-  }, [workspaceId, scope]);
+  }, [branchFilter]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  useEffect(() => {
-    if (scope !== 'branch') return;
-    if (workspaceId) return;
-    if (workspaces.length === 0) return;
-    setScope('all');
-  }, [scope, workspaceId, workspaces.length, setScope]);
 
   useEffect(() => {
     void loadFolders();
   }, [loadFolders]);
 
   useEffect(() => {
-    if (scope !== 'branch' || !workspaceId || loading || pending || items.length > 0) return;
+    if (!branchFilter || loading || pending || items.length > 0) return;
     if (autoSeedAttemptedRef.current) return;
     autoSeedAttemptedRef.current = true;
     void (async () => {
-      const res = await seedDemoContent(workspaceId);
+      const res = await seedDemoContent(branchFilter);
       if (res.ok) {
         bumpWorkspaceDataEpoch();
         await load();
@@ -223,23 +177,23 @@ export function MediaLibraryClient() {
         autoSeedAttemptedRef.current = false;
       }
     })();
-  }, [scope, workspaceId, loading, pending, items.length, load, bumpWorkspaceDataEpoch]);
+  }, [branchFilter, loading, pending, items.length, load, bumpWorkspaceDataEpoch]);
 
   const uploadFiles = useCallback(
     async (fileList: FileList | File[]) => {
       const files = Array.from(fileList);
-      if (scope === 'all') {
+      if (!branchFilter) {
         toast.error(t('uploadRequiresBranch'));
         return;
       }
-      if (!workspaceId || files.length === 0) return;
+      if (files.length === 0) return;
       const folderId = selectedFolderId !== 'all' ? selectedFolderId : undefined;
 
       // Pre-upload storage check (UJ-02)
       const totalUploadBytes = files.reduce((sum, f) => sum + f.size, 0);
       const currentUsed = items.reduce((sum, m) => sum + m.sizeBytes, 0);
       try {
-        const subRes = await fetchCurrentSubscription(workspaceId);
+        const subRes = await fetchCurrentSubscription(branchFilter);
         if (subRes.ok) {
           const sub = (await subRes.json()) as { storageLimitBytes: number | null };
           if (sub.storageLimitBytes != null && sub.storageLimitBytes > 0) {
@@ -280,7 +234,7 @@ export function MediaLibraryClient() {
             activeCount++;
             void (async () => {
               try {
-                const res = await uploadMedia(workspaceId, item.file!, folderId);
+                const res = await uploadMedia(branchFilter, item.file!, folderId);
                 if (!res.ok) {
                   throw await readApiError(res);
                 }
@@ -318,7 +272,7 @@ export function MediaLibraryClient() {
       bumpWorkspaceDataEpoch();
       setPending(false);
     },
-    [load, workspaceId, bumpWorkspaceDataEpoch, scope, t, selectedFolderId, loadFolders, toastApiError],
+    [load, branchFilter, bumpWorkspaceDataEpoch, t, selectedFolderId, loadFolders, toastApiError],
   );
 
   const onDrop = useCallback(
@@ -328,11 +282,11 @@ export function MediaLibraryClient() {
     [uploadFiles],
   );
 
-  const dropzoneEnabled = Boolean(workspaceId && scope === 'branch' && !pending);
+  const dropzoneEnabled = Boolean(branchFilter && !pending);
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
-    disabled: !workspaceId || pending || scope === 'all',
+    disabled: !branchFilter || pending,
     noClick: !dropzoneEnabled,
     accept: {
       'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
@@ -352,7 +306,7 @@ export function MediaLibraryClient() {
   };
 
   const openDeleteDialog = async (item: MediaItem) => {
-    const wid = item.workspaceId ?? workspaceId;
+    const wid = item.workspaceId ?? branchFilter;
     if (!wid) return;
     setDeleteTarget({ id: item.id, workspaceId: wid });
     setDeletePlaylistCount(0);
@@ -407,7 +361,7 @@ export function MediaLibraryClient() {
     let failed = 0;
     for (const m of items) {
       if (!selectedIds.has(m.id)) continue;
-      const ws = m.workspaceId ?? workspaceId;
+      const ws = m.workspaceId ?? branchFilter;
       if (!ws) { failed++; continue; }
       const res = await deleteMedia(ws, m.id);
       if (!res.ok) failed++;
@@ -427,8 +381,8 @@ export function MediaLibraryClient() {
 
   const createFolder = async () => {
     const name = newFolderName.trim();
-    if (!workspaceId || !name || scope === 'all') return;
-    const res = await apiCreateFolder(workspaceId, name);
+    if (!branchFilter || !name) return;
+    const res = await apiCreateFolder(branchFilter, name);
     if (!res.ok) {
       toast.error(t('folderCreateFailed'));
       return;
@@ -439,10 +393,10 @@ export function MediaLibraryClient() {
   };
 
   const renameFolder = async (folderId: string, current: string) => {
-    if (!workspaceId || scope === 'all') return;
+    if (!branchFilter) return;
     const name = window.prompt(t('folderRenamePrompt'), current)?.trim();
     if (!name || name === current) return;
-    const res = await apiRenameFolder(workspaceId, folderId, name);
+    const res = await apiRenameFolder(branchFilter, folderId, name);
     if (!res.ok) {
       toast.error(t('folderRenameFailed'));
       return;
@@ -452,10 +406,10 @@ export function MediaLibraryClient() {
   };
 
   const deleteFolder = async (folderId: string) => {
-    if (!workspaceId || scope === 'all') return;
+    if (!branchFilter) return;
     const confirmed = window.confirm(t('folderDeleteConfirm'));
     if (!confirmed) return;
-    const res = await apiDeleteFolder(workspaceId, folderId);
+    const res = await apiDeleteFolder(branchFilter, folderId);
     if (!res.ok) {
       toast.error(t('folderDeleteFailed'));
       return;
@@ -469,9 +423,9 @@ export function MediaLibraryClient() {
   };
 
   const moveMedia = async (mediaId: string, folderId: string) => {
-    if (!workspaceId || scope === 'all') return;
+    if (!branchFilter) return;
     const nextFolderId = folderId === 'all' ? null : folderId;
-    const res = await moveMediaToFolder(workspaceId, mediaId, nextFolderId);
+    const res = await moveMediaToFolder(branchFilter, mediaId, nextFolderId);
     if (!res.ok) {
       toast.error(t('moveFolderFailed'));
       return;
@@ -516,7 +470,7 @@ export function MediaLibraryClient() {
   const openAddToPlaylist = async (item: MediaItem) => {
     setAddToPlaylistTarget(item);
     setSelectedPlaylistId('');
-    const ws = item.workspaceId ?? workspaceId;
+    const ws = item.workspaceId ?? branchFilter;
     if (!ws) return;
     const res = await apiFetchPlaylists(ws);
     if (res.ok) setPlaylistOptions(await readPageItems(res));
@@ -524,7 +478,7 @@ export function MediaLibraryClient() {
 
   const confirmAddToPlaylist = async () => {
     if (!addToPlaylistTarget || !selectedPlaylistId) return;
-    const ws = addToPlaylistTarget.workspaceId ?? workspaceId;
+    const ws = addToPlaylistTarget.workspaceId ?? branchFilter;
     if (!ws) return;
     setAddingToPlaylist(true);
     try {
@@ -558,7 +512,7 @@ export function MediaLibraryClient() {
 
   const handleSaveExpiry = async () => {
     if (!infoTarget) return;
-    const ws = infoTarget.workspaceId ?? workspaceId;
+    const ws = infoTarget.workspaceId ?? branchFilter;
     if (!ws) return;
     setSavingExpiry(true);
     try {
@@ -589,11 +543,7 @@ export function MediaLibraryClient() {
     }
   }, [infoTarget]);
 
-  if (scope === 'branch' && !workspaceId) {
-    return <p className="text-sm text-muted-foreground">{t('selectWorkspace')}</p>;
-  }
-
-  if (scope === 'all' && workspaces.length === 0) {
+  if (workspaces.length === 0) {
     return <p className="text-sm text-muted-foreground">{t('selectWorkspace')}</p>;
   }
 
@@ -606,32 +556,7 @@ export function MediaLibraryClient() {
       >
         <div className="min-w-0 flex-1">
           {workspaces.length > 1 ? (
-            <div className="mt-4 inline-flex flex-wrap gap-1 rounded-lg border border-border bg-muted/50 p-1">
-              <button
-                type="button"
-                onClick={() => setScope('branch')}
-                className={cn(
-                  'rounded-lg px-4 py-2 text-sm font-semibold transition-colors',
-                  scope === 'branch'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {t('scopeBranch')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setScope('all')}
-                className={cn(
-                  'rounded-lg px-4 py-2 text-sm font-semibold transition-colors',
-                  scope === 'all'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {t('scopeAll')}
-              </button>
-            </div>
+            <BranchFilterDropdown value={branchFilter} onChange={setBranchFilter} />
           ) : null}
         </div>
         {canEdit && (
@@ -649,7 +574,7 @@ export function MediaLibraryClient() {
             variant="cta"
             className="rounded-lg font-semibold"
             onClick={onPickClick}
-            disabled={pending || scope === 'all'}
+            disabled={pending || !branchFilter}
           >
             <Upload className="h-4 w-4 shrink-0" strokeWidth={2} />
             {pending ? t('uploading') : t('uploadFiles')}
@@ -659,7 +584,7 @@ export function MediaLibraryClient() {
             variant="outline"
             className="rounded-lg"
             onClick={open}
-            disabled={pending || scope === 'all'}
+            disabled={pending || !branchFilter}
           >
             {t('browse')}
           </Button>
@@ -667,7 +592,7 @@ export function MediaLibraryClient() {
         )}
       </motion.div>
 
-      {scope === 'branch' && canEdit ? (
+      {branchFilter && canEdit ? (
         <FolderSection
           folders={folders}
           selectedFolderId={selectedFolderId}
@@ -682,7 +607,7 @@ export function MediaLibraryClient() {
 
       {items.length > 0 && (
         <div className="flex flex-wrap items-center gap-3">
-          {scope === 'branch' && (
+          {branchFilter && (
             <UsageIndicator storageUsedBytes={items.reduce((sum, m) => sum + m.sizeBytes, 0)} />
           )}
           <div className="relative flex-1 min-w-[200px]">
@@ -768,7 +693,7 @@ export function MediaLibraryClient() {
                 {t('emptyDescription')}
               </p>
             </div>
-            {scope === 'branch' ? (
+            {branchFilter ? (
               <Button
                 type="button"
                 variant="cta"
@@ -796,8 +721,8 @@ export function MediaLibraryClient() {
             items={items}
             filteredItems={filteredItems}
             locale={locale}
-            scope={scope}
-            workspaceId={workspaceId}
+            scope={branchFilter ? 'branch' : 'all'}
+            workspaceId={branchFilter}
             folders={folders}
             isDragActive={isDragActive}
             selectedIds={selectedIds}
@@ -812,7 +737,7 @@ export function MediaLibraryClient() {
             onAddToPlaylist={(m: MediaItem) => void openAddToPlaylist(m)}
           />
         )}
-        {scope === 'branch' && mediaPage < mediaTotalPages && (
+        {branchFilter && mediaPage < mediaTotalPages && (
           <div className="flex items-center justify-center gap-3 py-6">
             <Button
               type="button"

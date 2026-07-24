@@ -14,7 +14,6 @@ import { OtpHelper } from '../../common/auth/otp.helper';
 import { EmailService } from '../email/email.service';
 import { emailChangeOtpEmail } from '../email/email-templates';
 import { AccountInsightsService } from './account-insights.service';
-import Stripe from 'stripe';
 
 @Injectable()
 export class AccountService {

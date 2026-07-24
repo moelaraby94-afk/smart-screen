@@ -36,8 +36,23 @@ export class CanvasesService {
     });
   }
 
-  async list(workspaceId: string, query: PaginationQueryDto) {
-    const where = { workspaceId };
+  async list(
+    workspaceId: string | undefined,
+    userId: string | undefined,
+    query: PaginationQueryDto,
+  ) {
+    let workspaceFilter: { workspaceId?: string | { in: string[] } } = {};
+    if (workspaceId) {
+      workspaceFilter = { workspaceId };
+    } else if (userId) {
+      const memberships = await this.prisma.workspaceMember.findMany({
+        where: { userId },
+        select: { workspaceId: true },
+      });
+      const wsIds = memberships.map((m) => m.workspaceId);
+      workspaceFilter = wsIds.length > 0 ? { workspaceId: { in: wsIds } } : {};
+    }
+    const where = workspaceFilter;
     const [items, total] = await Promise.all([
       this.prisma.canvas.findMany({
         where,

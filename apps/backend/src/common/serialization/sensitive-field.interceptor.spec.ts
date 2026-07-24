@@ -100,12 +100,14 @@ describe('SensitiveFieldInterceptor', () => {
     const input = {
       id: '1',
       subscriptionEndDate: date,
-      payments: [
-        { id: 'p1', paidAt: date, createdAt: date },
-      ],
+      payments: [{ id: 'p1', paidAt: date, createdAt: date }],
     };
     interceptor.intercept(mockContext, callWith(input)).subscribe((result) => {
-      const r = result as { id: string; subscriptionEndDate: unknown; payments: Array<{ paidAt: unknown; createdAt: unknown }> };
+      const r = result as {
+        id: string;
+        subscriptionEndDate: unknown;
+        payments: Array<{ paidAt: unknown; createdAt: unknown }>;
+      };
       expect(r.subscriptionEndDate).toBeInstanceOf(Date);
       expect((r.subscriptionEndDate as Date).getTime()).toBe(date.getTime());
       expect(r.payments[0].paidAt).toBeInstanceOf(Date);

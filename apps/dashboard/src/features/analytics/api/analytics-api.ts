@@ -116,8 +116,8 @@ function buildContentBottomPerformers(raw: ScreenAnalytics | null): Performer[] 
 }
 
 export async function fetchAnalytics(
-  workspaceId: string,
-  period: Period,
+  workspaceId?: string | null,
+  period?: Period,
 ): Promise<AnalyticsResult | null> {
   const raw = await fetchScreenAnalytics(workspaceId);
   if (!raw) return null;
@@ -134,7 +134,7 @@ export async function fetchAnalytics(
       totalImpressions: { value: totalImpressions, unit: 's' },
       avgPlayTime: { value: avgPlayTime > 0 ? `${(avgPlayTime / 3600).toFixed(1)}h` : '—', unit: '' },
     },
-    trend: generateTrendData(period, uptimeValue, 5),
+    trend: generateTrendData(period ?? '30d', uptimeValue, 5),
     performers: buildScreenPerformers(raw),
     bottomPerformers: buildScreenBottomPerformers(raw),
     raw,
@@ -150,7 +150,7 @@ export async function fetchAnalytics(
       activePlaylists: { value: raw.playlistDistribution.length, unit: '' },
       contentReach: { value: raw.total, unit: 'screens' },
     },
-    trend: generateTrendData(period, raw.withPlaylist, 2),
+    trend: generateTrendData(period ?? '30d', raw.withPlaylist, 2),
     performers: buildContentPerformers(raw),
     bottomPerformers: buildContentBottomPerformers(raw),
   };

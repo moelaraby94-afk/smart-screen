@@ -2,6 +2,7 @@
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useBranchFilter } from '@/lib/use-branch-filter';
 import type { Route } from 'next';
 import { useTranslations, useLocale } from 'next-intl';
 import { Monitor, Search, Trash2, CheckSquare, Radio, Download, LayoutGrid, Table as TableIcon, RefreshCw, MoreHorizontal, BadgeAlert, PenLine, Zap, AlertTriangle, X, Sparkles } from 'lucide-react';
@@ -37,6 +38,7 @@ import {
   type PlaylistOption as ApiPlaylistOption,
 } from '@/features/screens/api/screens-api';
 import { useWorkspace } from '@/features/workspace/workspace-context';
+import { BranchFilterDropdown } from '@/components/branch-filter-dropdown';
 import { usePlayerPairing } from '@/features/branches/use-player-pairing';
 import { ScreenSetupModal } from '@/features/screens/screen-setup-modal';
 import { useApiScreens, type ScreenRow } from './useApiScreens';
@@ -57,45 +59,48 @@ export function ScreensClient({ locale }: Props) {
   const t = useTranslations('screensClient');
   const activeLocale = useLocale();
   const router = useRouter();
-  const { workspaceId, workspaces, workspaceDataEpoch, bumpWorkspaceDataEpoch, pairingActivityEpoch } =
+  const { branchId: urlBranchFilter, setBranchId: setUrlBranchFilter } = useBranchFilter();
+  const { workspaces, workspaceDataEpoch, bumpWorkspaceDataEpoch, pairingActivityEpoch } =
     useWorkspace();
-  const { screens, setScreens, isLoading, isError, reload } = useApiScreens(workspaceId);
-  useScreenRealtime(workspaceId, setScreens);
+  const { screens, setScreens, isLoading, isError, reload } = useApiScreens(urlBranchFilter);
+  useScreenRealtime(urlBranchFilter, setScreens);
 
   const canAssignPlayback = useMemo(() => {
-    const r = workspaces.find((w) => w.id === workspaceId)?.role;
+    if (!urlBranchFilter) return false;
+    const r = workspaces.find((w) => w.id === urlBranchFilter)?.role;
     return r === 'OWNER' || r === 'ADMIN' || r === 'EDITOR';
-  }, [workspaces, workspaceId]);
+  }, [workspaces, urlBranchFilter]);
 
   const canClaimPairing = useMemo(() => {
-    const r = workspaces.find((w) => w.id === workspaceId)?.role;
+    if (!urlBranchFilter) return false;
+    const r = workspaces.find((w) => w.id === urlBranchFilter)?.role;
     return r === 'OWNER' || r === 'EDITOR';
-  }, [workspaces, workspaceId]);
+  }, [workspaces, urlBranchFilter]);
 
   const [playlists, setPlaylists] = useState<PlaylistOption[]>([]);
   const [assignPlaylistScreenId, setAssignPlaylistScreenId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!workspaceId) {
+    if (!urlBranchFilter) {
       setPlaylists([]);
       return;
     }
     let cancelled = false;
     void (async () => {
-      const items = await fetchPlaylistOptions(workspaceId);
+      const items = await fetchPlaylistOptions(urlBranchFilter);
       if (!cancelled) setPlaylists(items);
     })();
     return () => {
       cancelled = true;
     };
-  }, [workspaceId, workspaceDataEpoch]);
+  }, [urlBranchFilter, workspaceDataEpoch]);
 
   const reloadScreensAndBump = useCallback(async () => {
     await reload();
     bumpWorkspaceDataEpoch();
   }, [reload, bumpWorkspaceDataEpoch]);
 
-  const pairing = usePlayerPairing(workspaceId ?? '', {
+  const pairing = usePlayerPairing(urlBranchFilter ?? '', {
     canClaim: canClaimPairing,
     pairingActivityEpoch,
     onClaimed: reloadScreensAndBump,
@@ -103,7 +108,7 @@ export function ScreensClient({ locale }: Props) {
   });
 
   const { onDelete, sendRemoteCommand } = useScreenActions({
-    workspaceId,
+    workspaceId: urlBranchFilter,
     setScreens,
     reload,
     bumpWorkspaceDataEpoch,
@@ -111,14 +116,14 @@ export function ScreensClient({ locale }: Props) {
 
   const assignPlaybackPlaylist = useCallback(
     async (screenId: string, playlistId: string | null) => {
-      if (!workspaceId) return;
+      if (!urlBranchFilter) return;
       setAssignPlaylistScreenId(screenId);
       try {
         const playlistName =
           playlistId === null
             ? null
             : (playlists.find((p) => p.id === playlistId)?.name ?? null);
-        const res = await apiUpdateScreen(workspaceId, screenId, { activePlaylistId: playlistId });
+        const res = await apiUpdateScreen(urlBranchFilter, screenId, { activePlaylistId: playlistId });
         if (!res.ok) {
           toast.error(t('playlistAssignFailed'));
           return;
@@ -141,7 +146,7 @@ export function ScreensClient({ locale }: Props) {
         setAssignPlaylistScreenId(null);
       }
     },
-    [workspaceId, playlists, setScreens, bumpWorkspaceDataEpoch, t],
+    [urlBranchFilter, playlists, setScreens, bumpWorkspaceDataEpoch, t],
   );
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -150,7 +155,7 @@ export function ScreensClient({ locale }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearch = useDeferredValue(searchQuery);
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [branchFilter, setBranchFilter] = useState<string>('all');
+  const [groupFilter, setGroupFilter] = useState<string>('all');
   const [contentFilter, setContentFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
@@ -163,7 +168,7 @@ export function ScreensClient({ locale }: Props) {
   const [bulkSyncBusy, setBulkSyncBusy] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'single' | 'bulk'; screenId?: string; screenName?: string } | null>(null);
 
-  const branchOptions = useMemo(() => {
+  const groupOptions = useMemo(() => {
     const seen = new Map<string, string>();
     for (const s of screens) {
       if (s.playlistGroupId && s.playlistGroup && !seen.has(s.playlistGroupId)) {
@@ -177,7 +182,7 @@ export function ScreensClient({ locale }: Props) {
     const q = deferredSearch.trim().toLowerCase();
     const filtered = screens.filter((s) => {
       if (statusFilter !== 'all' && s.status !== statusFilter) return false;
-      if (branchFilter !== 'all' && s.playlistGroupId !== branchFilter) return false;
+      if (groupFilter !== 'all' && s.playlistGroupId !== groupFilter) return false;
       if (contentFilter === 'has_content' && !s.activePlaylistId) return false;
       if (contentFilter === 'no_content' && s.activePlaylistId) return false;
       if (q) {
@@ -206,7 +211,7 @@ export function ScreensClient({ locale }: Props) {
       }
     });
     return sorted;
-  }, [screens, deferredSearch, statusFilter, branchFilter, contentFilter, sortBy]);
+  }, [screens, deferredSearch, statusFilter, groupFilter, contentFilter, sortBy]);
 
   const toggleSelect = useCallback((id: string, shiftKey = false) => {
     setSelectedIds((prev) => {
@@ -244,7 +249,7 @@ export function ScreensClient({ locale }: Props) {
   const clearAllFilters = useCallback(() => {
     setSearchQuery('');
     setStatusFilter('all');
-    setBranchFilter('all');
+    setGroupFilter('all');
     setContentFilter('all');
     setSortBy('name');
   }, []);
@@ -259,7 +264,7 @@ export function ScreensClient({ locale }: Props) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedIds.size, clearSelection]);
 
-  const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all' || branchFilter !== 'all' || contentFilter !== 'all' || sortBy !== 'name';
+  const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all' || groupFilter !== 'all' || contentFilter !== 'all' || sortBy !== 'name';
 
   const totalPages = Math.ceil(filteredScreens.length / pageSize);
   const paginatedScreens = useMemo(() => {
@@ -269,7 +274,7 @@ export function ScreensClient({ locale }: Props) {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, statusFilter, branchFilter, contentFilter, sortBy]);
+  }, [searchQuery, statusFilter, groupFilter, contentFilter, sortBy]);
 
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
@@ -278,12 +283,17 @@ export function ScreensClient({ locale }: Props) {
   }, [totalPages, currentPage]);
 
   const bulkDelete = async () => {
-    if (!workspaceId || selectedIds.size === 0) return;
+    if (selectedIds.size === 0) return;
     setBulkBusy(true);
     try {
       const ids = Array.from(selectedIds);
       const results = await Promise.all(
-        ids.map((id) => apiDeleteScreen(workspaceId, id)),
+        ids.map((id) => {
+          const screen = screens.find((s) => s.id === id);
+          const ws = urlBranchFilter ?? screen?.workspaceId;
+          if (!ws) return Promise.resolve({ ok: false } as Response);
+          return apiDeleteScreen(ws, id);
+        }),
       );
       const failed = results.filter((r) => !r.ok).length;
       if (failed > 0) {
@@ -300,12 +310,17 @@ export function ScreensClient({ locale }: Props) {
   };
 
   const bulkSyncContent = async () => {
-    if (!workspaceId || selectedIds.size === 0) return;
+    if (selectedIds.size === 0) return;
     setBulkSyncBusy(true);
     try {
       const ids = Array.from(selectedIds);
       const results = await Promise.all(
-        ids.map((id) => apiSendRemoteCommand(workspaceId, id, 'refresh_content')),
+        ids.map((id) => {
+          const screen = screens.find((s) => s.id === id);
+          const ws = urlBranchFilter ?? screen?.workspaceId;
+          if (!ws) return Promise.resolve({ ok: false } as Response);
+          return apiSendRemoteCommand(ws, id, 'refresh_content');
+        }),
       );
       const failed = results.filter((r) => !r.ok).length;
       if (failed > 0) {
@@ -321,13 +336,18 @@ export function ScreensClient({ locale }: Props) {
   };
 
   const bulkAssignPlaylist = async () => {
-    if (!workspaceId || selectedIds.size === 0 || !bulkPlaylistId) return;
+    if (selectedIds.size === 0 || !bulkPlaylistId) return;
     setBulkBusy(true);
     try {
       const ids = Array.from(selectedIds);
       const playlistName = playlists.find((p) => p.id === bulkPlaylistId)?.name ?? null;
       const results = await Promise.all(
-        ids.map((id) => apiUpdateScreen(workspaceId, id, { activePlaylistId: bulkPlaylistId })),
+        ids.map((id) => {
+          const screen = screens.find((s) => s.id === id);
+          const ws = urlBranchFilter ?? screen?.workspaceId;
+          if (!ws) return Promise.resolve({ ok: false } as Response);
+          return apiUpdateScreen(ws, id, { activePlaylistId: bulkPlaylistId });
+        }),
       );
       const failed = results.filter((r) => !r.ok).length;
       if (failed > 0) {
@@ -387,7 +407,7 @@ export function ScreensClient({ locale }: Props) {
     URL.revokeObjectURL(url);
   }, [filteredScreens, t]);
 
-  if (!workspaceId) {
+  if (workspaces.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">{t('selectWorkspace')}</p>
     );
@@ -470,14 +490,17 @@ export function ScreensClient({ locale }: Props) {
             <option value="OFFLINE">{t('filterOffline')}</option>
             <option value="MAINTENANCE">{t('filterMaintenance')}</option>
           </select>
-          <select
+          {workspaces.length > 1 && (
+          <BranchFilterDropdown value={urlBranchFilter} onChange={setUrlBranchFilter} />
+        )}
+        <select
             className="h-9 rounded-lg border border-border bg-background/80 px-3 text-sm backdrop-blur"
-            value={branchFilter}
-            onChange={(e) => setBranchFilter(e.target.value)}
+            value={groupFilter}
+            onChange={(e) => setGroupFilter(e.target.value)}
             aria-label={t('filterByBranch')}
           >
             <option value="all">{t('branchAll')}</option>
-            {branchOptions.map((b) => (
+            {groupOptions.map((b) => (
               <option key={b.id} value={b.id}>{b.name}</option>
             ))}
           </select>
@@ -563,7 +586,7 @@ export function ScreensClient({ locale }: Props) {
         </div>
       )}
 
-      {(statusFilter !== 'all' || branchFilter !== 'all' || contentFilter !== 'all' || searchQuery !== '') && screens.length > 0 && (
+      {(statusFilter !== 'all' || groupFilter !== 'all' || contentFilter !== 'all' || searchQuery !== '') && screens.length > 0 && (
         <div className="flex flex-wrap items-center gap-2" role="region" aria-label={t('filterByStatus')}>
           {searchQuery !== '' && (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground">
@@ -591,13 +614,13 @@ export function ScreensClient({ locale }: Props) {
               </button>
             </span>
           )}
-          {branchFilter !== 'all' && (
+          {groupFilter !== 'all' && (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground">
-              {t('filterChipBranch', { value: branchOptions.find((b) => b.id === branchFilter)?.name ?? branchFilter })}
+              {t('filterChipBranch', { value: groupOptions.find((b) => b.id === groupFilter)?.name ?? groupFilter })}
               <button
                 type="button"
                 className="text-muted-foreground hover:text-foreground"
-                onClick={() => setBranchFilter('all')}
+                onClick={() => setGroupFilter('all')}
                 aria-label={t('removeFilter')}
               >
                 <X className="h-3 w-3" />
@@ -769,11 +792,11 @@ export function ScreensClient({ locale }: Props) {
                           <PenLine className="me-2 h-4 w-4" />
                           {t('renameScreen')}
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => void sendRemoteCommand(screen.id, 'refresh_content')}>
+                        <DropdownMenuItem onClick={() => void sendRemoteCommand(screen.id, 'refresh_content', screen.workspaceId)}>
                           <RefreshCw className="me-2 h-4 w-4" />
                           {t('syncContent')}
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => void sendRemoteCommand(screen.id, 'identify')}>
+                        <DropdownMenuItem onClick={() => void sendRemoteCommand(screen.id, 'identify', screen.workspaceId)}>
                           <BadgeAlert className="me-2 h-4 w-4" />
                           {t('identify')}
                         </DropdownMenuItem>
@@ -806,7 +829,7 @@ export function ScreensClient({ locale }: Props) {
               key={screen.id}
               screen={screen}
               locale={locale}
-              workspaceId={workspaceId}
+              workspaceId={urlBranchFilter ?? screen.workspaceId}
               index={i}
               onCardClick={navigateToDetail}
               onEdit={(s) => openQuick(s)}
@@ -814,7 +837,10 @@ export function ScreensClient({ locale }: Props) {
                 const s = screens.find((sc) => sc.id === id);
                 setDeleteTarget({ type: 'single', screenId: id, screenName: s?.name });
               }}
-              onRemote={(id, cmd) => void sendRemoteCommand(id, cmd)}
+              onRemote={(id, cmd) => {
+                const screen = screens.find((s) => s.id === id);
+                void sendRemoteCommand(id, cmd, screen?.workspaceId);
+              }}
               onAssignContent={(s) => openQuick(s)}
               playlists={playlists}
               canAssignPlayback={canAssignPlayback}
@@ -872,7 +898,7 @@ export function ScreensClient({ locale }: Props) {
           if (!v) pairing.close();
         }}
         screen={modalScreen}
-        workspaceId={workspaceId}
+        workspaceId={urlBranchFilter ?? modalScreen?.workspaceId ?? ''}
         locale={locale}
         onSaved={reloadScreensAndBump}
         pairing={pairing}
@@ -904,7 +930,8 @@ export function ScreensClient({ locale }: Props) {
                 if (deleteTarget?.type === 'bulk') {
                   await bulkDelete();
                 } else if (deleteTarget?.screenId) {
-                  await onDelete(deleteTarget.screenId);
+                  const screen = screens.find((s) => s.id === deleteTarget.screenId);
+                  await onDelete(deleteTarget.screenId, screen?.workspaceId);
                 }
                 setDeleteTarget(null);
               }}

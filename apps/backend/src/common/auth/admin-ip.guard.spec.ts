@@ -7,7 +7,7 @@ function createMockContext(
   ip: string | undefined,
   user?: JwtUser,
 ): ExecutionContext {
-  const request = { ip, user } as any;
+  const request = { ip, user } as unknown as Request;
   return {
     switchToHttp: () => ({ getRequest: () => request }),
     getHandler: () => ({}),

@@ -21,11 +21,19 @@ describe('Player Telemetry API (e2e)', () => {
         update: jest.fn().mockResolvedValue({}),
       },
       screen: {
-        findFirst: jest.fn().mockResolvedValue({ id: 'screen-1', workspaceId: 'ws-1' }),
-        findUnique: jest.fn().mockResolvedValue({ id: 'screen-1', workspaceId: 'ws-1', activePlaylistId: 'pl-1' }),
+        findFirst: jest
+          .fn()
+          .mockResolvedValue({ id: 'screen-1', workspaceId: 'ws-1' }),
+        findUnique: jest.fn().mockResolvedValue({
+          id: 'screen-1',
+          workspaceId: 'ws-1',
+          activePlaylistId: 'pl-1',
+        }),
       },
       playlist: {
-        findFirst: jest.fn().mockResolvedValue({ id: 'pl-1', isPublished: true }),
+        findFirst: jest
+          .fn()
+          .mockResolvedValue({ id: 'pl-1', isPublished: true }),
         findMany: jest.fn().mockResolvedValue([]),
       },
       playlistItem: { findMany: jest.fn().mockResolvedValue([]) },
@@ -35,10 +43,7 @@ describe('Player Telemetry API (e2e)', () => {
 
     const moduleRef = await Test.createTestingModule({
       controllers: [PlayerTelemetryController],
-      providers: [
-        Reflector,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [Reflector, { provide: PrismaService, useValue: prisma }],
     })
       .overrideGuard(PlayerSecretGuard)
       .useValue({ canActivate: jest.fn().mockReturnValue(true) })

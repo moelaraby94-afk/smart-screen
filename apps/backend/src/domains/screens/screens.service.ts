@@ -7,7 +7,10 @@ import { Prisma, ScreenStatus } from '@prisma/client';
 import { DomainException } from '../../common/errors/domain.exception';
 import { ErrorCode } from '../../common/errors/error-codes';
 import { buildPage } from '../../common/pagination/page';
-import { skipFor, MAX_PAGE_SIZE } from '../../common/pagination/pagination-query.dto';
+import {
+  skipFor,
+  MAX_PAGE_SIZE,
+} from '../../common/pagination/pagination-query.dto';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { PlaylistsService } from '../playlists/playlists.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -90,7 +93,7 @@ export class ScreensService {
     });
   }
 
-  async list(dto: ListScreensDto) {
+  async list(dto: ListScreensDto, userId?: string) {
     const groupFilter: Prisma.ScreenWhereInput = {};
     if (dto.ungrouped) {
       groupFilter.playlistGroupId = null;
@@ -98,8 +101,20 @@ export class ScreensService {
       groupFilter.playlistGroupId = dto.playlistGroupId;
     }
 
+    let workspaceFilter: Prisma.ScreenWhereInput = {};
+    if (dto.workspaceId) {
+      workspaceFilter = { workspaceId: dto.workspaceId };
+    } else if (userId) {
+      const memberships = await this.prisma.workspaceMember.findMany({
+        where: { userId },
+        select: { workspaceId: true },
+      });
+      const wsIds = memberships.map((m) => m.workspaceId);
+      workspaceFilter = wsIds.length > 0 ? { workspaceId: { in: wsIds } } : {};
+    }
+
     const where: Prisma.ScreenWhereInput = {
-      workspaceId: dto.workspaceId,
+      ...workspaceFilter,
       ...(dto.status ? { status: dto.status } : {}),
       ...groupFilter,
     };
@@ -298,9 +313,20 @@ export class ScreensService {
     await this.prisma.screen.delete({ where: { id } });
   }
 
-  async getAnalytics(workspaceId: string) {
+  async getAnalytics(workspaceId: string | undefined, userId?: string) {
+    let workspaceFilter: Prisma.ScreenWhereInput = {};
+    if (workspaceId) {
+      workspaceFilter = { workspaceId };
+    } else if (userId) {
+      const memberships = await this.prisma.workspaceMember.findMany({
+        where: { userId },
+        select: { workspaceId: true },
+      });
+      const wsIds = memberships.map((m) => m.workspaceId);
+      workspaceFilter = wsIds.length > 0 ? { workspaceId: { in: wsIds } } : {};
+    }
     const screens = await this.prisma.screen.findMany({
-      where: { workspaceId },
+      where: workspaceFilter,
       take: MAX_PAGE_SIZE,
       select: {
         id: true,

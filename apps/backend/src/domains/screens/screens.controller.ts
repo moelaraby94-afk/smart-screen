@@ -14,6 +14,10 @@ import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/auth/roles.guard';
 import { Roles } from '../../common/auth/roles.decorator';
+import {
+  CurrentUser,
+  type JwtUser,
+} from '../../common/auth/current-user.decorator';
 import { CreateScreenDto } from './dto/create-screen.dto';
 import { ListScreensDto } from './dto/list-screens.dto';
 import { RemoteCommandDto } from './dto/remote-command.dto';
@@ -31,8 +35,8 @@ export class ScreensController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get()
-  list(@Query() query: ListScreensDto) {
-    return this.screensService.list(query);
+  list(@Query() query: ListScreensDto, @CurrentUser() user: JwtUser) {
+    return this.screensService.list(query, user.sub);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR)
@@ -53,8 +57,11 @@ export class ScreensController {
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)
   @Get('analytics')
-  analytics(@Query('workspaceId') workspaceId: string) {
-    return this.screensService.getAnalytics(workspaceId);
+  analytics(
+    @Query('workspaceId') workspaceId: string,
+    @CurrentUser() user: JwtUser,
+  ) {
+    return this.screensService.getAnalytics(workspaceId || undefined, user.sub);
   }
 
   @Roles(UserRole.OWNER, UserRole.ADMIN, UserRole.EDITOR, UserRole.VIEWER)

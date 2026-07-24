@@ -13,12 +13,14 @@ export async function mapWithConcurrency<T, R>(
   concurrency: number,
   fn: (item: T, index: number) => Promise<R>,
 ): Promise<(R | undefined)[]> {
-  const results: (R | undefined)[] = new Array(items.length).fill(undefined);
+  const results: (R | undefined)[] = new Array(items.length).fill(
+    undefined,
+  ) as (R | undefined)[];
   const batch = Math.max(1, Math.floor(concurrency));
 
   for (let i = 0; i < items.length; i += batch) {
     const slice = items.slice(i, i + batch);
-    const settled = await Promise.allSettled(
+    const settled: PromiseSettledResult<R>[] = await Promise.allSettled(
       slice.map((item, j) => fn(item, i + j)),
     );
     for (let j = 0; j < settled.length; j++) {

@@ -1,5 +1,16 @@
-import { Body, Controller, Get, Headers, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
+import type { Request } from 'express';
+import { Prisma } from '@prisma/client';
 import { PlayerSecretGuard } from '../player/player-secret.guard';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
@@ -11,10 +22,10 @@ export class PlayerTelemetryController {
   @UseGuards(PlayerSecretGuard)
   @Post('proof-of-play')
   async recordProofOfPlay(
-    @Query('serialNumber') serialNumber: string | undefined,
-    @Body() body: {
-      screenId: string;
-      workspaceId: string;
+    @Req()
+    req: Request & { playerScreenId?: string; playerWorkspaceId?: string },
+    @Body()
+    body: {
       contentType: string;
       contentId?: string;
       contentName?: string;
@@ -22,10 +33,12 @@ export class PlayerTelemetryController {
       durationSec?: number;
     },
   ) {
+    const screenId = req.playerScreenId!;
+    const workspaceId = req.playerWorkspaceId!;
     await this.prisma.proofOfPlay.create({
       data: {
-        workspaceId: body.workspaceId,
-        screenId: body.screenId,
+        workspaceId,
+        screenId,
         contentType: body.contentType,
         contentId: body.contentId,
         contentName: body.contentName,
@@ -39,18 +52,20 @@ export class PlayerTelemetryController {
   @UseGuards(PlayerSecretGuard)
   @Post('command-ack')
   async recordCommandAck(
-    @Query('serialNumber') serialNumber: string | undefined,
-    @Body() body: {
-      screenId: string;
+    @Req()
+    req: Request & { playerScreenId?: string; playerWorkspaceId?: string },
+    @Body()
+    body: {
       command: string;
       messageId: string;
       status?: string;
       errorMessage?: string;
     },
   ) {
+    const screenId = req.playerScreenId!;
     await this.prisma.commandAck.create({
       data: {
-        screenId: body.screenId,
+        screenId,
         command: body.command,
         messageId: body.messageId,
         status: body.status ?? 'RECEIVED',
@@ -60,13 +75,15 @@ export class PlayerTelemetryController {
     return { ok: true };
   }
 
+  @UseGuards(PlayerSecretGuard)
   @SkipThrottle({ default: false })
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('crash-report')
   async recordCrashReport(
-    @Body() body: {
-      screenId?: string;
-      workspaceId?: string;
+    @Req()
+    req: Request & { playerScreenId?: string; playerWorkspaceId?: string },
+    @Body()
+    body: {
       playerVersion?: string;
       platform?: string;
       stackTrace: string;
@@ -74,14 +91,16 @@ export class PlayerTelemetryController {
     },
     @Headers('x-forwarded-for') forwardedFor?: string,
   ) {
+    const screenId = req.playerScreenId!;
+    const workspaceId = req.playerWorkspaceId!;
     await this.prisma.crashReport.create({
       data: {
-        screenId: body.screenId,
-        workspaceId: body.workspaceId,
+        screenId,
+        workspaceId,
         playerVersion: body.playerVersion,
         platform: body.platform,
         stackTrace: body.stackTrace,
-        diagnostics: (body.diagnostics ?? undefined) as any,
+        diagnostics: (body.diagnostics ?? undefined) as Prisma.InputJsonValue,
         ipAddress: forwardedFor?.split(',')[0]?.trim(),
       },
     });
@@ -97,10 +116,7 @@ export class PlayerTelemetryController {
   ) {
     const where: Record<string, unknown> = { isPublished: true };
     if (platform) {
-      where.OR = [
-        { platform: 'ALL' },
-        { platform },
-      ];
+      where.OR = [{ platform: 'ALL' }, { platform }];
     }
     const updates = await this.prisma.playerOtaUpdate.findMany({
       where,
@@ -136,11 +152,14 @@ export class PlayerTelemetryController {
   @UseGuards(PlayerSecretGuard)
   @Get('content-manifest')
   async getContentManifest(
-    @Query('serialNumber') serialNumber: string | undefined,
-    @Query('screenId') screenId?: string,
+    @Req()
+    req: Request & { playerScreenId?: string; playerWorkspaceId?: string },
+    @Query('serialNumber') _serialNumber: string | undefined,
+    @Query('screenId') queryScreenId?: string,
   ) {
-    if (!screenId) {
-      return { manifest: [], error: 'screenId required' };
+    const screenId = req.playerScreenId!;
+    if (queryScreenId && queryScreenId !== screenId) {
+      return { manifest: [], error: 'forbidden' };
     }
     const screen = await this.prisma.screen.findUnique({
       where: { id: screenId },
@@ -163,7 +182,15 @@ export class PlayerTelemetryController {
       where: { playlistId },
       orderBy: { orderIndex: 'asc' },
       include: {
-        media: { select: { id: true, fileName: true, relativePath: true, mimeType: true, sizeBytes: true } },
+        media: {
+          select: {
+            id: true,
+            fileName: true,
+            relativePath: true,
+            mimeType: true,
+            sizeBytes: true,
+          },
+        },
         canvas: { select: { id: true, name: true, layoutData: true } },
       },
     });

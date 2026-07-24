@@ -49,18 +49,23 @@ export class ProofOfPlayService {
     });
   }
 
-  async getReport(workspaceId: string, opts?: {
-    screenId?: string;
-    startDate?: Date;
-    endDate?: Date;
-    limit?: number;
-  }) {
+  async getReport(
+    workspaceId: string,
+    opts?: {
+      screenId?: string;
+      startDate?: Date;
+      endDate?: Date;
+      limit?: number;
+    },
+  ) {
     const where: Record<string, unknown> = { workspaceId };
     if (opts?.screenId) where.screenId = opts.screenId;
     if (opts?.startDate || opts?.endDate) {
       where.playedAt = {};
-      if (opts?.startDate) (where.playedAt as Record<string, unknown>).gte = opts.startDate;
-      if (opts?.endDate) (where.playedAt as Record<string, unknown>).lte = opts.endDate;
+      if (opts?.startDate)
+        (where.playedAt as Record<string, unknown>).gte = opts.startDate;
+      if (opts?.endDate)
+        (where.playedAt as Record<string, unknown>).lte = opts.endDate;
     }
 
     const limit = Math.min(opts?.limit ?? 100, 500);

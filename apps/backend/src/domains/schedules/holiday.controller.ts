@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/auth/roles.guard';
 import { Roles } from '../../common/auth/roles.decorator';
@@ -20,7 +28,13 @@ export class HolidayController {
   @Post()
   create(
     @Query('workspaceId') workspaceId: string,
-    @Body() body: { name: string; date: string; endDate?: string; isRecurring?: boolean },
+    @Body()
+    body: {
+      name: string;
+      date: string;
+      endDate?: string;
+      isRecurring?: boolean;
+    },
   ) {
     return this.holidayService.create(workspaceId, {
       name: body.name,

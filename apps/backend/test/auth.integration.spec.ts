@@ -64,7 +64,12 @@ describe('Auth flow (integration)', () => {
         LoginLockoutService,
         {
           provide: RedisService,
-          useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn(), ping: jest.fn() },
+          useValue: {
+            get: jest.fn(),
+            set: jest.fn(),
+            del: jest.fn(),
+            ping: jest.fn(),
+          },
         },
         {
           provide: AuthCredentialsService,

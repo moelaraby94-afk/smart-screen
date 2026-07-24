@@ -4,10 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { createHmac, randomBytes } from 'crypto';
-import { lookup as dnsLookup } from 'node:dns/promises';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { DomainException } from '../../common/errors/domain.exception';
-import { ErrorCode } from '../../common/errors/error-codes';
+import { assertSafeUrl } from './safe-url.util';
 
 @Injectable()
 export class WebhooksService {
@@ -32,7 +30,7 @@ export class WebhooksService {
     if (!url?.trim()) {
       throw new BadRequestException('Webhook URL is required');
     }
-    await this.assertSafeUrl(url);
+    await assertSafeUrl(url);
     if (!events?.trim()) {
       throw new BadRequestException('At least one event type is required');
     }
@@ -104,7 +102,7 @@ export class WebhooksService {
       data: { message: 'Test webhook from Smart Screen' },
     };
 
-    await this.assertSafeUrl(endpoint.url);
+    await assertSafeUrl(endpoint.url);
 
     const body = JSON.stringify(payload);
     const signature = createHmac('sha256', endpoint.secret)
@@ -156,83 +154,4 @@ export class WebhooksService {
       };
     }
   }
-
-  private async assertSafeUrl(rawUrl: string): Promise<void> {
-    let parsed: URL;
-    try {
-      parsed = new URL(rawUrl);
-    } catch {
-      throw new BadRequestException('Invalid URL');
-    }
-    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
-      throw new BadRequestException('URL must use http or https protocol');
-    }
-
-    const hostname = parsed.hostname;
-
-    if (hostname === 'localhost') {
-      throw DomainException.badRequest(
-        ErrorCode.SSRF_BLOCKED,
-        'Webhook URL must not point to a private or local address',
-      );
-    }
-
-    try {
-      const addresses = await dnsLookup(hostname, { all: true });
-      for (const addr of addresses) {
-        if (isPrivateIp(addr.address)) {
-          throw DomainException.badRequest(
-            ErrorCode.SSRF_BLOCKED,
-            'Webhook URL must not point to a private or local address',
-            { hostname, resolved: addr.address },
-          );
-        }
-      }
-    } catch (err) {
-      if (err instanceof DomainException) throw err;
-      throw new BadRequestException('Could not resolve webhook URL hostname');
-    }
-  }
-}
-
-function isPrivateIp(ip: string): boolean {
-  if (ip.includes(':')) {
-    const lower = ip.toLowerCase();
-    // IPv4-mapped IPv6 must be unwrapped and re-checked as IPv4, otherwise
-    // ::ffff:127.0.0.1 (or its normalized form ::ffff:7f00:1) bypasses the
-    // guard and reaches loopback/metadata addresses.
-    const mappedDotted = lower.match(
-      /::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/,
-    );
-    if (mappedDotted) return isPrivateIp(mappedDotted[1]);
-    const mappedHex = lower.match(/::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
-    if (mappedHex) {
-      const hi = parseInt(mappedHex[1], 16);
-      const lo = parseInt(mappedHex[2], 16);
-      const v4 = `${(hi >> 8) & 255}.${hi & 255}.${(lo >> 8) & 255}.${lo & 255}`;
-      return isPrivateIp(v4);
-    }
-    return (
-      lower === '::' || // unspecified
-      lower === '::1' || // loopback
-      lower.startsWith('fc') || // unique-local fc00::/7
-      lower.startsWith('fd') ||
-      /^fe[89ab]/.test(lower) // link-local fe80::/10 (fe80–febf)
-    );
-  }
-
-  const parts = ip.split('.').map(Number);
-  if (parts.length !== 4 || parts.some((n) => isNaN(n) || n < 0 || n > 255)) {
-    return true;
-  }
-  const [a, b] = parts;
-  return (
-    a === 127 ||
-    a === 10 ||
-    (a === 172 && b >= 16 && b <= 31) ||
-    (a === 192 && b === 168) ||
-    (a === 169 && b === 254) ||
-    a === 0 ||
-    (a === 100 && b >= 64 && b <= 127)
-  );
 }

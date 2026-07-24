@@ -6,7 +6,10 @@
  * is defined and reasonable.
  */
 
-import { MAX_PAGE_SIZE, DEFAULT_PAGE_SIZE } from '../common/pagination/pagination-query.dto';
+import {
+  MAX_PAGE_SIZE,
+  DEFAULT_PAGE_SIZE,
+} from '../common/pagination/pagination-query.dto';
 
 describe('F-03: Unbounded list endpoint safety caps', () => {
   it('MAX_PAGE_SIZE is defined and reasonable (<= 500)', () => {

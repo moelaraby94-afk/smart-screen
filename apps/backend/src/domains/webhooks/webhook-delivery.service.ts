@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { createHmac } from 'crypto';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { assertSafeUrl } from './safe-url.util';
 
 const MAX_RETRIES = 3;
 const BACKOFF_MS = [60_000, 600_000, 3_600_000]; // 1m, 10m, 1h
@@ -35,6 +36,10 @@ export class WebhookDeliveryService {
       });
 
       try {
+        // Revalidate URL before every attempt — protects against DNS rebinding
+        // and ensures stored URLs remain safe at delivery time.
+        await assertSafeUrl(url);
+
         const res = await fetch(url, {
           method: 'POST',
           headers: {
@@ -43,8 +48,34 @@ export class WebhookDeliveryService {
             'X-Webhook-Signature': `sha256=${signature}`,
           },
           body,
+          redirect: 'manual',
           signal: AbortSignal.timeout(10_000),
         });
+
+        // Reject redirects — the redirect target is never vetted by assertSafeUrl.
+        if (
+          res.type === 'opaqueredirect' ||
+          (res.status >= 300 && res.status < 400)
+        ) {
+          await this.prisma.webhookDeliveryLog.update({
+            where: { id: logEntry.id },
+            data: {
+              statusCode: res.status,
+              status: 'FAILED',
+              responseBody:
+                'Endpoint attempted a redirect, which is not allowed',
+            },
+          });
+          this.logger.warn(
+            `Webhook ${webhookId} attempt ${attempt} rejected: redirect detected`,
+          );
+          if (attempt < MAX_RETRIES) {
+            await new Promise((resolve) =>
+              setTimeout(resolve, BACKOFF_MS[attempt - 1]),
+            );
+          }
+          continue;
+        }
 
         const responseText = await res.text().catch(() => '');
 

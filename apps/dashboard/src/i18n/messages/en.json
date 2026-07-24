@@ -1091,7 +1091,9 @@
     "timing": "Timing",
     "workspace": "Branch",
     "saas": "SaaS",
-    "content": "Content"
+    "content": "Content",
+    "allBranches": "All branches",
+    "filterByBranch": "Filter by branch"
   },
   "contentPage": {
     "title": "Content",

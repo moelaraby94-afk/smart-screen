@@ -35,14 +35,14 @@ export async function fetchScreenById(
 }
 
 export async function fetchScreens(
-  workspaceId: string,
+  workspaceId?: string | null,
   opts?: { playlistGroupId?: string },
 ): Promise<ScreenRow[]> {
   const params = new URLSearchParams({
-    workspaceId,
     limit: '500',
     page: '1',
   });
+  if (workspaceId) params.set('workspaceId', workspaceId);
   if (opts?.playlistGroupId) params.set('playlistGroupId', opts.playlistGroupId);
   const res = await apiFetch(`/screens?${params.toString()}`, { method: 'GET' });
   if (!res.ok) return [];
@@ -150,11 +150,11 @@ export type ScreenAnalytics = {
 };
 
 export async function fetchScreenAnalytics(
-  workspaceId: string,
+  workspaceId?: string | null,
 ): Promise<ScreenAnalytics | null> {
-  const res = await apiFetch(
-    `/screens/analytics?workspaceId=${encodeURIComponent(workspaceId)}`,
-  );
+  const params = new URLSearchParams();
+  if (workspaceId) params.set('workspaceId', workspaceId);
+  const res = await apiFetch(`/screens/analytics?${params.toString()}`);
   if (!res.ok) return null;
   return (await res.json()) as ScreenAnalytics;
 }

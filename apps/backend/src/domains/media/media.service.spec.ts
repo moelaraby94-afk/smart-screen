@@ -134,6 +134,9 @@ describe('MediaService storage quota + write ordering', () => {
         delete: mediaDelete,
         findFirst: jest.fn(),
       },
+      mediaFolder: {
+        findFirst: jest.fn().mockResolvedValue(null),
+      },
     } as unknown as PrismaService;
 
     const storage = makeStorage(uploadRoot);

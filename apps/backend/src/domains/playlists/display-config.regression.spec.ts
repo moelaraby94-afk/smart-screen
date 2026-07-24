@@ -41,7 +41,12 @@ type FakeAssignment = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
-const RENDER_FIELDS = ['renderMode', 'orientation', 'targetWidth', 'targetHeight'] as const;
+const RENDER_FIELDS = [
+  'renderMode',
+  'orientation',
+  'targetWidth',
+  'targetHeight',
+] as const;
 
 function makeFakeStorage(): IStorageService {
   return {
@@ -89,11 +94,7 @@ function createFakePrisma(opts: {
   screens?: FakeScreen[];
   assignments?: FakeAssignment[];
 }) {
-  const {
-    playlists = [],
-    screens = [],
-    assignments = [],
-  } = opts;
+  const { playlists = [], screens = [], assignments = [] } = opts;
 
   const playlistMap = new Map<string, FakePlaylist>(
     playlists.map((p) => [p.id, p]),
@@ -170,7 +171,9 @@ function createFakePrisma(opts: {
     },
     screenPlaylistAssignment: {
       findMany: jest.fn(({ where }: { where: { screenId: string } }) => {
-        const filtered = assignments.filter((a) => a.screenId === where.screenId);
+        const filtered = assignments.filter(
+          (a) => a.screenId === where.screenId,
+        );
         return Promise.resolve(
           filtered.map((a) => ({
             ...a,
@@ -241,18 +244,25 @@ function createMockHeartbeat() {
 function createMockMediaService() {
   return {
     toResponse: jest.fn((m: unknown) => m),
-    duplicateMediaToWorkspace: jest.fn(() => Promise.resolve({ id: 'media-dup' })),
+    duplicateMediaToWorkspace: jest.fn(() =>
+      Promise.resolve({ id: 'media-dup' }),
+    ),
   } as unknown as MediaService;
 }
 
 function createMockCanvasesService() {
   return {
     toCompiledPayload: jest.fn((c: unknown) => c),
-    duplicateCanvasToWorkspace: jest.fn(() => Promise.resolve({ id: 'canvas-dup' })),
+    duplicateCanvasToWorkspace: jest.fn(() =>
+      Promise.resolve({ id: 'canvas-dup' }),
+    ),
   } as unknown as CanvasesService;
 }
 
-function createMockScheduling(source: string = 'default', playlistId: string | null = null) {
+function createMockScheduling(
+  source: string = 'default',
+  playlistId: string | null = null,
+) {
   return {
     resolveEffectivePlaylistId: jest.fn(() =>
       Promise.resolve({ playlistId, source }),
@@ -279,7 +289,11 @@ describe('Display Config Regression (Phase 1.5)', () => {
       resolveOwnerId: jest.fn().mockResolvedValue('owner-1'),
     } as unknown as AccountContextHelper;
     const groupsService = new PlaylistGroupsService(prisma, accountContext);
-    const resolutionService = new PlaylistResolutionService(prisma, media, canvases);
+    const resolutionService = new PlaylistResolutionService(
+      prisma,
+      media,
+      canvases,
+    );
     return new PlaylistsService(
       prisma,
       createMockHeartbeat(),
@@ -304,7 +318,15 @@ describe('Display Config Regression (Phase 1.5)', () => {
         targetWidth: 1080,
         targetHeight: 1920,
         isPublished: true,
-        items: [{ id: 'i1', mediaId: 'm1', canvasId: null, orderIndex: 0, durationSec: 5 }] as never,
+        items: [
+          {
+            id: 'i1',
+            mediaId: 'm1',
+            canvasId: null,
+            orderIndex: 0,
+            durationSec: 5,
+          },
+        ] as never,
       });
       const pl2 = makePlaylist({
         id: 'pl-rot-2',
@@ -314,7 +336,15 @@ describe('Display Config Regression (Phase 1.5)', () => {
         targetWidth: 1080,
         targetHeight: 1080,
         isPublished: true,
-        items: [{ id: 'i2', mediaId: 'm2', canvasId: null, orderIndex: 0, durationSec: 5 }] as never,
+        items: [
+          {
+            id: 'i2',
+            mediaId: 'm2',
+            canvasId: null,
+            orderIndex: 0,
+            durationSec: 5,
+          },
+        ] as never,
       });
       const screen = makeScreen({ id: SCREEN_ID });
       const fake = createFakePrisma({
